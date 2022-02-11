@@ -1,0 +1,24 @@
+# SPDX-FileCopyrightText: 2022 Zextras <https://www.zextras.com>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
+mutation createShare($nodeId: ID!, $shareTargetId: ID!, $permission: SharePermission!, $customMessage: String) {
+	createShare(node_id: $nodeId, share_target_id: $shareTargetId, permission: $permission, custom_message: $customMessage) {
+		permission
+		share_target {
+			... on User {
+				email
+				full_name
+				id
+			}
+			... on DistributionList {
+				id
+				name
+			}
+		}
+		created_at
+		node {
+			id
+		}
+	}
+}

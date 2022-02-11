@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: 2022 Zextras <https://www.zextras.com>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
+query getShares($id: ID!, $sharesLimit: Int!, $sharesCursor: String, $shareSorts: [ShareSort!]) {
+	getNode(id: $id) {
+		id
+		shares(limit: $sharesLimit, cursor: $sharesCursor, sorts: $shareSorts) {
+			permission
+			share_target {
+				... on User {
+					email
+					full_name
+					id
+				}
+				... on DistributionList {
+					id
+					name
+				}
+			}
+			created_at
+			node {
+				id
+				type
+			}
+		}
+	}
+}

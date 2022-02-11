@@ -1,0 +1,193 @@
+/*
+ * SPDX-FileCopyrightText: 2022 Zextras <https://www.zextras.com>
+ *
+ * SPDX-License-Identifier: AGPL-3.0-only
+ */
+
+import React from 'react';
+
+import { ApolloError } from '@apollo/client';
+import { act, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { map } from 'lodash';
+
+import ListHeader from '../../../components/ListHeader';
+import { populateFolder, populateParents } from '../../mocks/mockUtils';
+import { Folder } from '../../types/graphql/types';
+import { mockGetParent, mockGetPath } from '../../utils/mockUtils';
+import { buildBreadCrumbRegExp, generateError, render } from '../../utils/testUtils';
+import { buildCrumbs } from '../../utils/utils';
+
+describe('ListHeader', () => {
+	describe('Breadcrumb', () => {
+		test('show only current folder if it has not a parent', async () => {
+			const currentFolder = populateFolder();
+			const mocks = [mockGetParent({ id: currentFolder.id }, currentFolder)];
+
+			const selectAll = jest.fn();
+			const unSelectAll = jest.fn();
+			const exitSelectionMode = jest.fn();
+			const { getByTextWithMarkup } = render(
+				<ListHeader
+					folderId={currentFolder.id}
+					exitSelectionMode={exitSelectionMode}
+					isAllSelected={false}
+					isSelectionModeActive={false}
+					permittedSelectionModePrimaryActionsItems={[]}
+					selectAll={selectAll}
+					unSelectAll={unSelectAll}
+				/>,
+				{ mocks }
+			);
+
+			await screen.findByText((content) => content.includes(currentFolder.name));
+
+			const breadcrumbRegExp = buildBreadCrumbRegExp(currentFolder.name);
+			expect(getByTextWithMarkup(breadcrumbRegExp)).toBeVisible();
+		});
+
+		test('by default shows two level (current folder and its parent)', async () => {
+			const { node: currentFolder } = populateParents(populateFolder(), 5);
+			const mocks = [mockGetParent({ id: currentFolder.id }, currentFolder)];
+
+			const selectAll = jest.fn();
+			const unSelectAll = jest.fn();
+			const exitSelectionMode = jest.fn();
+			const { getByTextWithMarkup } = render(
+				<ListHeader
+					folderId={currentFolder.id}
+					exitSelectionMode={exitSelectionMode}
+					isAllSelected={false}
+					isSelectionModeActive={false}
+					permittedSelectionModePrimaryActionsItems={[]}
+					selectAll={selectAll}
+					unSelectAll={unSelectAll}
+				/>,
+				{ mocks }
+			);
+
+			await screen.findByText((content) => content.includes(currentFolder.name));
+
+			const breadcrumbRegExp = buildBreadCrumbRegExp(
+				(currentFolder.parent as Folder).name,
+				currentFolder.name
+			);
+			expect(getByTextWithMarkup(breadcrumbRegExp)).toBeVisible();
+		});
+
+		test('consecutive clicks on the cta expand and collapse the path with a single API request to retrieve the full path', async () => {
+			const { node: currentFolder, path } = populateParents(populateFolder(), 5);
+			const mocks = [
+				mockGetParent({ id: currentFolder.id }, currentFolder),
+				mockGetPath({ id: currentFolder.id }, path)
+			];
+
+			const selectAll = jest.fn();
+			const unSelectAll = jest.fn();
+			const exitSelectionMode = jest.fn();
+			const { getByTextWithMarkup } = render(
+				<ListHeader
+					folderId={currentFolder.id}
+					exitSelectionMode={exitSelectionMode}
+					isAllSelected={false}
+					isSelectionModeActive={false}
+					permittedSelectionModePrimaryActionsItems={[]}
+					selectAll={selectAll}
+					unSelectAll={unSelectAll}
+				/>,
+				{ mocks }
+			);
+
+			const shortBreadcrumbRegExp = buildBreadCrumbRegExp(
+				(currentFolder.parent as Folder).name,
+				currentFolder.name
+			);
+
+			const fullBreadcrumbRegExp = buildBreadCrumbRegExp(...map(path, (node) => node.name));
+
+			// wait for the breadcrumb to be loaded
+			await screen.findByText((content) => content.includes(currentFolder.name));
+			// by default only 2 levels are shown
+			expect(getByTextWithMarkup(shortBreadcrumbRegExp)).toBeVisible();
+			// user clicks on the cta
+			// eslint-disable-next-line testing-library/no-unnecessary-act
+			act(() => {
+				userEvent.click(screen.getByTestId('icon: FolderOutline'));
+			});
+			// wait for the full path to be loaded
+			await screen.findByTestId('icon: ChevronLeft');
+			// all levels are now shown
+			expect(getByTextWithMarkup(fullBreadcrumbRegExp)).toBeVisible();
+			// user clicks again on the cta
+			// eslint-disable-next-line testing-library/no-unnecessary-act
+			act(() => {
+				userEvent.click(screen.getByTestId('icon: FolderOutline'));
+			});
+			// root element is not shown now, only the short breadcrumb, without a request to the API
+			expect(getByTextWithMarkup(shortBreadcrumbRegExp)).toBeVisible();
+			expect(screen.queryByText(path[0].name)).not.toBeInTheDocument();
+			// user clicks on the cta
+			// eslint-disable-next-line testing-library/no-unnecessary-act
+			act(() => {
+				userEvent.click(screen.getByTestId('icon: FolderOutline'));
+			});
+			// wait for the full path to be loaded
+			await screen.findByTestId('icon: ChevronLeft');
+			// all levels are now shown immediately without a request to the API
+			expect(getByTextWithMarkup(fullBreadcrumbRegExp)).toBeVisible();
+		});
+
+		test('if an error occurs when loading full breadcrumb, short breadcrumb stays visible', async () => {
+			const { node: currentFolder } = populateParents(populateFolder(), 5);
+			const mocks = [
+				mockGetParent({ id: currentFolder.id }, currentFolder),
+				{
+					request: mockGetPath({ id: currentFolder.id }, []).request,
+					error: new ApolloError({ graphQLErrors: [generateError('Failed to load getPath')] })
+				}
+			];
+
+			const selectAll = jest.fn();
+			const unselectAll = jest.fn();
+			const exitSelectionMode = jest.fn();
+			const { getByTextWithMarkup } = render(
+				<ListHeader
+					folderId={currentFolder.id}
+					isSelectionModeActive={false}
+					permittedSelectionModePrimaryActionsItems={[]}
+					selectAll={selectAll}
+					unSelectAll={unselectAll}
+					exitSelectionMode={exitSelectionMode}
+					isAllSelected={false}
+				/>,
+				{ mocks }
+			);
+
+			const shortBreadcrumbRegExp = buildBreadCrumbRegExp(
+				(currentFolder.parent as Folder).name,
+				currentFolder.name
+			);
+			const crumbs = buildCrumbs(currentFolder);
+
+			// wait for the breadcrumb to be loaded
+			await screen.findByText((content) => content.includes(currentFolder.name));
+			// by default only 2 levels are shown
+			expect(getByTextWithMarkup(shortBreadcrumbRegExp)).toBeVisible();
+			// user clicks on the cta
+			// eslint-disable-next-line testing-library/no-unnecessary-act
+			act(() => {
+				userEvent.click(screen.getByTestId('icon: FolderOutline'));
+			});
+			// wait for response
+			await waitFor(
+				() =>
+					new Promise((resolve) => {
+						setTimeout(resolve, 0);
+					})
+			);
+			// root element is not shown but the short breadcrumb remains visible
+			expect(getByTextWithMarkup(shortBreadcrumbRegExp)).toBeVisible();
+			expect(screen.queryByText(crumbs[0].label)).not.toBeInTheDocument();
+		});
+	});
+});

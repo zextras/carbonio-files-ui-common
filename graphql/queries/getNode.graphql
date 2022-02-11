@@ -1,0 +1,56 @@
+# SPDX-FileCopyrightText: 2022 Zextras <https://www.zextras.com>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
+#import "../fragments/baseNode.graphql"
+#import "../fragments/child.graphql"
+#import "../fragments/permissions.graphql"
+
+query getNode($id: ID!, $childrenLimit: Int!, $cursor: String, $sort: NodeSort!, $sharesLimit: Int!, $sharesCursor: String, $shareSorts: [ShareSort!]) {
+	getNode(id: $id) {
+		...BaseNode
+		description
+		owner {
+			id
+			email
+			full_name
+		}
+		creator {
+			id
+			email
+			full_name
+		}
+		last_editor {
+			id
+			email
+			full_name
+		}
+		created_at
+		updated_at
+		parent {
+			id
+			name
+			...Permissions
+		}
+		shares(limit: $sharesLimit, cursor: $sharesCursor, sorts: $shareSorts) {
+			share_target {
+				... on User {
+					email
+					full_name
+					id
+				}
+				... on DistributionList {
+					id
+					name
+				}
+			}
+			created_at
+		}
+		... on Folder {
+			children(limit: $childrenLimit, cursor: $cursor, sort: $sort) {
+				...Child
+			}
+			cursor @client
+		}
+	}
+}

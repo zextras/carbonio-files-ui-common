@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2022 Zextras <https://www.zextras.com>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
+#import "../fragments/child.graphql"
+
+query getChild(
+	$id: ID!,
+	$sharesLimit: Int = 1
+) {
+	getNode(id: $id) {
+		...Child
+		shares(limit: $sharesLimit) {
+			created_at
+		}
+	}
+}
