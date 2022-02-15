@@ -57,12 +57,16 @@ describe('Node Details', () => {
 		// expect(screen.getByText(`/${node.name}`)).toBeVisible();
 		expect(screen.getByText(node.owner.full_name)).toBeVisible();
 		expect(
-			screen.getByText(`${formatDate(node.created_at)} - ${formatTime(node.created_at)}`)
+			screen.getByText(
+				`${formatDate(node.created_at, undefined, 'UTC')} - ${formatTime(node.created_at, 'UTC')}`
+			)
 		).toBeVisible();
 		expect(screen.getByText(node.last_editor.full_name)).toBeVisible();
 		expect(screen.getByText(node.last_editor.email)).toBeVisible();
 		expect(
-			screen.getByText(`${formatDate(node.updated_at)} - ${formatTime(node.updated_at)}`)
+			screen.getByText(
+				`${formatDate(node.updated_at, undefined, 'UTC')} - ${formatTime(node.updated_at, 'UTC')}`
+			)
 		).toBeVisible();
 		expect(screen.getByText(node.description)).toBeVisible();
 		expect(screen.getByText(humanFileSize(node.size))).toBeVisible();
@@ -99,12 +103,16 @@ describe('Node Details', () => {
 		expect(screen.getByText('Collaborators')).toBeVisible();
 		expect(screen.getAllByText(node.owner.full_name)).toHaveLength(children.length + 1);
 		expect(
-			screen.getByText(`${formatDate(node.created_at)} - ${formatTime(node.created_at)}`)
+			screen.getByText(
+				`${formatDate(node.created_at, undefined, 'UTC')} - ${formatTime(node.created_at, 'UTC')}`
+			)
 		).toBeVisible();
 		expect(screen.getByText(node.last_editor.full_name)).toBeVisible();
 		expect(screen.getByText(node.last_editor.email)).toBeVisible();
 		expect(
-			screen.getByText(`${formatDate(node.updated_at)} - ${formatTime(node.updated_at)}`)
+			screen.getByText(
+				`${formatDate(node.updated_at, undefined, 'UTC')} - ${formatTime(node.updated_at, 'UTC')}`
+			)
 		).toBeVisible();
 		expect(screen.getByText(node.description)).toBeVisible();
 		expect(screen.queryByText('Size')).not.toBeInTheDocument();
@@ -141,7 +149,9 @@ describe('Node Details', () => {
 		);
 		expect(screen.getByText(node.owner.full_name)).toBeVisible();
 		expect(
-			screen.getByText(`${formatDate(node.created_at)} - ${formatTime(node.created_at)}`)
+			screen.getByText(
+				`${formatDate(node.created_at, undefined, 'UTC')} - ${formatTime(node.created_at, 'UTC')}`
+			)
 		).toBeVisible();
 		expect(screen.queryByText('Last edit')).not.toBeInTheDocument();
 		expect(screen.getByText('Description')).toBeInTheDocument();

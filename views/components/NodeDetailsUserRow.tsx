@@ -9,6 +9,7 @@ import React from 'react';
 import { Padding, Row, Text, Tooltip } from '@zextras/carbonio-design-system';
 import styled from 'styled-components';
 
+import useUserInfo from '../../../hooks/useUserInfo';
 import { User } from '../../types/graphql/types';
 import { formatDate, formatTime } from '../../utils/utils';
 
@@ -53,41 +54,48 @@ export const NodeDetailsUserRow: React.VFC<NodeDetailsUserRowProps> = ({
 	tooltip,
 	dateTime,
 	clickAction
-}) => (
-	<Row
-		orientation="vertical"
-		crossAlignment="flex-start"
-		padding={{ vertical: 'small' }}
-		width="fill"
-	>
-		<Label>{label}</Label>
-		<Row mainAlignment="flex-start" wrap="nowrap" width="fill" crossAlignment="baseline">
-			<Row
-				mainAlignment="flex-start"
-				flexBasis={`${(user.full_name?.length || 0) + 10}ex`}
-				flexShrink={1}
-				flexGrow={1}
-				minWidth="0"
-			>
-				{user.full_name && (
-					<>
-						<MainText>{user.full_name || ''}</MainText>
-						<Padding horizontal="extrasmall">
-							<Text color="secondary">|</Text>
-						</Padding>
-					</>
+}) => {
+	const { zimbraPrefTimeZoneId } = useUserInfo();
+
+	return (
+		<Row
+			orientation="vertical"
+			crossAlignment="flex-start"
+			padding={{ vertical: 'small' }}
+			width="fill"
+		>
+			<Label>{label}</Label>
+			<Row mainAlignment="flex-start" wrap="nowrap" width="fill" crossAlignment="baseline">
+				<Row
+					mainAlignment="flex-start"
+					flexBasis={`${(user.full_name?.length || 0) + 10}ex`}
+					flexShrink={1}
+					flexGrow={1}
+					minWidth="0"
+				>
+					{user.full_name && (
+						<>
+							<MainText>{user.full_name || ''}</MainText>
+							<Padding horizontal="extrasmall">
+								<Text color="secondary">|</Text>
+							</Padding>
+						</>
+					)}
+					<Tooltip label={tooltip} placement="bottom-start">
+						<SecondaryText color="secondary" onClick={clickAction}>
+							{user.email || ''}
+						</SecondaryText>
+					</Tooltip>
+				</Row>
+				{dateTime && (
+					<DateText size="small">
+						{`${formatDate(dateTime, undefined, zimbraPrefTimeZoneId)} - ${formatTime(
+							dateTime,
+							zimbraPrefTimeZoneId
+						)}`}
+					</DateText>
 				)}
-				<Tooltip label={tooltip} placement="bottom-start">
-					<SecondaryText color="secondary" onClick={clickAction}>
-						{user.email || ''}
-					</SecondaryText>
-				</Tooltip>
 			</Row>
-			{dateTime && (
-				<DateText size="small">
-					{formatDate(dateTime)} - {formatTime(dateTime)}
-				</DateText>
-			)}
 		</Row>
-	</Row>
-);
+	);
+};

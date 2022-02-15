@@ -47,7 +47,7 @@ describe('Node List Item', () => {
 		expect(screen.getByTestId(`node-item-${node.id}`)).toBeVisible();
 		expect(screen.getByTestId(`node-item-${node.id}`)).not.toBeEmptyDOMElement();
 		expect(screen.getByText(node.name)).toBeVisible();
-		expect(screen.getByText(formatDate(node.updated_at))).toBeVisible();
+		expect(screen.getByText(formatDate(node.updated_at, undefined, 'UTC'))).toBeVisible();
 		expect(screen.queryByText(mockedUserLogged.full_name)).not.toBeInTheDocument();
 	});
 
