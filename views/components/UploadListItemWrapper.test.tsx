@@ -13,6 +13,7 @@ import { UseNavigationHook } from '../../../hooks/useNavigation';
 import { UseUploadHook } from '../../hooks/useUpload';
 import { populateFolder } from '../../mocks/mockUtils';
 import { UploadStatus, UploadType } from '../../types/common';
+import { GetBaseNodeQuery, GetBaseNodeQueryVariables } from '../../types/graphql/types';
 import { mockGetBaseNode } from '../../utils/mockUtils';
 import { buildBreadCrumbRegExp, render } from '../../utils/testUtils';
 import { humanFileSize } from '../../utils/utils';
@@ -53,7 +54,7 @@ describe('Upload List Item Wrapper', () => {
 		};
 		const mockSelectId = jest.fn();
 
-		const mocks = [mockGetBaseNode({ id: destinationFolder.id }, destinationFolder)];
+		const mocks = [mockGetBaseNode({ node_id: destinationFolder.id }, destinationFolder)];
 
 		const { findByTextWithMarkup } = render(
 			<UploadListItemWrapper
@@ -87,12 +88,14 @@ describe('Upload List Item Wrapper', () => {
 		const mockSelectId = jest.fn();
 
 		const mockedGetBaseNodeRequest = mockGetBaseNode(
-			{ id: destinationFolder.id },
+			{ node_id: destinationFolder.id },
 			destinationFolder
 		);
-		global.apolloClient.writeQuery({
+		global.apolloClient.writeQuery<GetBaseNodeQuery, GetBaseNodeQueryVariables>({
 			...mockedGetBaseNodeRequest.request,
-			...mockedGetBaseNodeRequest.result
+			data: {
+				getNode: destinationFolder
+			}
 		});
 
 		render(

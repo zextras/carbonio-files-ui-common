@@ -38,7 +38,7 @@ export function useKeepVersionsMutation(): KeepVersionsType {
 		(nodeId: string, versions: Array<number>, keepForever: boolean) => {
 			return keepVersionsMutation({
 				variables: {
-					id: nodeId,
+					node_id: nodeId,
 					versions,
 					keep_forever: keepForever
 				},
@@ -50,7 +50,8 @@ export function useKeepVersionsMutation(): KeepVersionsType {
 					if (data?.keepVersions) {
 						cache.modify({
 							fields: {
-								[`getVersions({"id":"${nodeId}"})`](existingVersions) {
+								// TODO: think about another strategy because this way is impossible to detect during refactors
+								[`getVersions({"node_id":"${nodeId}"})`](existingVersions) {
 									return map(existingVersions, (fileVersion: File) =>
 										includes(data.keepVersions, fileVersion.version)
 											? { ...fileVersion, keep_forever: keepForever }

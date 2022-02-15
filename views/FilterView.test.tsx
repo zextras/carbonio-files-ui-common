@@ -28,21 +28,31 @@ import handleFindNodesRequest from '../mocks/handleFindNodesRequest';
 import {
 	populateFolder,
 	populateNode,
+	populateNodePage,
 	populateNodes,
 	populateParents,
 	populateShare,
 	populateUser
 } from '../mocks/mockUtils';
-import { Folder, NodeSort } from '../types/graphql/types';
+import { Node } from '../types/common';
 import {
-	getFindNodesVariables,
-	getNodeVariables,
-	getSharesVariables,
-	mockDeleteShare,
-	mockFindNodes,
-	mockGetNode,
-	mockGetShares
-} from '../utils/mockUtils';
+	DeleteShareMutation,
+	DeleteShareMutationVariables,
+	File,
+	FindNodesQuery,
+	FindNodesQueryVariables,
+	Folder,
+	GetChildrenQuery,
+	GetChildrenQueryVariables,
+	GetNodeQuery,
+	GetNodeQueryVariables,
+	GetPathQuery,
+	GetPathQueryVariables,
+	GetSharesQuery,
+	GetSharesQueryVariables,
+	NodeSort
+} from '../types/graphql/types';
+import { getFindNodesVariables, getNodeVariables } from '../utils/mockUtils';
 import {
 	actionRegexp,
 	buildBreadCrumbRegExp,
@@ -58,7 +68,9 @@ let mockedCreateOptions: CreateOptionsContent['createOptions'];
 beforeEach(() => {
 	mockedCreateOptions = {};
 	mockedRequestHandler = jest.fn().mockImplementation(handleFindNodesRequest);
-	server.use(graphql.query('findNodes', mockedRequestHandler));
+	server.use(
+		graphql.query<FindNodesQuery, FindNodesQueryVariables>('findNodes', mockedRequestHandler)
+	);
 });
 
 jest.mock('../../hooks/useCreateOptions', () => ({
@@ -95,11 +107,11 @@ describe('Filter view', () => {
 			await screen.findByText(/view files and folders/i);
 			const expectedVariables = {
 				flagged: true,
-				folderId: ROOTS.LOCAL_ROOT,
+				folder_id: ROOTS.LOCAL_ROOT,
 				cascade: true,
 				sort: NodeSort.NameAsc,
 				limit: NODES_LOAD_LIMIT,
-				sharesLimit: 1
+				shares_limit: 1
 			};
 			expect(mockedRequestHandler).toHaveBeenCalledWith(
 				expect.objectContaining({
@@ -118,12 +130,12 @@ describe('Filter view', () => {
 			await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 			await screen.findByText(/view files and folders/i);
 			const expectedVariables = {
-				folderId: ROOTS.TRASH,
+				folder_id: ROOTS.TRASH,
 				cascade: false,
-				sharedWithMe: false,
+				shared_with_me: false,
 				sort: NodeSort.NameAsc,
 				limit: NODES_LOAD_LIMIT,
-				sharesLimit: 1
+				shares_limit: 1
 			};
 			expect(mockedRequestHandler).toHaveBeenCalledWith(
 				expect.objectContaining({
@@ -142,13 +154,13 @@ describe('Filter view', () => {
 			await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 			await screen.findByText(/view files and folders/i);
 			const expectedVariables = {
-				folderId: ROOTS.TRASH,
+				folder_id: ROOTS.TRASH,
 				cascade: true,
-				sharedWithMe: true,
+				shared_with_me: true,
 				sort: NodeSort.NameAsc,
 				limit: NODES_LOAD_LIMIT,
-				sharesLimit: 1,
-				directShare: true
+				shares_limit: 1,
+				direct_share: true
 			};
 			expect(mockedRequestHandler).toHaveBeenCalledWith(
 				expect.objectContaining({
@@ -167,13 +179,13 @@ describe('Filter view', () => {
 			await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 			await screen.findByText(/view files and folders/i);
 			const expectedVariables = {
-				folderId: ROOTS.LOCAL_ROOT,
+				folder_id: ROOTS.LOCAL_ROOT,
 				cascade: true,
-				sharedByMe: true,
+				shared_by_me: true,
 				sort: NodeSort.NameAsc,
 				limit: NODES_LOAD_LIMIT,
-				sharesLimit: 1,
-				directShare: true
+				shares_limit: 1,
+				direct_share: true
 			};
 			expect(mockedRequestHandler).toHaveBeenCalledWith(
 				expect.objectContaining({
@@ -192,13 +204,13 @@ describe('Filter view', () => {
 			await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 			await screen.findByText(/view files and folders/i);
 			const expectedVariables = {
-				folderId: ROOTS.LOCAL_ROOT,
+				folder_id: ROOTS.LOCAL_ROOT,
 				cascade: true,
-				sharedWithMe: true,
+				shared_with_me: true,
 				sort: NodeSort.NameAsc,
 				limit: NODES_LOAD_LIMIT,
-				sharesLimit: 1,
-				directShare: true
+				shares_limit: 1,
+				direct_share: true
 			};
 			expect(mockedRequestHandler).toHaveBeenCalledWith(
 				expect.objectContaining({
@@ -225,18 +237,14 @@ describe('Filter view', () => {
 		test('Single click on a node opens the details tab on displayer', async () => {
 			const nodes = populateNodes(10);
 			const node = nodes[0];
-			const mockedFindNodesQuery = mockFindNodes(
-				getFindNodesVariables({ flagged: true, folderId: ROOTS.LOCAL_ROOT, cascade: true }),
-				nodes
-			);
 			server.use(
-				graphql.query('findNodes', (req, res, ctx) =>
-					res(ctx.data(mockedFindNodesQuery.result.data))
+				graphql.query<FindNodesQuery, FindNodesQueryVariables>('findNodes', (req, res, ctx) =>
+					res(ctx.data({ findNodes: populateNodePage(nodes) }))
 				),
-				graphql.query('getNode', (req, res, ctx) => {
-					const { id } = req.variables;
+				graphql.query<GetNodeQuery, GetNodeQueryVariables>('getNode', (req, res, ctx) => {
+					const { node_id: id } = req.variables;
 					const result = id === node.id ? node : null;
-					return res(ctx.data({ getNode: result }));
+					return res(ctx.data({ getNode: result as Node }));
 				})
 			);
 			const { getByTextWithMarkup } = render(
@@ -282,17 +290,13 @@ describe('Filter view', () => {
 			const path = [...parentPath, node];
 			const pathUpdated = [...parentPath, destinationFolder, node];
 			const pathResponse = [path, pathUpdated];
-			const mockedFindNodesQuery = mockFindNodes(
-				getFindNodesVariables({ flagged: true, folderId: ROOTS.LOCAL_ROOT, cascade: true }),
-				nodes
-			);
 			server.use(
-				graphql.query('findNodes', (req, res, ctx) =>
-					res(ctx.data(mockedFindNodesQuery.result.data))
+				graphql.query<FindNodesQuery, FindNodesQueryVariables>('findNodes', (req, res, ctx) =>
+					res(ctx.data({ findNodes: populateNodePage(nodes) }))
 				),
-				graphql.query('getNode', (req, res, ctx) => {
+				graphql.query<GetNodeQuery, GetNodeQueryVariables>('getNode', (req, res, ctx) => {
 					let result = null;
-					const { id } = req.variables;
+					const { node_id: id } = req.variables;
 					switch (id) {
 						case node.id:
 							result = node;
@@ -306,11 +310,11 @@ describe('Filter view', () => {
 						default:
 							break;
 					}
-					return res(ctx.data({ getNode: result }));
+					return res(ctx.data({ getNode: result as Node }));
 				}),
-				graphql.query('getPath', (req, res, ctx) => {
+				graphql.query<GetPathQuery, GetPathQueryVariables>('getPath', (req, res, ctx) => {
 					let result = null;
-					const { id } = req.variables;
+					const { node_id: id } = req.variables;
 					switch (id) {
 						case node.id:
 							result = pathResponse.shift() || [];
@@ -326,7 +330,9 @@ describe('Filter view', () => {
 					}
 					return res(ctx.data({ getPath: result || [] }));
 				}),
-				graphql.query('getChildren', (req, res, ctx) => res(ctx.data({ getNode: node.parent })))
+				graphql.query<GetChildrenQuery, GetChildrenQueryVariables>('getChildren', (req, res, ctx) =>
+					res(ctx.data({ getNode: node.parent }))
+				)
 			);
 
 			const { getByTextWithMarkup, queryByTextWithMarkup, findByTextWithMarkup } = render(
@@ -392,24 +398,23 @@ describe('Filter view', () => {
 			// wait the content to be rendered
 			await screen.findAllByTestId('node-item', { exact: false });
 			await screen.findByText(/view files and folders/i);
-			const {
-				findNodes: { nodes }
-			} = global.apolloClient.readQuery({
+			const queryResult = global.apolloClient.readQuery<FindNodesQuery, FindNodesQueryVariables>({
 				query: FIND_NODES,
 				variables: getFindNodesVariables({
-					sharedWithMe: false,
-					folderId: ROOTS.TRASH,
+					shared_with_me: false,
+					folder_id: ROOTS.TRASH,
 					cascade: false
 				})
 			});
-			expect(nodes).not.toBeNull();
+			expect(queryResult?.findNodes?.nodes || null).not.toBeNull();
+			const nodes = queryResult?.findNodes?.nodes as Node[];
 			expect(nodes.length).toBeGreaterThan(0);
 			const cachedNode = nodes[0];
 			const node = populateNode(cachedNode.__typename, cachedNode.id, cachedNode.name);
 			node.rootId = ROOTS.TRASH;
 			node.permissions.can_write_file = true;
 			node.permissions.can_write_folder = true;
-			global.apolloClient.writeQuery({
+			global.apolloClient.writeQuery<GetNodeQuery, GetNodeQueryVariables>({
 				query: GET_NODE,
 				variables: getNodeVariables(node.id),
 				data: {
@@ -456,17 +461,16 @@ describe('Filter view', () => {
 			// wait the content to be rendered
 			await screen.findAllByTestId('node-item', { exact: false });
 			await screen.findByText(/view files and folders/i);
-			const {
-				findNodes: { nodes }
-			} = global.apolloClient.readQuery({
+			const queryResult = global.apolloClient.readQuery<FindNodesQuery, FindNodesQueryVariables>({
 				query: FIND_NODES,
 				variables: getFindNodesVariables({
-					sharedWithMe: false,
-					folderId: ROOTS.TRASH,
+					shared_with_me: false,
+					folder_id: ROOTS.TRASH,
 					cascade: false
 				})
 			});
-			expect(nodes).not.toBeNull();
+			expect(queryResult?.findNodes?.nodes || null).not.toBeNull();
+			const nodes = queryResult?.findNodes?.nodes as Node[];
 			expect(nodes.length).toBeGreaterThan(0);
 			const cachedNode = nodes[0];
 			const node = populateNode(cachedNode.__typename, cachedNode.id, cachedNode.name);
@@ -474,7 +478,7 @@ describe('Filter view', () => {
 			node.permissions.can_write_file = true;
 			node.permissions.can_write_folder = true;
 			node.permissions.can_delete = true;
-			global.apolloClient.writeQuery({
+			global.apolloClient.writeQuery<GetNodeQuery, GetNodeQueryVariables>({
 				query: GET_NODE,
 				variables: getNodeVariables(node.id),
 				data: {
@@ -541,17 +545,16 @@ describe('Filter view', () => {
 			expect(screen.queryByText(actionRegexp.download)).not.toBeInTheDocument();
 			expect(screen.queryByText(actionRegexp.copy)).not.toBeInTheDocument();
 
-			const {
-				findNodes: { nodes }
-			} = global.apolloClient.readQuery({
+			const queryResult = global.apolloClient.readQuery<FindNodesQuery, FindNodesQueryVariables>({
 				query: FIND_NODES,
 				variables: getFindNodesVariables({
-					sharedWithMe: false,
-					folderId: ROOTS.TRASH,
+					shared_with_me: false,
+					folder_id: ROOTS.TRASH,
 					cascade: false
 				})
 			});
-
+			expect(queryResult?.findNodes?.nodes || null).not.toBeNull();
+			const nodes = queryResult?.findNodes?.nodes as Node[];
 			// selection mode
 			selectNodes([nodes[0].id]);
 			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
@@ -586,7 +589,7 @@ describe('Filter view', () => {
 			node.permissions.can_write_file = true;
 			node.permissions.can_delete = true;
 			node.rootId = ROOTS.TRASH;
-			global.apolloClient.writeQuery({
+			global.apolloClient.writeQuery<GetNodeQuery, GetNodeQueryVariables>({
 				query: GET_NODE,
 				variables: getNodeVariables(node.id),
 				data: {
@@ -623,25 +626,20 @@ describe('Filter view', () => {
 			);
 			node.shares = [populateShare({ ...node, shares: [] }, 'share-to-remove', mockedUserLogged)];
 
-			// variables are not important, just the result matters
-			const mockedFindNodesQuery = mockFindNodes(getFindNodesVariables({}), currentFilter);
-			const mockedGetNodeQuery = mockGetNode(getNodeVariables(node.id), node);
-			const mockedGetSharesQuery = mockGetShares(getSharesVariables(node.id), node);
-			const mockedDeleteShareMutation = mockDeleteShare(
-				{ shareTargetId: mockedUserLogged.id, nodeId: node.id },
-				true
-			);
 			// override handlers to return wanted data
 			server.use(
-				graphql.query('findNodes', (req, res, ctx) =>
-					res(ctx.data(mockedFindNodesQuery.result.data))
+				graphql.query<FindNodesQuery, FindNodesQueryVariables>('findNodes', (req, res, ctx) =>
+					res(ctx.data({ findNodes: populateNodePage(currentFilter) }))
 				),
-				graphql.query('getNode', (req, res, ctx) => res(ctx.data(mockedGetNodeQuery.result.data))),
-				graphql.query('getShares', (req, res, ctx) =>
-					res(ctx.data(mockedGetSharesQuery.result.data))
+				graphql.query<GetNodeQuery, GetNodeQueryVariables>('getNode', (req, res, ctx) =>
+					res(ctx.data({ getNode: node as File | Folder }))
 				),
-				graphql.mutation('deleteShare', (req, res, ctx) =>
-					res(ctx.data(mockedDeleteShareMutation.result.data))
+				graphql.query<GetSharesQuery, GetSharesQueryVariables>('getShares', (req, res, ctx) =>
+					res(ctx.data({ getNode: node }))
+				),
+				graphql.mutation<DeleteShareMutation, DeleteShareMutationVariables>(
+					'deleteShare',
+					(req, res, ctx) => res(ctx.data({ deleteShare: true }))
 				)
 			);
 

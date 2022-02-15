@@ -14,6 +14,7 @@ import UPDATE_NODE from '../../../graphql/mutations/updateNode.graphql';
 import GET_CHILDREN from '../../../graphql/queries/getChildren.graphql';
 import {
 	GetChildrenQuery,
+	GetChildrenQueryVariables,
 	UpdateNodeMutation,
 	UpdateNodeMutationVariables
 } from '../../../types/graphql/types';
@@ -49,7 +50,7 @@ export function useUpdateNodeMutation(): [
 		(id: string, name: string) =>
 			updateNodeMutation({
 				variables: {
-					id,
+					node_id: id,
 					name
 				},
 				// after the mutation returns a response
@@ -60,12 +61,12 @@ export function useUpdateNodeMutation(): [
 						// if updated node has a parent, check if parent has children in cache
 						// and update node position in parent cached children
 						if (updatedNode.parent) {
-							const parentFolder = cache.readQuery<GetChildrenQuery>({
+							const parentFolder = cache.readQuery<GetChildrenQuery, GetChildrenQueryVariables>({
 								query: GET_CHILDREN,
 								variables: {
-									id: updatedNode.parent.id,
+									node_id: updatedNode.parent.id,
 									// load all cached children
-									childrenLimit: Number.MAX_SAFE_INTEGER,
+									children_limit: Number.MAX_SAFE_INTEGER,
 									sort: nodeSort
 								}
 							});

@@ -18,8 +18,16 @@ const handleFindNodesRequest: ResponseResolver<
 	GraphQLContext<FindNodesQuery>,
 	FindNodesQuery
 > = (req, res, ctx) => {
-	const { keywords, flagged, sharedWithMe, sharedByMe, limit, sort, folderId, sharesLimit } =
-		req.variables;
+	const {
+		keywords,
+		flagged,
+		shared_with_me: sharedWithMe,
+		shared_by_me: sharedByMe,
+		limit,
+		sort,
+		folder_id: folderId,
+		shares_limit: sharesLimit
+	} = req.variables;
 
 	const nodes = [];
 

@@ -44,8 +44,8 @@ export function useUpdateShareMutation(): [
 		(node: PickIdNodeType, shareTargetId: string, permission: SharePermission) => {
 			return updateShareMutation({
 				variables: {
-					nodeId: node.id,
-					shareTargetId,
+					node_id: node.id,
+					share_target_id: shareTargetId,
 					permission
 				},
 				update(cache) {
@@ -58,6 +58,7 @@ export function useUpdateShareMutation(): [
 									(accumulator: Share[], existingShareRef: Share) => {
 										const sharedTarget: User | DistributionList | null | undefined =
 											existingShareRef.share_target &&
+											// TODO: move fragment to graphql file and add type
 											cache.readFragment({
 												id: cache.identify(existingShareRef.share_target),
 												fragment: gql`

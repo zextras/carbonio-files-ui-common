@@ -16,7 +16,15 @@ import { uploadVar } from '../../apollo/uploadVar';
 import { ROOTS } from '../../constants';
 import { populateFolder, populateNodes } from '../../mocks/mockUtils';
 import { UploadStatus, UploadType } from '../../types/common';
-import { File as FilesFile } from '../../types/graphql/types';
+import {
+	File as FilesFile,
+	Folder,
+	GetChildQuery,
+	GetChildQueryVariables,
+	GetChildrenQuery,
+	GetChildrenQueryVariables,
+	Maybe
+} from '../../types/graphql/types';
 import { getChildrenVariables, mockGetBaseNode, mockGetChildren } from '../../utils/mockUtils';
 import { render } from '../../utils/testUtils';
 import { UploadList } from './UploadList';
@@ -36,14 +44,16 @@ describe('Upload list', () => {
 
 			// write local root data in cache as if it was already loaded
 			const getChildrenMockedQuery = mockGetChildren(getChildrenVariables(localRoot.id), localRoot);
-			global.apolloClient.cache.writeQuery({
+			global.apolloClient.cache.writeQuery<GetChildrenQuery, GetChildrenQueryVariables>({
 				...getChildrenMockedQuery.request,
-				...getChildrenMockedQuery.result
+				data: {
+					getNode: localRoot
+				}
 			});
 
 			server.use(
-				graphql.query('getChild', (req, res, ctx) => {
-					const { id } = req.variables;
+				graphql.query<GetChildQuery, GetChildQueryVariables>('getChild', (req, res, ctx) => {
+					const { node_id: id } = req.variables;
 					const result = (reqIndex < uploadedFiles.length && uploadedFiles[reqIndex]) || null;
 					if (result) {
 						result.id = id;
@@ -58,7 +68,7 @@ describe('Upload list', () => {
 				files
 			};
 
-			const mocks = [mockGetBaseNode({ id: localRoot.id }, localRoot)];
+			const mocks = [mockGetBaseNode({ node_id: localRoot.id }, localRoot)];
 
 			render(<UploadList />, { mocks });
 
@@ -87,8 +97,13 @@ describe('Upload list', () => {
 			expect(screen.queryByText(/Drop here your attachments/gm)).not.toBeInTheDocument();
 
 			await waitFor(() => {
-				const localRootCachedData = global.apolloClient.readQuery(getChildrenMockedQuery.request);
-				return expect(localRootCachedData.getNode.children).toHaveLength(uploadedFiles.length);
+				const localRootCachedData = global.apolloClient.readQuery<
+					GetChildrenQuery,
+					GetChildrenQueryVariables
+				>(getChildrenMockedQuery.request);
+				return expect(
+					(localRootCachedData?.getNode as Maybe<Folder> | undefined)?.children || []
+				).toHaveLength(uploadedFiles.length);
 			});
 		});
 
@@ -130,7 +145,7 @@ describe('Upload list', () => {
 				})
 			});
 
-			const mocks = [mockGetBaseNode({ id: localRoot.id }, localRoot)];
+			const mocks = [mockGetBaseNode({ node_id: localRoot.id }, localRoot)];
 
 			render(<UploadList />, { mocks });
 

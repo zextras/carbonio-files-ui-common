@@ -14,7 +14,7 @@ const handleGetPermissionsRequest: ResponseResolver<
 	GraphQLContext<GetPermissionsQuery>,
 	GetPermissionsQuery
 > = (req, res, ctx) => {
-	const { id } = req.variables;
+	const { node_id: id } = req.variables;
 	const permissions = populatePermissions();
 	return res(
 		ctx.data({

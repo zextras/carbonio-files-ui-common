@@ -16,7 +16,7 @@ const handleGetNodeLinksRequest: ResponseResolver<
 	GraphQLContext<GetNodeLinksQuery>,
 	GetNodeLinksQuery
 > = (req, res, ctx) => {
-	const { nodeId: id } = req.variables;
+	const { node_id: id } = req.variables;
 
 	let nodeName = faker.random.words();
 	if (id.trim() === ROOTS.LOCAL_ROOT) {

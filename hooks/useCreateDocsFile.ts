@@ -14,7 +14,14 @@ import { DOCS_ENDPOINT, DOCS_PATH, NODES_LOAD_LIMIT, SHARES_LOAD_LIMIT } from '.
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import GET_NODE from '../graphql/queries/getNode.graphql';
 import { CreateDocsFile, DocsType } from '../types/common';
-import { Folder, GetChildrenQuery, GetNodeQuery, NodeSort } from '../types/graphql/types';
+import {
+	Folder,
+	GetChildrenQuery,
+	GetChildrenQueryVariables,
+	GetNodeQuery,
+	GetNodeQueryVariables,
+	NodeSort
+} from '../types/graphql/types';
 import { scrollToNodeItem } from '../utils/utils';
 import { UpdateFolderContentType, useUpdateFolderContent } from './graphql/useUpdateFolderContent';
 
@@ -44,23 +51,26 @@ const createFileCompleted = (
 			const { nodeId } = response;
 
 			return apolloClient
-				.query<GetNodeQuery>({
+				.query<GetNodeQuery, GetNodeQueryVariables>({
 					query: GET_NODE,
 					variables: {
-						id: nodeId,
-						childrenLimit: NODES_LOAD_LIMIT,
-						sharesLimit: SHARES_LOAD_LIMIT,
+						node_id: nodeId,
+						children_limit: NODES_LOAD_LIMIT,
+						shares_limit: SHARES_LOAD_LIMIT,
 						sort: nodeSort
 					}
 				})
 				.then((result) => {
 					if (result.data.getNode?.parent) {
-						const parentFolder = apolloClient.cache.readQuery<GetChildrenQuery>({
+						const parentFolder = apolloClient.cache.readQuery<
+							GetChildrenQuery,
+							GetChildrenQueryVariables
+						>({
 							query: GET_CHILDREN,
 							variables: {
-								id: result.data.getNode.parent.id,
+								node_id: result.data.getNode.parent.id,
 								// load all cached children
-								childrenLimit: Number.MAX_SAFE_INTEGER,
+								children_limit: Number.MAX_SAFE_INTEGER,
 								sort: nodeSort
 							}
 						});

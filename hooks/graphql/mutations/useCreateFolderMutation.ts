@@ -41,7 +41,7 @@ export function useCreateFolderMutation(): [
 		(parentFolder: Pick<Folder, '__typename' | 'id' | 'children'>, name: string) => {
 			return createFolderMutation({
 				variables: {
-					parentId: parentFolder.id,
+					destination_id: parentFolder.id,
 					name
 				},
 				// after the mutation returns a response, check if next neighbor is already loaded.

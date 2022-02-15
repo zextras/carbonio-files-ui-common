@@ -4,8 +4,8 @@
 
 #import "../fragments/permissions.graphql"
 
-query getPermissions($id: ID!) {
-    getNode(id: $id) {
+query getPermissions($node_id: ID!) {
+    getNode(node_id: $node_id) {
         id
         ...Permissions
     }

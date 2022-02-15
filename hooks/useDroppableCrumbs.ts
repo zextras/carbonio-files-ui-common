@@ -119,6 +119,7 @@ export function useDroppableCrumbs(
 			if (node) {
 				destinationNode = { ...node };
 				if (node.type === NodeType.Folder) {
+					// TODO: move fragment to graphql file and add type
 					const owner = apolloClient.readFragment({
 						fragment: NODE_OWNER,
 						id: apolloClient.cache.identify(node)

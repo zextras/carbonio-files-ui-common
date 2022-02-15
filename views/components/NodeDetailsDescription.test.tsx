@@ -238,7 +238,7 @@ describe('NodeDetailsDescription component', () => {
 		const mocks = [
 			mockUpdateNodeDescription(
 				{
-					id: node.id,
+					node_id: node.id,
 					description: newDescription
 				},
 				{

@@ -23,7 +23,12 @@ import { searchParamsVar } from '../../apollo/searchVar';
 import { NODES_LOAD_LIMIT, ROOTS } from '../../constants';
 import { populateFolder, populateNodes } from '../../mocks/mockUtils';
 import { AdvancedFilters } from '../../types/common';
-import { File as FilesFile } from '../../types/graphql/types';
+import {
+	File as FilesFile,
+	GetChildQuery,
+	GetChildrenQuery,
+	GetChildrenQueryVariables
+} from '../../types/graphql/types';
 import {
 	getChildrenVariables,
 	getFindNodesVariables,
@@ -54,14 +59,16 @@ describe('Search list', () => {
 
 			// write local root data in cache as if it was already loaded
 			const getChildrenMockedQuery = mockGetChildren(getChildrenVariables(localRoot.id), localRoot);
-			global.apolloClient.cache.writeQuery({
+			global.apolloClient.cache.writeQuery<GetChildrenQuery, GetChildrenQueryVariables>({
 				...getChildrenMockedQuery.request,
-				...getChildrenMockedQuery.result
+				data: {
+					getNode: localRoot
+				}
 			});
 
 			server.use(
-				graphql.query('getChild', (req, res, ctx) => {
-					const { id } = req.variables;
+				graphql.query<GetChildQuery, GetChildrenQueryVariables>('getChild', (req, res, ctx) => {
+					const { node_id: id } = req.variables;
 					const result = (reqIndex < uploadedFiles.length && uploadedFiles[reqIndex]) || null;
 					if (result) {
 						result.id = id;
@@ -108,8 +115,11 @@ describe('Search list', () => {
 			expect(screen.queryByText(/Drop here your attachments/gm)).not.toBeInTheDocument();
 
 			await waitFor(() => {
-				const localRootCachedData = global.apolloClient.readQuery(getChildrenMockedQuery.request);
-				return expect(localRootCachedData.getNode.children).toHaveLength(uploadedFiles.length);
+				const localRootCachedData = global.apolloClient.readQuery<
+					GetChildrenQuery,
+					GetChildrenQueryVariables
+				>(getChildrenMockedQuery.request);
+				return expect(localRootCachedData?.getNode || null).not.toBeNull();
 			});
 		});
 
@@ -140,7 +150,7 @@ describe('Search list', () => {
 				mockFindNodes(getFindNodesVariables({ keywords }), currentSearch),
 				mockMoveNodes(
 					{
-						nodes_ids: map(nodesToDrag, (node) => node.id),
+						node_ids: map(nodesToDrag, (node) => node.id),
 						destination_id: destinationFolder.id
 					},
 					map(nodesToDrag, (node) => ({ ...node, parent: destinationFolder }))
@@ -149,10 +159,8 @@ describe('Search list', () => {
 
 			let dataTransferData: Record<string, string> = {};
 			let dataTransferTypes: string[] = [];
-			// TODO: put correct type
-			const dataTransfer = (): unknown => ({
+			const dataTransfer = (): Partial<DataTransfer> => ({
 				setDragImage: jest.fn(),
-				items: dataTransferData,
 				setData: jest.fn().mockImplementation((type: string, data: string) => {
 					dataTransferData[type] = data;
 					dataTransferTypes.includes(type) || dataTransferTypes.push(type);
@@ -240,10 +248,8 @@ describe('Search list', () => {
 
 			let dataTransferData: Record<string, string> = {};
 			let dataTransferTypes: string[] = [];
-			// TODO: put correct type
-			const dataTransfer = (): unknown => ({
+			const dataTransfer = (): Partial<DataTransfer> => ({
 				setDragImage: jest.fn(),
-				items: dataTransferData,
 				setData: jest.fn().mockImplementation((type: string, data: string) => {
 					dataTransferData[type] = data;
 					dataTransferTypes.includes(type) || dataTransferTypes.push(type);
@@ -332,7 +338,7 @@ describe('Search list', () => {
 				mockFindNodes(getFindNodesVariables({ keywords }), currentFilter),
 				mockMoveNodes(
 					{
-						nodes_ids: map(nodesToDrag, (node) => node.id),
+						node_ids: map(nodesToDrag, (node) => node.id),
 						destination_id: destinationFolder.id
 					},
 					map(nodesToDrag, (node) => ({ ...node, parent: destinationFolder }))
@@ -341,10 +347,8 @@ describe('Search list', () => {
 
 			let dataTransferData: Record<string, string> = {};
 			let dataTransferTypes: string[] = [];
-			// TODO: put correct type
-			const dataTransfer = (): unknown => ({
+			const dataTransfer = (): Partial<DataTransfer> => ({
 				setDragImage: jest.fn(),
-				items: dataTransferData,
 				setData: jest.fn().mockImplementation((type: string, data: string) => {
 					dataTransferData[type] = data;
 					dataTransferTypes.includes(type) || dataTransferTypes.push(type);
@@ -411,7 +415,7 @@ describe('Search list', () => {
 
 				const mocks = [
 					mockFindNodes(
-						getFindNodesVariables({ keywords, folderId: ROOTS.LOCAL_ROOT }),
+						getFindNodesVariables({ keywords, folder_id: ROOTS.LOCAL_ROOT }),
 						currentFilter
 					),
 					mockTrashNodes(
@@ -421,7 +425,7 @@ describe('Search list', () => {
 						nodesIdsToMFD
 					),
 					mockFindNodes(
-						getFindNodesVariables({ keywords, folderId: ROOTS.LOCAL_ROOT }),
+						getFindNodesVariables({ keywords, folder_id: ROOTS.LOCAL_ROOT }),
 						currentFilter.slice(1)
 					)
 				];
@@ -517,7 +521,7 @@ describe('Search list', () => {
 					mockFindNodes(
 						getFindNodesVariables({
 							keywords,
-							folderId: ROOTS.TRASH,
+							folder_id: ROOTS.TRASH,
 							cascade: false
 						}),
 						currentFilter
@@ -531,7 +535,7 @@ describe('Search list', () => {
 					mockFindNodes(
 						getFindNodesVariables({
 							keywords,
-							folderId: ROOTS.TRASH,
+							folder_id: ROOTS.TRASH,
 							cascade: false
 						}),
 						currentFilter.slice(1)
@@ -704,7 +708,7 @@ describe('Search list', () => {
 					),
 					mockDeletePermanently(
 						{
-							nodes_ids: nodesIdsToDeletePermanently
+							node_ids: nodesIdsToDeletePermanently
 						},
 						nodesIdsToDeletePermanently
 					),
@@ -893,12 +897,12 @@ describe('Search list', () => {
 
 			const mocks = [
 				mockFindNodes(
-					getFindNodesVariables({ keywords, folderId: ROOTS.LOCAL_ROOT, cascade: true }),
+					getFindNodesVariables({ keywords, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
 					firstPage
 				),
 				mockTrashNodes({ node_ids: nodesToTrash }, nodesToTrash),
 				mockFindNodes(
-					getFindNodesVariables({ keywords, folderId: ROOTS.LOCAL_ROOT, cascade: true }),
+					getFindNodesVariables({ keywords, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
 					secondPage
 				)
 			];
@@ -955,12 +959,12 @@ describe('Search list', () => {
 
 			const mocks = [
 				mockFindNodes(
-					getFindNodesVariables({ keywords, folderId: ROOTS.TRASH, cascade: false }),
+					getFindNodesVariables({ keywords, folder_id: ROOTS.TRASH, cascade: false }),
 					firstPage
 				),
 				mockRestoreNodes({ node_ids: nodesToRestore }, firstPage),
 				mockFindNodes(
-					getFindNodesVariables({ keywords, folderId: ROOTS.TRASH, cascade: false }),
+					getFindNodesVariables({ keywords, folder_id: ROOTS.TRASH, cascade: false }),
 					secondPage
 				)
 			];
@@ -1021,12 +1025,12 @@ describe('Search list', () => {
 
 			const mocks = [
 				mockFindNodes(
-					getFindNodesVariables({ keywords, folderId: ROOTS.TRASH, cascade: false }),
+					getFindNodesVariables({ keywords, folder_id: ROOTS.TRASH, cascade: false }),
 					firstPage
 				),
-				mockDeletePermanently({ nodes_ids: nodesToDelete }, nodesToDelete),
+				mockDeletePermanently({ node_ids: nodesToDelete }, nodesToDelete),
 				mockFindNodes(
-					getFindNodesVariables({ keywords, folderId: ROOTS.TRASH, cascade: false }),
+					getFindNodesVariables({ keywords, folder_id: ROOTS.TRASH, cascade: false }),
 					secondPage
 				)
 			];
@@ -1087,7 +1091,7 @@ describe('Search list', () => {
 
 			const mocks = [
 				mockFindNodes(getFindNodesVariables({ keywords, flagged: true }), firstPage),
-				mockFlagNodes({ nodes_ids: nodesToUnflag, flag: false }, nodesToUnflag),
+				mockFlagNodes({ node_ids: nodesToUnflag, flag: false }, nodesToUnflag),
 				mockFindNodes(getFindNodesVariables({ keywords, flagged: true }), secondPage)
 			];
 

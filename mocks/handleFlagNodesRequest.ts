@@ -13,7 +13,7 @@ const handleFlagNodesRequest: ResponseResolver<
 	GraphQLContext<FlagNodesMutation>,
 	FlagNodesMutation
 > = (req, res, ctx) => {
-	const { nodes_ids: ids } = req.variables;
+	const { node_ids: ids } = req.variables;
 	return res(
 		ctx.data({
 			flagNodes: (ids as string[]) || []

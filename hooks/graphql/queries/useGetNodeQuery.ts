@@ -41,10 +41,10 @@ export function useGetNodeQuery(
 		GET_NODE,
 		{
 			variables: {
-				id: nodeId || '',
-				childrenLimit: NODES_LOAD_LIMIT,
+				node_id: nodeId || '',
+				children_limit: NODES_LOAD_LIMIT,
 				sort: nodeSort,
-				sharesLimit
+				shares_limit: sharesLimit
 			},
 			skip: !nodeId,
 			fetchPolicy,

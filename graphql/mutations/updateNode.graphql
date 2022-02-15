@@ -4,8 +4,8 @@
 
 #import "../fragments/child.graphql"
 
-mutation updateNode($id: String!, $name: String, $description: String) {
-	updateNode(id: $id, name: $name, description: $description) {
+mutation updateNode($node_id: String!, $name: String, $description: String) {
+	updateNode(node_id: $node_id, name: $name, description: $description) {
 		...Child
 	}
 }

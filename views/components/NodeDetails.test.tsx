@@ -20,6 +20,7 @@ import {
 	populateShares,
 	populateUser
 } from '../../mocks/mockUtils';
+import { QueryGetPathArgs } from '../../types/graphql/types';
 import { canUpsertDescription } from '../../utils/ActionsFactory';
 import { mockGetPath } from '../../utils/mockUtils';
 import { buildBreadCrumbRegExp, render } from '../../utils/testUtils';
@@ -157,7 +158,10 @@ describe('Node Details', () => {
 
 		const path2 = [...newPath, { ...node, parent: newParent }];
 
-		const mocks = [mockGetPath({ id: node.id }, path), mockGetPath({ id: node.id }, path2)];
+		const mocks = [
+			mockGetPath({ node_id: node.id }, path),
+			mockGetPath({ node_id: node.id }, path2)
+		];
 
 		const loadMore = jest.fn();
 		const { getByTextWithMarkup, queryByTextWithMarkup, findByTextWithMarkup } = render(
@@ -195,9 +199,10 @@ describe('Node Details', () => {
 			getByTextWithMarkup(buildBreadCrumbRegExp(...map(path, (parent) => parent.name)))
 		).toBeVisible();
 		expect(showPathButton).not.toBeInTheDocument();
+		const getPathArgs: QueryGetPathArgs = { node_id: node.id };
 		global.apolloClient.cache.evict({
 			fieldName: 'getPath',
-			args: { id: node.id }
+			args: getPathArgs
 		});
 		const newBreadcrumb = buildBreadCrumbRegExp(...map(path2, (parent) => parent.name));
 		await findByTextWithMarkup(newBreadcrumb);

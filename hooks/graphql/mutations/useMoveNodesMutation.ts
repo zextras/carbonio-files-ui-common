@@ -20,7 +20,8 @@ import {
 	Folder,
 	MoveNodesMutation,
 	MoveNodesMutationVariables,
-	Node
+	Node,
+	QueryGetPathArgs
 } from '../../../types/graphql/types';
 import { useCreateSnackbar } from '../../useCreateSnackbar';
 import { useErrorHandler } from '../../useErrorHandler';
@@ -80,7 +81,7 @@ export function useMoveNodesMutation(): MoveNodesType {
 
 			return moveNodesMutation({
 				variables: {
-					nodes_ids: nodesIds,
+					node_ids: nodesIds,
 					destination_id: destinationFolder.id
 				},
 				update(cache, { data: result }) {
@@ -108,9 +109,10 @@ export function useMoveNodesMutation(): MoveNodesType {
 								nodesByParent[fromParent.id] = [movedNode.id];
 							}
 						}
+						const getPathArgs: QueryGetPathArgs = { node_id: movedNode.id };
 						cache.evict({
 							fieldName: 'getPath',
-							args: { id: movedNode.id }
+							args: getPathArgs
 						});
 					});
 

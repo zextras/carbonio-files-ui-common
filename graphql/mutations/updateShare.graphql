@@ -2,8 +2,8 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-only
 
-mutation updateShare($nodeId: ID!, $shareTargetId: ID!, $permission: SharePermission!) {
-	updateShare(node_id: $nodeId, share_target_id: $shareTargetId, permission: $permission) {
+mutation updateShare($node_id: ID!, $share_target_id: ID!, $permission: SharePermission!) {
+	updateShare(node_id: $node_id, share_target_id: $share_target_id, permission: $permission) {
 		permission
 		share_target {
 			... on User {

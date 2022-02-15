@@ -5,6 +5,7 @@
  */
 
 import { ApolloError, ServerError } from '@apollo/client';
+import { MockedResponse } from '@apollo/client/testing';
 import { DocumentNode } from 'graphql';
 
 import {
@@ -52,7 +53,6 @@ import {
 	GetPathQueryVariables,
 	GetSharesQueryVariables,
 	MoveNodesMutationVariables,
-	Mutation,
 	Node,
 	Query as QueryType,
 	TrashNodesMutationVariables,
@@ -71,7 +71,33 @@ import {
 	Maybe,
 	Scalars,
 	KeepVersionsMutationVariables,
-	CloneVersionMutationVariables
+	CloneVersionMutationVariables,
+	FindNodesQuery,
+	TrashNodesMutation,
+	RestoreNodesMutation,
+	DeleteNodesMutation,
+	UpdateNodeMutation,
+	UpdateNodeDescriptionMutation,
+	FlagNodesMutation,
+	GetChildrenQuery,
+	MoveNodesMutation,
+	CopyNodesMutation,
+	CreateFolderMutation,
+	GetParentQuery,
+	GetPathQuery,
+	GetNodeQuery,
+	Folder,
+	GetSharesQuery,
+	GetBaseNodeQuery,
+	DeleteShareMutation,
+	CreateShareMutation,
+	UpdateShareMutation,
+	GetAccountByEmailQuery,
+	GetNodeLinksQuery,
+	GetVersionsQuery,
+	DeleteVersionsMutation,
+	KeepVersionsMutation,
+	CloneVersionMutation
 } from '../types/graphql/types';
 
 type Id = string;
@@ -101,34 +127,20 @@ type MockVariablePossibleType =
 	| DeleteVersionsMutationVariables
 	| GetVersionsQueryVariables;
 
-export interface Mock {
+export interface Mock<
+	TData = Record<string, unknown>,
+	V extends MockVariablePossibleType = Record<string, unknown>
+> extends MockedResponse<TData> {
 	request: {
 		query: DocumentNode;
-		variables: MockVariablePossibleType;
+		variables: V;
 	};
-	result?:
-		| {
-				data: Partial<QueryType> | Partial<Mutation>;
-		  }
-		| (() => {
-				data: Partial<QueryType> | Partial<Mutation>;
-		  });
 	error?: ServerError | ApolloError;
 }
 
 /**
  * Find Nodes Mock
  */
-interface FindNodesMock extends Mock {
-	request: {
-		query: DocumentNode;
-		variables: FindNodesQueryVariables;
-	};
-	result: {
-		data: Pick<QueryType, 'findNodes'>;
-	};
-}
-
 export function getFindNodesVariables(
 	variables: Partial<FindNodesQueryVariables>,
 	withCursor = false
@@ -136,13 +148,16 @@ export function getFindNodesVariables(
 	return {
 		limit: NODES_LOAD_LIMIT,
 		sort: NODES_SORT_DEFAULT,
-		pageToken: withCursor ? 'next_page_token' : undefined,
-		sharesLimit: 1,
+		page_token: withCursor ? 'next_page_token' : undefined,
+		shares_limit: 1,
 		...variables
 	};
 }
 
-export function mockFindNodes(variables: FindNodesQueryVariables, nodes: Node[]): FindNodesMock {
+export function mockFindNodes(
+	variables: FindNodesQueryVariables,
+	nodes: Node[]
+): Mock<FindNodesQuery, FindNodesQueryVariables> {
 	return {
 		request: {
 			query: FIND_NODES,
@@ -159,20 +174,11 @@ export function mockFindNodes(variables: FindNodesQueryVariables, nodes: Node[])
 /**
  * Trash Nodes Mock
  */
-interface TrashNodesMock extends Mock {
-	request: {
-		query: DocumentNode;
-		variables: TrashNodesMutationVariables;
-	};
-	result: {
-		data: Pick<Mutation, 'trashNodes'>;
-	};
-}
 
 export function mockTrashNodes(
 	variables: TrashNodesMutationVariables,
 	trashNodes: Id[]
-): TrashNodesMock {
+): Mock<TrashNodesMutation, TrashNodesMutationVariables> {
 	return {
 		request: {
 			query: TRASH_NODES,
@@ -189,20 +195,10 @@ export function mockTrashNodes(
 /**
  * Restore Nodes Mock
  */
-interface RestoreNodesMock extends Mock {
-	request: {
-		query: DocumentNode;
-		variables: RestoreNodesMutationVariables;
-	};
-	result: {
-		data: Pick<Mutation, 'restoreNodes'>;
-	};
-}
-
 export function mockRestoreNodes(
 	variables: RestoreNodesMutationVariables,
 	restoreNodes: Array<Node>
-): RestoreNodesMock {
+): Mock<RestoreNodesMutation, RestoreNodesMutationVariables> {
 	return {
 		request: {
 			query: RESTORE_NODES,
@@ -219,20 +215,10 @@ export function mockRestoreNodes(
 /**
  * Delete Permanently Mock
  */
-interface DeletePermanentlyMock extends Mock {
-	request: {
-		query: DocumentNode;
-		variables: DeleteNodesMutationVariables;
-	};
-	result: {
-		data: Pick<Mutation, 'deleteNodes'>;
-	};
-}
-
 export function mockDeletePermanently(
 	variables: DeleteNodesMutationVariables,
 	deleteNodes: Id[]
-): DeletePermanentlyMock {
+): Mock<DeleteNodesMutation, DeleteNodesMutationVariables> {
 	return {
 		request: {
 			query: DELETE_NODES,
@@ -249,20 +235,10 @@ export function mockDeletePermanently(
 /**
  * Update Node Mock
  */
-interface UpdateNodeMock extends Mock {
-	request: {
-		query: DocumentNode;
-		variables: UpdateNodeMutationVariables;
-	};
-	result: {
-		data: Pick<Mutation, 'updateNode'>;
-	};
-}
-
 export function mockUpdateNode(
 	variables: UpdateNodeMutationVariables,
 	updateNode: Node
-): Pick<UpdateNodeMock, 'request' | 'result'> {
+): Mock<UpdateNodeMutation, UpdateNodeMutationVariables> {
 	return {
 		request: {
 			query: UPDATE_NODE,
@@ -279,7 +255,7 @@ export function mockUpdateNode(
 export function mockUpdateNodeError(
 	variables: UpdateNodeMutationVariables,
 	error: ServerError | ApolloError
-): Pick<UpdateNodeMock, 'request' | 'error'> {
+): Mock<UpdateNodeMutation, UpdateNodeMutationVariables> {
 	return {
 		request: {
 			query: UPDATE_NODE,
@@ -292,20 +268,10 @@ export function mockUpdateNodeError(
 /**
  * Update Node Description Mock
  */
-interface UpdateNodeDescriptionMock extends Mock {
-	request: {
-		query: DocumentNode;
-		variables: UpdateNodeDescriptionMutationVariables;
-	};
-	result: {
-		data: Pick<Mutation, 'updateNode'>;
-	};
-}
-
 export function mockUpdateNodeDescription(
 	variables: UpdateNodeDescriptionMutationVariables,
 	updateNode: Node
-): Pick<UpdateNodeDescriptionMock, 'request' | 'result'> {
+): Mock<UpdateNodeDescriptionMutation, UpdateNodeDescriptionMutationVariables> {
 	return {
 		request: {
 			query: UPDATE_NODE_DESCRIPTION,
@@ -322,20 +288,10 @@ export function mockUpdateNodeDescription(
 /**
  * Flag Nodes Mock
  */
-interface FlagNodesMock extends Mock {
-	request: {
-		query: DocumentNode;
-		variables: FlagNodesMutationVariables;
-	};
-	result: {
-		data: Pick<Mutation, 'flagNodes'>;
-	};
-}
-
 export function mockFlagNodes(
 	variables: FlagNodesMutationVariables,
 	flagNodes: Id[]
-): FlagNodesMock {
+): Mock<FlagNodesMutation, FlagNodesMutationVariables> {
 	return {
 		request: {
 			query: FLAG_NODES,
@@ -352,16 +308,6 @@ export function mockFlagNodes(
 /**
  * Get Children Mock
  */
-interface GetChildrenMock extends Mock {
-	request: {
-		query: DocumentNode;
-		variables: GetChildrenQueryVariables;
-	};
-	result: {
-		data: Pick<QueryType, 'getNode'>;
-	};
-}
-
 export function getChildrenVariables(
 	folderId: Id,
 	childrenLimit = NODES_LOAD_LIMIT,
@@ -369,17 +315,17 @@ export function getChildrenVariables(
 	sharesLimit = 1
 ): GetChildrenQueryVariables {
 	return {
-		id: folderId,
-		childrenLimit,
+		node_id: folderId,
+		children_limit: childrenLimit,
 		sort,
-		sharesLimit
+		shares_limit: sharesLimit
 	};
 }
 
 export function mockGetChildren(
 	variables: GetChildrenQueryVariables,
 	getNode: Node
-): Pick<GetChildrenMock, 'request' | 'result'> {
+): Mock<GetChildrenQuery, GetChildrenQueryVariables> {
 	return {
 		request: {
 			query: GET_CHILDREN,
@@ -396,7 +342,7 @@ export function mockGetChildren(
 export function mockGetChildrenError(
 	variables: GetChildrenQueryVariables,
 	error: ServerError | ApolloError
-): Pick<GetChildrenMock, 'request' | 'error'> {
+): Mock<GetChildrenQuery, GetChildrenQueryVariables> {
 	return {
 		request: {
 			query: GET_CHILDREN,
@@ -409,27 +355,17 @@ export function mockGetChildrenError(
 /**
  * Move Nodes Mock
  */
-export interface MoveNodesMock extends Mock {
-	request: {
-		query: DocumentNode;
-		variables: MoveNodesMutationVariables;
-	};
-	result: () => {
-		data: Pick<Mutation, 'moveNodes'>;
-	};
-}
-
 export function mockMoveNodes(
 	variables: MoveNodesMutationVariables,
 	moveNodes: Node[],
 	callback?: () => void
-): MoveNodesMock {
+): Mock<MoveNodesMutation, MoveNodesMutationVariables> {
 	return {
 		request: {
 			query: MOVE_NODES,
 			variables
 		},
-		result: (): ReturnType<MoveNodesMock['result']> => {
+		result: (): { data: MoveNodesMutation } => {
 			callback && callback();
 			return {
 				data: {
@@ -443,20 +379,10 @@ export function mockMoveNodes(
 /**
  * Copy Nodes Mock
  */
-interface CopyNodesMock extends Mock {
-	request: {
-		query: DocumentNode;
-		variables: CopyNodesMutationVariables;
-	};
-	result: {
-		data: Pick<Mutation, 'copyNodes'>;
-	};
-}
-
 export function mockCopyNodes(
 	variables: MoveNodesMutationVariables,
 	copyNodes: Node[]
-): CopyNodesMock {
+): Mock<CopyNodesMutation, CopyNodesMutationVariables> {
 	return {
 		request: {
 			query: COPY_NODES,
@@ -473,21 +399,10 @@ export function mockCopyNodes(
 /**
  * Create Folder Mock
  */
-
-interface CreateFolderMock extends Mock {
-	request: {
-		query: DocumentNode;
-		variables: CreateFolderMutationVariables;
-	};
-	result: {
-		data: Pick<Mutation, 'createFolder'>;
-	};
-}
-
 export function mockCreateFolder(
 	variables: CreateFolderMutationVariables,
 	createFolder: Node
-): Pick<CreateFolderMock, 'request' | 'result'> {
+): Mock<CreateFolderMutation, CreateFolderMutationVariables> {
 	return {
 		request: {
 			query: CREATE_FOLDER,
@@ -504,7 +419,7 @@ export function mockCreateFolder(
 export function mockCreateFolderError(
 	variables: CreateFolderMutationVariables,
 	error: ServerError | ApolloError
-): Pick<CreateFolderMock, 'request' | 'error'> {
+): Mock<CreateFolderMutation, CreateFolderMutationVariables> {
 	return {
 		request: {
 			query: CREATE_FOLDER,
@@ -517,18 +432,10 @@ export function mockCreateFolderError(
 /**
  * Get parents mock
  */
-
-interface GetParentMock extends Mock {
-	request: {
-		query: DocumentNode;
-		variables: GetParentQueryVariables;
-	};
-	result: {
-		data: Pick<QueryType, 'getNode'>;
-	};
-}
-
-export function mockGetParent(variables: GetParentQueryVariables, node: Node): GetParentMock {
+export function mockGetParent(
+	variables: GetParentQueryVariables,
+	node: Node
+): Mock<GetParentQuery, GetParentQueryVariables> {
 	return {
 		request: {
 			query: GET_PARENT,
@@ -545,18 +452,10 @@ export function mockGetParent(variables: GetParentQueryVariables, node: Node): G
 /**
  * Get path mock
  */
-
-interface GetPathMock extends Mock {
-	request: {
-		query: DocumentNode;
-		variables: GetPathQueryVariables;
-	};
-	result: {
-		data: Pick<QueryType, 'getPath'>;
-	};
-}
-
-export function mockGetPath(variables: GetPathQueryVariables, getPath: Node[]): GetPathMock {
+export function mockGetPath(
+	variables: GetPathQueryVariables,
+	getPath: Node[]
+): Mock<GetPathQuery, GetPathQueryVariables> {
 	return {
 		request: {
 			query: GET_PATH,
@@ -573,16 +472,6 @@ export function mockGetPath(variables: GetPathQueryVariables, getPath: Node[]): 
 /**
  * Get node mock
  */
-interface GetNodeMock extends Mock {
-	request: {
-		query: DocumentNode;
-		variables: GetNodeQueryVariables;
-	};
-	result: {
-		data: Pick<QueryType, 'getNode'>;
-	};
-}
-
 export function getNodeVariables(
 	nodeId: Id,
 	childrenLimit = NODES_LOAD_LIMIT,
@@ -590,17 +479,17 @@ export function getNodeVariables(
 	sharesLimit = SHARES_LOAD_LIMIT
 ): GetNodeQueryVariables {
 	return {
-		id: nodeId,
-		childrenLimit,
+		node_id: nodeId,
+		children_limit: childrenLimit,
 		sort,
-		sharesLimit
+		shares_limit: sharesLimit
 	};
 }
 
 export function mockGetNode(
 	variables: GetNodeQueryVariables,
-	getNode: Node
-): Pick<GetNodeMock, 'request' | 'result'> {
+	getNode: File | Folder
+): Mock<GetNodeQuery, GetNodeQueryVariables> {
 	return {
 		request: {
 			query: GET_NODE,
@@ -617,30 +506,20 @@ export function mockGetNode(
 /**
  * Get shares mock
  */
-interface GetSharesMock extends Mock {
-	request: {
-		query: DocumentNode;
-		variables: GetSharesQueryVariables;
-	};
-	result: {
-		data: Pick<QueryType, 'getNode'>;
-	};
-}
-
 export function getSharesVariables(
 	nodeId: Id,
 	sharesLimit = FULL_SHARES_LOAD_LIMIT
 ): GetSharesQueryVariables {
 	return {
-		id: nodeId,
-		sharesLimit
+		node_id: nodeId,
+		shares_limit: sharesLimit
 	};
 }
 
 export function mockGetShares(
 	variables: GetSharesQueryVariables,
 	getNode: Node
-): Pick<GetSharesMock, 'request' | 'result'> {
+): Mock<GetSharesQuery, GetSharesQueryVariables> {
 	return {
 		request: {
 			query: GET_SHARES,
@@ -657,20 +536,10 @@ export function mockGetShares(
 /**
  * Get node mock
  */
-interface GetBaseNodeMock extends Mock {
-	request: {
-		query: DocumentNode;
-		variables: GetBaseNodeQueryVariables;
-	};
-	result: {
-		data: Pick<QueryType, 'getNode'>;
-	};
-}
-
 export function mockGetBaseNode(
 	variables: GetBaseNodeQueryVariables,
 	getNode: Node
-): Pick<GetBaseNodeMock, 'request' | 'result'> {
+): Mock<GetBaseNodeQuery, GetBaseNodeQueryVariables> {
 	return {
 		request: {
 			query: GET_BASE_NODE,
@@ -687,21 +556,10 @@ export function mockGetBaseNode(
 /**
  * Delete share mock
  */
-
-interface DeleteShareMock extends Mock {
-	request: {
-		query: DocumentNode;
-		variables: DeleteShareMutationVariables;
-	};
-	result: {
-		data: Pick<Mutation, 'deleteShare'>;
-	};
-}
-
 export function mockDeleteShare(
 	variables: DeleteShareMutationVariables,
 	deleteShare: boolean
-): DeleteShareMock {
+): Mock<DeleteShareMutation, DeleteShareMutationVariables> {
 	return {
 		request: {
 			query: DELETE_SHARE,
@@ -718,28 +576,17 @@ export function mockDeleteShare(
 /**
  * Create share mock
  */
-
-interface CreateShareMock extends Mock {
-	request: {
-		query: DocumentNode;
-		variables: CreateShareMutationVariables;
-	};
-	result: () => {
-		data: Pick<Mutation, 'createShare'>;
-	};
-}
-
 export function mockCreateShare(
 	variables: CreateShareMutationVariables,
 	createShare: Share,
 	callback?: (...args: unknown[]) => void
-): CreateShareMock {
+): Mock<CreateShareMutation, CreateShareMutationVariables> {
 	return {
 		request: {
 			query: CREATE_SHARE,
 			variables
 		},
-		result: (): ReturnType<CreateShareMock['result']> => {
+		result: (): { data: CreateShareMutation } => {
 			callback && callback();
 			return {
 				data: {
@@ -753,26 +600,17 @@ export function mockCreateShare(
 /**
  * Create share mock
  */
-
-interface UpdateShareMock extends Mock {
-	request: {
-		query: DocumentNode;
-		variables: UpdateShareMutationVariables;
-	};
-	result: () => { data: Pick<Mutation, 'updateShare'> };
-}
-
 export function mockUpdateShare(
 	variables: UpdateShareMutationVariables,
 	updateShare?: Share | null,
 	callback?: () => void
-): UpdateShareMock {
+): Mock<UpdateShareMutation, UpdateShareMutationVariables> {
 	return {
 		request: {
 			query: UPDATE_SHARE,
 			variables
 		},
-		result: (): ReturnType<UpdateShareMock['result']> => {
+		result: (): { data: UpdateShareMutation } => {
 			callback && callback();
 			return {
 				data: {
@@ -786,20 +624,11 @@ export function mockUpdateShare(
 /**
  * Get account by email mock
  */
-
-interface GetAccountByEmailMock extends Mock {
-	request: {
-		query: DocumentNode;
-		variables: GetAccountByEmailQueryVariables;
-	};
-	result?: { data: Pick<QueryType, 'getAccountByEmail'> };
-}
-
 export function mockGetAccountByEmail(
 	variables: GetAccountByEmailQueryVariables,
 	account: QueryType['getAccountByEmail'],
 	error?: ApolloError
-): GetAccountByEmailMock {
+): Mock<GetAccountByEmailQuery, GetAccountByEmailQueryVariables> {
 	return {
 		request: {
 			query: GET_ACCOUNT_BY_EMAIL,
@@ -817,20 +646,10 @@ export function mockGetAccountByEmail(
 /**
  * Get Node Links mock
  */
-interface GetNodeLinksMock extends Mock {
-	request: {
-		query: DocumentNode;
-		variables: GetNodeLinksQueryVariables;
-	};
-	result: {
-		data: Pick<QueryType, 'getNode'>;
-	};
-}
-
 export function mockGetNodeLinks(
 	variables: GetNodeLinksQueryVariables,
 	node: Node
-): GetNodeLinksMock {
+): Mock<GetNodeLinksQuery, GetNodeLinksQueryVariables> {
 	return {
 		request: {
 			query: GET_NODE_LINKS,
@@ -850,20 +669,10 @@ export function mockGetNodeLinks(
 /**
  * Get File Versions mock
  */
-interface GetVersionsMock extends Mock {
-	request: {
-		query: DocumentNode;
-		variables: GetVersionsQueryVariables;
-	};
-	result: {
-		data: Pick<QueryType, 'getVersions'>;
-	};
-}
-
 export function mockGetVersions(
 	variables: GetVersionsQueryVariables,
 	files: File[]
-): GetVersionsMock {
+): Mock<GetVersionsQuery, GetVersionsQueryVariables> {
 	return {
 		request: {
 			query: GET_VERSIONS,
@@ -880,21 +689,10 @@ export function mockGetVersions(
 /**
  * Delete versions mock
  */
-
-interface DeleteVersionsMock extends Mock {
-	request: {
-		query: DocumentNode;
-		variables: DeleteVersionsMutationVariables;
-	};
-	result: {
-		data: Pick<Mutation, 'deleteVersions'>;
-	};
-}
-
 export function mockDeleteVersions(
 	variables: DeleteVersionsMutationVariables,
 	versions: Array<Maybe<Scalars['Int']>>
-): DeleteVersionsMock {
+): Mock<DeleteVersionsMutation, DeleteVersionsMutationVariables> {
 	return {
 		request: {
 			query: DELETE_VERSIONS,
@@ -911,21 +709,10 @@ export function mockDeleteVersions(
 /**
  * keep versions mock
  */
-
-interface KeepVersionsMock extends Mock {
-	request: {
-		query: DocumentNode;
-		variables: KeepVersionsMutationVariables;
-	};
-	result: {
-		data: Pick<Mutation, 'keepVersions'>;
-	};
-}
-
 export function mockKeepVersions(
 	variables: KeepVersionsMutationVariables,
 	versions: Array<Maybe<Scalars['Int']>>
-): KeepVersionsMock {
+): Mock<KeepVersionsMutation, KeepVersionsMutationVariables> {
 	return {
 		request: {
 			query: KEEP_VERSIONS,
@@ -942,21 +729,10 @@ export function mockKeepVersions(
 /**
  * Clone version mock
  */
-
-interface CloneVersionMock extends Mock {
-	request: {
-		query: DocumentNode;
-		variables: CloneVersionMutationVariables;
-	};
-	result: {
-		data: Pick<Mutation, 'cloneVersion'>;
-	};
-}
-
 export function mockCloneVersion(
 	variables: CloneVersionMutationVariables,
 	file: File
-): CloneVersionMock {
+): Mock<CloneVersionMutation, CloneVersionMutationVariables> {
 	return {
 		request: {
 			query: CLONE_VERSION,

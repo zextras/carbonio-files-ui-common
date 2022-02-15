@@ -17,7 +17,7 @@ const handleGetChildRequest: ResponseResolver<
 	GraphQLContext<GetChildQuery>,
 	GetChildQuery
 > = (req, res, ctx) => {
-	const { id, sharesLimit } = req.variables;
+	const { node_id: id, shares_limit: sharesLimit } = req.variables;
 
 	let nodeName = faker.random.words();
 	if (id.trim() === ROOTS.LOCAL_ROOT) {

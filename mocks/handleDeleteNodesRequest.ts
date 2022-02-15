@@ -13,7 +13,7 @@ const handleDeleteNodesRequest: ResponseResolver<
 	GraphQLContext<DeleteNodesMutation>,
 	DeleteNodesMutation
 > = (req, res, ctx) => {
-	const { nodes_ids: nodes } = req.variables;
+	const { node_ids: nodes } = req.variables;
 
 	let result = null;
 	if (nodes) {

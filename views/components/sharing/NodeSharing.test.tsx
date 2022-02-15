@@ -18,7 +18,13 @@ import {
 	populateShares,
 	populateUser
 } from '../../../mocks/mockUtils';
-import { SharedTarget, SharePermission, User } from '../../../types/graphql/types';
+import {
+	GetNodeQuery,
+	GetNodeQueryVariables,
+	SharedTarget,
+	SharePermission,
+	User
+} from '../../../types/graphql/types';
 import {
 	getNodeVariables,
 	getSharesVariables,
@@ -60,7 +66,7 @@ describe('Node Sharing', () => {
 		node.shares = [userShare, dlShare, loggedUserShare];
 		const mocks = [
 			mockGetShares(getSharesVariables(node.id), node),
-			mockGetNodeLinks({ nodeId: node.id }, node)
+			mockGetNodeLinks({ node_id: node.id }, node)
 		];
 		const { getByTextWithMarkup } = render(<NodeSharing node={node} />, { mocks });
 		await screen.findByText(/collaborators/i);
@@ -105,7 +111,7 @@ describe('Node Sharing', () => {
 			const mocks = [
 				mockGetShares(getSharesVariables(node.id), node),
 				mockDeleteShare(
-					{ nodeId: node.id, shareTargetId: (loggedUserShare.share_target as SharedTarget).id },
+					{ node_id: node.id, share_target_id: (loggedUserShare.share_target as SharedTarget).id },
 					true
 				)
 			];
@@ -144,7 +150,7 @@ describe('Node Sharing', () => {
 			node.shares = shares;
 			const mocks = [
 				mockGetShares(getSharesVariables(node.id), node),
-				mockGetNodeLinks({ nodeId: node.id }, node)
+				mockGetNodeLinks({ node_id: node.id }, node)
 			];
 			render(<NodeSharing node={node} />, { mocks });
 			await screen.findByText(getChipLabel(shares[0].share_target as SharedTarget));
@@ -163,7 +169,7 @@ describe('Node Sharing', () => {
 			node.shares = shares;
 			const mocks = [
 				mockGetShares(getSharesVariables(node.id), node),
-				mockGetNodeLinks({ nodeId: node.id }, node)
+				mockGetNodeLinks({ node_id: node.id }, node)
 			];
 			render(<NodeSharing node={node} />, { mocks });
 			await screen.findByText(getChipLabel(shares[0].share_target as SharedTarget));
@@ -179,9 +185,9 @@ describe('Node Sharing', () => {
 			node.shares = [share];
 			const mocks = [
 				mockGetShares(getSharesVariables(node.id), node),
-				mockGetNodeLinks({ nodeId: node.id }, node),
+				mockGetNodeLinks({ node_id: node.id }, node),
 				mockDeleteShare(
-					{ nodeId: node.id, shareTargetId: (share.share_target as SharedTarget).id },
+					{ node_id: node.id, share_target_id: (share.share_target as SharedTarget).id },
 					true
 				)
 			];
@@ -222,11 +228,11 @@ describe('Node Sharing', () => {
 			const shareToUpdate = { ...shares[0], share_target: shares[0].share_target as SharedTarget };
 			const mocks = [
 				mockGetShares(getSharesVariables(node.id), node),
-				mockGetNodeLinks({ nodeId: node.id }, node),
+				mockGetNodeLinks({ node_id: node.id }, node),
 				mockUpdateShare(
 					{
-						shareTargetId: shareToUpdate.share_target.id,
-						nodeId: node.id,
+						share_target_id: shareToUpdate.share_target.id,
+						node_id: node.id,
 						permission: SharePermission.ReadWriteAndShare
 					},
 					{ ...shareToUpdate, permission: SharePermission.ReadWriteAndShare }
@@ -289,13 +295,13 @@ describe('Node Sharing', () => {
 			});
 			const mocks = [
 				mockGetShares(getSharesVariables(node.id), node),
-				mockGetNodeLinks({ nodeId: node.id }, node),
+				mockGetNodeLinks({ node_id: node.id }, node),
 				mockGetAccountByEmail({ email: user.email }, user),
 				mockCreateShare(
 					{
-						nodeId: node.id,
+						node_id: node.id,
 						permission: SharePermission.ReadWriteAndShare,
-						shareTargetId: (shareToCreate.share_target as SharedTarget).id
+						share_target_id: (shareToCreate.share_target as SharedTarget).id
 					},
 					shareToCreate
 				)
@@ -303,9 +309,11 @@ describe('Node Sharing', () => {
 
 			// write getNode query in cache and set initial router entry to contain active node id
 			const mockedGetNodeQuery = mockGetNode(getNodeVariables(node.id), node);
-			global.apolloClient.writeQuery({
+			global.apolloClient.writeQuery<GetNodeQuery, GetNodeQueryVariables>({
 				...mockedGetNodeQuery.request,
-				...mockedGetNodeQuery.result
+				data: {
+					getNode: node
+				}
 			});
 			render(<NodeSharing node={node} />, { mocks, initialRouterEntries: [`/?node=${node.id}`] });
 			await screen.findByText(getChipLabel(share.share_target as SharedTarget));
@@ -433,22 +441,22 @@ describe('Node Sharing', () => {
 				});
 			const mocks = [
 				mockGetShares(getSharesVariables(node.id), node),
-				mockGetNodeLinks({ nodeId: node.id }, node),
+				mockGetNodeLinks({ node_id: node.id }, node),
 				mockGetAccountByEmail({ email: user1.email }, user1),
 				mockGetAccountByEmail({ email: user2.email }, user2),
 				mockCreateShare(
 					{
-						nodeId: node.id,
+						node_id: node.id,
 						permission: shareToCreate1.permission,
-						shareTargetId: (shareToCreate1.share_target as SharedTarget).id
+						share_target_id: (shareToCreate1.share_target as SharedTarget).id
 					},
 					shareToCreate1
 				),
 				mockCreateShare(
 					{
-						nodeId: node.id,
+						node_id: node.id,
 						permission: shareToCreate2.permission,
-						shareTargetId: (shareToCreate2.share_target as SharedTarget).id
+						share_target_id: (shareToCreate2.share_target as SharedTarget).id
 					},
 					shareToCreate2
 				)
@@ -456,9 +464,11 @@ describe('Node Sharing', () => {
 
 			// write getNode query in cache and set initial router entry to contain active node id
 			const mockedGetNodeQuery = mockGetNode(getNodeVariables(node.id), node);
-			global.apolloClient.writeQuery({
+			global.apolloClient.writeQuery<GetNodeQuery, GetNodeQueryVariables>({
 				...mockedGetNodeQuery.request,
-				...mockedGetNodeQuery.result
+				data: {
+					getNode: node
+				}
 			});
 			render(<NodeSharing node={node} />, { mocks, initialRouterEntries: [`/?node=${node.id}`] });
 			await screen.findByText(getChipLabel(share.share_target as SharedTarget));
