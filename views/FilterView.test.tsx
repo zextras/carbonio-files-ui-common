@@ -356,7 +356,7 @@ describe('Filter view', () => {
 			const showPathButton = screen.getByRole('button', { name: /show path/i });
 			expect(showPathButton).toBeVisible();
 			userEvent.click(showPathButton);
-			await within(displayer).findByText(node.parent.name, { exact: false });
+			await within(displayer).findByText(node.parent.name);
 			const fullPathOriginalRegexp = buildBreadCrumbRegExp(...map(path, (parent) => parent.name));
 			await findByTextWithMarkup(fullPathOriginalRegexp);
 			expect(getByTextWithMarkup(fullPathOriginalRegexp)).toBeVisible();
