@@ -144,7 +144,7 @@ const FilterView: React.VFC = () => {
 				<FilterList trashed sharedWithMe={false} canUploadFile={false} cascade={false} />
 			)) ||
 			(isSharedTrashFilter && (
-				<FilterList trashed sharedWithMe canUploadFile={false} cascade directShare />
+				<FilterList trashed sharedWithMe canUploadFile={false} cascade={false} />
 			)) || <Container>Missing Filter</Container>,
 		[
 			isFlaggedFilter,

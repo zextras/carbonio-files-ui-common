@@ -425,7 +425,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 										)}
 										<Padding left="extrasmall">
 											<Text size="extrasmall" color="gray1" disabled={disabled}>
-												{formatDate(updatedAt)}
+												{formatDate(updatedAt, undefined, userInfo.zimbraPrefTimeZoneId)}
 											</Text>
 										</Padding>
 									</Container>
