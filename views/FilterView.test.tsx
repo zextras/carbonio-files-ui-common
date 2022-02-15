@@ -143,12 +143,11 @@ describe('Filter view', () => {
 			await screen.findByText(/view files and folders/i);
 			const expectedVariables = {
 				folderId: ROOTS.TRASH,
-				cascade: true,
+				cascade: false,
 				sharedWithMe: true,
 				sort: NodeSort.NameAsc,
 				limit: NODES_LOAD_LIMIT,
-				sharesLimit: 1,
-				directShare: true
+				sharesLimit: 1
 			};
 			expect(mockedRequestHandler).toHaveBeenCalledWith(
 				expect.objectContaining({
