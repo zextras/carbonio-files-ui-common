@@ -163,7 +163,12 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 				inputRef.current.focus();
 			}
 			setSearchText('');
-
+			setSearchResult([]);
+			setForceOpen(false);
+			const alreadyInChips = findIndex(chips, ['email', contact.email]) >= 0;
+			if (alreadyInChips) {
+				return;
+			}
 			apolloClient
 				.query({
 					query: GET_ACCOUNT_BY_EMAIL,
@@ -184,11 +189,8 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 				.catch((err) => {
 					console.error(err);
 				});
-
-			setSearchResult([]);
-			setForceOpen(false);
 		},
-		[apolloClient]
+		[apolloClient, chips]
 	);
 
 	const search = useMemo(
@@ -266,8 +268,8 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 							console.error(err);
 						});
 				},
-				1000,
-				{ leading: true, trailing: true }
+				500,
+				{ leading: true }
 			),
 		[chips, node]
 	);
