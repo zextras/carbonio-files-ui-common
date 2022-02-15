@@ -13,12 +13,12 @@ import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 
 import { ROOTS } from '../../constants';
-import { Breadcrumbs } from '../../design_system_fork/Breadcrumbs';
 import { useFindNodesQuery } from '../../hooks/graphql/queries/useFindNodesQuery';
-import { NodeListItemType } from '../../types/common';
+import { Crumb, NodeListItemType } from '../../types/common';
 import { NodeType } from '../../types/graphql/types';
 import { MakeRequired } from '../../types/utils';
 import { decodeError } from '../../utils/utils';
+import { InteractiveBreadcrumbs } from '../InteractiveBreadcrumbs';
 import { EmptyFolder } from './EmptyFolder';
 import { ListContent } from './ListContent';
 import { LoadingIcon } from './LoadingIcon';
@@ -30,7 +30,7 @@ interface RootsListProps {
 		node: Pick<NodeListItemType, 'id' | 'name' | '__typename' | 'disabled'>,
 		event: React.SyntheticEvent
 	) => void;
-	navigateTo: (id: string, event?: React.SyntheticEvent) => void;
+	navigateTo: (id: string, event?: React.SyntheticEvent | Event) => void;
 	showTrash?: boolean;
 	checkDisabled: (node: NodeListItemType) => boolean;
 }
@@ -69,12 +69,12 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 		listRef.current && listRef.current.scrollTo(0, 0);
 	}, [filterQueryParams]);
 
-	const crumbs = useMemo(() => {
-		const $crumbs = [];
+	const crumbs = useMemo<Crumb[]>(() => {
+		const $crumbs: Crumb[] = [];
 		$crumbs.push({
 			id: ROOTS.ENTRY_POINT,
 			label: t('modal.roots.rootsList', 'Files'),
-			click: (event: React.MouseEvent) => {
+			click: (event: React.SyntheticEvent) => {
 				setFilterQueryParam({});
 				navigateTo('', event);
 			}
@@ -85,7 +85,7 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 				$crumbs.push({
 					id: 'sharedWithMe',
 					label: t('modal.roots.sharedWitMe', 'Shared with me'),
-					click: (event: React.MouseEvent) => {
+					click: (event: React.SyntheticEvent) => {
 						setFilterQueryParam({ sharedWithMe: true, folderId: ROOTS.LOCAL_ROOT, cascade: false });
 						setActiveNode(
 							{
@@ -184,11 +184,12 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 			<Row
 				width="fill"
 				wrap="nowrap"
-				mainAlignment="flex-start"
 				height={48}
 				onClick={stopPropagationClickHandler}
+				mainAlignment="flex-start"
+				flexShrink={0}
 			>
-				{crumbs && <Breadcrumbs crumbs={crumbs} />}
+				{crumbs && <InteractiveBreadcrumbs crumbs={crumbs} />}
 				{loading && (
 					<Row mainAlignment="flex-end" wrap="nowrap" flexGrow={1}>
 						<LoadingIcon icon="Refresh" color="primary" />

@@ -62,7 +62,7 @@ export type GetNodeParentType = {
 export type Crumb = {
 	id: string;
 	label: string;
-	click?: (id?: string) => void;
+	click?: (event: React.SyntheticEvent) => void;
 };
 
 export type CrumbNode = Pick<Node, 'id' | 'name' | 'type'> & {
