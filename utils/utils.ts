@@ -156,9 +156,16 @@ export const formatDate = (
 	return moment(date).format($format);
 };
 
-export const formatTime = (date: Moment | Date | string | number): string =>
+export const formatTime = (
+	date: Moment | Date | string | number,
+	zimbraPrefTimeZoneId?: string
+): string => {
+	if (zimbraPrefTimeZoneId) {
+		return moment(date).tz(zimbraPrefTimeZoneId).format('HH.mm A');
+	}
 	// TODO manage locale
-	moment(date).format('HH.mm A');
+	return moment(date).format('HH.mm A');
+};
 
 /**
  * Decode an Apollo Error in a string message

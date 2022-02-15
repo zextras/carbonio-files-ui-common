@@ -355,6 +355,7 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 					canUpsertDescription={canUpsertDescription}
 					description={description}
 					id={id}
+					key={`NodeDetailsDescription${id}`}
 				/>
 				{downloads && (
 					<Row orientation="vertical" crossAlignment="flex-start" padding={{ vertical: 'small' }}>
