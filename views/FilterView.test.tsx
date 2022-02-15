@@ -143,12 +143,11 @@ describe('Filter view', () => {
 			await screen.findByText(/view files and folders/i);
 			const expectedVariables = {
 				folderId: ROOTS.TRASH,
-				cascade: true,
+				cascade: false,
 				sharedWithMe: true,
 				sort: NodeSort.NameAsc,
 				limit: NODES_LOAD_LIMIT,
-				sharesLimit: 1,
-				directShare: true
+				sharesLimit: 1
 			};
 			expect(mockedRequestHandler).toHaveBeenCalledWith(
 				expect.objectContaining({
@@ -357,7 +356,7 @@ describe('Filter view', () => {
 			const showPathButton = screen.getByRole('button', { name: /show path/i });
 			expect(showPathButton).toBeVisible();
 			userEvent.click(showPathButton);
-			await within(displayer).findByText(node.parent.name, { exact: false });
+			await within(displayer).findByText(node.parent.name);
 			const fullPathOriginalRegexp = buildBreadCrumbRegExp(...map(path, (parent) => parent.name));
 			await findByTextWithMarkup(fullPathOriginalRegexp);
 			expect(getByTextWithMarkup(fullPathOriginalRegexp)).toBeVisible();

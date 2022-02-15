@@ -11,12 +11,14 @@ import filter from 'lodash/filter';
 import find from 'lodash/find';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
+import partition from 'lodash/partition';
 import size from 'lodash/size';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useParams } from 'react-router-dom';
 
 import { useActiveNode } from '../../../../hooks/useActiveNode';
 import { useNavigation } from '../../../../hooks/useNavigation';
+import useUserInfo from '../../../../hooks/useUserInfo';
 import { ROOTS } from '../../../constants';
 import TRASH_NODES from '../../../graphql/mutations/trashNodes.graphql';
 import FIND_NODES from '../../../graphql/queries/findNodes.graphql';
@@ -29,6 +31,7 @@ import {
 	TrashNodesMutation,
 	TrashNodesMutationVariables
 } from '../../../types/graphql/types';
+import { DeepPick } from '../../../types/utils';
 import { isTrashedVisible } from '../../../utils/utils';
 import { useCreateSnackbar } from '../../useCreateSnackbar';
 import { useErrorHandler } from '../../useErrorHandler';
@@ -36,7 +39,7 @@ import { useUpload } from '../../useUpload';
 import { useUpdateFolderContent } from '../useUpdateFolderContent';
 
 export type TrashNodesType = (
-	...nodes: PickIdNodeType[]
+	...nodes: Array<PickIdNodeType & DeepPick<Node, 'owner', 'id'>>
 ) => Promise<FetchResult<TrashNodesMutation>>;
 
 /**
@@ -56,21 +59,6 @@ export function useTrashNodesMutation(): TrashNodesType {
 		TrashNodesMutation,
 		TrashNodesMutationVariables
 	>(TRASH_NODES, {
-		onCompleted(data) {
-			if (data.trashNodes) {
-				removeByNodeId(data.trashNodes);
-			}
-			createSnackbar({
-				key: new Date().toLocaleString(),
-				type: 'success',
-				label: t('snackbar.markForDeletion.success', 'Item moved to trash'),
-				replace: true,
-				onActionClick: () => {
-					navigateTo('/filter/myTrash');
-				},
-				actionLabel: t('snackbar.markForDeletion.showTrash', 'Open Trash Folder')
-			});
-		},
 		errorPolicy: 'all'
 	});
 
@@ -79,10 +67,11 @@ export function useTrashNodesMutation(): TrashNodesType {
 	const params = useParams();
 	const location = useLocation();
 	const includeTrashed = useMemo(() => isTrashedVisible(params, location), [params, location]);
+	const { me: loggedUser } = useUserInfo();
 
 	const trashNodes: TrashNodesType = useCallback(
-		(...nodes: PickIdNodeType[]) => {
-			const nodesIds: string[] = map(nodes, (node: PickIdNodeType) => node.id);
+		(...nodes) => {
+			const nodesIds = map(nodes, (node) => node.id);
 
 			return trashNodesMutation({
 				variables: {
@@ -192,9 +181,40 @@ export function useTrashNodesMutation(): TrashNodesType {
 					}
 					return false;
 				}
+			}).then(({ data }) => {
+				if (data?.trashNodes) {
+					removeByNodeId(data.trashNodes);
+					const [ownedNodes, sharedNodes] = partition(
+						nodes,
+						(node) => node.owner.id === loggedUser
+					);
+					createSnackbar({
+						key: new Date().toLocaleString(),
+						type: 'success',
+						label: t('snackbar.markForDeletion.success', 'Item moved to trash'),
+						replace: true,
+						hideButton: ownedNodes.length > 0 && sharedNodes.length > 0,
+						onActionClick: () => {
+							navigateTo(ownedNodes.length > 0 ? '/filter/myTrash' : '/filter/sharedTrash');
+						},
+						actionLabel: t('snackbar.markForDeletion.showTrash', 'Open Trash Folder')
+					});
+				}
+				return { data };
 			});
 		},
-		[trashNodesMutation, includeTrashed, activeNodeId, removeActiveNode, removeNodesFromFolder]
+		[
+			trashNodesMutation,
+			activeNodeId,
+			includeTrashed,
+			removeActiveNode,
+			removeNodesFromFolder,
+			removeByNodeId,
+			createSnackbar,
+			t,
+			loggedUser,
+			navigateTo
+		]
 	);
 
 	return trashNodes;

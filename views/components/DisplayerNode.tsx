@@ -14,7 +14,7 @@ import styled from 'styled-components';
 import { useActiveNode } from '../../../hooks/useActiveNode';
 import { DISPLAYER_TABS } from '../../constants';
 import { GetNodeQuery } from '../../types/graphql/types';
-import { canUpsertDescription, isFile } from '../../utils/ActionsFactory';
+import { canUpsertDescription, isFile, isFolder } from '../../utils/ActionsFactory';
 import { NodeDetails } from './NodeDetails';
 import { PreviewPanelActions } from './PreviewPanelActions';
 import { PreviewPanelHeader } from './PreviewPanelHeader';
@@ -142,9 +142,10 @@ export const DisplayerNode: React.VFC<DisplayerNodeProps> = ({
 							loading={loading}
 							loadMore={loadMore}
 							hasMore={hasMore}
-							nodes={node.__typename === 'Folder' ? node.children : undefined}
+							nodes={isFolder(node) ? node.children : undefined}
 							shares={node.shares}
 							type={node.type}
+							rootId={node.rootId || undefined}
 						/>
 					)}
 					{isSharingTab && <NodeSharing node={node} />}
