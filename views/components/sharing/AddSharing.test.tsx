@@ -16,7 +16,7 @@ import {
 	populateShare,
 	populateUser
 } from '../../../mocks/mockUtils';
-import { SharePermission } from '../../../types/graphql/types';
+import { GetNodeQuery, GetNodeQueryVariables, SharePermission } from '../../../types/graphql/types';
 import {
 	getNodeVariables,
 	mockCreateShare,
@@ -247,8 +247,8 @@ describe('Add Sharing', () => {
 			mockGetAccountByEmail({ email: user.email }, user),
 			mockCreateShare(
 				{
-					nodeId: node.id,
-					shareTargetId: user.id,
+					node_id: node.id,
+					share_target_id: user.id,
 					permission: SharePermission.ReadOnly
 				},
 				share,
@@ -362,8 +362,8 @@ describe('Add Sharing', () => {
 			mockGetAccountByEmail({ email: user.email }, user),
 			mockCreateShare(
 				{
-					nodeId: node.id,
-					shareTargetId: user.id,
+					node_id: node.id,
+					share_target_id: user.id,
 					permission: SharePermission.ReadWriteAndShare
 				},
 				share,
@@ -380,9 +380,11 @@ describe('Add Sharing', () => {
 		});
 		// write getNode in cache since it is used to establish permissions
 		const mockedGetNodeQuery = mockGetNode(getNodeVariables(node.id), node);
-		global.apolloClient.writeQuery({
+		global.apolloClient.writeQuery<GetNodeQuery, GetNodeQueryVariables>({
 			...mockedGetNodeQuery.request,
-			...mockedGetNodeQuery.result
+			data: {
+				getNode: node
+			}
 		});
 
 		render(<AddSharing node={node} />, { mocks, initialRouterEntries: [`/?node=${node.id}`] });
@@ -475,8 +477,8 @@ describe('Add Sharing', () => {
 			mockGetAccountByEmail({ email: user.email }, user),
 			mockCreateShare(
 				{
-					nodeId: node.id,
-					shareTargetId: user.id,
+					node_id: node.id,
+					share_target_id: user.id,
 					permission: SharePermission.ReadAndShare
 				},
 				share,
@@ -493,9 +495,11 @@ describe('Add Sharing', () => {
 		});
 		// write getNode in cache since it is used to establish permissions
 		const mockedGetNodeQuery = mockGetNode(getNodeVariables(node.id), node);
-		global.apolloClient.writeQuery({
+		global.apolloClient.writeQuery<GetNodeQuery, GetNodeQueryVariables>({
 			...mockedGetNodeQuery.request,
-			...mockedGetNodeQuery.result
+			data: {
+				getNode: node
+			}
 		});
 
 		render(<AddSharing node={node} />, { mocks, initialRouterEntries: [`/?node=${node.id}`] });
@@ -571,10 +575,10 @@ describe('Add Sharing', () => {
 			mockGetAccountByEmail({ email: user.email }, user),
 			mockCreateShare(
 				{
-					nodeId: node.id,
-					shareTargetId: user.id,
+					node_id: node.id,
+					share_target_id: user.id,
 					permission: SharePermission.ReadOnly,
-					customMessage
+					custom_message: customMessage
 				},
 				share,
 				createShareMutationFn
@@ -641,10 +645,10 @@ describe('Add Sharing', () => {
 			mockGetAccountByEmail({ email: user.email }, user),
 			mockCreateShare(
 				{
-					nodeId: node.id,
-					shareTargetId: user.id,
+					node_id: node.id,
+					share_target_id: user.id,
 					permission: SharePermission.ReadOnly,
-					customMessage
+					custom_message: customMessage
 				},
 				share,
 				createShareMutationFn
@@ -763,8 +767,8 @@ describe('Add Sharing', () => {
 			mockGetAccountByEmail({ email: user2.email }, user2),
 			mockCreateShare(
 				{
-					nodeId: node.id,
-					shareTargetId: user1.id,
+					node_id: node.id,
+					share_target_id: user1.id,
 					permission: SharePermission.ReadAndWrite
 				},
 				share1,
@@ -772,8 +776,8 @@ describe('Add Sharing', () => {
 			),
 			mockCreateShare(
 				{
-					nodeId: node.id,
-					shareTargetId: user2.id,
+					node_id: node.id,
+					share_target_id: user2.id,
 					permission: SharePermission.ReadAndShare
 				},
 				share2,
@@ -798,9 +802,11 @@ describe('Add Sharing', () => {
 			});
 		// write getNode in cache since it is used to establish permissions
 		const mockedGetNodeQuery = mockGetNode(getNodeVariables(node.id), node);
-		global.apolloClient.writeQuery({
+		global.apolloClient.writeQuery<GetNodeQuery, GetNodeQueryVariables>({
 			...mockedGetNodeQuery.request,
-			...mockedGetNodeQuery.result
+			data: {
+				getNode: node
+			}
 		});
 
 		render(<AddSharing node={node} />, { mocks, initialRouterEntries: [`/?node=${node.id}`] });

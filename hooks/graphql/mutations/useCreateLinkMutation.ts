@@ -11,7 +11,11 @@ import { FetchResult, useMutation } from '@apollo/client';
 
 import LINK from '../../../graphql/fragments/link.graphql';
 import CREATE_LINK from '../../../graphql/mutations/createLink.graphql';
-import { CreateLinkMutation, CreateLinkMutationVariables } from '../../../types/graphql/types';
+import {
+	CreateLinkMutation,
+	CreateLinkMutationVariables,
+	LinkFragment
+} from '../../../types/graphql/types';
 import { useErrorHandler } from '../../useErrorHandler';
 
 export type CreateLinkType = (
@@ -32,9 +36,9 @@ export function useCreateLinkMutation(
 		(description?: string, expiresAt?: number) => {
 			return createLinkMutation({
 				variables: {
-					nodeId,
+					node_id: nodeId,
 					description,
-					expiresAt
+					expires_at: expiresAt
 				},
 				update(cache, { data }) {
 					if (data?.createLink) {
@@ -42,7 +46,7 @@ export function useCreateLinkMutation(
 							id: cache.identify({ id: nodeId, __typename: nodeTypename }),
 							fields: {
 								links(existingLinks) {
-									const newLinkRef = cache.writeFragment({
+									const newLinkRef = cache.writeFragment<LinkFragment>({
 										data: data.createLink,
 										fragment: LINK
 									});

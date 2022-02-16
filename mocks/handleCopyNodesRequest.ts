@@ -10,7 +10,12 @@ import { GraphQLContext, GraphQLRequest, ResponseResolver } from 'msw';
 
 import buildClient from '../apollo';
 import CHILD from '../graphql/fragments/child.graphql';
-import { Node, CopyNodesMutation, CopyNodesMutationVariables } from '../types/graphql/types';
+import {
+	CopyNodesMutation,
+	CopyNodesMutationVariables,
+	ChildFragment,
+	Folder
+} from '../types/graphql/types';
 
 const handleCopyNodesRequest: ResponseResolver<
 	GraphQLRequest<CopyNodesMutationVariables>,
@@ -18,15 +23,15 @@ const handleCopyNodesRequest: ResponseResolver<
 	CopyNodesMutation
 > = (req, res, ctx) => {
 	// eslint-disable-next-line camelcase
-	const { nodes_ids, destination_id } = req.variables;
+	const { node_ids, destination_id } = req.variables;
 
 	const apolloClient = buildClient();
 
-	const nodes: Node[] = [];
+	const nodes: CopyNodesMutation['copyNodes'] = [];
 
-	forEach(nodes_ids, (nodeId) => {
+	forEach(node_ids, (nodeId) => {
 		// try to read the node as a file
-		let node = apolloClient.readFragment({
+		let node = apolloClient.readFragment<ChildFragment>({
 			fragmentName: 'Child',
 			fragment: CHILD,
 			id: `File:${nodeId}`
@@ -34,21 +39,23 @@ const handleCopyNodesRequest: ResponseResolver<
 
 		if (!node) {
 			// if result is null, try to read the node as a folder
-			node = apolloClient.readFragment({
+			node = apolloClient.readFragment<ChildFragment>({
 				fragmentName: 'Child',
 				fragment: CHILD,
 				id: `Folder:${nodeId}`
 			});
 		}
 
-		const newNode = {
-			...node,
-			id: faker.datatype.uuid(),
-			name: `${node.name} - Copy`,
-			parent: { __typename: 'Folder', id: destination_id, name: 'parent folder' }
-		};
+		if (node) {
+			const newNode = {
+				...node,
+				id: faker.datatype.uuid(),
+				name: `${node.name} - Copy`,
+				parent: { __typename: 'Folder', id: destination_id, name: 'parent folder' } as Folder
+			};
 
-		nodes.push(newNode);
+			nodes.push(newNode);
+		}
 	});
 
 	return res(

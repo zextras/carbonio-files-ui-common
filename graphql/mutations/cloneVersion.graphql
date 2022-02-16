@@ -2,8 +2,8 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-only
 
-mutation cloneVersion($id: ID!, $version: Int!) {
-    cloneVersion(id: $id, version: $version) {
+mutation cloneVersion($node_id: ID!, $version: Int!) {
+    cloneVersion(node_id: $node_id, version: $version) {
         version
         size
         last_editor {

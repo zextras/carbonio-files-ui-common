@@ -8,40 +8,48 @@ import { GraphQLContext, GraphQLRequest, ResponseResolver } from 'msw';
 
 import buildClient from '../apollo';
 import CHILD from '../graphql/fragments/child.graphql';
-import { UpdateNodeMutation, UpdateNodeMutationVariables } from '../types/graphql/types';
+import { Node } from '../types/common';
+import {
+	ChildFragment,
+	UpdateNodeDescriptionMutation,
+	UpdateNodeDescriptionMutationVariables,
+	UpdateNodeMutation,
+	UpdateNodeMutationVariables
+} from '../types/graphql/types';
 
 const handleUpdateNodeRequest: ResponseResolver<
-	GraphQLRequest<UpdateNodeMutationVariables>,
-	GraphQLContext<UpdateNodeMutation>,
-	UpdateNodeMutation
+	GraphQLRequest<UpdateNodeMutationVariables | UpdateNodeDescriptionMutationVariables>,
+	GraphQLContext<UpdateNodeMutation | UpdateNodeDescriptionMutation>,
+	UpdateNodeMutation | UpdateNodeDescriptionMutation | string
 > = (req, res, ctx) => {
-	const { id, name, description } = req.variables;
+	const { variables } = req;
 
 	const apolloClient = buildClient();
 
 	// try to read the node as a file
-	let result = apolloClient.readFragment({
+	let result = apolloClient.readFragment<ChildFragment>({
 		fragmentName: 'Child',
 		fragment: CHILD,
-		id: `File:${id}`
+		id: `File:${variables.node_id}`
 	});
 
 	if (!result) {
 		// if result is null, try to read the node as a folder
-		result = apolloClient.readFragment({
+		result = apolloClient.readFragment<ChildFragment>({
 			fragmentName: 'Child',
 			fragment: CHILD,
-			id: `Folder:${id}`
+			id: `Folder:${variables.node_id}`
 		});
 	}
 
+	const name = ('name' in variables && variables.name) || result?.name || '';
 	return res(
 		ctx.data({
 			updateNode: {
 				...result,
-				name: name || result.name,
-				description
-			}
+				name,
+				description: variables.description || ''
+			} as Node
 		})
 	);
 };

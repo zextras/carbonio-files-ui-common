@@ -68,9 +68,9 @@ describe('Folder Selection Modal Content', () => {
 
 		const mocks = [
 			// request to find out parent
-			mockGetPath({ id: folder.id }, [...path, folder]),
+			mockGetPath({ node_id: folder.id }, [...path, folder]),
 			// request to create breadcrumb
-			mockGetPath({ id: parent.id }, path),
+			mockGetPath({ node_id: parent.id }, path),
 			mockGetChildren(getChildrenVariables(parent.id), parent)
 		];
 
@@ -157,7 +157,7 @@ describe('Folder Selection Modal Content', () => {
 
 		const mocks = [
 			// request to find out parent
-			mockGetPath({ id: localRoot.id }, [localRoot]),
+			mockGetPath({ node_id: localRoot.id }, [localRoot]),
 			mockGetChildren(getChildrenVariables(localRoot.id), localRoot)
 		];
 
@@ -218,10 +218,10 @@ describe('Folder Selection Modal Content', () => {
 
 		const mocks = [
 			// request to find out parent
-			mockGetPath({ id: localRoot.id }, [localRoot]),
+			mockGetPath({ node_id: localRoot.id }, [localRoot]),
 			mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
 			// request to create breadcrumb
-			mockGetPath({ id: folder.id }, [localRoot, folder]),
+			mockGetPath({ node_id: folder.id }, [localRoot, folder]),
 			mockGetChildren(getChildrenVariables(folder.id), folder)
 		];
 
@@ -304,7 +304,7 @@ describe('Folder Selection Modal Content', () => {
 
 	test('search in sub-folders is checked if cascade is true', async () => {
 		const localRoot = populateLocalRoot();
-		const mocks = [mockGetPath({ id: localRoot.id }, [localRoot])];
+		const mocks = [mockGetPath({ node_id: localRoot.id }, [localRoot])];
 		render(
 			<FolderSelectionModalContent
 				folderId={localRoot.id}
@@ -336,7 +336,7 @@ describe('Folder Selection Modal Content', () => {
 
 	test('search in sub-folders check set cascade param', async () => {
 		const localRoot = populateLocalRoot();
-		const mocks = [mockGetPath({ id: localRoot.id }, [localRoot])];
+		const mocks = [mockGetPath({ node_id: localRoot.id }, [localRoot])];
 		render(<FolderSelectionModalContent folderId={localRoot.id} confirmAction={confirmAction} />, {
 			mocks
 		});
@@ -396,7 +396,11 @@ describe('Folder Selection Modal Content', () => {
 		const sharedWithMeFilter = populateNodes(4);
 		const mocks = [
 			mockFindNodes(
-				getFindNodesVariables({ sharedWithMe: true, cascade: false, folderId: ROOTS.LOCAL_ROOT }),
+				getFindNodesVariables({
+					shared_with_me: true,
+					cascade: false,
+					folder_id: ROOTS.LOCAL_ROOT
+				}),
 				sharedWithMeFilter
 			)
 		];
@@ -470,9 +474,9 @@ describe('Folder Selection Modal Content', () => {
 		localRoot.children.push(folder);
 		const mocks = [
 			mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
-			mockGetPath({ id: localRoot.id }, [localRoot]),
+			mockGetPath({ node_id: localRoot.id }, [localRoot]),
 			mockGetChildren(getChildrenVariables(folder.id), folder),
-			mockGetPath({ id: folder.id }, [localRoot, folder])
+			mockGetPath({ node_id: folder.id }, [localRoot, folder])
 		];
 
 		render(<FolderSelectionModalContent confirmAction={confirmAction} />, { mocks });
@@ -502,11 +506,15 @@ describe('Folder Selection Modal Content', () => {
 		filter.push(folder);
 		const mocks = [
 			mockFindNodes(
-				getFindNodesVariables({ sharedWithMe: true, cascade: false, folderId: ROOTS.LOCAL_ROOT }),
+				getFindNodesVariables({
+					shared_with_me: true,
+					cascade: false,
+					folder_id: ROOTS.LOCAL_ROOT
+				}),
 				filter
 			),
 			mockGetChildren(getChildrenVariables(folder.id), folder),
-			mockGetPath({ id: folder.id }, [folder])
+			mockGetPath({ node_id: folder.id }, [folder])
 		];
 
 		render(<FolderSelectionModalContent confirmAction={confirmAction} />, { mocks });

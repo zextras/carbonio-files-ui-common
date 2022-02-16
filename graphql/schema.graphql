@@ -204,13 +204,13 @@ type Link {
 }
 
 type Mutation {
-  cloneVersion(id: ID!, version: Int!): File!
+  cloneVersion(node_id: ID!, version: Int!): File!
 
   """ Allows to copy a list of Nodes into a specified Folder."""
-  copyNodes(destination_id: ID!, nodes_ids: [ID!]): [Node!]
+  copyNodes(destination_id: ID!, node_ids: [ID!]): [Node!]
 
   """ <strong>Creates a new folder</strong>"""
-  createFolder(name: String!, parent_id: String!): Node!
+  createFolder(destination_id: String!, name: String!): Node!
 
   """
    Allows to create a public link for an existing node. A link can be created only if the requester has the
@@ -231,7 +231,7 @@ type Mutation {
   ): Link!
 
   """
-   Allows to share an existing node to a user specifing the user permissions on that node,
+   Allows to share an existing node to a user specifying the user permissions on that node,
    and, optionally, an expiration timestamp.
   """
   createShare(
@@ -266,7 +266,7 @@ type Mutation {
    if the node is a file then it removes all the related versions. This operation requires can_delete permission on
    every node that should be deleted and it cannot be reverted.
   """
-  deleteNodes(nodes_ids: [ID!]): [ID!]
+  deleteNodes(node_ids: [ID!]): [ID!]
   deleteShare(
     """ The unique identifier of the shared node (mandatory)"""
     node_id: ID!
@@ -277,17 +277,17 @@ type Mutation {
   ): Boolean!
 
   """TODO doc"""
-  deleteVersions(id: ID!, versions: [Int!]): [Int]!
+  deleteVersions(node_id: ID!, versions: [Int!]): [Int]!
 
   """ Allows to flag a list of nodes."""
-  flagNodes(flag: Boolean!, nodes_ids: [ID!]): [ID!]
-  keepVersions(id: ID!, keep_forever: Boolean!, versions: [Int!]!): [Int]!
+  flagNodes(flag: Boolean!, node_ids: [ID!]): [ID!]
+  keepVersions(keep_forever: Boolean!, node_id: ID!, versions: [Int!]!): [Int]!
 
   """
    Allows to move a list of nodes into a folder destination. This operation requires write permissions on each file
    should be moved and write permission on the destination folder otherwise it fails.
   """
-  moveNodes(destination_id: ID!, nodes_ids: [ID!]): [Node!]
+  moveNodes(destination_id: ID!, node_ids: [ID!]): [Node!]
 
   """ Restores a list of nodes."""
   restoreNodes(node_ids: [ID!]): [Node]
@@ -312,11 +312,11 @@ type Mutation {
     expires_at: DateTime
 
     """ The unique identifier of the link (mandatory)"""
-    id: ID!
+    link_id: ID!
   ): Link
 
   """ <strong>Update an existing node</strong>"""
-  updateNode(description: String, flagged: Boolean, id: String!, name: String): Node!
+  updateNode(description: String, flagged: Boolean, name: String, node_id: String!): Node!
 
   """ Allows to update the SharePermissions and the expiration timestamp of an existing share.
   """
@@ -426,33 +426,6 @@ enum NodeSort {
   TYPE_DESC
   UPDATED_AT_ASC
   UPDATED_AT_DESC
-}
-
-type NodeSubscription {
-  """ Node creation timestamp"""
-  created_at: DateTime!
-
-  """ Description of the file/folder"""
-  description: String!
-
-  """ True if the owner has marked the node as favourite, false otherwise"""
-  flagged: Boolean!
-
-  """ Unique identifier of the node"""
-  id: ID!
-
-  """ True if the user has marked the node for future deletion, false otherwise
-  """
-  marked_for_deletion: Boolean!
-
-  """ Name of the file/folder"""
-  name: String!
-
-  """ Type of the node"""
-  type: String!
-
-  """ Node update timestamp"""
-  updated_at: DateTime!
 }
 
 """
@@ -567,8 +540,8 @@ type Query {
 
   """ <strong>Returns the attributes of the node specified by ID</strong>"""
   getNode(
-    """ The unique indentifier of the node (required)"""
-    id: ID!
+    """ The unique identifier of the node (required)"""
+    node_id: ID!
 
     """ The version of a file (if the id is related to a file)"""
     version: Int
@@ -578,7 +551,7 @@ type Query {
    <strong> Returns the list of nodes corresponding to the path of a node</strong>
    The path is ordered and returns from the highest visible one to the requested node.
   """
-  getPath(id: ID!): [Node]!
+  getPath(node_id: ID!): [Node]!
 
   """ Returns the list of all root folders"""
   getRootsList: [Root]!
@@ -593,10 +566,10 @@ type Query {
     share_target_id: ID!
   ): Share
   getUserById(
-    """ The unique indentifier of the user to retrieve (required)"""
-    id: ID!
+    """ The unique identifier of the user to retrieve (required)"""
+    user_id: ID!
   ): User
-  getVersions(id: ID!, versions: [Int!]): [File]!
+  getVersions(node_id: ID!, versions: [Int!]): [File]!
 }
 
 """ Definition of the type Root. Represents a root folder"""
@@ -648,7 +621,7 @@ enum ShareSort {
   """
   SHARE_PERMISSIONS_ASC
 
-  """ The order is discending: this means that first are shown the shares with more permissions.
+  """ The order is descending: this means that first are shown the shares with more permissions.
   """
   SHARE_PERMISSIONS_DESC
 
@@ -662,10 +635,6 @@ enum ShareSort {
 }
 
 union SharedTarget = DistributionList | User
-
-type Subscription {
-  nodeSubscription(ids: [String]!): NodeSubscription!
-}
 
 """ Definition of the User type"""
 type User {

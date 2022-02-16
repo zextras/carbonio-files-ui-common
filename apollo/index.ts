@@ -17,7 +17,14 @@ import last from 'lodash/last';
 import { GRAPHQL_ENDPOINT } from '../constants';
 import { FindNodesCachedObject, FindNodesObject, NodesListCachedObject } from '../types/apollo';
 import introspection from '../types/graphql/possible-types';
-import { FindNodesQueryVariables, QueryFindNodesArgs, Share } from '../types/graphql/types';
+import {
+	FindNodesQueryVariables,
+	FolderChildrenArgs,
+	GetChildrenQueryVariables,
+	NodeSharesArgs,
+	QueryFindNodesArgs,
+	Share
+} from '../types/graphql/types';
 import { nodeListCursorVar } from './nodeListCursorVar';
 
 function mergeNodesList(
@@ -78,7 +85,11 @@ const cache = new InMemoryCache({
 			fields: {
 				shares: {
 					keyArgs: false,
-					merge(existing: Share[], incoming: Share[], { args }): Share[] {
+					merge(
+						existing: Share[],
+						incoming: Share[],
+						{ args }: FieldFunctionOptions<Partial<NodeSharesArgs>>
+					): Share[] {
 						if (args?.cursor) {
 							const newExisting = existing || [];
 							return [...newExisting, ...incoming];
@@ -98,11 +109,14 @@ const cache = new InMemoryCache({
 					merge(
 						existing: NodesListCachedObject | undefined,
 						incoming: Reference[],
-						fieldFunctions: FieldFunctionOptions
+						fieldFunctions: FieldFunctionOptions<
+							Partial<FolderChildrenArgs>,
+							Partial<GetChildrenQueryVariables>
+						>
 					): NodesListCachedObject {
 						const merged = mergeNodesList(existing, incoming, fieldFunctions);
-						const nodeListCursorKey = fieldFunctions.variables?.id;
-						const pageSize = fieldFunctions.variables?.childrenLimit;
+						const nodeListCursorKey = fieldFunctions.variables?.node_id;
+						const pageSize = fieldFunctions.variables?.children_limit;
 						// By putting this logic here cursor is updated only when new data are received by network requests.
 						// If an update to ordered nodes is done from client, the cursor does not change.
 						// The only case where the cursor might have to be updated is when client add a node as last ordered
@@ -136,7 +150,10 @@ const cache = new InMemoryCache({
 				},
 				cursor(
 					_existing: string,
-					{ variables, readField }: FieldFunctionOptions
+					{
+						variables,
+						readField
+					}: FieldFunctionOptions<unknown, Partial<GetChildrenQueryVariables>>
 				): string | null | undefined {
 					// cursor can have 3 state:
 					// 1) non-empty string: it's a cursor to load pages after first one
@@ -144,8 +161,8 @@ const cache = new InMemoryCache({
 					// 3) undefined: indicates that there might be a new first page.
 					// Useful state to force refetch when all ordered nodes are removed from the list
 					// but there are some pages not loaded yet.
-					if (variables?.id) {
-						const cursor = nodeListCursorVar()[variables.id];
+					if (variables?.node_id) {
+						const cursor = nodeListCursorVar()[variables.node_id];
 						if (cursor) {
 							return readField('id', cursor);
 						}
@@ -179,10 +196,10 @@ const cache = new InMemoryCache({
 						// see https://github.com/apollographql/apollo-client/issues/6394#issuecomment-656193666
 						return {
 							args: fieldFunctions.args,
-							pageToken: incoming.page_token,
+							page_token: incoming.page_token,
 							nodes: mergeNodesList(
 								// for filters, if first page is requested, clear cached data emptying existing data
-								fieldFunctions.variables?.pageToken
+								fieldFunctions.variables?.page_token
 									? existing.nodes
 									: { ordered: [], unOrdered: [] },
 								incoming.nodes,
@@ -196,7 +213,7 @@ const cache = new InMemoryCache({
 						if (existing) {
 							return {
 								nodes: existing?.nodes ? readNodesList(existing.nodes) : [],
-								page_token: existing.pageToken
+								page_token: existing.page_token
 							};
 						}
 						return existing;

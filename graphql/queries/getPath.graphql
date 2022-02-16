@@ -4,8 +4,8 @@
 
 #import "../fragments/baseNode.graphql"
 
-query getPath($id: ID!) {
-	getPath(id: $id) {
+query getPath($node_id: ID!) {
+	getPath(node_id: $node_id) {
 		...BaseNode
 	}
 }

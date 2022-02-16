@@ -31,14 +31,15 @@ export function useCloneVersionMutation(): CloneVersionType {
 		(nodeId: string, version: number) => {
 			return cloneVersionMutation({
 				variables: {
-					id: nodeId,
+					node_id: nodeId,
 					version
 				},
 				update(cache, { data }) {
 					if (data?.cloneVersion) {
 						cache.modify({
 							fields: {
-								[`getVersions({"id":"${nodeId}"})`](existingVersions) {
+								// TODO: think about another strategy because this way is impossible to detect during refactors
+								[`getVersions({"node_id":"${nodeId}"})`](existingVersions) {
 									return [data.cloneVersion, ...existingVersions];
 								}
 							}

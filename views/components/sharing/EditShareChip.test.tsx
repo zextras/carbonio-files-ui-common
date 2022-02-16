@@ -218,7 +218,7 @@ describe('Edit Share Chip', () => {
 			share.permission = SharePermission.ReadAndShare;
 			const mocks = [
 				mockDeleteShare(
-					{ nodeId: node.id, shareTargetId: (share.share_target as SharedTarget).id },
+					{ node_id: node.id, share_target_id: (share.share_target as SharedTarget).id },
 					true
 				)
 			];
@@ -341,7 +341,7 @@ describe('Edit Share Chip', () => {
 		const share = populateShare(node, 'abc', user);
 		const mocks = [
 			mockDeleteShare(
-				{ nodeId: node.id, shareTargetId: (share.share_target as SharedTarget).id },
+				{ node_id: node.id, share_target_id: (share.share_target as SharedTarget).id },
 				true
 			)
 		];
@@ -382,7 +382,7 @@ describe('Edit Share Chip', () => {
 		share.permission = SharePermission.ReadAndShare;
 		const mocks = [
 			mockDeleteShare(
-				{ nodeId: node.id, shareTargetId: (share.share_target as SharedTarget).id },
+				{ node_id: node.id, share_target_id: (share.share_target as SharedTarget).id },
 				true
 			)
 		];
@@ -431,8 +431,8 @@ describe('Edit Share Chip', () => {
 			const mocks = [
 				mockUpdateShare(
 					{
-						shareTargetId: user.id,
-						nodeId: node.id,
+						share_target_id: user.id,
+						node_id: node.id,
 						permission: SharePermission.ReadAndWrite
 					},
 					share,
@@ -476,8 +476,8 @@ describe('Edit Share Chip', () => {
 			const mocks = [
 				mockUpdateShare(
 					{
-						shareTargetId: user.id,
-						nodeId: node.id,
+						share_target_id: user.id,
+						node_id: node.id,
 						permission: SharePermission.ReadAndWrite
 					},
 					share,
@@ -519,8 +519,8 @@ describe('Edit Share Chip', () => {
 			const mocks = [
 				mockUpdateShare(
 					{
-						shareTargetId: user.id,
-						nodeId: node.id,
+						share_target_id: user.id,
+						node_id: node.id,
 						permission: SharePermission.ReadAndWrite
 					},
 					share,
@@ -574,8 +574,8 @@ describe('Edit Share Chip', () => {
 			const mocks = [
 				mockUpdateShare(
 					{
-						shareTargetId: user.id,
-						nodeId: node.id,
+						share_target_id: user.id,
+						node_id: node.id,
 						permission: SharePermission.ReadWriteAndShare
 					},
 					share,

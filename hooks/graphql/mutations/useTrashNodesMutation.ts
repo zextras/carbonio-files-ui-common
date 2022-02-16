@@ -104,7 +104,7 @@ export function useTrashNodesMutation(): TrashNodesType {
 										});
 
 										if (
-											existingNodesRefs.pageToken &&
+											existingNodesRefs.page_token &&
 											size(ordered) === 0 &&
 											size(unOrdered) === 0
 										) {
@@ -113,7 +113,7 @@ export function useTrashNodesMutation(): TrashNodesType {
 
 										return {
 											args: existingNodesRefs.args,
-											pageToken: existingNodesRefs.pageToken,
+											page_token: existingNodesRefs.page_token,
 											nodes: {
 												ordered,
 												unOrdered
@@ -135,7 +135,7 @@ export function useTrashNodesMutation(): TrashNodesType {
 								if (activeNodeId && node.id === activeNodeId && !includeTrashed) {
 									removeActiveNode();
 								}
-
+								// TODO: move fragment to graphql file and add type
 								const parentFolder: Node | null = cache.readFragment({
 									id: cache.identify(node),
 									fragment: gql`

@@ -9,7 +9,7 @@ import filter from 'lodash/filter';
 import find from 'lodash/find';
 import some from 'lodash/some';
 
-import { NODES_SORT_DEFAULT, ROOTS } from '../constants';
+import { NODES_LOAD_LIMIT, NODES_SORT_DEFAULT, ROOTS } from '../constants';
 import { SortableNode } from '../types/common';
 import {
 	DistributionList,
@@ -306,7 +306,7 @@ export function populateFile(id?: string, name?: string): FilesFile {
 	return file;
 }
 
-export function populateNodePage(nodes: Node[], pageSize: number): NodePage {
+export function populateNodePage(nodes: Node[], pageSize: number = NODES_LOAD_LIMIT): NodePage {
 	return {
 		__typename: 'NodePage',
 		nodes,

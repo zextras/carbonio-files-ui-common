@@ -35,8 +35,8 @@ export function useGetChildrenQuery(
 		GET_CHILDREN,
 		{
 			variables: {
-				id: parentNode,
-				childrenLimit: NODES_LOAD_LIMIT,
+				node_id: parentNode,
+				children_limit: NODES_LOAD_LIMIT,
 				sort: nodeSort
 			},
 			skip: !parentNode,
