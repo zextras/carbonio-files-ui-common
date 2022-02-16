@@ -88,7 +88,7 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 		{
 			fetchPolicy: 'network-only',
 			variables: {
-				id: share?.node?.id
+				node_id: share?.node?.id
 			}
 		}
 	);
