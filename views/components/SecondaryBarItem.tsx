@@ -31,6 +31,7 @@ import { useGetRootsListQuery } from '../../hooks/graphql/queries/useGetRootsLis
 import { useUpload } from '../../hooks/useUpload';
 import { PickIdNodeType } from '../../types/common';
 import { Folder, Node } from '../../types/graphql/types';
+import { DeepPick } from '../../types/utils';
 import {
 	canBeWriteNodeDestination,
 	canUploadFile,
@@ -113,7 +114,7 @@ export const SecondaryBarItem: React.VFC<SecondaryBarItemProps> = ({ item, expan
 			const markingForDeletion = event.dataTransfer.getData(DRAG_TYPES.markForDeletion);
 			navigationTimerRef.current && clearTimeout(navigationTimerRef.current);
 			if (item.id.includes(ROOTS.TRASH) && markingForDeletion) {
-				const nodesToMarkForDeletion: Array<Partial<Node> & PickIdNodeType> =
+				const nodesToMarkForDeletion: Array<PickIdNodeType & DeepPick<Node, 'owner', 'id'>> =
 					JSON.parse(markingForDeletion);
 				markNodesForDeletionMutation(...nodesToMarkForDeletion).then(() => {
 					selectionModeVar(false);
