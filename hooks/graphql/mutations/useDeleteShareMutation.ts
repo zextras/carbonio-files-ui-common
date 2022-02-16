@@ -41,19 +41,7 @@ export function useDeleteShareMutation(): (
 	const [deleteShareMutation, { error }] = useMutation<
 		DeleteShareMutation,
 		DeleteShareMutationVariables
-	>(DELETE_SHARE, {
-		onCompleted({ deleteShare }) {
-			if (deleteShare) {
-				createSnackbar({
-					key: new Date().toLocaleString(),
-					type: 'info',
-					label: t('snackbar.deleteShare.success', 'Success'),
-					replace: true,
-					hideButton: true
-				});
-			}
-		}
-	});
+	>(DELETE_SHARE);
 
 	useErrorHandler(error, 'DELETE_SHARE');
 
@@ -141,9 +129,20 @@ export function useDeleteShareMutation(): (
 						});
 					}
 				}
+			}).then((result) => {
+				if (result.data?.deleteShare) {
+					createSnackbar({
+						key: new Date().toLocaleString(),
+						type: 'info',
+						label: t('snackbar.deleteShare.success', 'Success'),
+						replace: true,
+						hideButton: true
+					});
+				}
+				return result;
 			});
 		},
-		[deleteShareMutation, me]
+		[createSnackbar, deleteShareMutation, me, t]
 	);
 
 	return deleteShare;
