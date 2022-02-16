@@ -26,6 +26,8 @@ import {
 	DeleteNodesMutation,
 	File,
 	Folder,
+	GetPermissionsQuery,
+	GetPermissionsQueryVariables,
 	Node,
 	NodeType,
 	Permissions,
@@ -81,12 +83,15 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 	const [t] = useTranslation();
 	const createSnackbar = useCreateSnackbar();
 
-	const [getPermissionsLazy] = useLazyQuery(GET_PERMISSIONS, {
-		fetchPolicy: 'network-only',
-		variables: {
-			id: share?.node?.id
+	const [getPermissionsLazy] = useLazyQuery<GetPermissionsQuery, GetPermissionsQueryVariables>(
+		GET_PERMISSIONS,
+		{
+			fetchPolicy: 'network-only',
+			variables: {
+				id: share?.node?.id
+			}
 		}
-	});
+	);
 
 	const updateShareActionCallback = useCallback(() => {
 		getPermissionsLazy();
