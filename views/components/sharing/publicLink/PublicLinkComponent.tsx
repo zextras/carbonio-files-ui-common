@@ -19,6 +19,7 @@ import {
 	Tooltip,
 	Row
 } from '@zextras/carbonio-design-system';
+import moment from 'moment-timezone';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 
@@ -74,16 +75,28 @@ export const PublicLinkComponent: React.FC<PublicLinkComponentProps> = ({
 		setLinkDescriptionValue(ev.target.value);
 	}, []);
 
-	const [date, setDate] = useState(expiresAt);
+	const initialMomentDate = useMemo(() => {
+		if (expiresAt) {
+			const momentDate = moment(expiresAt).tz(zimbraPrefTimeZoneId);
+			return new Date(momentDate.year(), momentDate.month(), momentDate.date());
+		}
+		return undefined;
+	}, [expiresAt, zimbraPrefTimeZoneId]);
+
+	const [date, setDate] = useState(initialMomentDate);
+	const [updatedTimestamp, setUpdatedTimestamp] = useState(expiresAt);
+
 	const handleChange = useCallback((d: Date | string) => {
 		if (typeof d === 'string' && d.length === 0) {
 			setDate(undefined);
+			setUpdatedTimestamp(undefined);
 		} else {
 			const userTimezoneOffset = (d as Date).getTimezoneOffset() * 60000;
 			const epoch = (d as Date).getTime() - userTimezoneOffset;
 			// add 23 hours and 59 minutes
 			const epochPlusOneDay = epoch + 24 * 60 * 60 * 1000 - 60000;
-			setDate(epochPlusOneDay);
+			setUpdatedTimestamp(epochPlusOneDay);
+			setDate(d as Date);
 		}
 	}, []);
 
@@ -93,16 +106,22 @@ export const PublicLinkComponent: React.FC<PublicLinkComponentProps> = ({
 
 	const onUndoCallback = useCallback(() => {
 		setLinkDescriptionValue(description || undefined);
+		setDate(initialMomentDate);
+		setUpdatedTimestamp(expiresAt);
 		onUndo();
-	}, [description, onUndo]);
+	}, [description, expiresAt, initialMomentDate, onUndo]);
 
 	const onRevokeOrRemoveCallback = useCallback(() => {
 		onRevokeOrRemove(id, !isExpired);
 	}, [id, onRevokeOrRemove, isExpired]);
 
 	const onEditConfirmCallback = useCallback(() => {
-		onEditConfirm(id, linkDescriptionValue, date !== expiresAt ? date || 0 : undefined);
-	}, [date, expiresAt, id, linkDescriptionValue, onEditConfirm]);
+		onEditConfirm(
+			id,
+			linkDescriptionValue,
+			updatedTimestamp !== expiresAt ? updatedTimestamp || 0 : undefined
+		);
+	}, [expiresAt, id, linkDescriptionValue, onEditConfirm, updatedTimestamp]);
 
 	const copyUrl = useCallback(
 		(_event) => {
