@@ -7,6 +7,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { Container, Responsive, Snackbar } from '@zextras/carbonio-design-system';
+import { ACTION_TYPES } from '@zextras/carbonio-shell-ui';
 import noop from 'lodash/noop';
 import { useTranslation } from 'react-i18next';
 
@@ -63,10 +64,14 @@ export const SearchView: React.VFC<SearchViewProps> = ({
 	);
 
 	useEffect(() => {
-		setCreateOptions({
-			newButton: {
-				primary: {
+		setCreateOptions(
+			{
+				type: ACTION_TYPES.NEW,
+				id: 'upload-file',
+				action: () => ({
+					type: ACTION_TYPES.NEW,
 					id: 'upload-file',
+					primary: true,
 					label: t('create.options.new.upload', 'Upload'),
 					icon: 'CloudUploadOutline',
 					click: (event?: React.SyntheticEvent): void => {
@@ -75,55 +80,74 @@ export const SearchView: React.VFC<SearchViewProps> = ({
 						inputElement.onchange = inputElementOnchange;
 					},
 					disabled: false
-				},
-				secondaryItems: [
-					{
-						id: 'create-folder',
-						label: t('create.options.new.folder', 'New Folder'),
-						icon: 'FolderOutline',
-						disabled: true,
-						click: noop
-					},
-					{
-						id: 'create-docs-document',
-						label: t('create.options.new.document', 'New Document'),
-						icon: 'FileTextOutline',
-						disabled: true,
-						click: noop
-					},
-					{
-						id: 'create-docs-spreadsheet',
-						label: t('create.options.new.spreadsheet', 'New Spreadsheet'),
-						icon: 'FileCalcOutline',
-						disabled: true,
-						click: noop
-					},
-					{
-						id: 'create-docs-presentation',
-						label: t('create.options.new.presentation', 'New Presentation'),
-						icon: 'FilePresentationOutline',
-						disabled: true,
-						click: noop
-					}
-				]
+				})
+			},
+			{
+				type: ACTION_TYPES.NEW,
+				id: 'create-folder',
+				action: () => ({
+					type: ACTION_TYPES.NEW,
+					id: 'create-folder',
+					label: t('create.options.new.folder', 'New Folder'),
+					icon: 'FolderOutline',
+					disabled: true,
+					click: noop
+				})
+			},
+			{
+				type: ACTION_TYPES.NEW,
+				id: 'create-docs-document',
+				action: () => ({
+					type: ACTION_TYPES.NEW,
+					id: 'create-docs-document',
+					label: t('create.options.new.document', 'New Document'),
+					icon: 'FileTextOutline',
+					disabled: true,
+					click: noop
+				})
+			},
+			{
+				type: ACTION_TYPES.NEW,
+				id: 'create-docs-spreadsheet',
+				action: () => ({
+					type: ACTION_TYPES.NEW,
+					id: 'create-docs-spreadsheet',
+					label: t('create.options.new.spreadsheet', 'New Spreadsheet'),
+					icon: 'FileCalcOutline',
+					disabled: true,
+					click: noop
+				})
+			},
+			{
+				type: ACTION_TYPES.NEW,
+				id: 'create-docs-presentation',
+				action: () => ({
+					type: ACTION_TYPES.NEW,
+					id: 'create-docs-presentation',
+					label: t('create.options.new.presentation', 'New Presentation'),
+					icon: 'FilePresentationOutline',
+					disabled: true,
+					click: noop
+				})
 			}
-		});
+		);
 		return (): void => {
 			setCreateOptions({
-				newButton: {
-					primary: {
-						id: 'upload-file',
-						label: t('create.options.new.upload', 'Upload'),
-						icon: 'CloudUploadOutline',
-						click: (event?: React.SyntheticEvent): void => {
-							event && event.stopPropagation();
-							inputElement.click();
-							inputElement.onchange = inputElementOnchange;
-						},
-						disabled: false
+				type: ACTION_TYPES.NEW,
+				id: 'upload-file',
+				action: () => ({
+					type: ACTION_TYPES.NEW,
+					id: 'upload-file',
+					primary: true,
+					label: t('create.options.new.upload', 'Upload'),
+					icon: 'CloudUploadOutline',
+					click: (event?: React.SyntheticEvent): void => {
+						event && event.stopPropagation();
+						inputElement.click();
+						inputElement.onchange = inputElementOnchange;
 					},
-					secondaryItems: []
-				}
+					disabled: false
+				})
 			});
 		};
 	}, [inputElementOnchange, navigateToFolder, setCreateOptions, t]);

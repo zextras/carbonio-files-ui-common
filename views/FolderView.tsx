@@ -8,6 +8,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useQuery } from '@apollo/client';
 import { Container, Responsive } from '@zextras/carbonio-design-system';
+import { ACTION_TYPES } from '@zextras/carbonio-shell-ui';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
@@ -93,32 +94,52 @@ const FolderView: React.VFC = () => {
 		const fillerActions: ActionItem[] = [];
 		fillerActions.push(
 			{
+				type: ACTION_TYPES.NEW,
 				id: 'create-folder',
-				label: t('create.options.new.folder', 'New Folder'),
-				icon: 'FolderOutline',
-				click: createFolderAction,
-				disabled: !isCanCreateFolder
+				action: () => ({
+					type: ACTION_TYPES.NEW,
+					id: 'create-folder',
+					label: t('create.options.new.folder', 'New Folder'),
+					icon: 'FolderOutline',
+					click: createFolderAction,
+					disabled: !isCanCreateFolder
+				})
 			},
 			{
+				type: ACTION_TYPES.NEW,
 				id: 'create-docs-document',
-				label: t('create.options.new.document', 'New Document'),
-				icon: 'FileTextOutline',
-				click: createDocumentAction,
-				disabled: !isCanCreateFile
+				action: () => ({
+					type: ACTION_TYPES.NEW,
+					id: 'create-docs-document',
+					label: t('create.options.new.document', 'New Document'),
+					icon: 'FileTextOutline',
+					click: createDocumentAction,
+					disabled: !isCanCreateFile
+				})
 			},
 			{
+				type: ACTION_TYPES.NEW,
 				id: 'create-docs-spreadsheet',
-				label: t('create.options.new.spreadsheet', 'New Spreadsheet'),
-				icon: 'FileCalcOutline',
-				click: createSpreadsheetAction,
-				disabled: !isCanCreateFile
+				action: () => ({
+					type: ACTION_TYPES.NEW,
+					id: 'create-docs-spreadsheet',
+					label: t('create.options.new.spreadsheet', 'New Spreadsheet'),
+					icon: 'FileCalcOutline',
+					click: createSpreadsheetAction,
+					disabled: !isCanCreateFile
+				})
 			},
 			{
+				type: ACTION_TYPES.NEW,
 				id: 'create-docs-presentation',
-				label: t('create.options.new.presentation', 'New Presentation'),
-				icon: 'FilePresentationOutline',
-				click: createPresentationAction,
-				disabled: !isCanCreateFile
+				action: () => ({
+					type: ACTION_TYPES.NEW,
+					id: 'create-docs-presentation',
+					label: t('create.options.new.presentation', 'New Presentation'),
+					icon: 'FilePresentationOutline',
+					click: createPresentationAction,
+					disabled: !isCanCreateFile
+				})
 			}
 		);
 		return fillerActions;
@@ -133,10 +154,14 @@ const FolderView: React.VFC = () => {
 	]);
 
 	useEffect(() => {
-		setCreateOptions({
-			newButton: {
-				primary: {
+		setCreateOptions(
+			{
+				type: ACTION_TYPES.NEW,
+				id: 'upload-file',
+				action: () => ({
+					type: ACTION_TYPES.NEW,
 					id: 'upload-file',
+					primary: true,
 					label: t('create.options.new.upload', 'Upload'),
 					icon: 'CloudUploadOutline',
 					click: (event) => {
@@ -145,56 +170,75 @@ const FolderView: React.VFC = () => {
 						inputElement.onchange = inputElementOnchange;
 					},
 					disabled: !isCanUploadFile
-				},
-				secondaryItems: [
-					{
-						id: 'create-folder',
-						label: t('create.options.new.folder', 'New Folder'),
-						icon: 'FolderOutline',
-						click: createFolderAction,
-						disabled: !isCanCreateFolder
-					},
-					{
-						id: 'create-docs-document',
-						label: t('create.options.new.document', 'New Document'),
-						icon: 'FileTextOutline',
-						click: createDocumentAction,
-						disabled: !isCanCreateFile
-					},
-					{
-						id: 'create-docs-spreadsheet',
-						label: t('create.options.new.spreadsheet', 'New Spreadsheet'),
-						icon: 'FileCalcOutline',
-						click: createSpreadsheetAction,
-						disabled: !isCanCreateFile
-					},
-					{
-						id: 'create-docs-presentation',
-						label: t('create.options.new.presentation', 'New Presentation'),
-						icon: 'FilePresentationOutline',
-						click: createPresentationAction,
-						disabled: !isCanCreateFile
-					}
-				]
+				})
+			},
+			{
+				type: ACTION_TYPES.NEW,
+				id: 'create-folder',
+				action: () => ({
+					type: ACTION_TYPES.NEW,
+					id: 'create-folder',
+					label: t('create.options.new.folder', 'New Folder'),
+					icon: 'FolderOutline',
+					click: createFolderAction,
+					disabled: !isCanCreateFolder
+				})
+			},
+			{
+				type: ACTION_TYPES.NEW,
+				id: 'create-docs-document',
+				action: () => ({
+					type: ACTION_TYPES.NEW,
+					id: 'create-docs-document',
+					label: t('create.options.new.document', 'New Document'),
+					icon: 'FileTextOutline',
+					click: createDocumentAction,
+					disabled: !isCanCreateFile
+				})
+			},
+			{
+				type: ACTION_TYPES.NEW,
+				id: 'create-docs-spreadsheet',
+				action: () => ({
+					type: ACTION_TYPES.NEW,
+					id: 'create-docs-spreadsheet',
+					label: t('create.options.new.spreadsheet', 'New Spreadsheet'),
+					icon: 'FileCalcOutline',
+					click: createSpreadsheetAction,
+					disabled: !isCanCreateFile
+				})
+			},
+			{
+				type: ACTION_TYPES.NEW,
+				id: 'create-docs-presentation',
+				action: () => ({
+					type: ACTION_TYPES.NEW,
+					id: 'create-docs-presentation',
+					label: t('create.options.new.presentation', 'New Presentation'),
+					icon: 'FilePresentationOutline',
+					click: createPresentationAction,
+					disabled: !isCanCreateFile
+				})
 			}
-		});
+		);
 
 		return (): void => {
 			setCreateOptions({
-				newButton: {
-					primary: {
-						id: 'upload-file',
-						label: t('create.options.new.upload', 'Upload'),
-						icon: 'CloudUploadOutline',
-						click: (event) => {
-							event && event.stopPropagation();
-							inputElement.click();
-							inputElement.onchange = inputElementOnchange;
-						},
-						disabled: !isCanUploadFile
+				type: ACTION_TYPES.NEW,
+				id: 'upload-file',
+				action: () => ({
+					type: ACTION_TYPES.NEW,
+					id: 'upload-file',
+					primary: true,
+					label: t('create.options.new.upload', 'Upload'),
+					icon: 'CloudUploadOutline',
+					click: (event) => {
+						event && event.stopPropagation();
+						inputElement.click();
+						inputElement.onchange = inputElementOnchange;
 					},
-					secondaryItems: []
-				}
+					disabled: !isCanUploadFile
+				})
 			});
 		};
 	}, [

@@ -7,6 +7,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { Container, Responsive } from '@zextras/carbonio-design-system';
+import { ACTION_TYPES } from '@zextras/carbonio-shell-ui';
 import noop from 'lodash/noop';
 import { useTranslation } from 'react-i18next';
 
@@ -24,60 +25,83 @@ const FileView: React.VFC = () => {
 	const [isEmpty, setIsEmpty] = useState(false);
 
 	useEffect(() => {
-		setCreateOptions({
-			newButton: {
-				primary: {
+		setCreateOptions(
+			{
+				id: 'upload-file',
+				type: ACTION_TYPES.NEW,
+				action: () => ({
+					type: ACTION_TYPES.NEW,
 					id: 'upload-file',
 					label: t('create.options.new.upload', 'Upload'),
 					icon: 'CloudUploadOutline',
 					click: noop,
+					primary: true,
 					disabled: true
-				},
-				secondaryItems: [
-					{
-						id: 'create-folder',
-						label: t('create.options.new.folder', 'New Folder'),
-						icon: 'FolderOutline',
-						click: noop,
-						disabled: true
-					},
-					{
-						id: 'create-docs-document',
-						label: t('create.options.new.document', 'New Document'),
-						icon: 'FileTextOutline',
-						click: noop,
-						disabled: true
-					},
-					{
-						id: 'create-docs-spreadsheet',
-						label: t('create.options.new.spreadsheet', 'New Spreadsheet'),
-						icon: 'FileCalcOutline',
-						click: noop,
-						disabled: true
-					},
-					{
-						id: 'create-docs-presentation',
-						label: t('create.options.new.presentation', 'New Presentation'),
-						icon: 'FilePresentationOutline',
-						click: noop,
-						disabled: true
-					}
-				]
+				})
+			},
+			{
+				id: 'create-folder',
+				type: ACTION_TYPES.NEW,
+				action: () => ({
+					id: 'create-folder',
+					type: ACTION_TYPES.NEW,
+					label: t('create.options.new.folder', 'New Folder'),
+					icon: 'FolderOutline',
+					click: noop,
+					disabled: true
+				})
+			},
+			{
+				id: 'create-docs-document',
+				type: ACTION_TYPES.NEW,
+				action: () => ({
+					id: 'create-docs-document',
+					type: ACTION_TYPES.NEW,
+					label: t('create.options.new.document', 'New Document'),
+					icon: 'FileTextOutline',
+					click: noop,
+					disabled: true
+				})
+			},
+			{
+				id: 'create-docs-spreadsheet',
+				type: ACTION_TYPES.NEW,
+				action: () => ({
+					id: 'create-docs-spreadsheet',
+					type: ACTION_TYPES.NEW,
+					label: t('create.options.new.spreadsheet', 'New Spreadsheet'),
+					icon: 'FileCalcOutline',
+					click: noop,
+					disabled: true
+				})
+			},
+			{
+				id: 'create-docs-presentation',
+				type: ACTION_TYPES.NEW,
+				action: () => ({
+					id: 'create-docs-presentation',
+					type: ACTION_TYPES.NEW,
+					label: t('create.options.new.presentation', 'New Presentation'),
+					icon: 'FilePresentationOutline',
+					click: noop,
+					disabled: true
+				})
 			}
-		});
+		);
 
 		return (): void => {
 			setCreateOptions({
-				newButton: {
-					primary: {
-						id: 'upload-file',
-						label: t('create.options.new.upload', 'Upload'),
-						icon: 'CloudUploadOutline',
-						click: noop,
-						disabled: false
-					},
-					secondaryItems: []
-				}
+				type: ACTION_TYPES.NEW,
+				id: 'upload-file',
+				action: () => ({
+					id: 'upload-file',
+					primary: true,
+					type: ACTION_TYPES.NEW,
+					label: t('create.options.new.upload', 'Upload'),
+					icon: 'CloudUploadOutline',
+					click: noop,
+					disabled: false
+				})
 			});
 		};
 	}, [setCreateOptions, t]);
