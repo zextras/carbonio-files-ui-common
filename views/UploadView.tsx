@@ -11,10 +11,9 @@ import { ACTION_TYPES } from '@zextras/carbonio-shell-ui';
 import noop from 'lodash/noop';
 import { useTranslation } from 'react-i18next';
 
-import { FILES_APP_ID } from '../../constants';
 import { useCreateOptions } from '../../hooks/useCreateOptions';
 import { useNavigation } from '../../hooks/useNavigation';
-import { DISPLAYER_WIDTH, LIST_WIDTH, ROOTS } from '../constants';
+import { DISPLAYER_WIDTH, FILES_APP_ID, LIST_WIDTH, ROOTS } from '../constants';
 import { ListContext } from '../contexts';
 import { useUpload } from '../hooks/useUpload';
 import { inputElement } from '../utils/utils';
@@ -66,7 +65,9 @@ const UploadView: React.VFC = () => {
 					primary: true,
 					label: t('create.options.new.upload', 'Upload'),
 					icon: 'CloudUploadOutline',
-					click: (event?: React.SyntheticEvent): void => {
+					click: (event): void => {
+						// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+						// @ts-ignore
 						event && event.stopPropagation();
 						inputElement.click();
 						inputElement.onchange = inputElementOnchange;
@@ -138,7 +139,9 @@ const UploadView: React.VFC = () => {
 					primary: true,
 					label: t('create.options.new.upload', 'Upload'),
 					icon: 'CloudUploadOutline',
-					click: (event?: React.SyntheticEvent): void => {
+					click: (event): void => {
+						// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+						// @ts-ignore
 						event && event.stopPropagation();
 						inputElement.click();
 						inputElement.onchange = inputElementOnchange;

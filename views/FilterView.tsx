@@ -12,10 +12,9 @@ import noop from 'lodash/noop';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useParams } from 'react-router-dom';
 
-import { FILES_APP_ID } from '../../constants';
 import { useCreateOptions } from '../../hooks/useCreateOptions';
 import { useNavigation } from '../../hooks/useNavigation';
-import { DISPLAYER_WIDTH, LIST_WIDTH, ROOTS } from '../constants';
+import { DISPLAYER_WIDTH, FILES_APP_ID, LIST_WIDTH, ROOTS } from '../constants';
 import { ListContext } from '../contexts';
 import { useUpload } from '../hooks/useUpload';
 import { URLParams } from '../types/common';
@@ -76,6 +75,8 @@ const FilterView: React.VFC = () => {
 					label: t('create.options.new.upload', 'Upload'),
 					icon: 'CloudUploadOutline',
 					click: (event): void => {
+						// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+						// @ts-ignore
 						event && event.stopPropagation();
 						inputElement.click();
 						inputElement.onchange = inputElementOnchange;
@@ -147,6 +148,8 @@ const FilterView: React.VFC = () => {
 					label: t('create.options.new.upload', 'Upload'),
 					icon: 'CloudUploadOutline',
 					click: (event): void => {
+						// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+						// @ts-ignore
 						event && event.stopPropagation();
 						inputElement.click();
 						inputElement.onchange = inputElementOnchange;

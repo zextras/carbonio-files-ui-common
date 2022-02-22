@@ -11,9 +11,8 @@ import { ACTION_TYPES } from '@zextras/carbonio-shell-ui';
 import noop from 'lodash/noop';
 import { useTranslation } from 'react-i18next';
 
-import { FILES_APP_ID } from '../../constants';
 import { useCreateOptions } from '../../hooks/useCreateOptions';
-import { DISPLAYER_WIDTH, LIST_WIDTH } from '../constants';
+import { DISPLAYER_WIDTH, FILES_APP_ID, LIST_WIDTH } from '../constants';
 import { ListContext } from '../contexts';
 import useQueryParam from '../hooks/useQueryParam';
 import { Displayer } from './components/Displayer';

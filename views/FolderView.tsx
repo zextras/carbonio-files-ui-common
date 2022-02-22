@@ -12,9 +12,8 @@ import { ACTION_TYPES } from '@zextras/carbonio-shell-ui';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
-import { FILES_APP_ID } from '../../constants';
 import { useCreateOptions } from '../../hooks/useCreateOptions';
-import { DISPLAYER_WIDTH, LIST_WIDTH, ROOTS } from '../constants';
+import { DISPLAYER_WIDTH, FILES_APP_ID, LIST_WIDTH, ROOTS } from '../constants';
 import { ListContext } from '../contexts';
 import GET_PERMISSIONS from '../graphql/queries/getPermissions.graphql';
 import useQueryParam from '../hooks/useQueryParam';
@@ -71,22 +70,22 @@ const FolderView: React.VFC = () => {
 		[permissionsData]
 	);
 
-	const createFolderAction = useCallback((event?: React.SyntheticEvent) => {
+	const createFolderAction = useCallback((event) => {
 		event && event.stopPropagation();
 		setNewFolder(true);
 	}, []);
 
-	const createDocumentAction = useCallback((event?: React.SyntheticEvent) => {
+	const createDocumentAction = useCallback((event) => {
 		event && event.stopPropagation();
 		setNewFile(DocsType.DOCUMENT);
 	}, []);
 
-	const createSpreadsheetAction = useCallback((event?: React.SyntheticEvent) => {
+	const createSpreadsheetAction = useCallback((event) => {
 		event && event.stopPropagation();
 		setNewFile(DocsType.SPREADSHEET);
 	}, []);
 
-	const createPresentationAction = useCallback((event?: React.SyntheticEvent) => {
+	const createPresentationAction = useCallback((event) => {
 		event && event.stopPropagation();
 		setNewFile(DocsType.PRESENTATION);
 	}, []);
@@ -147,6 +146,8 @@ const FolderView: React.VFC = () => {
 					label: t('create.options.new.upload', 'Upload'),
 					icon: 'CloudUploadOutline',
 					click: (event): void => {
+						// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+						// @ts-ignore
 						event && event.stopPropagation();
 						inputElement.click();
 						inputElement.onchange = inputElementOnchange;
@@ -220,6 +221,8 @@ const FolderView: React.VFC = () => {
 					label: t('create.options.new.upload', 'Upload'),
 					icon: 'CloudUploadOutline',
 					click: (event): void => {
+						// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+						// @ts-ignore
 						event && event.stopPropagation();
 						inputElement.click();
 						inputElement.onchange = inputElementOnchange;
