@@ -26,6 +26,7 @@ import {
 	downloadNode,
 	formatDate,
 	getIconByFileType,
+	getPreviewSrc,
 	humanFileSize,
 	openNodeWithDocs
 } from '../../utils/utils';
@@ -103,6 +104,7 @@ interface NodeListItemProps {
 	deletePermanentlyCallback?: () => void;
 	selectionContextualMenuActionsItems?: ActionItem[];
 	dragging?: boolean;
+	version?: number;
 }
 
 const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
@@ -140,7 +142,8 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 	trashed,
 	deletePermanentlyCallback,
 	selectionContextualMenuActionsItems,
-	dragging = false
+	dragging = false,
+	version
 }) => {
 	const [t] = useTranslation();
 	const [showPreviewer, setShowPreviewer] = useState(false);
@@ -278,7 +281,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 					permittedContextualMenuActions[Action.OpenWithDocs] === true
 				) {
 					openNodeWithDocs(id);
-				} else {
+				} else if (type === NodeType.Image) {
 					showPreviewerCallback();
 				}
 			}
@@ -503,12 +506,13 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 				</ListItemContainer>
 			</ContextualMenu>
 			<Previewer
-				src="https://images.pexels.com/photos/2559941/pexels-photo-2559941.jpeg"
-				show={showPreviewer}
-				onClose={hidePreviewerCallback}
 				filename="Test image"
 				extension="JPG"
 				size="100 KB"
+				actions={[]}
+				src={version ? getPreviewSrc(id, version, 0, 0, 'high') : ''}
+				show={showPreviewer}
+				onClose={hidePreviewerCallback}
 			/>
 		</Container>
 	);

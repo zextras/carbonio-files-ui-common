@@ -50,3 +50,5 @@ export const DOWNLOAD_PATH = '/download';
 export const UPLOAD_PATH = '/upload';
 export const UPLOAD_VERSION_PATH = '/upload-version';
 export const DOCS_PATH = '/createFile';
+
+export const PREVIEW = '/preview';

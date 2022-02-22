@@ -339,6 +339,7 @@ export const NodeListItemWrapper: React.VFC<NodeListItemWrapperProps> = ({
 					trashed={node.rootId === ROOTS.TRASH}
 					selectionContextualMenuActionsItems={selectionContextualMenuActionsItems}
 					dragging={dragging}
+					version={(isFile(node) && node.version) || undefined}
 				/>
 			)}
 		</Dropzone>
