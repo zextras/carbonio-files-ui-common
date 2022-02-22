@@ -506,9 +506,9 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 				</ListItemContainer>
 			</ContextualMenu>
 			<Previewer
-				filename="Test image"
-				extension="JPG"
-				size="100 KB"
+				filename={name}
+				extension={extension || undefined}
+				size={(size && humanFileSize(size)) || undefined}
 				actions={[]}
 				src={version ? getPreviewSrc(id, version, 0, 0, 'high') : ''}
 				show={showPreviewer}
