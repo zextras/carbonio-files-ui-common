@@ -12,6 +12,7 @@ import { ACTION_TYPES } from '@zextras/carbonio-shell-ui';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
+import { FILES_APP_ID } from '../../constants';
 import { useCreateOptions } from '../../hooks/useCreateOptions';
 import { DISPLAYER_WIDTH, LIST_WIDTH, ROOTS } from '../constants';
 import { ListContext } from '../contexts';
@@ -94,52 +95,32 @@ const FolderView: React.VFC = () => {
 		const fillerActions: ActionItem[] = [];
 		fillerActions.push(
 			{
-				type: ACTION_TYPES.NEW,
 				id: 'create-folder',
-				action: () => ({
-					type: ACTION_TYPES.NEW,
-					id: 'create-folder',
-					label: t('create.options.new.folder', 'New Folder'),
-					icon: 'FolderOutline',
-					click: createFolderAction,
-					disabled: !isCanCreateFolder
-				})
+				label: t('create.options.new.folder', 'New Folder'),
+				icon: 'FolderOutline',
+				click: createFolderAction,
+				disabled: !isCanCreateFolder
 			},
 			{
-				type: ACTION_TYPES.NEW,
 				id: 'create-docs-document',
-				action: () => ({
-					type: ACTION_TYPES.NEW,
-					id: 'create-docs-document',
-					label: t('create.options.new.document', 'New Document'),
-					icon: 'FileTextOutline',
-					click: createDocumentAction,
-					disabled: !isCanCreateFile
-				})
+				label: t('create.options.new.document', 'New Document'),
+				icon: 'FileTextOutline',
+				click: createDocumentAction,
+				disabled: !isCanCreateFile
 			},
 			{
-				type: ACTION_TYPES.NEW,
 				id: 'create-docs-spreadsheet',
-				action: () => ({
-					type: ACTION_TYPES.NEW,
-					id: 'create-docs-spreadsheet',
-					label: t('create.options.new.spreadsheet', 'New Spreadsheet'),
-					icon: 'FileCalcOutline',
-					click: createSpreadsheetAction,
-					disabled: !isCanCreateFile
-				})
+				label: t('create.options.new.spreadsheet', 'New Spreadsheet'),
+				icon: 'FileCalcOutline',
+				click: createSpreadsheetAction,
+				disabled: !isCanCreateFile
 			},
 			{
-				type: ACTION_TYPES.NEW,
 				id: 'create-docs-presentation',
-				action: () => ({
-					type: ACTION_TYPES.NEW,
-					id: 'create-docs-presentation',
-					label: t('create.options.new.presentation', 'New Presentation'),
-					icon: 'FilePresentationOutline',
-					click: createPresentationAction,
-					disabled: !isCanCreateFile
-				})
+				label: t('create.options.new.presentation', 'New Presentation'),
+				icon: 'FilePresentationOutline',
+				click: createPresentationAction,
+				disabled: !isCanCreateFile
 			}
 		);
 		return fillerActions;
@@ -162,9 +143,10 @@ const FolderView: React.VFC = () => {
 					type: ACTION_TYPES.NEW,
 					id: 'upload-file',
 					primary: true,
+					group: FILES_APP_ID,
 					label: t('create.options.new.upload', 'Upload'),
 					icon: 'CloudUploadOutline',
-					click: (event) => {
+					click: (event): void => {
 						event && event.stopPropagation();
 						inputElement.click();
 						inputElement.onchange = inputElementOnchange;
@@ -178,6 +160,7 @@ const FolderView: React.VFC = () => {
 				action: () => ({
 					type: ACTION_TYPES.NEW,
 					id: 'create-folder',
+					group: FILES_APP_ID,
 					label: t('create.options.new.folder', 'New Folder'),
 					icon: 'FolderOutline',
 					click: createFolderAction,
@@ -190,6 +173,7 @@ const FolderView: React.VFC = () => {
 				action: () => ({
 					type: ACTION_TYPES.NEW,
 					id: 'create-docs-document',
+					group: FILES_APP_ID,
 					label: t('create.options.new.document', 'New Document'),
 					icon: 'FileTextOutline',
 					click: createDocumentAction,
@@ -202,6 +186,7 @@ const FolderView: React.VFC = () => {
 				action: () => ({
 					type: ACTION_TYPES.NEW,
 					id: 'create-docs-spreadsheet',
+					group: FILES_APP_ID,
 					label: t('create.options.new.spreadsheet', 'New Spreadsheet'),
 					icon: 'FileCalcOutline',
 					click: createSpreadsheetAction,
@@ -214,6 +199,7 @@ const FolderView: React.VFC = () => {
 				action: () => ({
 					type: ACTION_TYPES.NEW,
 					id: 'create-docs-presentation',
+					group: FILES_APP_ID,
 					label: t('create.options.new.presentation', 'New Presentation'),
 					icon: 'FilePresentationOutline',
 					click: createPresentationAction,
@@ -230,9 +216,10 @@ const FolderView: React.VFC = () => {
 					type: ACTION_TYPES.NEW,
 					id: 'upload-file',
 					primary: true,
+					group: FILES_APP_ID,
 					label: t('create.options.new.upload', 'Upload'),
 					icon: 'CloudUploadOutline',
-					click: (event) => {
+					click: (event): void => {
 						event && event.stopPropagation();
 						inputElement.click();
 						inputElement.onchange = inputElementOnchange;

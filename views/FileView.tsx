@@ -11,6 +11,7 @@ import { ACTION_TYPES } from '@zextras/carbonio-shell-ui';
 import noop from 'lodash/noop';
 import { useTranslation } from 'react-i18next';
 
+import { FILES_APP_ID } from '../../constants';
 import { useCreateOptions } from '../../hooks/useCreateOptions';
 import { DISPLAYER_WIDTH, LIST_WIDTH } from '../constants';
 import { ListContext } from '../contexts';
@@ -31,6 +32,7 @@ const FileView: React.VFC = () => {
 				type: ACTION_TYPES.NEW,
 				action: () => ({
 					type: ACTION_TYPES.NEW,
+					group: FILES_APP_ID,
 					id: 'upload-file',
 					label: t('create.options.new.upload', 'Upload'),
 					icon: 'CloudUploadOutline',
@@ -44,6 +46,7 @@ const FileView: React.VFC = () => {
 				type: ACTION_TYPES.NEW,
 				action: () => ({
 					id: 'create-folder',
+					group: FILES_APP_ID,
 					type: ACTION_TYPES.NEW,
 					label: t('create.options.new.folder', 'New Folder'),
 					icon: 'FolderOutline',
@@ -56,6 +59,7 @@ const FileView: React.VFC = () => {
 				type: ACTION_TYPES.NEW,
 				action: () => ({
 					id: 'create-docs-document',
+					group: FILES_APP_ID,
 					type: ACTION_TYPES.NEW,
 					label: t('create.options.new.document', 'New Document'),
 					icon: 'FileTextOutline',
@@ -68,6 +72,7 @@ const FileView: React.VFC = () => {
 				type: ACTION_TYPES.NEW,
 				action: () => ({
 					id: 'create-docs-spreadsheet',
+					group: FILES_APP_ID,
 					type: ACTION_TYPES.NEW,
 					label: t('create.options.new.spreadsheet', 'New Spreadsheet'),
 					icon: 'FileCalcOutline',
@@ -80,6 +85,7 @@ const FileView: React.VFC = () => {
 				type: ACTION_TYPES.NEW,
 				action: () => ({
 					id: 'create-docs-presentation',
+					group: FILES_APP_ID,
 					type: ACTION_TYPES.NEW,
 					label: t('create.options.new.presentation', 'New Presentation'),
 					icon: 'FilePresentationOutline',
@@ -96,6 +102,7 @@ const FileView: React.VFC = () => {
 				action: () => ({
 					id: 'upload-file',
 					primary: true,
+					group: FILES_APP_ID,
 					type: ACTION_TYPES.NEW,
 					label: t('create.options.new.upload', 'Upload'),
 					icon: 'CloudUploadOutline',

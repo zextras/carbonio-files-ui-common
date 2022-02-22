@@ -11,6 +11,7 @@ import { ACTION_TYPES } from '@zextras/carbonio-shell-ui';
 import noop from 'lodash/noop';
 import { useTranslation } from 'react-i18next';
 
+import { FILES_APP_ID } from '../../constants';
 import { useCreateOptions } from '../../hooks/useCreateOptions';
 import { useNavigation } from '../../hooks/useNavigation';
 import { DISPLAYER_WIDTH, LIST_WIDTH, ROOTS } from '../constants';
@@ -60,6 +61,7 @@ const UploadView: React.VFC = () => {
 				id: 'upload-file',
 				action: () => ({
 					type: ACTION_TYPES.NEW,
+					group: FILES_APP_ID,
 					id: 'upload-file',
 					primary: true,
 					label: t('create.options.new.upload', 'Upload'),
@@ -77,6 +79,7 @@ const UploadView: React.VFC = () => {
 				id: 'create-folder',
 				action: () => ({
 					type: ACTION_TYPES.NEW,
+					group: FILES_APP_ID,
 					id: 'create-folder',
 					label: t('create.options.new.folder', 'New Folder'),
 					icon: 'FolderOutline',
@@ -89,6 +92,7 @@ const UploadView: React.VFC = () => {
 				id: 'create-docs-document',
 				action: () => ({
 					type: ACTION_TYPES.NEW,
+					group: FILES_APP_ID,
 					id: 'create-docs-document',
 					label: t('create.options.new.document', 'New Document'),
 					icon: 'FileTextOutline',
@@ -101,6 +105,7 @@ const UploadView: React.VFC = () => {
 				id: 'create-docs-spreadsheet',
 				action: () => ({
 					type: ACTION_TYPES.NEW,
+					group: FILES_APP_ID,
 					id: 'create-docs-spreadsheet',
 					label: t('create.options.new.spreadsheet', 'New Spreadsheet'),
 					icon: 'FileCalcOutline',
@@ -113,6 +118,7 @@ const UploadView: React.VFC = () => {
 				id: 'create-docs-presentation',
 				action: () => ({
 					type: ACTION_TYPES.NEW,
+					group: FILES_APP_ID,
 					id: 'create-docs-presentation',
 					label: t('create.options.new.presentation', 'New Presentation'),
 					icon: 'FilePresentationOutline',
@@ -127,6 +133,7 @@ const UploadView: React.VFC = () => {
 				id: 'upload-file',
 				action: () => ({
 					type: ACTION_TYPES.NEW,
+					group: FILES_APP_ID,
 					id: 'upload-file',
 					primary: true,
 					label: t('create.options.new.upload', 'Upload'),

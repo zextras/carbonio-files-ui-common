@@ -11,6 +11,7 @@ import { ACTION_TYPES } from '@zextras/carbonio-shell-ui';
 import noop from 'lodash/noop';
 import { useTranslation } from 'react-i18next';
 
+import { FILES_APP_ID } from '../../constants';
 import { useCreateOptions } from '../../hooks/useCreateOptions';
 import { useNavigation } from '../../hooks/useNavigation';
 import { DISPLAYER_WIDTH, LIST_WIDTH, ROOTS } from '../constants';
@@ -72,6 +73,7 @@ export const SearchView: React.VFC<SearchViewProps> = ({
 					type: ACTION_TYPES.NEW,
 					id: 'upload-file',
 					primary: true,
+					group: FILES_APP_ID,
 					label: t('create.options.new.upload', 'Upload'),
 					icon: 'CloudUploadOutline',
 					click: (event?: React.SyntheticEvent): void => {
@@ -88,6 +90,7 @@ export const SearchView: React.VFC<SearchViewProps> = ({
 				action: () => ({
 					type: ACTION_TYPES.NEW,
 					id: 'create-folder',
+					group: FILES_APP_ID,
 					label: t('create.options.new.folder', 'New Folder'),
 					icon: 'FolderOutline',
 					disabled: true,
@@ -99,6 +102,7 @@ export const SearchView: React.VFC<SearchViewProps> = ({
 				id: 'create-docs-document',
 				action: () => ({
 					type: ACTION_TYPES.NEW,
+					group: FILES_APP_ID,
 					id: 'create-docs-document',
 					label: t('create.options.new.document', 'New Document'),
 					icon: 'FileTextOutline',
@@ -111,6 +115,7 @@ export const SearchView: React.VFC<SearchViewProps> = ({
 				id: 'create-docs-spreadsheet',
 				action: () => ({
 					type: ACTION_TYPES.NEW,
+					group: FILES_APP_ID,
 					id: 'create-docs-spreadsheet',
 					label: t('create.options.new.spreadsheet', 'New Spreadsheet'),
 					icon: 'FileCalcOutline',
@@ -123,6 +128,7 @@ export const SearchView: React.VFC<SearchViewProps> = ({
 				id: 'create-docs-presentation',
 				action: () => ({
 					type: ACTION_TYPES.NEW,
+					group: FILES_APP_ID,
 					id: 'create-docs-presentation',
 					label: t('create.options.new.presentation', 'New Presentation'),
 					icon: 'FilePresentationOutline',
@@ -137,6 +143,7 @@ export const SearchView: React.VFC<SearchViewProps> = ({
 				id: 'upload-file',
 				action: () => ({
 					type: ACTION_TYPES.NEW,
+					group: FILES_APP_ID,
 					id: 'upload-file',
 					primary: true,
 					label: t('create.options.new.upload', 'Upload'),

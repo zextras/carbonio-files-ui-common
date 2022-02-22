@@ -12,6 +12,7 @@ import noop from 'lodash/noop';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useParams } from 'react-router-dom';
 
+import { FILES_APP_ID } from '../../constants';
 import { useCreateOptions } from '../../hooks/useCreateOptions';
 import { useNavigation } from '../../hooks/useNavigation';
 import { DISPLAYER_WIDTH, LIST_WIDTH, ROOTS } from '../constants';
@@ -70,10 +71,11 @@ const FilterView: React.VFC = () => {
 				action: () => ({
 					id: 'upload-file',
 					primary: true,
+					group: FILES_APP_ID,
 					type: ACTION_TYPES.NEW,
 					label: t('create.options.new.upload', 'Upload'),
 					icon: 'CloudUploadOutline',
-					click: (event) => {
+					click: (event): void => {
 						event && event.stopPropagation();
 						inputElement.click();
 						inputElement.onchange = inputElementOnchange;
@@ -85,6 +87,7 @@ const FilterView: React.VFC = () => {
 				type: ACTION_TYPES.NEW,
 				action: () => ({
 					id: 'create-folder',
+					group: FILES_APP_ID,
 					type: ACTION_TYPES.NEW,
 					label: t('create.options.new.folder', 'New Folder'),
 					icon: 'FolderOutline',
@@ -97,6 +100,7 @@ const FilterView: React.VFC = () => {
 				type: ACTION_TYPES.NEW,
 				action: () => ({
 					id: 'create-docs-document',
+					group: FILES_APP_ID,
 					type: ACTION_TYPES.NEW,
 					label: t('create.options.new.document', 'New Document'),
 					icon: 'FileTextOutline',
@@ -109,6 +113,7 @@ const FilterView: React.VFC = () => {
 				type: ACTION_TYPES.NEW,
 				action: () => ({
 					id: 'create-docs-spreadsheet',
+					group: FILES_APP_ID,
 					type: ACTION_TYPES.NEW,
 					label: t('create.options.new.spreadsheet', 'New Spreadsheet'),
 					icon: 'FileCalcOutline',
@@ -121,6 +126,7 @@ const FilterView: React.VFC = () => {
 				type: ACTION_TYPES.NEW,
 				action: () => ({
 					id: 'create-docs-presentation',
+					group: FILES_APP_ID,
 					type: ACTION_TYPES.NEW,
 					label: t('create.options.new.presentation', 'New Presentation'),
 					icon: 'FilePresentationOutline',
@@ -136,10 +142,11 @@ const FilterView: React.VFC = () => {
 				action: () => ({
 					id: 'upload-file',
 					primary: true,
+					group: FILES_APP_ID,
 					type: ACTION_TYPES.NEW,
 					label: t('create.options.new.upload', 'Upload'),
 					icon: 'CloudUploadOutline',
-					click: (event) => {
+					click: (event): void => {
 						event && event.stopPropagation();
 						inputElement.click();
 						inputElement.onchange = inputElementOnchange;
