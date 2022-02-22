@@ -7,6 +7,14 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 
 import last from 'lodash/last';
+import styled from 'styled-components';
+
+const FocusContainer = styled.span`
+	outline: none;
+	& > * {
+		outline: none;
+	}
+`;
 
 interface FocusContainerProps {
 	returnFocus?: boolean;
@@ -55,13 +63,13 @@ const FocusWithin = ({ children, returnFocus = true }: FocusContainerProps): JSX
 	}, [onStartSentinelFocus, onEndSentinelFocus, returnFocus]);
 
 	return (
-		<span>
+		<FocusContainer>
 			<span tabIndex={0} ref={startSentinelRef} />
-			<span tabIndex={-1} ref={contentRef}>
+			<div tabIndex={-1} ref={contentRef}>
 				{children}
-			</span>
+			</div>
 			<span tabIndex={0} ref={endSentinelRef} />
-		</span>
+		</FocusContainer>
 	);
 };
 

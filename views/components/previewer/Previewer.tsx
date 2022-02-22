@@ -17,6 +17,14 @@ type PreviewerProps = Omit<React.ComponentPropsWithRef<typeof PreviewerBase>, 'H
 		closeTooltip?: string;
 	};
 
+const FooterContainer = styled.div`
+	width: fit-content;
+`;
+
+const UpperCaseText = styled(Text)`
+	text-transform: uppercase;
+`;
+
 interface FooterProps {
 	/** Extension of the file, shown as info */
 	extension: string;
@@ -27,14 +35,16 @@ interface FooterProps {
 }
 
 const Footer: React.VFC<FooterProps> = ({ filename, extension, size }) => (
-	<div>
+	<FooterContainer>
 		<Text size="small" color="gray6">
 			{filename}
 		</Text>
-		<Text size="small" color="gray6">
-			{extension} {extension && size && '&middot;'} {size}
-		</Text>
-	</div>
+		<UpperCaseText size="small" color="gray6">
+			{extension}
+			{extension && size && <> &middot; </>}
+			{size}
+		</UpperCaseText>
+	</FooterContainer>
 );
 
 interface HeaderAction {
@@ -57,7 +67,7 @@ interface HeaderProps {
 
 const HeaderContainer = styled.div`
 	display: flex;
-	justify-items: flex-end;
+	justify-content: flex-end;
 `;
 
 const Header: React.VFC<HeaderProps> = ({ actions }) => (
@@ -88,7 +98,8 @@ const Previewer = React.forwardRef<HTMLDivElement, PreviewerProps>(function Prev
 		size = '',
 		actions = [],
 		onClose,
-		closeTooltip = 'Close'
+		closeTooltip = 'Close',
+		alt
 	},
 	ref
 ) {
@@ -109,6 +120,7 @@ const Previewer = React.forwardRef<HTMLDivElement, PreviewerProps>(function Prev
 			disablePortal={disablePortal}
 			ref={ref}
 			onClose={onClose}
+			alt={alt ?? filename}
 		/>
 	);
 });

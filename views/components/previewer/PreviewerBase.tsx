@@ -1,12 +1,12 @@
-/* eslint-disable jsx-a11y/no-noninteractive-tabindex */
 /*
  * SPDX-FileCopyrightText: 2022 Zextras <https://www.zextras.com>
  *
  * SPDX-License-Identifier: AGPL-3.0-only
  */
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Portal, useCombinedRefs } from '@zextras/carbonio-design-system';
+import throttle from 'lodash/throttle';
 import styled from 'styled-components';
 
 import FocusWithin from './FocusWithin';
@@ -26,25 +26,27 @@ const Overlay = styled.div`
 	z-index: 3;
 `;
 
-const PreviewerContainer = styled.div`
+const PreviewerContainer = styled.div.attrs({
+	padding: '8px'
+})`
 	display: flex;
 	max-width: 100%;
-	max-height: 100vh;
+	max-height: calc(100vh - ${({ padding }): string => padding} * 2);
 	flex-direction: column;
-	gap: 8px;
-	//width: auto;
-	//height: auto;
+	gap: ${({ padding }): string => padding};
+	justify-content: center;
+	align-items: center;
+	overflow: hidden;
+	padding: ${({ padding }): string => padding};
+	outline: none;
 `;
 
-const Header = styled.div`
-	align-self: flex-end;
+const Header = styled.div<{ imageWidth?: number }>`
+	width: ${({ imageWidth }): string => (imageWidth ? `${imageWidth}px` : '100%')};
 `;
 
-const Footer = styled.div``;
-
-const Content = styled.div`
-	max-height: 100%;
-	max-width: 100%;
+const Footer = styled.div<{ imageWidth?: number }>`
+	width: ${({ imageWidth }): string => (imageWidth ? `${imageWidth}px` : '100%')};
 `;
 
 const Image = styled.img`
@@ -52,9 +54,9 @@ const Image = styled.img`
 	max-width: 100%;
 	min-height: 0;
 	min-width: 0;
-	//flex-basis: auto;
-	//object-fit: scale-down;
 	align-self: center;
+	filter: drop-shadow(0px 5px 14px rgba(0, 0, 0, 0.35));
+	border-radius: 4px;
 `;
 
 export interface PreviewerBaseProps {
@@ -81,52 +83,15 @@ export interface PreviewerBaseProps {
 
 // TODO: allow usage of blob as data
 
-function getRenderedSize(
-	contains: boolean,
-	cWidth: number,
-	cHeight: number,
-	width: number,
-	height: number,
-	pos: number
-): { width: number; height: number; left: number; right: number } {
-	const oRatio = width / height;
-	const cRatio = cWidth / cHeight;
-	const result = {
-		width: 0,
-		height: 0,
-		left: 0,
-		right: 0
-	};
-	if (contains ? oRatio > cRatio : oRatio < cRatio) {
-		result.width = cWidth;
-		result.height = cWidth / oRatio;
-	} else {
-		result.width = cHeight * oRatio;
-		result.height = cHeight;
-	}
-	result.left = (cWidth - result.width) * (pos / 100);
-	result.right = result.width + result.left;
-	return result;
-}
-
-function getImgSizeInfo(img: HTMLImageElement): ReturnType<typeof getRenderedSize> {
-	const pos = window.getComputedStyle(img).getPropertyValue('object-position').split(' ');
-	return getRenderedSize(
-		true,
-		img.width,
-		img.height,
-		img.naturalWidth,
-		img.naturalHeight,
-		parseInt(pos[0], 10)
-	);
-}
-
 const PreviewerBase = React.forwardRef<HTMLDivElement, PreviewerBaseProps>(function PreviewerBaseFn(
 	{ src, footer, header, show = false, container, disablePortal = false, alt, onClose },
 	ref
 ) {
 	const previewerRef: React.MutableRefObject<HTMLDivElement | null> = useCombinedRefs(ref);
 	const imageRef = useRef<HTMLImageElement | null>(null);
+	const headerRef = useRef<HTMLDivElement | null>(null);
+	const footerRef = useRef<HTMLDivElement | null>(null);
+	const [imageWidth, setImageWidth] = useState<number | undefined>(undefined);
 
 	const escapeEvent = useCallback<(e: KeyboardEvent) => void>(
 		(event) => {
@@ -137,30 +102,36 @@ const PreviewerBase = React.forwardRef<HTMLDivElement, PreviewerBaseProps>(funct
 		[onClose]
 	);
 
-	const calcPositions = useCallback(() => {
-		if (imageRef.current) {
-			console.log('image positions', getImgSizeInfo(imageRef.current));
-		}
-	}, []);
+	const calcImageWidth = useMemo(
+		() =>
+			throttle(
+				() => {
+					if (imageRef.current) {
+						const imgWidth = imageRef.current.width;
+						const windowWidth = window.innerWidth;
+						setImageWidth(imgWidth > windowWidth ? undefined : imgWidth);
+					}
+				},
+				0,
+				{ leading: true, trailing: true }
+			),
+		[]
+	);
 
 	useEffect(() => {
 		const imageElement = imageRef.current;
 		if (show) {
 			if (imageElement) {
-				imageElement.addEventListener('load', calcPositions);
-				imageElement.addEventListener('resize', calcPositions);
+				window.addEventListener('resize', calcImageWidth);
 			}
 			document.addEventListener('keyup', escapeEvent);
 		}
 
 		return (): void => {
-			if (imageElement) {
-				imageElement.removeEventListener('load', calcPositions);
-				imageElement.removeEventListener('resize', calcPositions);
-			}
+			window.removeEventListener('resize', calcImageWidth);
 			document.removeEventListener('keyup', escapeEvent);
 		};
-	}, [calcPositions, escapeEvent, show]);
+	}, [calcImageWidth, escapeEvent, show]);
 
 	const onOverlayClick = useCallback<React.ReactEventHandler>(
 		(event) => {
@@ -168,7 +139,8 @@ const PreviewerBase = React.forwardRef<HTMLDivElement, PreviewerBaseProps>(funct
 			event.stopPropagation();
 			previewerRef.current &&
 				!event.isDefaultPrevented() &&
-				!previewerRef.current.contains(event.target as Node) &&
+				(previewerRef.current === event.target ||
+					!previewerRef.current.contains(event.target as Node)) &&
 				onClose(event);
 		},
 		[onClose, previewerRef]
@@ -179,14 +151,19 @@ const PreviewerBase = React.forwardRef<HTMLDivElement, PreviewerBaseProps>(funct
 			<Overlay onClick={onOverlayClick}>
 				<FocusWithin>
 					<PreviewerContainer ref={previewerRef}>
-						<Header>{header}</Header>
+						<Header ref={headerRef} imageWidth={imageWidth}>
+							{header}
+						</Header>
 						<Image
 							alt={alt}
 							src={src}
+							onLoad={calcImageWidth}
 							onError={(): void => console.log('TODO handle error')}
 							ref={imageRef}
 						/>
-						<Footer>{footer}</Footer>
+						<Footer ref={footerRef} imageWidth={imageWidth}>
+							{footer}
+						</Footer>
 					</PreviewerContainer>
 				</FocusWithin>
 			</Overlay>
