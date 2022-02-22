@@ -31,6 +31,7 @@ import {
 } from '../../utils/utils';
 import { ContextualMenu } from './ContextualMenu';
 import { NodeHoverBar } from './NodeHoverBar';
+import Previewer from './previewer/Previewer';
 import {
 	CheckedAvatar,
 	FileIconPreview,
@@ -142,6 +143,9 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 	dragging = false
 }) => {
 	const [t] = useTranslation();
+	const [showPreviewer, setShowPreviewer] = useState(false);
+	const showPreviewerCallback = useCallback(() => setShowPreviewer(true), []);
+	const hidePreviewerCallback = useCallback(() => setShowPreviewer(false), []);
 	const userInfo = useUserInfo();
 	const [isContextualMenuActive, setIsContextualMenuActive] = useState(false);
 	const selectIdCallback = useCallback(
@@ -274,10 +278,21 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 					permittedContextualMenuActions[Action.OpenWithDocs] === true
 				) {
 					openNodeWithDocs(id);
+				} else {
+					showPreviewerCallback();
 				}
 			}
 		},
-		[disabled, id, isSelectionModeActive, trashed, navigateTo, permittedContextualMenuActions, type]
+		[
+			isSelectionModeActive,
+			disabled,
+			trashed,
+			type,
+			permittedContextualMenuActions,
+			id,
+			navigateTo,
+			showPreviewerCallback
+		]
 	);
 
 	const setActiveOrOpenNode = useMemo(
@@ -487,6 +502,14 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 					)}
 				</ListItemContainer>
 			</ContextualMenu>
+			<Previewer
+				src="https://images.pexels.com/photos/2559941/pexels-photo-2559941.jpeg"
+				show={showPreviewer}
+				onClose={hidePreviewerCallback}
+				filename="Test image"
+				extension="JPG"
+				size="100 KB"
+			/>
 		</Container>
 	);
 };
