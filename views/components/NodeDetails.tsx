@@ -226,7 +226,7 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 	// use a useQuery to load full path only when required so that operations like move that cleanup cache trigger a refetch
 	const { data } = useQuery<GetPathQuery, GetPathQueryVariables>(GET_PATH, {
 		variables: {
-			id
+			node_id: id
 		},
 		skip: !id || !crumbsRequested,
 		onError(err) {

@@ -18,7 +18,7 @@ export function useGetVersionsQuery(
 		GET_VERSIONS,
 		{
 			variables: {
-				id,
+				node_id: id,
 				versions
 			},
 			skip: !id,

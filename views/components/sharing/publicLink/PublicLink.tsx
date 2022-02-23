@@ -174,6 +174,8 @@ export const PublicLink: React.FC<AddPublicLinkProps> = ({
 			if (expiresAt) {
 				const minOffset = moment().tz(zimbraPrefTimeZoneId).utcOffset();
 				expiresWithOffset = expiresAt - minOffset * 60 * 1000;
+			} else if (expiresAt === 0) {
+				expiresWithOffset = expiresAt;
 			}
 			updateLink(linkId, description, expiresWithOffset).then(({ data }) => {
 				if (data) {

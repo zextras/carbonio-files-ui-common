@@ -52,7 +52,7 @@ describe('Versioning', () => {
 		const version3 = getVersionFromFile(fileVersion3);
 
 		const mocks = [
-			mockGetVersions({ id: fileVersion3.id }, [
+			mockGetVersions({ node_id: fileVersion3.id }, [
 				version3 as FilesFile,
 				version2 as FilesFile,
 				version1 as FilesFile
@@ -100,14 +100,14 @@ describe('Versioning', () => {
 			const version5 = getVersionFromFile(fileVersion5);
 
 			const mocks = [
-				mockGetVersions({ id: fileVersion5.id }, [
+				mockGetVersions({ node_id: fileVersion5.id }, [
 					version5 as FilesFile,
 					version4 as FilesFile,
 					version3 as FilesFile,
 					version2 as FilesFile,
 					version1 as FilesFile
 				]),
-				mockDeleteVersions({ id: fileVersion5.id, versions: [version2.version] }, [
+				mockDeleteVersions({ node_id: fileVersion5.id, versions: [version2.version] }, [
 					version2.version
 				])
 			];
@@ -167,14 +167,14 @@ describe('Versioning', () => {
 			const version5 = getVersionFromFile(fileVersion5);
 
 			const mocks = [
-				mockGetVersions({ id: fileVersion5.id }, [
+				mockGetVersions({ node_id: fileVersion5.id }, [
 					version5 as FilesFile,
 					version4 as FilesFile,
 					version3 as FilesFile,
 					version2 as FilesFile,
 					version1 as FilesFile
 				]),
-				mockDeleteVersions({ id: fileVersion5.id }, [
+				mockDeleteVersions({ node_id: fileVersion5.id }, [
 					version4.version,
 					version3.version,
 					version1.version
@@ -220,9 +220,9 @@ describe('Versioning', () => {
 		const version2 = getVersionFromFile(fileVersion2);
 
 		const mocks = [
-			mockGetVersions({ id: fileVersion2.id }, [version2 as FilesFile, version1 as FilesFile]),
-			mockKeepVersions({ id: fileVersion2.id, versions: [2], keep_forever: true }, [2]),
-			mockKeepVersions({ id: fileVersion2.id, versions: [2], keep_forever: false }, [2])
+			mockGetVersions({ node_id: fileVersion2.id }, [version2 as FilesFile, version1 as FilesFile]),
+			mockKeepVersions({ node_id: fileVersion2.id, versions: [2], keep_forever: true }, [2]),
+			mockKeepVersions({ node_id: fileVersion2.id, versions: [2], keep_forever: false }, [2])
 		];
 
 		render(<Versioning node={fileVersion2} />, { mocks });
@@ -278,8 +278,8 @@ describe('Versioning', () => {
 		const version3 = getVersionFromFile(fileVersion3);
 
 		const mocks = [
-			mockGetVersions({ id: fileVersion2.id }, [version2 as FilesFile, version1 as FilesFile]),
-			mockCloneVersion({ id: fileVersion2.id, version: 2 }, version3 as FilesFile)
+			mockGetVersions({ node_id: fileVersion2.id }, [version2 as FilesFile, version1 as FilesFile]),
+			mockCloneVersion({ node_id: fileVersion2.id, version: 2 }, version3 as FilesFile)
 		];
 
 		render(<Versioning node={fileVersion2} />, { mocks });
@@ -315,7 +315,7 @@ describe('Versioning', () => {
 
 		const version1 = getVersionFromFile(fileVersion1);
 
-		const mocks = [mockGetVersions({ id: fileVersion1.id }, [version1 as FilesFile])];
+		const mocks = [mockGetVersions({ node_id: fileVersion1.id }, [version1 as FilesFile])];
 
 		render(<Versioning node={fileVersion1} />, { mocks });
 		await screen.findByText(getChipLabel(fileVersion1.last_editor));
@@ -347,7 +347,7 @@ describe('Versioning', () => {
 
 		const version1 = getVersionFromFile(fileVersion1);
 
-		const mocks = [mockGetVersions({ id: fileVersion1.id }, [version1 as FilesFile])];
+		const mocks = [mockGetVersions({ node_id: fileVersion1.id }, [version1 as FilesFile])];
 
 		render(<Versioning node={fileVersion1} />, { mocks });
 		await screen.findByText(getChipLabel(fileVersion1.last_editor));
@@ -397,13 +397,13 @@ describe('Versioning', () => {
 		const version5 = getVersionFromFile(fileVersion5);
 
 		const mocks = [
-			mockGetVersions({ id: fileVersion4.id }, [
+			mockGetVersions({ node_id: fileVersion4.id }, [
 				version4 as FilesFile,
 				version3 as FilesFile,
 				version2 as FilesFile,
 				version1 as FilesFile
 			]),
-			mockGetVersions({ id: fileVersion4.id, versions: [5] }, [version5 as FilesFile])
+			mockGetVersions({ node_id: fileVersion4.id, versions: [5] }, [version5 as FilesFile])
 		];
 
 		server.use(

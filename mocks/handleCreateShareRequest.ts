@@ -14,7 +14,7 @@ const handleCreateShareRequest: ResponseResolver<
 	GraphQLContext<CreateShareMutation>,
 	CreateShareMutation
 > = (req, res, ctx) => {
-	const { nodeId, shareTargetId, permission } = req.variables;
+	const { node_id: nodeId, share_target_id: shareTargetId, permission } = req.variables;
 	const share = populateShare({ id: nodeId } as Node, '', populateUser(shareTargetId));
 	share.permission = permission;
 

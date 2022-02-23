@@ -20,6 +20,7 @@ import GET_PERMISSIONS from '../graphql/queries/getPermissions.graphql';
 import useQueryParam from '../hooks/useQueryParam';
 import { useUpload } from '../hooks/useUpload';
 import { DocsType, URLParams } from '../types/common';
+import { GetPermissionsQuery, GetPermissionsQueryVariables } from '../types/graphql/types';
 import { ActionItem, canCreateFile, canCreateFolder, canUploadFile } from '../utils/ActionsFactory';
 import { inputElement } from '../utils/utils';
 import { Displayer } from './components/Displayer';
@@ -50,24 +51,27 @@ const FolderView: React.VFC = () => {
 		[add, folderId, rootId]
 	);
 
-	const { data: permissionsData } = useQuery(GET_PERMISSIONS, {
-		variables: {
-			id: folderId || rootId || ROOTS.LOCAL_ROOT
+	const { data: permissionsData } = useQuery<GetPermissionsQuery, GetPermissionsQueryVariables>(
+		GET_PERMISSIONS,
+		{
+			variables: {
+				node_id: folderId || rootId || ROOTS.LOCAL_ROOT
+			}
 		}
-	});
+	);
 
 	const isCanUploadFile = useMemo(
-		() => permissionsData?.getNode && canUploadFile(permissionsData.getNode),
+		() => !!permissionsData?.getNode && canUploadFile(permissionsData.getNode),
 		[permissionsData]
 	);
 
 	const isCanCreateFolder = useMemo(
-		() => permissionsData?.getNode && canCreateFolder(permissionsData.getNode),
+		() => !!permissionsData?.getNode && canCreateFolder(permissionsData.getNode),
 		[permissionsData]
 	);
 
 	const isCanCreateFile = useMemo(
-		() => permissionsData?.getNode && canCreateFile(permissionsData.getNode),
+		() => !!permissionsData?.getNode && canCreateFile(permissionsData.getNode),
 		[permissionsData]
 	);
 

@@ -57,8 +57,9 @@ const roleAssignChecker: {
 	[Role.Viewer]: (node: Node, permissions: Permissions) => boolean;
 } = {
 	[Role.Editor]: (node: Node, permissions: Permissions) =>
-		(node.type === NodeType.Folder && permissions.can_write_folder) ||
-		(node.type !== NodeType.Folder && permissions.can_write_file),
+		node?.type &&
+		((node.type === NodeType.Folder && permissions.can_write_folder) ||
+			(node.type !== NodeType.Folder && permissions.can_write_file)),
 	[Role.Viewer]: () => true
 };
 
@@ -88,7 +89,7 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 		{
 			fetchPolicy: 'network-only',
 			variables: {
-				id: share?.node?.id
+				node_id: share?.node?.id
 			}
 		}
 	);
@@ -164,10 +165,10 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 
 	// remove active when deleted share to avoid having an un-accessible node as active
 	const navigateToSharedWithMe = useCallback(() => {
-		if (yourselfChip && share.node.id === activeNodeId) {
+		if (yourselfChip && share.node?.id === activeNodeId) {
 			removeActiveNode();
 		}
-	}, [activeNodeId, removeActiveNode, share.node.id, yourselfChip]);
+	}, [activeNodeId, removeActiveNode, share.node?.id, yourselfChip]);
 
 	const { openDeleteShareModal } = useDeleteShareModal(
 		deleteShareCallback,

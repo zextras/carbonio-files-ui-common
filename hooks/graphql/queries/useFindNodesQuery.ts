@@ -40,13 +40,13 @@ export function useFindNodesQuery({
 			variables: {
 				keywords,
 				flagged,
-				sharedWithMe,
-				sharedByMe,
-				folderId,
+				shared_with_me: sharedWithMe,
+				shared_by_me: sharedByMe,
+				folder_id: folderId,
 				cascade,
 				limit: NODES_LOAD_LIMIT,
 				sort: nodeSort,
-				directShare
+				direct_share: directShare
 			},
 			skip:
 				!flagged &&
@@ -65,7 +65,7 @@ export function useFindNodesQuery({
 		() =>
 			fetchMore({
 				variables: {
-					pageToken: data?.findNodes?.page_token
+					page_token: data?.findNodes?.page_token
 				}
 			}).catch((err) => {
 				console.error(err);

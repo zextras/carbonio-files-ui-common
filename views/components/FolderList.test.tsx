@@ -42,7 +42,17 @@ import {
 	sortNodes
 } from '../../mocks/mockUtils';
 import { DocsType, Node } from '../../types/common';
-import { File as FilesFile, Folder, NodeSort } from '../../types/graphql/types';
+import {
+	File as FilesFile,
+	Folder,
+	GetChildQuery,
+	GetChildQueryVariables,
+	GetChildrenQuery,
+	GetChildrenQueryVariables,
+	GetNodeQuery,
+	GetNodeQueryVariables,
+	NodeSort
+} from '../../types/graphql/types';
 import {
 	getChildrenVariables,
 	mockCopyNodes,
@@ -140,13 +150,14 @@ describe('Folder List', () => {
 			within(screen.getByTestId('list-header')).queryByTestId('icon: Refresh')
 		);
 		expect(screen.getByTestId(`list-${currentFolder.id}`)).not.toBeEmptyDOMElement();
-		const { getNode } = global.apolloClient.readQuery({
+		const queryResult = global.apolloClient.readQuery<GetChildrenQuery, GetChildrenQueryVariables>({
 			query: GET_CHILDREN,
 			variables: getChildrenVariables(currentFolder.id)
 		});
-		forEach(getNode.children, (child) => {
-			expect(screen.getByTestId(`node-item-${child.id}`)).toBeInTheDocument();
-			expect(screen.getByTestId(`node-item-${child.id}`)).toHaveTextContent(child.name);
+		forEach((queryResult?.getNode as Folder).children, (child) => {
+			const $child = child as Node;
+			expect(screen.getByTestId(`node-item-${$child.id}`)).toBeInTheDocument();
+			expect(screen.getByTestId(`node-item-${$child.id}`)).toHaveTextContent($child.name);
 		});
 	});
 
@@ -159,7 +170,7 @@ describe('Folder List', () => {
 		const mocks = [
 			mockGetParent(
 				{
-					id: currentFolder.id
+					node_id: currentFolder.id
 				},
 				currentFolder
 			),
@@ -237,7 +248,7 @@ describe('Folder List', () => {
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 				mockCreateFolderError(
 					{
-						parentId: currentFolder.id,
+						destination_id: currentFolder.id,
 						name: newName
 					},
 					new ApolloError({ graphQLErrors: [generateError('Error! Name already assigned')] })
@@ -306,11 +317,11 @@ describe('Folder List', () => {
 			const setNewFileMock = jest.fn();
 
 			const mocks = [
-				mockGetParent({ id: currentFolder.id }, currentFolder),
+				mockGetParent({ node_id: currentFolder.id }, currentFolder),
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 				mockCreateFolder(
 					{
-						parentId: currentFolder.id,
+						destination_id: currentFolder.id,
 						name: node2.name
 					},
 					node2
@@ -387,14 +398,14 @@ describe('Folder List', () => {
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 				mockCreateFolder(
 					{
-						parentId: currentFolder.id,
+						destination_id: currentFolder.id,
 						name: node2.name
 					},
 					node2
 				),
 				mockCreateFolder(
 					{
-						parentId: currentFolder.id,
+						destination_id: currentFolder.id,
 						name: node1.name
 					},
 					node1
@@ -518,11 +529,11 @@ describe('Folder List', () => {
 			const setNewFileMock = jest.fn();
 
 			const mocks = [
-				mockGetParent({ id: currentFolder.id }, currentFolder),
+				mockGetParent({ node_id: currentFolder.id }, currentFolder),
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 				mockCreateFolder(
 					{
-						parentId: currentFolder.id,
+						destination_id: currentFolder.id,
 						name: newNode.name
 					},
 					newNode
@@ -586,7 +597,7 @@ describe('Folder List', () => {
 		test('if there is no element selected, all actions are visible and disabled', async () => {
 			const currentFolder = populateFolder(10);
 			const mocks = [
-				mockGetParent({ id: currentFolder.id }, currentFolder),
+				mockGetParent({ node_id: currentFolder.id }, currentFolder),
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder)
 			];
 			const setNewFolderMock = jest.fn();
@@ -654,7 +665,7 @@ describe('Folder List', () => {
 			const setNewFolderMock = jest.fn();
 			const setNewFileMock = jest.fn();
 			const mocks = [
-				mockGetParent({ id: currentFolder.id }, currentFolder),
+				mockGetParent({ node_id: currentFolder.id }, currentFolder),
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 				mockGetChildren(
 					{
@@ -726,14 +737,14 @@ describe('Folder List', () => {
 				} as Folder),
 				mockFlagNodes(
 					{
-						nodes_ids: nodesIdsToFlag,
+						node_ids: nodesIdsToFlag,
 						flag: true
 					},
 					nodesIdsToFlag
 				),
 				mockFlagNodes(
 					{
-						nodes_ids: nodesIdsToUnflag,
+						node_ids: nodesIdsToUnflag,
 						flag: false
 					},
 					nodesIdsToUnflag
@@ -883,7 +894,7 @@ describe('Folder List', () => {
 					mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 					mockUpdateNodeError(
 						{
-							id: element.id,
+							node_id: element.id,
 							name: newName
 						},
 						new ApolloError({ graphQLErrors: [generateError('Error! Name already assigned')] })
@@ -947,7 +958,7 @@ describe('Folder List', () => {
 					mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 					mockUpdateNode(
 						{
-							id: element.id,
+							node_id: element.id,
 							name: newName
 						},
 						{
@@ -1193,7 +1204,7 @@ describe('Folder List', () => {
 						...currentFolder,
 						children: firstPage
 					} as Folder),
-					mockGetParent({ id: currentFolder.id }, currentFolder),
+					mockGetParent({ node_id: currentFolder.id }, currentFolder),
 					mockTrashNodes({ node_ids: nodesToTrash }, nodesToTrash),
 					mockGetChildren(getChildrenVariables(currentFolder.id), {
 						...currentFolder,
@@ -1354,7 +1365,7 @@ describe('Folder List', () => {
 				nodeToMove.permissions.can_write_file = true;
 
 				// write destination folder in cache as if it was already loaded
-				global.apolloClient.writeQuery({
+				global.apolloClient.writeQuery<GetChildrenQuery, GetChildrenQueryVariables>({
 					query: GET_CHILDREN,
 					variables: getChildrenVariables(destinationFolder.id),
 					data: {
@@ -1363,10 +1374,10 @@ describe('Folder List', () => {
 				});
 				const mocks = [
 					mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
-					mockGetPath({ id: currentFolder.id }, [currentFolder]),
+					mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 					mockMoveNodes(
 						{
-							nodes_ids: [nodeToMove.id],
+							node_ids: [nodeToMove.id],
 							destination_id: destinationFolder.id
 						},
 						[{ ...nodeToMove, parent: destinationFolder }]
@@ -1388,13 +1399,16 @@ describe('Folder List', () => {
 
 				await screen.findByText(nodeToMove.name);
 
-				let destinationFolderCachedData = global.apolloClient.readQuery({
+				let destinationFolderCachedData = global.apolloClient.readQuery<
+					GetChildrenQuery,
+					GetChildrenQueryVariables
+				>({
 					query: GET_CHILDREN,
 					variables: getChildrenVariables(destinationFolder.id)
 				});
 
-				expect(destinationFolderCachedData.getNode).not.toBeNull();
-				expect(destinationFolderCachedData.getNode.id).toBe(destinationFolder.id);
+				expect(destinationFolderCachedData?.getNode || null).not.toBeNull();
+				expect((destinationFolderCachedData?.getNode as Folder).id).toBe(destinationFolder.id);
 
 				// activate selection mode by selecting items
 				selectNodes([nodeToMove.id]);
@@ -1411,7 +1425,10 @@ describe('Folder List', () => {
 					currentFolder.children.length - 1
 				);
 
-				destinationFolderCachedData = global.apolloClient.readQuery({
+				destinationFolderCachedData = global.apolloClient.readQuery<
+					GetChildrenQuery,
+					GetChildrenQueryVariables
+				>({
 					query: GET_CHILDREN,
 					variables: getChildrenVariables(destinationFolder.id)
 				});
@@ -1434,7 +1451,7 @@ describe('Folder List', () => {
 				});
 
 				// write destination folder in cache as if it was already loaded
-				global.apolloClient.writeQuery({
+				global.apolloClient.writeQuery<GetChildrenQuery, GetChildrenQueryVariables>({
 					query: GET_CHILDREN,
 					variables: getChildrenVariables(destinationFolder.id),
 					data: {
@@ -1443,10 +1460,10 @@ describe('Folder List', () => {
 				});
 				const mocks = [
 					mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
-					mockGetPath({ id: currentFolder.id }, [currentFolder]),
+					mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 					mockMoveNodes(
 						{
-							nodes_ids: map(nodesToMove, (nodeToMove) => nodeToMove.id),
+							node_ids: map(nodesToMove, (nodeToMove) => nodeToMove.id),
 							destination_id: destinationFolder.id
 						},
 						map(nodesToMove, (nodeToMove) => ({ ...nodeToMove, parent: destinationFolder }))
@@ -1468,13 +1485,16 @@ describe('Folder List', () => {
 
 				await screen.findByText(nodesToMove[0].name);
 
-				let destinationFolderCachedData = global.apolloClient.readQuery({
+				let destinationFolderCachedData = global.apolloClient.readQuery<
+					GetChildrenQuery,
+					GetChildrenQueryVariables
+				>({
 					query: GET_CHILDREN,
 					variables: getChildrenVariables(destinationFolder.id)
 				});
 
-				expect(destinationFolderCachedData.getNode).not.toBeNull();
-				expect(destinationFolderCachedData.getNode.id).toBe(destinationFolder.id);
+				expect(destinationFolderCachedData?.getNode || null).not.toBeNull();
+				expect((destinationFolderCachedData?.getNode as Folder).id).toBe(destinationFolder.id);
 
 				// activate selection mode by selecting items
 				selectNodes(map(nodesToMove, (nodeToMove) => nodeToMove.id));
@@ -1491,7 +1511,10 @@ describe('Folder List', () => {
 					currentFolder.children.length - nodesToMove.length
 				);
 
-				destinationFolderCachedData = global.apolloClient.readQuery({
+				destinationFolderCachedData = global.apolloClient.readQuery<
+					GetChildrenQuery,
+					GetChildrenQueryVariables
+				>({
 					query: GET_CHILDREN,
 					variables: getChildrenVariables(destinationFolder.id)
 				});
@@ -1526,13 +1549,13 @@ describe('Folder List', () => {
 						...currentFolder,
 						children: firstPage
 					} as Folder),
-					mockGetParent({ id: currentFolder.id }, currentFolder),
-					mockGetPath({ id: currentFolder.id }, [commonParent, currentFolder]),
+					mockGetParent({ node_id: currentFolder.id }, currentFolder),
+					mockGetPath({ node_id: currentFolder.id }, [commonParent, currentFolder]),
 					mockGetChildren(getChildrenVariables(commonParent.id), commonParent),
-					mockGetPath({ id: commonParent.id }, [commonParent]),
+					mockGetPath({ node_id: commonParent.id }, [commonParent]),
 					mockMoveNodes(
 						{
-							nodes_ids: map(nodesToMove, (node) => (node as Node).id),
+							node_ids: map(nodesToMove, (node) => (node as Node).id),
 							destination_id: destinationFolder.id
 						},
 						map(nodesToMove, (node) => ({ ...node, parent: destinationFolder }))
@@ -1644,7 +1667,7 @@ describe('Folder List', () => {
 				const nodeToCopy = currentFolder.children[0] as Node;
 
 				// write destination folder in cache as if it was already loaded
-				global.apolloClient.writeQuery({
+				global.apolloClient.writeQuery<GetChildrenQuery, GetChildrenQueryVariables>({
 					query: GET_CHILDREN,
 					variables: getChildrenVariables(destinationFolder.id),
 					data: {
@@ -1652,11 +1675,11 @@ describe('Folder List', () => {
 					}
 				});
 				const mocks = [
-					mockGetPath({ id: currentFolder.id }, [currentFolder]),
+					mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 					mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 					mockCopyNodes(
 						{
-							nodes_ids: [nodeToCopy.id],
+							node_ids: [nodeToCopy.id],
 							destination_id: destinationFolder.id
 						},
 						[{ ...nodeToCopy, parent: destinationFolder }]
@@ -1678,13 +1701,16 @@ describe('Folder List', () => {
 
 				await screen.findByText(nodeToCopy.name);
 
-				let destinationFolderCachedData = global.apolloClient.readQuery({
+				let destinationFolderCachedData = global.apolloClient.readQuery<
+					GetChildrenQuery,
+					GetChildrenQueryVariables
+				>({
 					query: GET_CHILDREN,
 					variables: getChildrenVariables(destinationFolder.id)
 				});
 
-				expect(destinationFolderCachedData.getNode).not.toBeNull();
-				expect(destinationFolderCachedData.getNode.id).toBe(destinationFolder.id);
+				expect(destinationFolderCachedData?.getNode || null).not.toBeNull();
+				expect((destinationFolderCachedData?.getNode as Folder).id).toBe(destinationFolder.id);
 
 				// activate selection mode by selecting items
 				selectNodes([nodeToCopy.id]);
@@ -1709,7 +1735,10 @@ describe('Folder List', () => {
 				expect(screen.queryByRole('button', { name: actionRegexp.copy })).not.toBeInTheDocument();
 				expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 
-				destinationFolderCachedData = global.apolloClient.readQuery({
+				destinationFolderCachedData = global.apolloClient.readQuery<
+					GetChildrenQuery,
+					GetChildrenQueryVariables
+				>({
 					query: GET_CHILDREN,
 					variables: getChildrenVariables(destinationFolder.id)
 				});
@@ -1732,11 +1761,11 @@ describe('Folder List', () => {
 					}));
 
 					const mocks = [
-						mockGetPath({ id: currentFolder.id }, [currentFolder]),
+						mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 						mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 						mockCopyNodes(
 							{
-								nodes_ids: map(nodesToCopy, (node) => node.id),
+								node_ids: map(nodesToCopy, (node) => node.id),
 								destination_id: currentFolder.id
 							},
 							copiedNodes
@@ -2508,14 +2537,14 @@ describe('Folder List', () => {
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 				mockFlagNodes(
 					{
-						nodes_ids: [node.id],
+						node_ids: [node.id],
 						flag: true
 					},
 					[node.id]
 				),
 				mockFlagNodes(
 					{
-						nodes_ids: [node.id],
+						node_ids: [node.id],
 						flag: false
 					},
 					[node.id]
@@ -2656,7 +2685,7 @@ describe('Folder List', () => {
 					mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 					mockUpdateNode(
 						{
-							id: element.id,
+							node_id: element.id,
 							name: newName
 						},
 						{
@@ -2747,7 +2776,7 @@ describe('Folder List', () => {
 					} as Folder),
 					mockUpdateNode(
 						{
-							id: element.id,
+							node_id: element.id,
 							name: newName
 						},
 						{
@@ -2895,9 +2924,9 @@ describe('Folder List', () => {
 						...currentFolder,
 						children: firstPage
 					} as Folder),
-					mockGetParent({ id: currentFolder.id }, currentFolder),
+					mockGetParent({ node_id: currentFolder.id }, currentFolder),
 					mockUpdateNode(
-						{ id: nodeToRename.id, name: newName },
+						{ node_id: nodeToRename.id, name: newName },
 						{ ...nodeToRename, name: newName }
 					),
 					mockGetChildren(
@@ -2974,9 +3003,9 @@ describe('Folder List', () => {
 						...currentFolder,
 						children: firstPage
 					} as Folder),
-					mockGetParent({ id: currentFolder.id }, currentFolder),
+					mockGetParent({ node_id: currentFolder.id }, currentFolder),
 					mockUpdateNode(
-						{ id: nodeToRename.id, name: newName },
+						{ node_id: nodeToRename.id, name: newName },
 						{ ...nodeToRename, name: newName }
 					),
 					mockTrashNodes({ node_ids: nodesToTrash }, nodesToTrash),
@@ -3200,7 +3229,7 @@ describe('Folder List', () => {
 						...currentFolder,
 						children: firstPage
 					} as Folder),
-					mockGetParent({ id: currentFolder.id }, currentFolder),
+					mockGetParent({ node_id: currentFolder.id }, currentFolder),
 					mockTrashNodes({ node_ids: [firstPage[NODES_LOAD_LIMIT - 1].id] }, [
 						firstPage[NODES_LOAD_LIMIT - 1].id
 					]),
@@ -3311,7 +3340,7 @@ describe('Folder List', () => {
 				nodeToMove.permissions.can_write_file = true;
 
 				// write destination folder in cache as if it was already loaded
-				global.apolloClient.writeQuery({
+				global.apolloClient.writeQuery<GetChildrenQuery, GetChildrenQueryVariables>({
 					query: GET_CHILDREN,
 					variables: getChildrenVariables(destinationFolder.id),
 					data: {
@@ -3324,10 +3353,10 @@ describe('Folder List', () => {
 
 				const mocks = [
 					mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
-					mockGetPath({ id: currentFolder.id }, [currentFolder]),
+					mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 					mockMoveNodes(
 						{
-							nodes_ids: [nodeToMove.id],
+							node_ids: [nodeToMove.id],
 							destination_id: destinationFolder.id
 						},
 						[{ ...nodeToMove, parent: destinationFolder }]
@@ -3346,13 +3375,16 @@ describe('Folder List', () => {
 
 				await screen.findByText(nodeToMove.name);
 
-				let destinationFolderCachedData = global.apolloClient.readQuery({
+				let destinationFolderCachedData = global.apolloClient.readQuery<
+					GetChildrenQuery,
+					GetChildrenQueryVariables
+				>({
 					query: GET_CHILDREN,
 					variables: getChildrenVariables(destinationFolder.id)
 				});
 
-				expect(destinationFolderCachedData.getNode).not.toBeNull();
-				expect(destinationFolderCachedData.getNode.id).toBe(destinationFolder.id);
+				expect(destinationFolderCachedData?.getNode || null).not.toBeNull();
+				expect((destinationFolderCachedData?.getNode as Folder).id).toBe(destinationFolder.id);
 
 				// right click to open contextual menu on folder
 				const nodeToMoveItem = await screen.findByText(nodeToMove.name);
@@ -3366,7 +3398,10 @@ describe('Folder List', () => {
 					currentFolder.children.length - 1
 				);
 
-				destinationFolderCachedData = global.apolloClient.readQuery({
+				destinationFolderCachedData = global.apolloClient.readQuery<
+					GetChildrenQuery,
+					GetChildrenQueryVariables
+				>({
 					query: GET_CHILDREN,
 					variables: getChildrenVariables(destinationFolder.id)
 				});
@@ -3393,11 +3428,11 @@ describe('Folder List', () => {
 						...currentFolder,
 						children: firstPage
 					} as Folder),
-					mockGetParent({ id: currentFolder.id }, currentFolder),
-					mockGetPath({ id: currentFolder.id }, [currentFolder]),
+					mockGetParent({ node_id: currentFolder.id }, currentFolder),
+					mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 					mockMoveNodes(
 						{
-							nodes_ids: [firstPage[NODES_LOAD_LIMIT - 1].id],
+							node_ids: [firstPage[NODES_LOAD_LIMIT - 1].id],
 							destination_id: destinationFolder.id
 						},
 						[{ ...firstPage[NODES_LOAD_LIMIT - 1], parent: destinationFolder }]
@@ -3460,7 +3495,7 @@ describe('Folder List', () => {
 				const nodeToCopy = currentFolder.children[0] as Node;
 
 				// write destination folder in cache as if it was already loaded
-				global.apolloClient.writeQuery({
+				global.apolloClient.writeQuery<GetChildrenQuery, GetChildrenQueryVariables>({
 					query: GET_CHILDREN,
 					variables: getChildrenVariables(destinationFolder.id),
 					data: {
@@ -3469,11 +3504,11 @@ describe('Folder List', () => {
 				});
 
 				const mocks = [
-					mockGetPath({ id: currentFolder.id }, [currentFolder]),
+					mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 					mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 					mockCopyNodes(
 						{
-							nodes_ids: [nodeToCopy.id],
+							node_ids: [nodeToCopy.id],
 							destination_id: destinationFolder.id
 						},
 						[{ ...nodeToCopy, parent: destinationFolder }]
@@ -3495,13 +3530,16 @@ describe('Folder List', () => {
 
 				await screen.findByText(nodeToCopy.name);
 
-				let destinationFolderCachedData = global.apolloClient.readQuery({
+				let destinationFolderCachedData = global.apolloClient.readQuery<
+					GetChildrenQuery,
+					GetChildrenQueryVariables
+				>({
 					query: GET_CHILDREN,
 					variables: getChildrenVariables(destinationFolder.id)
 				});
 
-				expect(destinationFolderCachedData.getNode).not.toBeNull();
-				expect(destinationFolderCachedData.getNode.id).toBe(destinationFolder.id);
+				expect(destinationFolderCachedData?.getNode || null).not.toBeNull();
+				expect((destinationFolderCachedData?.getNode as Folder).id).toBe(destinationFolder.id);
 
 				// right click to open contextual menu on folder
 				const nodeToCopyItem = await screen.findByText(nodeToCopy.name);
@@ -3524,7 +3562,10 @@ describe('Folder List', () => {
 				// context menu is closed
 				expect(screen.queryByText(actionRegexp.copy)).not.toBeInTheDocument();
 
-				destinationFolderCachedData = global.apolloClient.readQuery({
+				destinationFolderCachedData = global.apolloClient.readQuery<
+					GetChildrenQuery,
+					GetChildrenQueryVariables
+				>({
 					query: GET_CHILDREN,
 					variables: getChildrenVariables(destinationFolder.id)
 				});
@@ -3546,7 +3587,7 @@ describe('Folder List', () => {
 			const newName = node2.name;
 
 			const mocks = [
-				mockGetParent({ id: currentFolder.id }, currentFolder),
+				mockGetParent({ node_id: currentFolder.id }, currentFolder),
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder)
 			];
 
@@ -3554,7 +3595,9 @@ describe('Folder List', () => {
 				rest.post(`${DOCS_ENDPOINT}${DOCS_PATH}`, (req, res, ctx) =>
 					res(ctx.status(500, 'Error! Name already assigned'))
 				),
-				graphql.query('getNode', (req, res, ctx) => res(ctx.data({ getNode: node2 })))
+				graphql.query<GetNodeQuery, GetNodeQueryVariables>('getNode', (req, res, ctx) =>
+					res(ctx.data({ getNode: node2 }))
+				)
 			);
 
 			const setNewFolderMock = jest.fn();
@@ -3613,7 +3656,7 @@ describe('Folder List', () => {
 			const setNewFileMock = jest.fn();
 
 			const mocks = [
-				mockGetParent({ id: currentFolder.id }, currentFolder),
+				mockGetParent({ node_id: currentFolder.id }, currentFolder),
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder)
 			];
 
@@ -3625,7 +3668,9 @@ describe('Folder List', () => {
 						})
 					)
 				),
-				graphql.query('getNode', (req, res, ctx) => res(ctx.data({ getNode: node2 })))
+				graphql.query<GetNodeQuery, GetNodeQueryVariables>('getNode', (req, res, ctx) =>
+					res(ctx.data({ getNode: node2 }))
+				)
 			);
 
 			// simulate the creation of a new folder
@@ -3726,8 +3771,8 @@ describe('Folder List', () => {
 							})
 						)
 				),
-				graphql.query('getNode', (req, res, ctx) => {
-					const { id } = req.variables;
+				graphql.query<GetNodeQuery, GetNodeQueryVariables>('getNode', (req, res, ctx) => {
+					const { node_id: id } = req.variables;
 					let result = null;
 					if (id === node1.id) {
 						result = node1;
@@ -3845,8 +3890,8 @@ describe('Folder List', () => {
 			let reqIndex = 0;
 
 			server.use(
-				graphql.query('getChild', (req, res, ctx) => {
-					const { id } = req.variables;
+				graphql.query<GetChildQuery, GetChildQueryVariables>('getChild', (req, res, ctx) => {
+					const { node_id: id } = req.variables;
 					const result = (reqIndex < uploadedFiles.length && uploadedFiles[reqIndex]) || null;
 					if (result) {
 						result.id = id;
@@ -3914,8 +3959,8 @@ describe('Folder List', () => {
 			let reqIndex = 0;
 
 			server.use(
-				graphql.query('getChild', (req, res, ctx) => {
-					const { id } = req.variables;
+				graphql.query<GetChildQuery, GetChildQueryVariables>('getChild', (req, res, ctx) => {
+					const { node_id: id } = req.variables;
 					const result = (reqIndex < uploadedFiles.length && uploadedFiles[reqIndex]) || null;
 					if (result) {
 						result.id = id;
@@ -3981,8 +4026,8 @@ describe('Folder List', () => {
 			let reqIndex = 0;
 
 			server.use(
-				graphql.query('getChild', (req, res, ctx) => {
-					const { id } = req.variables;
+				graphql.query<GetChildQuery, GetChildQueryVariables>('getChild', (req, res, ctx) => {
+					const { node_id: id } = req.variables;
 					const result = (reqIndex < uploadedFiles.length && uploadedFiles[reqIndex]) || null;
 					if (result) {
 						result.id = id;
@@ -4053,8 +4098,8 @@ describe('Folder List', () => {
 			let reqIndex = 0;
 
 			server.use(
-				graphql.query('getChild', (req, res, ctx) => {
-					const { id } = req.variables;
+				graphql.query<GetChildQuery, GetChildQueryVariables>('getChild', (req, res, ctx) => {
+					const { node_id: id } = req.variables;
 					const result = (reqIndex < uploadedFiles.length && uploadedFiles[reqIndex]) || null;
 					if (result) {
 						result.id = id;
@@ -4123,8 +4168,8 @@ describe('Folder List', () => {
 			let reqIndex = 0;
 
 			server.use(
-				graphql.query('getChild', (req, res, ctx) => {
-					const { id } = req.variables;
+				graphql.query<GetChildQuery, GetChildQueryVariables>('getChild', (req, res, ctx) => {
+					const { node_id: id } = req.variables;
 					const result = (reqIndex < uploadedFiles.length && uploadedFiles[reqIndex]) || null;
 					if (result) {
 						result.id = id;
@@ -4204,7 +4249,7 @@ describe('Folder List', () => {
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 				mockMoveNodes(
 					{
-						nodes_ids: map(nodesToDrag, (node) => node.id),
+						node_ids: map(nodesToDrag, (node) => node.id),
 						destination_id: destinationFolder.id
 					},
 					map(nodesToDrag, (node) => ({ ...node, parent: destinationFolder }))
@@ -4410,7 +4455,7 @@ describe('Folder List', () => {
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 				mockMoveNodes(
 					{
-						nodes_ids: map(nodesToDrag, (node) => node.id),
+						node_ids: map(nodesToDrag, (node) => node.id),
 						destination_id: destinationFolder.id
 					},
 					map(nodesToDrag, (node) => ({ ...node, parent: destinationFolder }))
@@ -4500,11 +4545,11 @@ describe('Folder List', () => {
 
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
-				mockGetParent({ id: currentFolder.id }, currentFolder),
-				mockGetPath({ id: currentFolder.id }, path),
+				mockGetParent({ node_id: currentFolder.id }, currentFolder),
+				mockGetPath({ node_id: currentFolder.id }, path),
 				mockMoveNodes(
 					{
-						nodes_ids: map(nodesToDrag, (node) => node.id),
+						node_ids: map(nodesToDrag, (node) => node.id),
 						destination_id: path[0].id
 					},
 					map(nodesToDrag, (node) => ({ ...node, parent: path[0] }))
@@ -4549,6 +4594,7 @@ describe('Folder List', () => {
 				userEvent.click(screen.getByTestId('icon: ChevronRight'));
 			});
 			await screen.findByText(path[0].name);
+			// TODO: move fragment to graphql file and add type
 			// add missing data in cache
 			global.apolloClient.writeFragment({
 				fragment: gql`
@@ -4565,6 +4611,7 @@ describe('Folder List', () => {
 					owner
 				}
 			});
+			// TODO: move fragment to graphql file and add type
 			// add missing data in cache
 			global.apolloClient.writeFragment({
 				fragment: gql`

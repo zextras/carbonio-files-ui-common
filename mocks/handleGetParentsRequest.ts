@@ -14,7 +14,7 @@ const handleGetParentsRequest: ResponseResolver<
 	GraphQLContext<GetParentQuery>,
 	GetParentQuery
 > = (req, res, ctx) => {
-	const { id } = req.variables;
+	const { node_id: id } = req.variables;
 
 	const { node: currentFolder } = populateParents(populateFolder(0, id), 2);
 

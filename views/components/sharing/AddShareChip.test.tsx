@@ -11,6 +11,7 @@ import userEvent from '@testing-library/user-event';
 
 import { populateNode } from '../../../mocks/mockUtils';
 import { Role } from '../../../types/common';
+import { GetNodeQuery, GetNodeQueryVariables } from '../../../types/graphql/types';
 import { getNodeVariables, mockGetNode } from '../../../utils/mockUtils';
 import { render } from '../../../utils/testUtils';
 import { AddShareChip } from './AddShareChip';
@@ -157,9 +158,11 @@ describe('Add Share Chip', () => {
 
 			const mockedGetNodeQuery = mockGetNode(getNodeVariables(node.id), node);
 
-			global.apolloClient.writeQuery({
+			global.apolloClient.writeQuery<GetNodeQuery, GetNodeQueryVariables>({
 				...mockedGetNodeQuery.request,
-				...mockedGetNodeQuery.result
+				data: {
+					getNode: node
+				}
 			});
 
 			const chip = { id: 'chip-id', type: 'whats dis', role: Role.Viewer, sharingAllowed: false };
@@ -199,9 +202,11 @@ describe('Add Share Chip', () => {
 
 			const mockedGetNodeQuery = mockGetNode(getNodeVariables(node.id), node);
 
-			global.apolloClient.writeQuery({
+			global.apolloClient.writeQuery<GetNodeQuery, GetNodeQueryVariables>({
 				...mockedGetNodeQuery.request,
-				...mockedGetNodeQuery.result
+				data: {
+					getNode: node
+				}
 			});
 
 			render(
@@ -240,9 +245,11 @@ describe('Add Share Chip', () => {
 
 			const mockedGetNodeQuery = mockGetNode(getNodeVariables(node.id), node);
 
-			global.apolloClient.writeQuery({
+			global.apolloClient.writeQuery<GetNodeQuery, GetNodeQueryVariables>({
 				...mockedGetNodeQuery.request,
-				...mockedGetNodeQuery.result
+				data: {
+					getNode: node
+				}
 			});
 
 			const chip = { id: 'chip-id', type: 'whats dis', role: Role.Viewer, sharingAllowed: false };
@@ -287,9 +294,11 @@ describe('Add Share Chip', () => {
 
 			const mockedGetNodeQuery = mockGetNode(getNodeVariables(node.id), node);
 
-			global.apolloClient.writeQuery({
+			global.apolloClient.writeQuery<GetNodeQuery, GetNodeQueryVariables>({
 				...mockedGetNodeQuery.request,
-				...mockedGetNodeQuery.result
+				data: {
+					getNode: node
+				}
 			});
 
 			const chip = { id: 'chip-id', type: 'whats dis', role: Role.Viewer, sharingAllowed: true };

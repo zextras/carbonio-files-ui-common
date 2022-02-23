@@ -74,7 +74,7 @@ export const useUpdateFolderContent = (
 							return DELETE;
 						}
 
-						const newNodeRef = cache.writeFragment({
+						const newNodeRef = cache.writeFragment<ChildFragment>({
 							fragment: CHILD,
 							fragmentName: 'Child',
 							data: newNode

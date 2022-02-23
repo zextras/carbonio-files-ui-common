@@ -19,8 +19,8 @@ export function useGetSharesQuery(
 ): Pick<QueryResult<GetSharesQuery>, 'data' | 'loading' | 'error'> {
 	const { data, loading, error } = useQuery<GetSharesQuery, GetSharesQueryVariables>(GET_SHARES, {
 		variables: {
-			id: nodeId || '',
-			sharesLimit: FULL_SHARES_LOAD_LIMIT
+			node_id: nodeId || '',
+			shares_limit: FULL_SHARES_LOAD_LIMIT
 		},
 		skip: !nodeId,
 		notifyOnNetworkStatusChange: true

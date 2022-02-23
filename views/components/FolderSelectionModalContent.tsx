@@ -16,7 +16,7 @@ import BASE_NODE from '../../graphql/fragments/baseNode.graphql';
 import { useGetChildrenQuery } from '../../hooks/graphql/queries/useGetChildrenQuery';
 import { useGetPathQuery } from '../../hooks/graphql/queries/useGetPathQuery';
 import { NodeListItemType } from '../../types/common';
-import { Folder } from '../../types/graphql/types';
+import { BaseNodeFragment, Folder } from '../../types/graphql/types';
 import { isFile } from '../../utils/ActionsFactory';
 import { ModalFooter } from './ModalFooter';
 import { ModalHeader } from './ModalHeader';
@@ -111,7 +111,7 @@ export const FolderSelectionModalContent: React.VFC<FolderSelectionModalContentP
 	const navigateTo = useCallback(
 		(id: string) => {
 			setOpenedFolder(id);
-			const node = apolloClient.readFragment({
+			const node = apolloClient.readFragment<BaseNodeFragment>({
 				fragment: BASE_NODE,
 				fragmentName: 'BaseNode',
 				// assuming it's a folder, not the best solution

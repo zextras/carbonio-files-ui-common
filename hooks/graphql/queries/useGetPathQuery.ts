@@ -18,7 +18,7 @@ export const useGetPathQuery = (
 ): Pick<QueryResult<GetPathQuery>, 'data' | 'loading' | 'error'> => {
 	const { data, loading, error } = useQuery<GetPathQuery, GetPathQueryVariables>(GET_PATH, {
 		variables: {
-			id: nodeId || ''
+			node_id: nodeId || ''
 		},
 		skip: !nodeId
 	});

@@ -5,19 +5,19 @@
 #import "../fragments/child.graphql"
 
 query getChildren(
-	$id: ID!,
-	$childrenLimit: Int!,
+	$node_id: ID!,
+	$children_limit: Int!,
 	$cursor: String,
 	$sort: NodeSort!,
-	$sharesLimit: Int = 1
+	$shares_limit: Int = 1
 ) {
-	getNode(id: $id) {
+	getNode(node_id: $node_id) {
 		id
 		name
 		... on Folder {
-			children(limit: $childrenLimit, cursor: $cursor, sort: $sort) {
+			children(limit: $children_limit, cursor: $cursor, sort: $sort) {
 				...Child
-				shares(limit: $sharesLimit) {
+				shares(limit: $shares_limit) {
 					created_at
 				}
 			}

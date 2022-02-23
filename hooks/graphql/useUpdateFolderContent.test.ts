@@ -11,7 +11,13 @@ import server from '../../../mocks/server';
 import { NODES_LOAD_LIMIT, NODES_SORT_DEFAULT } from '../../constants';
 import GET_CHILDREN from '../../graphql/queries/getChildren.graphql';
 import { populateFolder, populateNode, populateNodes, sortNodes } from '../../mocks/mockUtils';
-import { Folder, Node } from '../../types/graphql/types';
+import {
+	Folder,
+	GetChildrenQuery,
+	GetChildrenQueryVariables,
+	Maybe,
+	Node
+} from '../../types/graphql/types';
 import { getChildrenVariables } from '../../utils/mockUtils';
 import { getApolloHookWrapper, WrapperProps } from '../../utils/testUtils';
 import { addNodeInSortedList } from '../../utils/utils';
@@ -33,16 +39,16 @@ describe('useUpdateFolderContent', () => {
 	}
 
 	function readGetChildrenQuery(folderId: string, sort = NODES_SORT_DEFAULT): Folder {
-		const { getNode } = global.apolloClient.readQuery({
+		const queryResult = global.apolloClient.readQuery<GetChildrenQuery, GetChildrenQueryVariables>({
 			query: GET_CHILDREN,
 			variables: getChildrenVariables(folderId, NODES_LOAD_LIMIT * 2, sort)
 		});
-
-		return getNode;
+		expect(queryResult?.getNode || null).not.toBeNull();
+		return queryResult?.getNode as Folder;
 	}
 
 	function prepareCache(folder: Folder, sort = NODES_SORT_DEFAULT): void {
-		global.apolloClient.writeQuery({
+		global.apolloClient.writeQuery<GetChildrenQuery, GetChildrenQueryVariables>({
 			query: GET_CHILDREN,
 			variables: getChildrenVariables(folder.id, NODES_LOAD_LIMIT, sort),
 			data: {
@@ -66,13 +72,17 @@ describe('useUpdateFolderContent', () => {
 			} = setupHook();
 
 			addNodeToFolder(folder, element);
-			const { getNode } = global.apolloClient.readQuery({
+			const queryResult = global.apolloClient.readQuery<
+				GetChildrenQuery,
+				GetChildrenQueryVariables
+			>({
 				query: GET_CHILDREN,
 				variables: getChildrenVariables(folder.id, NODES_LOAD_LIMIT)
 			});
-			expect(getNode.children).toHaveLength(1);
+			expect(queryResult?.getNode as Maybe<Folder> | undefined).not.toBeNull();
+			expect((queryResult?.getNode as Folder).children).toHaveLength(1);
 			// created element has to be the first and only element
-			expect(getNode.children[0].id).toBe(element.id);
+			expect((queryResult?.getNode as Folder).children[0]?.id).toBe(element.id);
 		});
 
 		it('should add the element at the end if its next neighbor is not loaded yet', async () => {

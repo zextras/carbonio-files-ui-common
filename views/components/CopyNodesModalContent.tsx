@@ -149,8 +149,8 @@ export const CopyNodesModalContent: React.VFC<CopyNodesModalContentProps> = ({
 				const cachedData = apolloClient.readQuery<GetChildrenQuery, GetChildrenQueryVariables>({
 					query: GET_CHILDREN,
 					variables: {
-						id: destinationFolder,
-						childrenLimit: NODES_LOAD_LIMIT,
+						node_id: destinationFolder,
+						children_limit: NODES_LOAD_LIMIT,
 						sort: nodeSortVar()
 					}
 				});

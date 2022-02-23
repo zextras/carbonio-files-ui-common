@@ -9,7 +9,12 @@ import { GraphQLContext, GraphQLRequest, ResponseResolver } from 'msw';
 
 import buildClient from '../apollo';
 import CHILD from '../graphql/fragments/child.graphql';
-import { Node, MoveNodesMutation, MoveNodesMutationVariables } from '../types/graphql/types';
+import {
+	MoveNodesMutation,
+	MoveNodesMutationVariables,
+	ChildFragment,
+	Folder
+} from '../types/graphql/types';
 
 const handleMoveNodesRequest: ResponseResolver<
 	GraphQLRequest<MoveNodesMutationVariables>,
@@ -17,15 +22,15 @@ const handleMoveNodesRequest: ResponseResolver<
 	MoveNodesMutation
 > = (req, res, ctx) => {
 	// eslint-disable-next-line camelcase
-	const { nodes_ids, destination_id } = req.variables;
+	const { node_ids, destination_id } = req.variables;
 
 	const apolloClient = buildClient();
 
-	const nodes: Node[] = [];
+	const nodes: MoveNodesMutation['moveNodes'] = [];
 
-	forEach(nodes_ids, (nodeId) => {
+	forEach(node_ids, (nodeId) => {
 		// try to read the node as a file
-		let node = apolloClient.readFragment({
+		let node = apolloClient.readFragment<ChildFragment>({
 			fragmentName: 'Child',
 			fragment: CHILD,
 			id: `File:${nodeId}`
@@ -33,16 +38,18 @@ const handleMoveNodesRequest: ResponseResolver<
 
 		if (!node) {
 			// if result is null, try to read the node as a folder
-			node = apolloClient.readFragment({
+			node = apolloClient.readFragment<ChildFragment>({
 				fragmentName: 'Child',
 				fragment: CHILD,
 				id: `Folder:${nodeId}`
 			});
 		}
 
-		const newNode = { ...node, parent: { __typename: 'Folder', id: destination_id } };
+		if (node) {
+			const newNode = { ...node, parent: { __typename: 'Folder', id: destination_id } as Folder };
 
-		nodes.push(newNode);
+			nodes.push(newNode);
+		}
 	});
 
 	return res(

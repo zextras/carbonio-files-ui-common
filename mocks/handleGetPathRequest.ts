@@ -16,7 +16,7 @@ const handleGetPathRequest: ResponseResolver<
 	GraphQLContext<GetPathQuery>,
 	GetPathQuery
 > = (req, res, ctx) => {
-	const { id } = req.variables;
+	const { node_id: id } = req.variables;
 
 	const { path } = populateParents(populateFolder(0, id), faker.datatype.number(15));
 	if (id !== ROOTS.LOCAL_ROOT) {

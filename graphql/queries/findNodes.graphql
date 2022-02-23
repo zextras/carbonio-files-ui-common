@@ -7,31 +7,31 @@
 query findNodes(
     $keywords: [String!],
     $flagged: Boolean,
-    $sharedByMe: Boolean,
-    $sharedWithMe: Boolean,
-    $folderId: String,
+    $shared_by_me: Boolean,
+    $shared_with_me: Boolean,
+    $folder_id: String,
     $cascade: Boolean,
     $limit: Int!,
-    $pageToken: String,
+    $page_token: String,
     $sort: NodeSort,
-    $sharesLimit: Int = 1,
-    $directShare: Boolean
+    $shares_limit: Int = 1,
+    $direct_share: Boolean
 ) {
     findNodes(
         keywords: $keywords,
         flagged: $flagged,
-        shared_by_me: $sharedByMe,
-        shared_with_me: $sharedWithMe,
-        folder_id: $folderId,
+        shared_by_me: $shared_by_me,
+        shared_with_me: $shared_with_me,
+        folder_id: $folder_id,
         cascade: $cascade,
         limit: $limit,
-        page_token: $pageToken,
+        page_token: $page_token,
         sort: $sort,
-        direct_share: $directShare
+        direct_share: $direct_share
     ) {
         nodes {
             ...Child
-            shares(limit: $sharesLimit) {
+            shares(limit: $shares_limit) {
                 created_at
             }
         }

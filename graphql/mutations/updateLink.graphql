@@ -2,8 +2,8 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-only
 
-mutation updateLink($id: ID!, $description: String, $expiresAt: DateTime) {
-	updateLink(id: $id, description: $description,expires_at:  $expiresAt) {
+mutation updateLink($link_id: ID!, $description: String, $expires_at: DateTime) {
+	updateLink(link_id: $link_id, description: $description, expires_at: $expires_at) {
 		id
 		url
 		description

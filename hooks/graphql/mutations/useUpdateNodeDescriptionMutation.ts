@@ -35,7 +35,7 @@ export const useUpdateNodeDescriptionMutation: UseUpdateNodeDescriptionMutationH
 		(id: string, description: string) =>
 			updateNodeMutation({
 				variables: {
-					id,
+					node_id: id,
 					description
 				}
 			}),

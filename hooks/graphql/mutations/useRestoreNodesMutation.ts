@@ -99,7 +99,7 @@ export function useRestoreNodesMutation(): RestoreType {
 										});
 
 										if (
-											existingNodesRefs.pageToken &&
+											existingNodesRefs.page_token &&
 											size(ordered) === 0 &&
 											size(unOrdered) === 0
 										) {
@@ -108,7 +108,7 @@ export function useRestoreNodesMutation(): RestoreType {
 
 										return {
 											args: existingNodesRefs.args,
-											pageToken: existingNodesRefs.pageToken,
+											page_token: existingNodesRefs.page_token,
 											nodes: {
 												ordered,
 												unOrdered

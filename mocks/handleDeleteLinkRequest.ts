@@ -13,7 +13,7 @@ const handleDeleteLinksRequest: ResponseResolver<
 	GraphQLContext<DeleteLinksMutation>,
 	DeleteLinksMutation
 > = (req, res, ctx) => {
-	const { linkIds } = req.variables;
+	const { link_ids: linkIds } = req.variables;
 
 	const result = linkIds instanceof Array ? linkIds : [linkIds];
 

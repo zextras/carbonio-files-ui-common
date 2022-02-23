@@ -4,8 +4,8 @@
 
 #import "../fragments/link.graphql"
 
-mutation createLink($nodeId: ID!, $description: String, $expiresAt: DateTime) {
-	createLink(node_id: $nodeId, description: $description,expires_at:  $expiresAt) {
+mutation createLink($node_id: ID!, $description: String, $expires_at: DateTime) {
+	createLink(node_id: $node_id, description: $description, expires_at: $expires_at) {
 		...Link
 	}
 }

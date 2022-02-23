@@ -18,6 +18,7 @@ import {
 	Permissions,
 	Share
 } from './graphql/types';
+import { SnakeToCamelCase } from './utils';
 
 export type Node = FilesFile | Folder;
 
@@ -159,10 +160,18 @@ export enum OrderType {
 	Size = 'Size'
 }
 
-export type SearchParams = Pick<
-	FindNodesQueryVariables,
-	'flagged' | 'sharedByMe' | 'sharedWithMe' | 'folderId' | 'cascade' | 'keywords' | 'directShare'
->;
+export type SearchParams = {
+	[K in keyof Pick<
+		FindNodesQueryVariables,
+		| 'flagged'
+		| 'shared_by_me'
+		| 'shared_with_me'
+		| 'folder_id'
+		| 'cascade'
+		| 'keywords'
+		| 'direct_share'
+	> as SnakeToCamelCase<K & string>]: FindNodesQueryVariables[K];
+};
 
 export type AdvancedFilters = {
 	[P in keyof Omit<SearchParams, 'keywords'>]: SearchChip & { value: SearchParams[P] };
