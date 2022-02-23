@@ -45,7 +45,7 @@ export interface NodeDetailsUserRowProps {
 	label: string;
 	tooltip: string;
 	dateTime?: number;
-	clickAction?: () => void;
+	clickAction?: React.MouseEventHandler;
 }
 
 export const NodeDetailsUserRow: React.VFC<NodeDetailsUserRowProps> = ({

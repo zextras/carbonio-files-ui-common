@@ -56,23 +56,18 @@ let mockedRequestHandler: jest.Mock;
 let mockedCreateOptions: CreateOptionsContent['createOptions'];
 
 beforeEach(() => {
-	mockedCreateOptions = {};
+	mockedCreateOptions = [];
 	mockedRequestHandler = jest.fn().mockImplementation(handleFindNodesRequest);
 	server.use(graphql.query('findNodes', mockedRequestHandler));
 });
 
 jest.mock('../../hooks/useCreateOptions', () => ({
-	useCreateOptions: (): {
-		setCreateOptions: (options: {
-			newButton: {
-				primary: unknown;
-				secondaryItems: Array<unknown>;
-			};
-		}) => void;
-	} => ({
-		setCreateOptions: jest.fn().mockImplementation((options) => {
-			mockedCreateOptions = options;
-		})
+	useCreateOptions: (): CreateOptionsContent => ({
+		setCreateOptions: jest
+			.fn()
+			.mockImplementation((...options: Parameters<CreateOptionsContent['setCreateOptions']>[0]) => {
+				mockedCreateOptions = options;
+			})
 	})
 }));
 
@@ -214,7 +209,7 @@ describe('Filter view', () => {
 		test('Create folder option is always disabled', async () => {
 			render(<FilterView />);
 			await screen.findByText(/view files and folders/i);
-			expect(mockedCreateOptions?.newButton?.secondaryItems).toEqual(
+			expect(map(mockedCreateOptions, (createOption) => createOption.action({}))).toEqual(
 				expect.arrayContaining([expect.objectContaining({ id: 'create-folder', disabled: true })])
 			);
 		});

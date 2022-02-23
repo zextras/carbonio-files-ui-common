@@ -144,7 +144,9 @@ export interface ChipProps {
 	maxWidth?: string;
 }
 
-export type SearchChip = Omit<ChipProps, 'label'> & { label?: string };
+export interface SearchChip extends ChipProps {
+	label?: string;
+}
 
 export enum OrderTrend {
 	Ascending = 'Ascending',

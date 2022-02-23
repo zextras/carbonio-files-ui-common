@@ -13,6 +13,7 @@ import map from 'lodash/map';
 import { graphql } from 'msw';
 import { Route } from 'react-router-dom';
 
+import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import server from '../../mocks/server';
 import { searchParamsVar } from '../apollo/searchVar';
 import { NODES_LOAD_LIMIT, ROOTS } from '../constants';
@@ -43,25 +44,9 @@ import {
 } from '../utils/testUtils';
 import { SearchView } from './SearchView';
 
-let mockedCreateOptions;
-
-beforeEach(() => {
-	mockedCreateOptions = {};
-});
-
 jest.mock('../../hooks/useCreateOptions', () => ({
-	useCreateOptions: (): {
-		setCreateOptions: (options: {
-			newButton: {
-				primary: unknown;
-				secondaryItems: Array<unknown>;
-			};
-		}) => void;
-	} => ({
-		setCreateOptions: jest.fn().mockImplementation((options) => {
-			// eslint-disable-next-line unused-imports/no-unused-vars
-			mockedCreateOptions = options;
-		})
+	useCreateOptions: (): CreateOptionsContent => ({
+		setCreateOptions: jest.fn()
 	})
 }));
 

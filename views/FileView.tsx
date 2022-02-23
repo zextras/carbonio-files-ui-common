@@ -7,6 +7,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { Container, Responsive } from '@zextras/carbonio-design-system';
+// eslint-disable-next-line import/no-unresolved
 import { ACTION_TYPES } from '@zextras/carbonio-shell-ui';
 import noop from 'lodash/noop';
 import { useTranslation } from 'react-i18next';
