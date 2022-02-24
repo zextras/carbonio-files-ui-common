@@ -27,17 +27,20 @@ const Overlay = styled.div`
 `;
 
 const PreviewerContainer = styled.div.attrs({
-	padding: '8px'
+	$paddingVertical: '32px',
+	$paddingHorizontal: '16px',
+	$gap: '8px'
 })`
 	display: flex;
 	max-width: 100%;
-	max-height: calc(100vh - ${({ padding }): string => padding} * 2);
+	max-height: calc(100vh - ${({ $paddingVertical }): string => $paddingVertical} * 2);
 	flex-direction: column;
-	gap: ${({ padding }): string => padding};
+	gap: ${({ $gap }): string => $gap};
 	justify-content: center;
 	align-items: center;
 	overflow: hidden;
-	padding: ${({ padding }): string => padding};
+	padding: ${({ $paddingVertical, $paddingHorizontal }): string =>
+		`${$paddingVertical} ${$paddingHorizontal}`};
 	outline: none;
 `;
 

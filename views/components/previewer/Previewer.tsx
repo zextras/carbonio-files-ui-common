@@ -14,11 +14,15 @@ import PreviewerBase from './PreviewerBase';
 type PreviewerProps = Omit<React.ComponentPropsWithRef<typeof PreviewerBase>, 'Header' | 'Footer'> &
 	Partial<FooterProps> &
 	Partial<HeaderProps> & {
-		closeTooltip?: string;
+		closeTooltipLabel?: string;
+		closeTooltipPlacement?: React.ComponentPropsWithRef<typeof Tooltip>['placement'];
 	};
 
 const FooterContainer = styled.div`
 	width: fit-content;
+	& div {
+		line-height: 1.5;
+	}
 `;
 
 const UpperCaseText = styled(Text)`
@@ -55,7 +59,8 @@ interface HeaderAction {
 	/** Icon from the theme */
 	icon: string;
 	/** Label to show as tooltip for the action */
-	tooltip?: string;
+	tooltipLabel?: string;
+	tooltipPlacement?: React.ComponentPropsWithRef<typeof Tooltip>['placement'];
 	/** Disabled status for the action */
 	disabled?: boolean;
 }
@@ -72,8 +77,8 @@ const HeaderContainer = styled.div`
 
 const Header: React.VFC<HeaderProps> = ({ actions }) => (
 	<HeaderContainer>
-		{map(actions, ({ id, onClick, disabled, icon, tooltip }) => (
-			<Tooltip label={tooltip} disabled={!tooltip} key={id}>
+		{map(actions, ({ id, onClick, disabled, icon, tooltipLabel, tooltipPlacement }) => (
+			<Tooltip label={tooltipLabel} disabled={!tooltipLabel} key={id} placement={tooltipPlacement}>
 				<IconButton
 					onClick={onClick}
 					disabled={disabled}
@@ -98,7 +103,8 @@ const Previewer = React.forwardRef<HTMLDivElement, PreviewerProps>(function Prev
 		size = '',
 		actions = [],
 		onClose,
-		closeTooltip = 'Close',
+		closeTooltipLabel = 'Close',
+		closeTooltipPlacement = 'top',
 		alt
 	},
 	ref
@@ -106,10 +112,17 @@ const Previewer = React.forwardRef<HTMLDivElement, PreviewerProps>(function Prev
 	const $actions = useMemo(
 		() => [
 			...actions,
-			{ id: 'close-action', icon: 'Close', onClick: onClose, tooltip: closeTooltip }
+			{
+				id: 'close-action',
+				icon: 'Close',
+				onClick: onClose,
+				tooltipLabel: closeTooltipLabel,
+				tooltipPlacement: closeTooltipPlacement
+			}
 		],
-		[actions, closeTooltip, onClose]
+		[actions, closeTooltipLabel, closeTooltipPlacement, onClose]
 	);
+
 	return (
 		<PreviewerBase
 			footer={<Footer filename={filename} extension={extension} size={size} />}

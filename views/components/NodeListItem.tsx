@@ -513,6 +513,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 				src={version ? getPreviewSrc(id, version, 0, 0, 'high') : ''}
 				show={showPreviewer}
 				onClose={hidePreviewerCallback}
+				closeTooltipLabel={t('previewer.close.tooltip', 'Close')}
 			/>
 		</Container>
 	);
