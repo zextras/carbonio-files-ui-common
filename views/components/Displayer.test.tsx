@@ -12,7 +12,13 @@ import { act } from 'react-dom/test-utils';
 
 import GET_CHILDREN from '../../graphql/queries/getChildren.graphql';
 import { populateFolder, populateNode, populateShares } from '../../mocks/mockUtils';
-import { File, Folder } from '../../types/graphql/types';
+import {
+	File,
+	Folder,
+	GetChildrenQuery,
+	GetChildrenQueryVariables,
+	Maybe
+} from '../../types/graphql/types';
 import {
 	getChildrenVariables,
 	getNodeVariables,
@@ -74,9 +80,9 @@ describe('Displayer', () => {
 		};
 		const mocks = [
 			mockGetNode(getNodeVariables(node.id), node),
-			mockGetPath({ id: parent.id }, [parent]),
+			mockGetPath({ node_id: parent.id }, [parent]),
 			mockGetChildren(getChildrenVariables(parent.id), parent),
-			mockCopyNodes({ nodes_ids: [node.id], destination_id: parent.id }, [copyNode]),
+			mockCopyNodes({ node_ids: [node.id], destination_id: parent.id }, [copyNode]),
 			mockGetChildren(getChildrenVariables(parent.id), {
 				...parent,
 				children: [...parent.children, copyNode]
@@ -109,11 +115,11 @@ describe('Displayer', () => {
 		await waitForElementToBeRemoved(copyButton);
 		const snackbar = await screen.findByText(/item copied/i);
 		await waitForElementToBeRemoved(snackbar);
-		const { getNode } = global.apolloClient.readQuery({
+		const queryResult = global.apolloClient.readQuery<GetChildrenQuery, GetChildrenQueryVariables>({
 			query: GET_CHILDREN,
 			variables: getChildrenVariables(parent.id)
 		});
-		expect(getNode.children).toHaveLength(3);
+		expect((queryResult?.getNode as Maybe<Folder> | undefined)?.children || []).toHaveLength(3);
 	});
 
 	test('Move action open move modal', async () => {
@@ -134,8 +140,8 @@ describe('Displayer', () => {
 				...parent,
 				children: [...parent.children, node]
 			} as Folder),
-			mockGetPath({ id: parent.id }, [parent]),
-			mockMoveNodes({ nodes_ids: [node.id], destination_id: destinationFolder.id }, [
+			mockGetPath({ node_id: parent.id }, [parent]),
+			mockMoveNodes({ node_ids: [node.id], destination_id: destinationFolder.id }, [
 				{ ...node, parent: destinationFolder }
 			]),
 			mockGetChildren(getChildrenVariables(parent.id), parent),
@@ -171,11 +177,11 @@ describe('Displayer', () => {
 		await waitForElementToBeRemoved(moveButton);
 		const snackbar = await screen.findByText(/item moved/i);
 		await waitForElementToBeRemoved(snackbar);
-		const { getNode } = global.apolloClient.readQuery({
+		const queryResult = global.apolloClient.readQuery<GetChildrenQuery, GetChildrenQueryVariables>({
 			query: GET_CHILDREN,
 			variables: getChildrenVariables(parent.id)
 		});
-		expect(getNode.children).toHaveLength(1);
+		expect((queryResult?.getNode as Maybe<Folder> | undefined)?.children || []).toHaveLength(1);
 	});
 
 	test('Rename action open rename modal', async () => {
@@ -189,7 +195,7 @@ describe('Displayer', () => {
 		const mocks = [
 			mockGetNode(getNodeVariables(node.id), node),
 			mockGetChildren(getChildrenVariables(parent.id), parent),
-			mockUpdateNode({ id: node.id, name: newName }, { ...node, name: newName })
+			mockUpdateNode({ node_id: node.id, name: newName }, { ...node, name: newName })
 		];
 		const { getByTextWithMarkup } = render(<Displayer translationKey="No.node" />, {
 			initialRouterEntries: [`/?node=${node.id}`],

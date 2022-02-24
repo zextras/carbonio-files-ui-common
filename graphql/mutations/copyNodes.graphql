@@ -4,8 +4,8 @@
 
 #import "../fragments/child.graphql"
 
-mutation copyNodes($nodes_ids: [ID!], $destination_id: ID!) {
-    copyNodes(nodes_ids: $nodes_ids, destination_id: $destination_id) {
+mutation copyNodes($node_ids: [ID!], $destination_id: ID!) {
+    copyNodes(node_ids: $node_ids, destination_id: $destination_id) {
         ...Child
     }
 }

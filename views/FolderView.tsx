@@ -8,16 +8,19 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useQuery } from '@apollo/client';
 import { Container, Responsive } from '@zextras/carbonio-design-system';
+// eslint-disable-next-line import/no-unresolved
+import { ACTION_TYPES } from '@zextras/carbonio-shell-ui';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
 import { useCreateOptions } from '../../hooks/useCreateOptions';
-import { DISPLAYER_WIDTH, LIST_WIDTH, ROOTS } from '../constants';
+import { DISPLAYER_WIDTH, FILES_APP_ID, LIST_WIDTH, ROOTS } from '../constants';
 import { ListContext } from '../contexts';
 import GET_PERMISSIONS from '../graphql/queries/getPermissions.graphql';
 import useQueryParam from '../hooks/useQueryParam';
 import { useUpload } from '../hooks/useUpload';
 import { DocsType, URLParams } from '../types/common';
+import { GetPermissionsQuery, GetPermissionsQueryVariables } from '../types/graphql/types';
 import { ActionItem, canCreateFile, canCreateFolder, canUploadFile } from '../utils/ActionsFactory';
 import { inputElement } from '../utils/utils';
 import { Displayer } from './components/Displayer';
@@ -48,43 +51,46 @@ const FolderView: React.VFC = () => {
 		[add, folderId, rootId]
 	);
 
-	const { data: permissionsData } = useQuery(GET_PERMISSIONS, {
-		variables: {
-			id: folderId || rootId || ROOTS.LOCAL_ROOT
+	const { data: permissionsData } = useQuery<GetPermissionsQuery, GetPermissionsQueryVariables>(
+		GET_PERMISSIONS,
+		{
+			variables: {
+				node_id: folderId || rootId || ROOTS.LOCAL_ROOT
+			}
 		}
-	});
+	);
 
 	const isCanUploadFile = useMemo(
-		() => permissionsData?.getNode && canUploadFile(permissionsData.getNode),
+		() => !!permissionsData?.getNode && canUploadFile(permissionsData.getNode),
 		[permissionsData]
 	);
 
 	const isCanCreateFolder = useMemo(
-		() => permissionsData?.getNode && canCreateFolder(permissionsData.getNode),
+		() => !!permissionsData?.getNode && canCreateFolder(permissionsData.getNode),
 		[permissionsData]
 	);
 
 	const isCanCreateFile = useMemo(
-		() => permissionsData?.getNode && canCreateFile(permissionsData.getNode),
+		() => !!permissionsData?.getNode && canCreateFile(permissionsData.getNode),
 		[permissionsData]
 	);
 
-	const createFolderAction = useCallback((event?: React.SyntheticEvent) => {
+	const createFolderAction = useCallback((event) => {
 		event && event.stopPropagation();
 		setNewFolder(true);
 	}, []);
 
-	const createDocumentAction = useCallback((event?: React.SyntheticEvent) => {
+	const createDocumentAction = useCallback((event) => {
 		event && event.stopPropagation();
 		setNewFile(DocsType.DOCUMENT);
 	}, []);
 
-	const createSpreadsheetAction = useCallback((event?: React.SyntheticEvent) => {
+	const createSpreadsheetAction = useCallback((event) => {
 		event && event.stopPropagation();
 		setNewFile(DocsType.SPREADSHEET);
 	}, []);
 
-	const createPresentationAction = useCallback((event?: React.SyntheticEvent) => {
+	const createPresentationAction = useCallback((event) => {
 		event && event.stopPropagation();
 		setNewFile(DocsType.PRESENTATION);
 	}, []);
@@ -133,68 +139,97 @@ const FolderView: React.VFC = () => {
 	]);
 
 	useEffect(() => {
-		setCreateOptions({
-			newButton: {
-				primary: {
+		setCreateOptions(
+			{
+				type: ACTION_TYPES.NEW,
+				id: 'upload-file',
+				action: () => ({
+					type: ACTION_TYPES.NEW,
 					id: 'upload-file',
+					primary: true,
+					group: FILES_APP_ID,
 					label: t('create.options.new.upload', 'Upload'),
 					icon: 'CloudUploadOutline',
-					click: (event) => {
+					click: (event): void => {
 						event && event.stopPropagation();
 						inputElement.click();
 						inputElement.onchange = inputElementOnchange;
 					},
 					disabled: !isCanUploadFile
-				},
-				secondaryItems: [
-					{
-						id: 'create-folder',
-						label: t('create.options.new.folder', 'New Folder'),
-						icon: 'FolderOutline',
-						click: createFolderAction,
-						disabled: !isCanCreateFolder
-					},
-					{
-						id: 'create-docs-document',
-						label: t('create.options.new.document', 'New Document'),
-						icon: 'FileTextOutline',
-						click: createDocumentAction,
-						disabled: !isCanCreateFile
-					},
-					{
-						id: 'create-docs-spreadsheet',
-						label: t('create.options.new.spreadsheet', 'New Spreadsheet'),
-						icon: 'FileCalcOutline',
-						click: createSpreadsheetAction,
-						disabled: !isCanCreateFile
-					},
-					{
-						id: 'create-docs-presentation',
-						label: t('create.options.new.presentation', 'New Presentation'),
-						icon: 'FilePresentationOutline',
-						click: createPresentationAction,
-						disabled: !isCanCreateFile
-					}
-				]
+				})
+			},
+			{
+				type: ACTION_TYPES.NEW,
+				id: 'create-folder',
+				action: () => ({
+					type: ACTION_TYPES.NEW,
+					id: 'create-folder',
+					group: FILES_APP_ID,
+					label: t('create.options.new.folder', 'New Folder'),
+					icon: 'FolderOutline',
+					click: createFolderAction,
+					disabled: !isCanCreateFolder
+				})
+			},
+			{
+				type: ACTION_TYPES.NEW,
+				id: 'create-docs-document',
+				action: () => ({
+					type: ACTION_TYPES.NEW,
+					id: 'create-docs-document',
+					group: FILES_APP_ID,
+					label: t('create.options.new.document', 'New Document'),
+					icon: 'FileTextOutline',
+					click: createDocumentAction,
+					disabled: !isCanCreateFile
+				})
+			},
+			{
+				type: ACTION_TYPES.NEW,
+				id: 'create-docs-spreadsheet',
+				action: () => ({
+					type: ACTION_TYPES.NEW,
+					id: 'create-docs-spreadsheet',
+					group: FILES_APP_ID,
+					label: t('create.options.new.spreadsheet', 'New Spreadsheet'),
+					icon: 'FileCalcOutline',
+					click: createSpreadsheetAction,
+					disabled: !isCanCreateFile
+				})
+			},
+			{
+				type: ACTION_TYPES.NEW,
+				id: 'create-docs-presentation',
+				action: () => ({
+					type: ACTION_TYPES.NEW,
+					id: 'create-docs-presentation',
+					group: FILES_APP_ID,
+					label: t('create.options.new.presentation', 'New Presentation'),
+					icon: 'FilePresentationOutline',
+					click: createPresentationAction,
+					disabled: !isCanCreateFile
+				})
 			}
-		});
+		);
 
 		return (): void => {
 			setCreateOptions({
-				newButton: {
-					primary: {
-						id: 'upload-file',
-						label: t('create.options.new.upload', 'Upload'),
-						icon: 'CloudUploadOutline',
-						click: (event) => {
-							event && event.stopPropagation();
-							inputElement.click();
-							inputElement.onchange = inputElementOnchange;
-						},
-						disabled: !isCanUploadFile
+				type: ACTION_TYPES.NEW,
+				id: 'upload-file',
+				action: () => ({
+					type: ACTION_TYPES.NEW,
+					id: 'upload-file',
+					primary: true,
+					group: FILES_APP_ID,
+					label: t('create.options.new.upload', 'Upload'),
+					icon: 'CloudUploadOutline',
+					click: (event): void => {
+						event && event.stopPropagation();
+						inputElement.click();
+						inputElement.onchange = inputElementOnchange;
 					},
-					secondaryItems: []
-				}
+					disabled: !isCanUploadFile
+				})
 			});
 		};
 	}, [

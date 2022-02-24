@@ -88,8 +88,7 @@ export const NodeDetailsListItem: React.VFC<NodeDetailsListItemProps> = ({
 					{displayName && <Text>&middot;</Text>}
 					<Padding left="extrasmall">
 						<Text color="gray1" size="extrasmall">
-							{/* TODO: format with locale */}
-							{formatDate(updatedAt, 'DD/MM/YYYY')}
+							{formatDate(updatedAt, 'DD/MM/YYYY', userInfo.zimbraPrefTimeZoneId)}
 						</Text>
 					</Padding>
 				</>

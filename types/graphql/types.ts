@@ -185,7 +185,7 @@ export type Mutation = {
 	 */
 	createLink: Link;
 	/**
-	 *  Allows to share an existing node to a user specifing the user permissions on that node,
+	 *  Allows to share an existing node to a user specifying the user permissions on that node,
 	 *  and, optionally, an expiration timestamp.
 	 */
 	createShare: Share;
@@ -228,18 +228,18 @@ export type Mutation = {
 };
 
 export type MutationCloneVersionArgs = {
-	id: Scalars['ID'];
+	node_id: Scalars['ID'];
 	version: Scalars['Int'];
 };
 
 export type MutationCopyNodesArgs = {
 	destination_id: Scalars['ID'];
-	nodes_ids?: InputMaybe<Array<Scalars['ID']>>;
+	node_ids?: InputMaybe<Array<Scalars['ID']>>;
 };
 
 export type MutationCreateFolderArgs = {
+	destination_id: Scalars['String'];
 	name: Scalars['String'];
-	parent_id: Scalars['String'];
 };
 
 export type MutationCreateLinkArgs = {
@@ -261,7 +261,7 @@ export type MutationDeleteLinksArgs = {
 };
 
 export type MutationDeleteNodesArgs = {
-	nodes_ids?: InputMaybe<Array<Scalars['ID']>>;
+	node_ids?: InputMaybe<Array<Scalars['ID']>>;
 };
 
 export type MutationDeleteShareArgs = {
@@ -270,24 +270,24 @@ export type MutationDeleteShareArgs = {
 };
 
 export type MutationDeleteVersionsArgs = {
-	id: Scalars['ID'];
+	node_id: Scalars['ID'];
 	versions?: InputMaybe<Array<Scalars['Int']>>;
 };
 
 export type MutationFlagNodesArgs = {
 	flag: Scalars['Boolean'];
-	nodes_ids?: InputMaybe<Array<Scalars['ID']>>;
+	node_ids?: InputMaybe<Array<Scalars['ID']>>;
 };
 
 export type MutationKeepVersionsArgs = {
-	id: Scalars['ID'];
 	keep_forever: Scalars['Boolean'];
+	node_id: Scalars['ID'];
 	versions: Array<Scalars['Int']>;
 };
 
 export type MutationMoveNodesArgs = {
 	destination_id: Scalars['ID'];
-	nodes_ids?: InputMaybe<Array<Scalars['ID']>>;
+	node_ids?: InputMaybe<Array<Scalars['ID']>>;
 };
 
 export type MutationRestoreNodesArgs = {
@@ -301,14 +301,14 @@ export type MutationTrashNodesArgs = {
 export type MutationUpdateLinkArgs = {
 	description?: InputMaybe<Scalars['String']>;
 	expires_at?: InputMaybe<Scalars['DateTime']>;
-	id: Scalars['ID'];
+	link_id: Scalars['ID'];
 };
 
 export type MutationUpdateNodeArgs = {
 	description?: InputMaybe<Scalars['String']>;
 	flagged?: InputMaybe<Scalars['Boolean']>;
-	id: Scalars['String'];
 	name?: InputMaybe<Scalars['String']>;
+	node_id: Scalars['String'];
 };
 
 export type MutationUpdateShareArgs = {
@@ -388,26 +388,6 @@ export enum NodeSort {
 	UpdatedAtAsc = 'UPDATED_AT_ASC',
 	UpdatedAtDesc = 'UPDATED_AT_DESC'
 }
-
-export type NodeSubscription = {
-	__typename?: 'NodeSubscription';
-	/**  Node creation timestamp */
-	created_at: Scalars['DateTime'];
-	/**  Description of the file/folder */
-	description: Scalars['String'];
-	/**  True if the owner has marked the node as favourite, false otherwise */
-	flagged: Scalars['Boolean'];
-	/**  Unique identifier of the node */
-	id: Scalars['ID'];
-	/**  True if the user has marked the node for future deletion, false otherwise */
-	marked_for_deletion: Scalars['Boolean'];
-	/**  Name of the file/folder */
-	name: Scalars['String'];
-	/**  Type of the node */
-	type: Scalars['String'];
-	/**  Node update timestamp */
-	updated_at: Scalars['DateTime'];
-};
 
 /** Definition of NodeType enumerator. This is used for discriminating the specific type of a node */
 export enum NodeType {
@@ -514,12 +494,12 @@ export type QueryGetLinksArgs = {
 };
 
 export type QueryGetNodeArgs = {
-	id: Scalars['ID'];
+	node_id: Scalars['ID'];
 	version?: InputMaybe<Scalars['Int']>;
 };
 
 export type QueryGetPathArgs = {
-	id: Scalars['ID'];
+	node_id: Scalars['ID'];
 };
 
 export type QueryGetShareArgs = {
@@ -528,11 +508,11 @@ export type QueryGetShareArgs = {
 };
 
 export type QueryGetUserByIdArgs = {
-	id: Scalars['ID'];
+	user_id: Scalars['ID'];
 };
 
 export type QueryGetVersionsArgs = {
-	id: Scalars['ID'];
+	node_id: Scalars['ID'];
 	versions?: InputMaybe<Array<Scalars['Int']>>;
 };
 
@@ -576,7 +556,7 @@ export enum ShareSort {
 	ExpirationDesc = 'EXPIRATION_DESC',
 	/**  The order is ascending: this means that first are shown the shares with fewer permissions. */
 	SharePermissionsAsc = 'SHARE_PERMISSIONS_ASC',
-	/**  The order is discending: this means that first are shown the shares with more permissions. */
+	/**  The order is descending: this means that first are shown the shares with more permissions. */
 	SharePermissionsDesc = 'SHARE_PERMISSIONS_DESC',
 	/**  The order is based on the target user identifier and not on his email or display name. */
 	TargetUserAsc = 'TARGET_USER_ASC',
@@ -585,15 +565,6 @@ export enum ShareSort {
 }
 
 export type SharedTarget = DistributionList | User;
-
-export type Subscription = {
-	__typename?: 'Subscription';
-	nodeSubscription: NodeSubscription;
-};
-
-export type SubscriptionNodeSubscriptionArgs = {
-	ids: Array<InputMaybe<Scalars['String']>>;
-};
 
 /**  Definition of the User type */
 export type User = {
@@ -843,7 +814,7 @@ type Permissions_Folder_Fragment = {
 export type PermissionsFragment = Permissions_File_Fragment | Permissions_Folder_Fragment;
 
 export type CloneVersionMutationVariables = Exact<{
-	id: Scalars['ID'];
+	node_id: Scalars['ID'];
 	version: Scalars['Int'];
 }>;
 
@@ -864,7 +835,7 @@ export type CloneVersionMutation = {
 };
 
 export type CopyNodesMutationVariables = Exact<{
-	nodes_ids?: InputMaybe<Array<Scalars['ID']> | Scalars['ID']>;
+	node_ids?: InputMaybe<Array<Scalars['ID']> | Scalars['ID']>;
 	destination_id: Scalars['ID'];
 }>;
 
@@ -1014,7 +985,7 @@ export type CopyNodesMutation = {
 };
 
 export type CreateFolderMutationVariables = Exact<{
-	parentId: Scalars['String'];
+	destination_id: Scalars['String'];
 	name: Scalars['String'];
 }>;
 
@@ -1160,9 +1131,9 @@ export type CreateFolderMutation = {
 };
 
 export type CreateLinkMutationVariables = Exact<{
-	nodeId: Scalars['ID'];
+	node_id: Scalars['ID'];
 	description?: InputMaybe<Scalars['String']>;
-	expiresAt?: InputMaybe<Scalars['DateTime']>;
+	expires_at?: InputMaybe<Scalars['DateTime']>;
 }>;
 
 export type CreateLinkMutation = {
@@ -1179,10 +1150,10 @@ export type CreateLinkMutation = {
 };
 
 export type CreateShareMutationVariables = Exact<{
-	nodeId: Scalars['ID'];
-	shareTargetId: Scalars['ID'];
+	node_id: Scalars['ID'];
+	share_target_id: Scalars['ID'];
 	permission: SharePermission;
-	customMessage?: InputMaybe<Scalars['String']>;
+	custom_message?: InputMaybe<Scalars['String']>;
 }>;
 
 export type CreateShareMutation = {
@@ -1201,7 +1172,7 @@ export type CreateShareMutation = {
 };
 
 export type DeleteLinksMutationVariables = Exact<{
-	linkIds: Array<Scalars['ID']> | Scalars['ID'];
+	link_ids: Array<Scalars['ID']> | Scalars['ID'];
 }>;
 
 export type DeleteLinksMutation = {
@@ -1210,7 +1181,7 @@ export type DeleteLinksMutation = {
 };
 
 export type DeleteNodesMutationVariables = Exact<{
-	nodes_ids?: InputMaybe<Array<Scalars['ID']> | Scalars['ID']>;
+	node_ids?: InputMaybe<Array<Scalars['ID']> | Scalars['ID']>;
 }>;
 
 export type DeleteNodesMutation = {
@@ -1219,14 +1190,14 @@ export type DeleteNodesMutation = {
 };
 
 export type DeleteShareMutationVariables = Exact<{
-	nodeId: Scalars['ID'];
-	shareTargetId: Scalars['ID'];
+	node_id: Scalars['ID'];
+	share_target_id: Scalars['ID'];
 }>;
 
 export type DeleteShareMutation = { __typename?: 'Mutation'; deleteShare: boolean };
 
 export type DeleteVersionsMutationVariables = Exact<{
-	id: Scalars['ID'];
+	node_id: Scalars['ID'];
 	versions?: InputMaybe<Array<Scalars['Int']> | Scalars['Int']>;
 }>;
 
@@ -1236,7 +1207,7 @@ export type DeleteVersionsMutation = {
 };
 
 export type FlagNodesMutationVariables = Exact<{
-	nodes_ids?: InputMaybe<Array<Scalars['ID']> | Scalars['ID']>;
+	node_ids?: InputMaybe<Array<Scalars['ID']> | Scalars['ID']>;
 	flag: Scalars['Boolean'];
 }>;
 
@@ -1246,7 +1217,7 @@ export type FlagNodesMutation = {
 };
 
 export type KeepVersionsMutationVariables = Exact<{
-	id: Scalars['ID'];
+	node_id: Scalars['ID'];
 	versions: Array<Scalars['Int']> | Scalars['Int'];
 	keep_forever: Scalars['Boolean'];
 }>;
@@ -1257,7 +1228,7 @@ export type KeepVersionsMutation = {
 };
 
 export type MoveNodesMutationVariables = Exact<{
-	nodes_ids?: InputMaybe<Array<Scalars['ID']> | Scalars['ID']>;
+	node_ids?: InputMaybe<Array<Scalars['ID']> | Scalars['ID']>;
 	destination_id: Scalars['ID'];
 }>;
 
@@ -1333,9 +1304,9 @@ export type TrashNodesMutation = {
 };
 
 export type UpdateLinkMutationVariables = Exact<{
-	id: Scalars['ID'];
+	link_id: Scalars['ID'];
 	description?: InputMaybe<Scalars['String']>;
-	expiresAt?: InputMaybe<Scalars['DateTime']>;
+	expires_at?: InputMaybe<Scalars['DateTime']>;
 }>;
 
 export type UpdateLinkMutation = {
@@ -1354,7 +1325,7 @@ export type UpdateLinkMutation = {
 };
 
 export type UpdateNodeMutationVariables = Exact<{
-	id: Scalars['String'];
+	node_id: Scalars['String'];
 	name?: InputMaybe<Scalars['String']>;
 	description?: InputMaybe<Scalars['String']>;
 }>;
@@ -1501,7 +1472,7 @@ export type UpdateNodeMutation = {
 };
 
 export type UpdateNodeDescriptionMutationVariables = Exact<{
-	id: Scalars['String'];
+	node_id: Scalars['String'];
 	description?: InputMaybe<Scalars['String']>;
 }>;
 
@@ -1513,8 +1484,8 @@ export type UpdateNodeDescriptionMutation = {
 };
 
 export type UpdateShareMutationVariables = Exact<{
-	nodeId: Scalars['ID'];
-	shareTargetId: Scalars['ID'];
+	node_id: Scalars['ID'];
+	share_target_id: Scalars['ID'];
 	permission: SharePermission;
 }>;
 
@@ -1539,15 +1510,15 @@ export type UpdateShareMutation = {
 export type FindNodesQueryVariables = Exact<{
 	keywords?: InputMaybe<Array<Scalars['String']> | Scalars['String']>;
 	flagged?: InputMaybe<Scalars['Boolean']>;
-	sharedByMe?: InputMaybe<Scalars['Boolean']>;
-	sharedWithMe?: InputMaybe<Scalars['Boolean']>;
-	folderId?: InputMaybe<Scalars['String']>;
+	shared_by_me?: InputMaybe<Scalars['Boolean']>;
+	shared_with_me?: InputMaybe<Scalars['Boolean']>;
+	folder_id?: InputMaybe<Scalars['String']>;
 	cascade?: InputMaybe<Scalars['Boolean']>;
 	limit: Scalars['Int'];
-	pageToken?: InputMaybe<Scalars['String']>;
+	page_token?: InputMaybe<Scalars['String']>;
 	sort?: InputMaybe<NodeSort>;
-	sharesLimit?: InputMaybe<Scalars['Int']>;
-	directShare?: InputMaybe<Scalars['Boolean']>;
+	shares_limit?: InputMaybe<Scalars['Int']>;
+	direct_share?: InputMaybe<Scalars['Boolean']>;
 }>;
 
 export type FindNodesQuery = {
@@ -1717,7 +1688,7 @@ export type GetAccountByEmailQuery = {
 };
 
 export type GetBaseNodeQueryVariables = Exact<{
-	id: Scalars['ID'];
+	node_id: Scalars['ID'];
 }>;
 
 export type GetBaseNodeQuery = {
@@ -1774,8 +1745,8 @@ export type GetBaseNodeQuery = {
 };
 
 export type GetChildQueryVariables = Exact<{
-	id: Scalars['ID'];
-	sharesLimit?: InputMaybe<Scalars['Int']>;
+	node_id: Scalars['ID'];
+	shares_limit?: InputMaybe<Scalars['Int']>;
 }>;
 
 export type GetChildQuery = {
@@ -1924,11 +1895,11 @@ export type GetChildQuery = {
 };
 
 export type GetChildrenQueryVariables = Exact<{
-	id: Scalars['ID'];
-	childrenLimit: Scalars['Int'];
+	node_id: Scalars['ID'];
+	children_limit: Scalars['Int'];
 	cursor?: InputMaybe<Scalars['String']>;
 	sort: NodeSort;
-	sharesLimit?: InputMaybe<Scalars['Int']>;
+	shares_limit?: InputMaybe<Scalars['Int']>;
 }>;
 
 export type GetChildrenQuery = {
@@ -2088,13 +2059,13 @@ export type GetChildrenQuery = {
 };
 
 export type GetNodeQueryVariables = Exact<{
-	id: Scalars['ID'];
-	childrenLimit: Scalars['Int'];
+	node_id: Scalars['ID'];
+	children_limit: Scalars['Int'];
 	cursor?: InputMaybe<Scalars['String']>;
 	sort: NodeSort;
-	sharesLimit: Scalars['Int'];
-	sharesCursor?: InputMaybe<Scalars['String']>;
-	shareSorts?: InputMaybe<Array<ShareSort> | ShareSort>;
+	shares_limit: Scalars['Int'];
+	shares_cursor?: InputMaybe<Scalars['String']>;
+	shares_sorts?: InputMaybe<Array<ShareSort> | ShareSort>;
 }>;
 
 export type GetNodeQuery = {
@@ -2414,7 +2385,7 @@ export type GetNodeQuery = {
 };
 
 export type GetNodeLinksQueryVariables = Exact<{
-	nodeId: Scalars['ID'];
+	node_id: Scalars['ID'];
 }>;
 
 export type GetNodeLinksQuery = {
@@ -2459,7 +2430,7 @@ export type GetNodeLinksQuery = {
 };
 
 export type GetParentQueryVariables = Exact<{
-	id: Scalars['ID'];
+	node_id: Scalars['ID'];
 }>;
 
 export type GetParentQuery = {
@@ -2810,7 +2781,7 @@ export type GetParentQuery = {
 };
 
 export type GetPathQueryVariables = Exact<{
-	id: Scalars['ID'];
+	node_id: Scalars['ID'];
 }>;
 
 export type GetPathQuery = {
@@ -2868,7 +2839,7 @@ export type GetPathQuery = {
 };
 
 export type GetPermissionsQueryVariables = Exact<{
-	id: Scalars['ID'];
+	node_id: Scalars['ID'];
 }>;
 
 export type GetPermissionsQuery = {
@@ -2920,10 +2891,10 @@ export type GetRootsListQuery = {
 };
 
 export type GetSharesQueryVariables = Exact<{
-	id: Scalars['ID'];
-	sharesLimit: Scalars['Int'];
-	sharesCursor?: InputMaybe<Scalars['String']>;
-	shareSorts?: InputMaybe<Array<ShareSort> | ShareSort>;
+	node_id: Scalars['ID'];
+	shares_limit: Scalars['Int'];
+	shares_cursor?: InputMaybe<Scalars['String']>;
+	shares_sorts?: InputMaybe<Array<ShareSort> | ShareSort>;
 }>;
 
 export type GetSharesQuery = {
@@ -2976,7 +2947,7 @@ export type GetSharesQuery = {
 };
 
 export type GetVersionsQueryVariables = Exact<{
-	id: Scalars['ID'];
+	node_id: Scalars['ID'];
 	versions?: InputMaybe<Array<Scalars['Int']> | Scalars['Int']>;
 }>;
 

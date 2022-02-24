@@ -20,7 +20,7 @@ export function useGetBaseNodeQuery(nodeId?: string): GetBaseNodeQueryHook {
 		GET_BASE_NODE,
 		{
 			variables: {
-				id: nodeId || ''
+				node_id: nodeId || ''
 			},
 			skip: !nodeId,
 			notifyOnNetworkStatusChange: true

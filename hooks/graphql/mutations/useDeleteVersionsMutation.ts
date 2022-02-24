@@ -37,7 +37,7 @@ export function useDeleteVersionsMutation(): DeleteVersionsType {
 		(nodeId: string, versions?: Array<number>) => {
 			return deleteVersionsMutation({
 				variables: {
-					id: nodeId,
+					node_id: nodeId,
 					versions
 				},
 				optimisticResponse: {
@@ -48,7 +48,8 @@ export function useDeleteVersionsMutation(): DeleteVersionsType {
 					if (data?.deleteVersions) {
 						cache.modify({
 							fields: {
-								[`getVersions({"id":"${nodeId}"})`](existingVersions) {
+								// TODO: think about another strategy because this way is impossible to detect during refactors
+								[`getVersions({"node_id":"${nodeId}"})`](existingVersions) {
 									return filter(existingVersions, (fileVersion: File) => {
 										return !includes(data.deleteVersions, fileVersion.version);
 									});

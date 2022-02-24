@@ -14,7 +14,7 @@ const handleUpdateLinkRequest: ResponseResolver<
 	GraphQLContext<UpdateLinkMutation>,
 	UpdateLinkMutation
 > = (req, res, ctx) => {
-	const { id, description, expiresAt } = req.variables;
+	const { link_id: id, description, expires_at: expiresAt } = req.variables;
 	const link: UpdateLinkMutation['updateLink'] = {
 		__typename: 'Link',
 		id,

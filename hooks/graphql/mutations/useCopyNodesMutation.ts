@@ -21,7 +21,8 @@ import {
 	CopyNodesMutation,
 	CopyNodesMutationVariables,
 	Folder,
-	GetChildrenQuery
+	GetChildrenQuery,
+	GetChildrenQueryVariables
 } from '../../../types/graphql/types';
 import { useCreateSnackbar } from '../../useCreateSnackbar';
 import { useErrorHandler } from '../../useErrorHandler';
@@ -81,7 +82,7 @@ export function useCopyNodesMutation(): CopyNodesType {
 
 			return copyNodesMutation({
 				variables: {
-					nodes_ids: nodesIds,
+					node_ids: nodesIds,
 					destination_id: destinationFolder.id
 				},
 				update(cache, { data: result }) {
@@ -94,12 +95,12 @@ export function useCopyNodesMutation(): CopyNodesType {
 						// add copied nodes in cached data in right sorted position
 						forEach(result?.copyNodes, (newNode) => {
 							// read data from cache at every iteration to includes previously added nodes
-							const cachedFolder = cache.readQuery<GetChildrenQuery>({
+							const cachedFolder = cache.readQuery<GetChildrenQuery, GetChildrenQueryVariables>({
 								query: GET_CHILDREN,
 								variables: {
-									id: destinationFolder.id,
+									node_id: destinationFolder.id,
 									// load all cached children
-									childrenLimit: Number.MAX_SAFE_INTEGER,
+									children_limit: Number.MAX_SAFE_INTEGER,
 									sort: nodeSort
 								}
 							});

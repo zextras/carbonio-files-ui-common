@@ -15,7 +15,8 @@ export interface NodesListCachedObject {
 
 export interface FindNodesCachedObject {
 	args: QueryFindNodesArgs | null;
-	pageToken: string;
+	// eslint-disable-next-line camelcase
+	page_token: string;
 	nodes: NodesListCachedObject | undefined;
 }
 

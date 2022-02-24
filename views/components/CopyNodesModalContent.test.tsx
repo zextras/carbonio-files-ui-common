@@ -25,7 +25,8 @@ import {
 	File,
 	Node,
 	GetChildrenQuery,
-	GetChildrenQueryVariables
+	GetChildrenQueryVariables,
+	Maybe
 } from '../../types/graphql/types';
 import {
 	getChildrenVariables,
@@ -49,7 +50,7 @@ describe('Copy Nodes Modal', () => {
 		const currentFolder = populateFolder(5);
 		const nodesToCopy = [currentFolder.children[0] as File | Folder];
 		const mocks = [
-			mockGetPath({ id: currentFolder.id }, [currentFolder]),
+			mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder)
 		];
 		render(<CopyNodesModalContent folderId={currentFolder.id} nodesToCopy={nodesToCopy} />, {
@@ -65,7 +66,7 @@ describe('Copy Nodes Modal', () => {
 		const parentFolder = populateFolder(5);
 		const nodesToCopy = [parentFolder.children[0] as File | Folder];
 		const mocks = [
-			mockGetPath({ id: parentFolder.id }, [parentFolder]),
+			mockGetPath({ node_id: parentFolder.id }, [parentFolder]),
 			mockGetChildren(getChildrenVariables(parentFolder.id), parentFolder)
 		];
 		render(<CopyNodesModalContent nodesToCopy={nodesToCopy} />, { mocks });
@@ -82,7 +83,7 @@ describe('Copy Nodes Modal', () => {
 			parentFolder.children[1] as File | Folder
 		];
 		const mocks = [
-			mockGetPath({ id: parentFolder.id }, [parentFolder]),
+			mockGetPath({ node_id: parentFolder.id }, [parentFolder]),
 			mockGetChildren(getChildrenVariables(parentFolder.id), parentFolder)
 		];
 		const { findByTextWithMarkup } = render(<CopyNodesModalContent nodesToCopy={nodesToCopy} />, {
@@ -140,11 +141,11 @@ describe('Copy Nodes Modal', () => {
 		// first copy file -> folderWithWriteFolder is disabled
 		let nodesToCopy: Array<File | Folder> = [file];
 		const mocks = [
-			mockGetPath({ id: currentFolder.id }, [currentFolder]),
+			mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
-			mockGetPath({ id: folderWithWriteFile.id }, [currentFolder, folderWithWriteFile]),
+			mockGetPath({ node_id: folderWithWriteFile.id }, [currentFolder, folderWithWriteFile]),
 			mockGetChildren(getChildrenVariables(folderWithWriteFile.id), folderWithWriteFile),
-			mockGetPath({ id: folderWithWriteFolder.id }, [currentFolder, folderWithWriteFolder]),
+			mockGetPath({ node_id: folderWithWriteFolder.id }, [currentFolder, folderWithWriteFolder]),
 			mockGetChildren(getChildrenVariables(folderWithWriteFolder.id), folderWithWriteFolder)
 		];
 		const { rerender } = render(
@@ -211,13 +212,17 @@ describe('Copy Nodes Modal', () => {
 			mockedNode.parent = populateFolder();
 		});
 		const mocks = [
-			mockGetPath({ id: localRoot.id }, [localRoot]),
+			mockGetPath({ node_id: localRoot.id }, [localRoot]),
 			mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
 			mockFindNodes(
-				getFindNodesVariables({ sharedWithMe: true, folderId: ROOTS.LOCAL_ROOT, cascade: false }),
+				getFindNodesVariables({
+					shared_with_me: true,
+					folder_id: ROOTS.LOCAL_ROOT,
+					cascade: false
+				}),
 				sharedWithMeFilter
 			),
-			mockGetPath({ id: sharedWithMeFilter[0].id }, [sharedWithMeFilter[0]]),
+			mockGetPath({ node_id: sharedWithMeFilter[0].id }, [sharedWithMeFilter[0]]),
 			mockGetChildren(getChildrenVariables(sharedWithMeFilter[0].id), sharedWithMeFilter[0])
 		];
 		const { findByTextWithMarkup, getByTextWithMarkup } = render(
@@ -296,7 +301,7 @@ describe('Copy Nodes Modal', () => {
 
 		const nodesToCopy = [file];
 		const mocks = [
-			mockGetPath({ id: currentFolder.id }, [currentFolder]),
+			mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder)
 		];
 		render(<CopyNodesModalContent folderId={currentFolder.id} nodesToCopy={nodesToCopy} />, {
@@ -346,10 +351,10 @@ describe('Copy Nodes Modal', () => {
 			id: `new-id-${node.id}`
 		}));
 		const mocks = [
-			mockGetPath({ id: currentFolder.id }, [currentFolder]),
+			mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 			mockCopyNodes(
-				{ nodes_ids: map(nodesToCopy, (node) => node.id), destination_id: currentFolder.id },
+				{ node_ids: map(nodesToCopy, (node) => node.id), destination_id: currentFolder.id },
 				copiedNodes
 			),
 			mockGetChildren(getChildrenVariables(currentFolder.id), {
@@ -379,12 +384,13 @@ describe('Copy Nodes Modal', () => {
 		await waitFor(() => expect(closeAction).toHaveBeenCalled());
 		const snackbar = await screen.findByText(/item copied/i);
 		await waitForElementToBeRemoved(snackbar);
-		const currentFolderCachedData = global.apolloClient.readQuery(
-			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder).request
-		);
-		expect(currentFolderCachedData.getNode.children).toHaveLength(
-			currentFolder.children.length + nodesToCopy.length
-		);
+		const currentFolderCachedData = global.apolloClient.readQuery<
+			GetChildrenQuery,
+			GetChildrenQueryVariables
+		>(mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder).request);
+		expect(
+			(currentFolderCachedData?.getNode as Maybe<Folder> | undefined)?.children || []
+		).toHaveLength(currentFolder.children.length + nodesToCopy.length);
 	});
 
 	test('confirm action without selecting a destination copy node in opened sub-folder', async () => {
@@ -406,12 +412,12 @@ describe('Copy Nodes Modal', () => {
 			id: `new-id-${node.id}`
 		}));
 		const mocks = [
-			mockGetPath({ id: currentFolder.id }, [currentFolder]),
+			mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
-			mockGetPath({ id: folder.id }, [currentFolder, folder]),
+			mockGetPath({ node_id: folder.id }, [currentFolder, folder]),
 			mockGetChildren(getChildrenVariables(folder.id), folder),
 			mockCopyNodes(
-				{ nodes_ids: map(nodesToCopy, (node) => node.id), destination_id: folder.id },
+				{ node_ids: map(nodesToCopy, (node) => node.id), destination_id: folder.id },
 				copiedNodes
 			),
 			mockGetChildren(getChildrenVariables(folder.id), {
@@ -446,14 +452,20 @@ describe('Copy Nodes Modal', () => {
 		await waitFor(() => expect(closeAction).toHaveBeenCalled());
 		const snackbar = await screen.findByText(/item copied/i);
 		await waitForElementToBeRemoved(snackbar);
-		const currentFolderCachedData = global.apolloClient.readQuery(
-			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder).request
+		const currentFolderCachedData = global.apolloClient.readQuery<
+			GetChildrenQuery,
+			GetChildrenQueryVariables
+		>(mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder).request);
+		expect(
+			(currentFolderCachedData?.getNode as Maybe<Folder> | undefined)?.children || []
+		).toHaveLength(currentFolder.children.length);
+		const folderCachedData = global.apolloClient.readQuery<
+			GetChildrenQuery,
+			GetChildrenQueryVariables
+		>(mockGetChildren(getChildrenVariables(folder.id), folder).request);
+		expect((folderCachedData?.getNode as Maybe<Folder> | undefined)?.children || []).toHaveLength(
+			nodesToCopy.length
 		);
-		expect(currentFolderCachedData.getNode.children).toHaveLength(currentFolder.children.length);
-		const folderCachedData = global.apolloClient.readQuery(
-			mockGetChildren(getChildrenVariables(folder.id), folder).request
-		);
-		expect(folderCachedData.getNode.children).toHaveLength(nodesToCopy.length);
 	});
 
 	test('confirm action after selecting a destination from the list copy node in selected destination', async () => {
@@ -475,10 +487,10 @@ describe('Copy Nodes Modal', () => {
 			id: `new-id-${node.id}`
 		}));
 		const mocks = [
-			mockGetPath({ id: currentFolder.id }, [currentFolder]),
+			mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 			mockCopyNodes(
-				{ nodes_ids: map(nodesToCopy, (node) => node.id), destination_id: folder.id },
+				{ node_ids: map(nodesToCopy, (node) => node.id), destination_id: folder.id },
 				copiedNodes
 			),
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder)
@@ -507,14 +519,18 @@ describe('Copy Nodes Modal', () => {
 		const snackbar = await screen.findByText(/item copied/i);
 		await waitForElementToBeRemoved(snackbar);
 		await waitFor(() => {
-			const currentFolderCachedData = global.apolloClient.readQuery(
-				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder).request
-			);
-			expect(currentFolderCachedData.getNode.children).toHaveLength(currentFolder.children.length);
+			const currentFolderCachedData = global.apolloClient.readQuery<
+				GetChildrenQuery,
+				GetChildrenQueryVariables
+			>(mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder).request);
+			expect(
+				(currentFolderCachedData?.getNode as Maybe<Folder> | undefined)?.children || []
+			).toHaveLength(currentFolder.children.length);
 		});
-		const folderCachedData = global.apolloClient.readQuery(
-			mockGetChildren(getChildrenVariables(folder.id), folder).request
-		);
+		const folderCachedData = global.apolloClient.readQuery<
+			GetChildrenQuery,
+			GetChildrenQueryVariables
+		>(mockGetChildren(getChildrenVariables(folder.id), folder).request);
 		expect(folderCachedData).toBeNull();
 	});
 
@@ -535,10 +551,10 @@ describe('Copy Nodes Modal', () => {
 			id: `new-id-${node.id}`
 		}));
 		const mocks = [
-			mockGetPath({ id: currentFolder.id }, [currentFolder]),
+			mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 			mockCopyNodes(
-				{ nodes_ids: map(nodesToCopy, (node) => node.id), destination_id: localRoot.id },
+				{ node_ids: map(nodesToCopy, (node) => node.id), destination_id: localRoot.id },
 				copiedNodes
 			),
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder)
@@ -546,7 +562,7 @@ describe('Copy Nodes Modal', () => {
 
 		const closeAction = jest.fn();
 
-		global.apolloClient.writeQuery({
+		global.apolloClient.writeQuery<GetChildrenQuery, GetChildrenQueryVariables>({
 			query: GET_CHILDREN,
 			variables: getChildrenVariables(localRoot.id),
 			data: {
@@ -627,10 +643,10 @@ describe('Copy Nodes Modal', () => {
 			id: `new-id-${node.id}`
 		}));
 		const mocks = [
-			mockGetPath({ id: currentFolder.id }, [currentFolder]),
+			mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 			mockCopyNodes(
-				{ nodes_ids: map(nodesToCopy, (node) => node.id), destination_id: localRoot.id },
+				{ node_ids: map(nodesToCopy, (node) => node.id), destination_id: localRoot.id },
 				copiedNodes
 			),
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder)
@@ -683,11 +699,11 @@ describe('Copy Nodes Modal', () => {
 		const ancestor = path[ancestorIndex] as Folder;
 		ancestor.children = [path[ancestorIndex + 1]];
 		const mocks = [
-			mockGetPath({ id: currentFolder.id }, path),
+			mockGetPath({ node_id: currentFolder.id }, path),
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
-			mockGetPath({ id: folder.id }, path.concat(folder)),
+			mockGetPath({ node_id: folder.id }, path.concat(folder)),
 			mockGetChildren(getChildrenVariables(folder.id), folder),
-			mockGetPath({ id: ancestor.id }, path.slice(0, ancestorIndex + 1)),
+			mockGetPath({ node_id: ancestor.id }, path.slice(0, ancestorIndex + 1)),
 			mockGetChildren(getChildrenVariables(ancestor.id), ancestor)
 		];
 
@@ -725,7 +741,7 @@ describe('Copy Nodes Modal', () => {
 		const currentFolder = populateFolder(NODES_LOAD_LIMIT * 2 - 1);
 		const nodesToCopy = [currentFolder.children[0] as File | Folder];
 		const mocks = [
-			mockGetPath({ id: currentFolder.id }, [currentFolder]),
+			mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 			mockGetChildren(getChildrenVariables(currentFolder.id), {
 				...currentFolder,
 				children: currentFolder.children.slice(0, NODES_LOAD_LIMIT)

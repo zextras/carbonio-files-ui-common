@@ -2,6 +2,6 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-only
 
-mutation keepVersions($id: ID!, $versions: [Int!]!, $keep_forever: Boolean!) {
-    keepVersions(id: $id, versions: $versions, keep_forever: $keep_forever)
+mutation keepVersions($node_id: ID!, $versions: [Int!]!, $keep_forever: Boolean!) {
+    keepVersions(node_id: $node_id, versions: $versions, keep_forever: $keep_forever)
 }

@@ -43,7 +43,7 @@ describe('Node List Item', () => {
 		expect(nodeItem).toBeVisible();
 		expect(nodeItem).not.toBeEmptyDOMElement();
 		expect(screen.getByText(node.name)).toBeVisible();
-		expect(screen.getByText(formatDate(node.updated_at, 'DD/MM/YYYY'))).toBeVisible();
+		expect(screen.getByText(formatDate(node.updated_at, 'DD/MM/YYYY', 'UTC'))).toBeVisible();
 		expect(screen.queryByText(mockedUserLogged.full_name)).not.toBeInTheDocument();
 		expect(screen.getByText(/you/i)).toBeVisible();
 	});

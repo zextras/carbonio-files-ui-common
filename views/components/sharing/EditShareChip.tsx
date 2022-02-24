@@ -7,7 +7,7 @@
 /* eslint-disable arrow-body-style */
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { FetchResult } from '@apollo/client';
+import { FetchResult, useLazyQuery } from '@apollo/client';
 import { Text, Tooltip } from '@zextras/carbonio-design-system';
 import filter from 'lodash/filter';
 import map from 'lodash/map';
@@ -15,14 +15,19 @@ import { useTranslation } from 'react-i18next';
 
 import { useActiveNode } from '../../../../hooks/useActiveNode';
 import { SHARE_CHIP_SIZE } from '../../../constants';
+import GET_PERMISSIONS from '../../../graphql/queries/getPermissions.graphql';
 import { useDeleteShareMutation } from '../../../hooks/graphql/mutations/useDeleteShareMutation';
 import { useUpdateShareMutation } from '../../../hooks/graphql/mutations/useUpdateShareMutation';
+import { useDecreaseYourOwnSharePermissionModal } from '../../../hooks/modals/useDecreaseYourOwnSharePermissionModal';
+import { useCreateSnackbar } from '../../../hooks/useCreateSnackbar';
 import { useDeleteShareModal } from '../../../hooks/useDeleteShareModal';
 import { ChipActionsType, Role } from '../../../types/common';
 import {
 	DeleteNodesMutation,
 	File,
 	Folder,
+	GetPermissionsQuery,
+	GetPermissionsQueryVariables,
 	Node,
 	NodeType,
 	Permissions,
@@ -52,8 +57,9 @@ const roleAssignChecker: {
 	[Role.Viewer]: (node: Node, permissions: Permissions) => boolean;
 } = {
 	[Role.Editor]: (node: Node, permissions: Permissions) =>
-		(node.type === NodeType.Folder && permissions.can_write_folder) ||
-		(node.type !== NodeType.Folder && permissions.can_write_file),
+		node?.type &&
+		((node.type === NodeType.Folder && permissions.can_write_folder) ||
+			(node.type !== NodeType.Folder && permissions.can_write_file)),
 	[Role.Viewer]: () => true
 };
 
@@ -76,6 +82,29 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 }) => {
 	const [updateShare] = useUpdateShareMutation();
 	const [t] = useTranslation();
+	const createSnackbar = useCreateSnackbar();
+
+	const [getPermissionsLazy] = useLazyQuery<GetPermissionsQuery, GetPermissionsQueryVariables>(
+		GET_PERMISSIONS,
+		{
+			fetchPolicy: 'network-only',
+			variables: {
+				node_id: share?.node?.id
+			}
+		}
+	);
+
+	const updateShareActionCallback = useCallback(() => {
+		getPermissionsLazy();
+		createSnackbar({
+			key: new Date().toLocaleString(),
+			type: 'info',
+			label: t('snackbar.decreaseYourOwnShare.success', 'Rights updated successfully'),
+			replace: true,
+			hideButton: true
+		});
+	}, [createSnackbar, getPermissionsLazy, t]);
+
 	const { activeNodeId, removeActiveNode } = useActiveNode();
 
 	const initialActiveRow = useMemo(() => rowSharePermissionToIdxMap[share.permission], [share]);
@@ -88,6 +117,14 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 
 	const [activeRow, setActiveRow] = useState(initialActiveRow);
 	const [checkboxValue, setCheckboxValue] = useState(initialCheckboxValue);
+
+	const decreasingSharePermissions = useMemo(
+		() =>
+			(initialCheckboxValue && !checkboxValue) ||
+			(rowIdxToRoleMap[initialActiveRow] === Role.Editor &&
+				rowIdxToRoleMap[activeRow] === Role.Viewer),
+		[activeRow, checkboxValue, initialActiveRow, initialCheckboxValue]
+	);
 
 	const switchSharingAllowed = (): void => {
 		setCheckboxValue((prevState) => !prevState);
@@ -106,14 +143,17 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 	};
 
 	const updateShareCallback = useCallback(() => {
-		updateShare(
+		return updateShare(
 			share.node,
 			share.share_target?.id as string,
 			sharePermissionsGetter(rowIdxToRoleMap[activeRow], checkboxValue)
-		).then((_result) => {
-			// console.log(_result);
-		});
+		);
 	}, [activeRow, checkboxValue, share, updateShare]);
+
+	const { openDeletePermanentlyModal } = useDecreaseYourOwnSharePermissionModal(
+		updateShareCallback,
+		updateShareActionCallback
+	);
 
 	const deleteShare = useDeleteShareMutation();
 
@@ -125,10 +165,10 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 
 	// remove active when deleted share to avoid having an un-accessible node as active
 	const navigateToSharedWithMe = useCallback(() => {
-		if (yourselfChip && share.node.id === activeNodeId) {
+		if (yourselfChip && share.node?.id === activeNodeId) {
 			removeActiveNode();
 		}
-	}, [activeNodeId, removeActiveNode, share.node.id, yourselfChip]);
+	}, [activeNodeId, removeActiveNode, share.node?.id, yourselfChip]);
 
 	const { openDeleteShareModal } = useDeleteShareModal(
 		deleteShareCallback,
@@ -265,7 +305,11 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 						checkboxOnClick={switchSharingAllowed}
 						containerOnClick={changeRole}
 						saveDisabled={initialActiveRow === activeRow && initialCheckboxValue === checkboxValue}
-						saveOnClick={updateShareCallback}
+						saveOnClick={
+							yourselfChip && decreasingSharePermissions
+								? openDeletePermanentlyModal
+								: updateShareCallback
+						}
 						closePopover={closePopover}
 					/>
 				)}

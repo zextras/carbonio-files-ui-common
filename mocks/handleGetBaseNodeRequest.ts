@@ -16,7 +16,7 @@ const handleGetBaseNodeRequest: ResponseResolver<
 	GraphQLContext<GetBaseNodeQuery>,
 	GetBaseNodeQuery
 > = (req, res, ctx) => {
-	const { id } = req.variables;
+	const { node_id: id } = req.variables;
 
 	let nodeName = faker.random.words();
 	if (id.trim() === ROOTS.LOCAL_ROOT) {

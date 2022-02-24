@@ -10,20 +10,24 @@ import { ApolloError, useQuery } from '@apollo/client';
 import { Avatar, Container, Padding, Row, Text, Tooltip } from '@zextras/carbonio-design-system';
 import reduce from 'lodash/reduce';
 import { useTranslation } from 'react-i18next';
+import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { NodeDetailsUserRow } from '../../../components/NodeDetailsUserRow';
 import { useActiveNode } from '../../../hooks/useActiveNode';
 import { useInternalLink } from '../../../hooks/useInternalLink';
 import { useNavigation } from '../../../hooks/useNavigation';
-import { DISPLAYER_TABS } from '../../constants';
+import { DISPLAYER_TABS, ROOTS } from '../../constants';
 import GET_PATH from '../../graphql/queries/getPath.graphql';
 import { useCreateSnackbar } from '../../hooks/useCreateSnackbar';
+import useQueryParam from '../../hooks/useQueryParam';
 import { HoverSwitchComponent } from '../../HoverSwitchComponent';
-import { Crumb } from '../../types/common';
+import { Crumb, URLParams } from '../../types/common';
 import {
 	ChildFragment,
 	DistributionList,
+	GetPathQuery,
+	GetPathQueryVariables,
 	Maybe,
 	Node,
 	NodeType,
@@ -64,6 +68,7 @@ interface NodeDetailsProps {
 		| undefined
 	>;
 	type: NodeType;
+	rootId?: string;
 }
 
 const MainContainer = styled(Container)`
@@ -100,7 +105,8 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 	loadMore,
 	loading,
 	shares,
-	type
+	type,
+	rootId
 }) => {
 	const [t] = useTranslation();
 	const loadMoreRef = useRef<Element>();
@@ -143,6 +149,8 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 		};
 	}, [hasMore, loadMore]);
 
+	const activeFolderId = useQueryParam('folder');
+	const { rootId: activeRootId } = useParams<URLParams>();
 	const { activeNodeId, setActiveNode } = useActiveNode();
 
 	const openShareTab = useCallback(() => {
@@ -191,13 +199,24 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 	}, [openShareTab, shares, t]);
 
 	const { navigateToFolder } = useNavigation();
+
+	const isCrumbNavigable = useCallback(
+		(node: Pick<Node, 'id' | 'type'>) =>
+			(node.type === NodeType.Folder || node.type === NodeType.Root) &&
+			// disable navigation for folder currently visible in list
+			node.id !== activeFolderId &&
+			node.id !== activeRootId &&
+			// disable navigation if node is trashed
+			rootId !== ROOTS.TRASH,
+		[activeFolderId, activeRootId, rootId]
+	);
+
 	const [crumbs, setCrumbs] = useState<Crumb[]>(
 		buildCrumbs(
 			[{ name, id, type }],
 			navigateToFolder,
 			t,
-			(node: Pick<Node, 'id' | 'name' | 'type'>) =>
-				node.type === NodeType.Folder || node.type === NodeType.Root
+			(node: Pick<Node, 'id' | 'name' | 'type'>) => isCrumbNavigable(node)
 		)
 	);
 	const [crumbsRequested, setCrumbsRequested] = useState<boolean>(false);
@@ -205,9 +224,9 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 
 	// TODO: investigate if this can be requested with lazy query or move into custom hook to better handle error
 	// use a useQuery to load full path only when required so that operations like move that cleanup cache trigger a refetch
-	const { data } = useQuery(GET_PATH, {
+	const { data } = useQuery<GetPathQuery, GetPathQueryVariables>(GET_PATH, {
 		variables: {
-			id
+			node_id: id
 		},
 		skip: !id || !crumbsRequested,
 		onError(err) {
@@ -219,12 +238,8 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 	useEffect(() => {
 		if (crumbsRequested && data?.getPath) {
 			setCrumbs(
-				buildCrumbs(
-					data.getPath,
-					navigateToFolder,
-					t,
-					(node: Pick<Node, 'id' | 'name' | 'type'>) =>
-						node.type === NodeType.Folder || node.type === NodeType.Root
+				buildCrumbs(data.getPath, navigateToFolder, t, (node: Pick<Node, 'id' | 'type'>) =>
+					isCrumbNavigable(node)
 				)
 			);
 		} else {
@@ -233,12 +248,23 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 					[{ name, id, type }],
 					navigateToFolder,
 					t,
-					(node: Pick<Node, 'id' | 'name' | 'type'>) =>
-						node.type === NodeType.Folder || node.type === NodeType.Root
+					(node: Pick<Node, 'id' | 'name' | 'type'>) => isCrumbNavigable(node)
 				)
 			);
 		}
-	}, [crumbsRequested, data?.getPath, id, name, type, navigateToFolder, t]);
+	}, [
+		crumbsRequested,
+		data?.getPath,
+		id,
+		name,
+		type,
+		navigateToFolder,
+		t,
+		activeFolderId,
+		activeRootId,
+		rootId,
+		isCrumbNavigable
+	]);
 
 	const loadPath = useCallback(() => {
 		setCrumbsRequested(true);
@@ -355,6 +381,7 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 					canUpsertDescription={canUpsertDescription}
 					description={description}
 					id={id}
+					key={`NodeDetailsDescription${id}`}
 				/>
 				{downloads && (
 					<Row orientation="vertical" crossAlignment="flex-start" padding={{ vertical: 'small' }}>

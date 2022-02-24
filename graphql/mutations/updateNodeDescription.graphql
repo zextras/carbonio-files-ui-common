@@ -2,8 +2,8 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-only
 
-mutation updateNodeDescription($id: String!, $description: String) {
-	updateNode(id: $id, description: $description) {
+mutation updateNodeDescription($node_id: String!, $description: String) {
+	updateNode(node_id: $node_id, description: $description) {
 		id,
 		description
 	}

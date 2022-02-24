@@ -16,7 +16,7 @@ import DELETE_LINKS from '../../../graphql/mutations/deleteLinks.graphql';
 import {
 	DeleteLinksMutation,
 	DeleteLinksMutationVariables,
-	Link
+	LinkFragment
 } from '../../../types/graphql/types';
 import { useErrorHandler } from '../../useErrorHandler';
 
@@ -35,7 +35,7 @@ export function useDeleteLinksMutation(nodeId: string, nodeTypename: string): De
 		(linkIds: Array<string>) => {
 			return deleteLinksMutation({
 				variables: {
-					linkIds
+					link_ids: linkIds
 				},
 				update(cache, { data }) {
 					if (data?.deleteLinks) {
@@ -44,7 +44,7 @@ export function useDeleteLinksMutation(nodeId: string, nodeTypename: string): De
 							fields: {
 								links(existingLinks) {
 									const updatedLinks = filter(existingLinks, (existingLink) => {
-										const link: Link | null = cache.readFragment({
+										const link = cache.readFragment<LinkFragment>({
 											id: cache.identify(existingLink),
 											fragment: LINK
 										});

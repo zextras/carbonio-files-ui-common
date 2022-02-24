@@ -41,19 +41,7 @@ export function useDeleteShareMutation(): (
 	const [deleteShareMutation, { error }] = useMutation<
 		DeleteShareMutation,
 		DeleteShareMutationVariables
-	>(DELETE_SHARE, {
-		onCompleted({ deleteShare }) {
-			if (deleteShare) {
-				createSnackbar({
-					key: new Date().toLocaleString(),
-					type: 'info',
-					label: t('snackbar.deleteShare.success', 'Success'),
-					replace: true,
-					hideButton: true
-				});
-			}
-		}
-	});
+	>(DELETE_SHARE);
 
 	useErrorHandler(error, 'DELETE_SHARE');
 
@@ -64,8 +52,8 @@ export function useDeleteShareMutation(): (
 		(node: PickIdNodeType, shareTargetId: string) => {
 			return deleteShareMutation({
 				variables: {
-					nodeId: node.id,
-					shareTargetId
+					node_id: node.id,
+					share_target_id: shareTargetId
 				},
 				optimisticResponse: {
 					__typename: 'Mutation',
@@ -79,6 +67,7 @@ export function useDeleteShareMutation(): (
 								const updatedShares = filter(existingShareRefs, (existingShareRef) => {
 									const sharedTarget: User | DistributionList | null | undefined =
 										existingShareRef.share_target &&
+										// TODO: move fragment to graphql file and add type
 										cache.readFragment({
 											id: cache.identify(existingShareRef.share_target),
 											fragment: gql`
@@ -117,7 +106,7 @@ export function useDeleteShareMutation(): (
 										);
 
 										if (
-											existingNodesRefs.pageToken &&
+											existingNodesRefs.page_token &&
 											size(ordered) === 0 &&
 											size(unOrdered) === 0
 										) {
@@ -126,7 +115,7 @@ export function useDeleteShareMutation(): (
 
 										return {
 											args: existingNodesRefs.args,
-											pageToken: existingNodesRefs.pageToken,
+											page_token: existingNodesRefs.page_token,
 											nodes: {
 												ordered,
 												unOrdered
@@ -140,9 +129,20 @@ export function useDeleteShareMutation(): (
 						});
 					}
 				}
+			}).then((result) => {
+				if (result.data?.deleteShare) {
+					createSnackbar({
+						key: new Date().toLocaleString(),
+						type: 'info',
+						label: t('snackbar.deleteShare.success', 'Success'),
+						replace: true,
+						hideButton: true
+					});
+				}
+				return result;
 			});
 		},
-		[deleteShareMutation, me]
+		[createSnackbar, deleteShareMutation, me, t]
 	);
 
 	return deleteShare;

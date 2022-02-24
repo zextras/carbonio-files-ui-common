@@ -13,7 +13,14 @@ import { useTranslation } from 'react-i18next';
 import GET_PARENT from '../graphql/queries/getParent.graphql';
 import GET_PATH from '../graphql/queries/getPath.graphql';
 import { Crumb, CrumbNode } from '../types/common';
-import { GetPathQuery, GetPathQueryVariables, Maybe, Node } from '../types/graphql/types';
+import {
+	GetParentQuery,
+	GetParentQueryVariables,
+	GetPathQuery,
+	GetPathQueryVariables,
+	Maybe,
+	Node
+} from '../types/graphql/types';
 import { buildCrumbs } from '../utils/utils';
 
 export type UseBreadcrumbType = (
@@ -64,14 +71,16 @@ const useBreadcrumb: UseBreadcrumbType = (folderId, labels, crumbAction) => {
 	);
 
 	// main query that loads short breadcrumb
-	const { loading, error } = useQuery(GET_PARENT, {
+	const { loading, error } = useQuery<GetParentQuery, GetParentQueryVariables>(GET_PARENT, {
 		variables: {
-			id: folderId
+			node_id: folderId || ''
 		},
-		skip: folderId === undefined,
+		skip: !folderId,
 		onCompleted({ getNode }) {
-			updateCrumbs(getNode);
-			setExpanded(false);
+			if (getNode) {
+				updateCrumbs(getNode);
+				setExpanded(false);
+			}
 		}
 	});
 
@@ -82,7 +91,7 @@ const useBreadcrumb: UseBreadcrumbType = (folderId, labels, crumbAction) => {
 				.query<GetPathQuery, GetPathQueryVariables>({
 					query: GET_PATH,
 					variables: {
-						id: folderId
+						node_id: folderId
 					}
 				})
 				.then(({ data: { getPath } }) => {

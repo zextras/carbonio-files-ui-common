@@ -113,12 +113,12 @@ describe('Header Breadcrumbs', () => {
 			});
 
 			const mocks = [
-				mockGetParent({ id: currentFolder.id }, currentFolder),
-				mockGetPath({ id: currentFolder.id }, path),
+				mockGetParent({ node_id: currentFolder.id }, currentFolder),
+				mockGetPath({ node_id: currentFolder.id }, path),
 				mockMoveNodes(
 					{
 						destination_id: path[0].id,
-						nodes_ids: map(movingNodes, (node) => node.id)
+						node_ids: map(movingNodes, (node) => node.id)
 					},
 					map(movingNodes, (node) => ({ ...node, parent: path[0] }))
 				)
@@ -150,6 +150,7 @@ describe('Header Breadcrumbs', () => {
 			expect(
 				getByTextWithMarkup(buildBreadCrumbRegExp(...map(path, (parent) => parent.name)))
 			).toBeVisible();
+			// TODO: move fragment to graphql file and add type
 			// add missing data in cache
 			global.apolloClient.writeFragment({
 				fragment: gql`
@@ -211,12 +212,12 @@ describe('Header Breadcrumbs', () => {
 			const moveMutationFn = jest.fn();
 
 			const mocks = [
-				mockGetParent({ id: currentFolder.id }, currentFolder),
-				mockGetPath({ id: currentFolder.id }, path),
+				mockGetParent({ node_id: currentFolder.id }, currentFolder),
+				mockGetPath({ node_id: currentFolder.id }, path),
 				mockMoveNodes(
 					{
 						destination_id: currentFolder.id,
-						nodes_ids: map(movingNodes, (node) => node.id)
+						node_ids: map(movingNodes, (node) => node.id)
 					},
 					map(movingNodes, (node) => ({ ...node, parent: currentFolder })),
 					moveMutationFn
@@ -246,6 +247,7 @@ describe('Header Breadcrumbs', () => {
 			expect(
 				getByTextWithMarkup(buildBreadCrumbRegExp(...map(path, (parent) => parent.name)))
 			).toBeVisible();
+			// TODO: move fragment to graphql file and add type
 			// add missing data in cache
 			global.apolloClient.writeFragment({
 				fragment: gql`
@@ -305,7 +307,7 @@ describe('Header Breadcrumbs', () => {
 				mockedNode.owner = owner;
 			});
 
-			const mocks = [mockGetParent({ id: currentFolder.id }, currentFolder)];
+			const mocks = [mockGetParent({ node_id: currentFolder.id }, currentFolder)];
 
 			const { getByTextWithMarkup } = render(
 				<>
@@ -319,6 +321,7 @@ describe('Header Breadcrumbs', () => {
 			expect(
 				getByTextWithMarkup(buildBreadCrumbRegExp(parent.name, currentFolder.name))
 			).toBeVisible();
+			// TODO: move fragment to graphql file and add type
 			// add missing data in cache
 			global.apolloClient.writeFragment({
 				fragment: gql`
@@ -373,7 +376,7 @@ describe('Header Breadcrumbs', () => {
 				mockedNode.owner = owner;
 			});
 
-			const mocks = [mockGetParent({ id: currentFolder.id }, currentFolder)];
+			const mocks = [mockGetParent({ node_id: currentFolder.id }, currentFolder)];
 
 			const { getByTextWithMarkup } = render(
 				<>
@@ -387,6 +390,7 @@ describe('Header Breadcrumbs', () => {
 			expect(
 				getByTextWithMarkup(buildBreadCrumbRegExp(parent.name, currentFolder.name))
 			).toBeVisible();
+			// TODO: move fragment to graphql file and add type
 			// add missing data in cache
 			global.apolloClient.writeFragment({
 				fragment: gql`
@@ -452,12 +456,12 @@ describe('Header Breadcrumbs', () => {
 			const moveMutationFn = jest.fn();
 
 			const mocks = [
-				mockGetParent({ id: currentFolder.id }, currentFolder),
-				mockGetPath({ id: currentFolder.id }, path),
+				mockGetParent({ node_id: currentFolder.id }, currentFolder),
+				mockGetPath({ node_id: currentFolder.id }, path),
 				mockMoveNodes(
 					{
 						destination_id: path[0].id,
-						nodes_ids: map(movingNodes, (node) => node.id)
+						node_ids: map(movingNodes, (node) => node.id)
 					},
 					map(movingNodes, (node) => ({ ...node, parent: path[0] })),
 					moveMutationFn
@@ -490,6 +494,7 @@ describe('Header Breadcrumbs', () => {
 			expect(
 				getByTextWithMarkup(buildBreadCrumbRegExp(...map(path, (parent) => parent.name)))
 			).toBeVisible();
+			// TODO: move fragment to graphql file and add type
 			// add missing data in cache
 			global.apolloClient.writeFragment({
 				fragment: gql`
@@ -554,8 +559,8 @@ describe('Header Breadcrumbs', () => {
 			});
 
 			const mocks = [
-				mockGetParent({ id: currentFolder.id }, currentFolder),
-				mockGetPath({ id: currentFolder.id }, path)
+				mockGetParent({ node_id: currentFolder.id }, currentFolder),
+				mockGetPath({ node_id: currentFolder.id }, path)
 			];
 
 			const { getByTextWithMarkup } = render(
@@ -610,8 +615,8 @@ describe('Header Breadcrumbs', () => {
 			});
 
 			const mocks = [
-				mockGetParent({ id: currentFolder.id }, currentFolder),
-				mockGetPath({ id: currentFolder.id }, path)
+				mockGetParent({ node_id: currentFolder.id }, currentFolder),
+				mockGetPath({ node_id: currentFolder.id }, path)
 			];
 
 			const { getByTextWithMarkup } = render(
@@ -708,12 +713,12 @@ describe('Header Breadcrumbs', () => {
 			});
 
 			const mocks = [
-				mockGetParent({ id: currentFolder.id }, currentFolder),
-				mockGetPath({ id: currentFolder.id }, path),
+				mockGetParent({ node_id: currentFolder.id }, currentFolder),
+				mockGetPath({ node_id: currentFolder.id }, path),
 				mockMoveNodes(
 					{
 						destination_id: path[0].id,
-						nodes_ids: map(movingNodes, (node) => node.id)
+						node_ids: map(movingNodes, (node) => node.id)
 					},
 					map(movingNodes, (node) => ({ ...node, parent: path[0] }))
 				)
@@ -746,6 +751,7 @@ describe('Header Breadcrumbs', () => {
 			expect(
 				getByTextWithMarkup(buildBreadCrumbRegExp(...map(path, (parent) => parent.name)))
 			).toBeVisible();
+			// TODO: move fragment to graphql file and add type
 			// add missing data in cache
 			global.apolloClient.writeFragment({
 				fragment: gql`
@@ -820,12 +826,12 @@ describe('Header Breadcrumbs', () => {
 			const moveMutationFn = jest.fn();
 
 			const mocks = [
-				mockGetParent({ id: currentFolder.id }, currentFolder),
-				mockGetPath({ id: currentFolder.id }, path),
+				mockGetParent({ node_id: currentFolder.id }, currentFolder),
+				mockGetPath({ node_id: currentFolder.id }, path),
 				mockMoveNodes(
 					{
 						destination_id: path[0].id,
-						nodes_ids: map(movingNodes, (node) => node.id)
+						node_ids: map(movingNodes, (node) => node.id)
 					},
 					map(movingNodes, (node) => ({ ...node, parent: path[0] })),
 					moveMutationFn
@@ -859,6 +865,7 @@ describe('Header Breadcrumbs', () => {
 			expect(
 				getByTextWithMarkup(buildBreadCrumbRegExp(...map(path, (parent) => parent.name)))
 			).toBeVisible();
+			// TODO: move fragment to graphql file and add type
 			// add missing data in cache
 			global.apolloClient.writeFragment({
 				fragment: gql`

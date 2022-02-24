@@ -2,6 +2,6 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-only
 
-mutation deleteVersions($id: ID!, $versions: [Int!]) {
-    deleteVersions(id: $id, versions: $versions)
+mutation deleteVersions($node_id: ID!, $versions: [Int!]) {
+    deleteVersions(node_id: $node_id, versions: $versions)
 }

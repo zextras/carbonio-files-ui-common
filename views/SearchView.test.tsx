@@ -13,6 +13,7 @@ import map from 'lodash/map';
 import { graphql } from 'msw';
 import { Route } from 'react-router-dom';
 
+import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import server from '../../mocks/server';
 import { searchParamsVar } from '../apollo/searchVar';
 import { NODES_LOAD_LIMIT, ROOTS } from '../constants';
@@ -23,16 +24,19 @@ import {
 	populateParents,
 	populatePermissions
 } from '../mocks/mockUtils';
-import { AdvancedFilters } from '../types/common';
+import { AdvancedFilters, Node } from '../types/common';
 import {
 	File,
 	FindNodesQuery,
 	FindNodesQueryVariables,
 	Folder,
+	GetChildrenQuery,
+	GetChildrenQueryVariables,
 	GetNodeQuery,
-	GetNodeQueryVariables
+	GetNodeQueryVariables,
+	GetPathQuery,
+	GetPathQueryVariables
 } from '../types/graphql/types';
-import { getFindNodesVariables, mockFindNodes } from '../utils/mockUtils';
 import {
 	actionRegexp,
 	buildBreadCrumbRegExp,
@@ -43,25 +47,9 @@ import {
 } from '../utils/testUtils';
 import { SearchView } from './SearchView';
 
-let mockedCreateOptions;
-
-beforeEach(() => {
-	mockedCreateOptions = {};
-});
-
 jest.mock('../../hooks/useCreateOptions', () => ({
-	useCreateOptions: (): {
-		setCreateOptions: (options: {
-			newButton: {
-				primary: unknown;
-				secondaryItems: Array<unknown>;
-			};
-		}) => void;
-	} => ({
-		setCreateOptions: jest.fn().mockImplementation((options) => {
-			// eslint-disable-next-line unused-imports/no-unused-vars
-			mockedCreateOptions = options;
-		})
+	useCreateOptions: (): CreateOptionsContent => ({
+		setCreateOptions: jest.fn()
 	})
 }));
 
@@ -94,7 +82,7 @@ describe('Search view', () => {
 				res(ctx.data({ findNodes: populateNodePage(nodes, NODES_LOAD_LIMIT) }))
 			),
 			graphql.query<GetNodeQuery, GetNodeQueryVariables>('getNode', (req, res, ctx) => {
-				const { id } = req.variables;
+				const { node_id: id } = req.variables;
 				return res(
 					ctx.data({ getNode: (find(nodes, (node) => node.id === id) as File | Folder) || null })
 				);
@@ -191,16 +179,18 @@ describe('Search view', () => {
 			searchParamsVar(searchParams);
 			const currentSearch = populateNodes(2);
 			// prepare cache so that apollo client read data from the cache
-			const mockedFindNodesQuery = mockFindNodes(
-				getFindNodesVariables({ keywords }),
-				currentSearch
-			);
 
 			server.use(
-				graphql.query('findNodes', (req, res, ctx) =>
-					res(ctx.data(mockedFindNodesQuery.result.data))
+				graphql.query<FindNodesQuery, FindNodesQueryVariables>('findNodes', (req, res, ctx) =>
+					res(
+						ctx.data({
+							findNodes: populateNodePage(currentSearch)
+						})
+					)
 				),
-				graphql.query('getNode', (req, res, ctx) => res(ctx.data({ getNode: currentSearch[0] })))
+				graphql.query<GetNodeQuery, GetNodeQueryVariables>('getNode', (req, res, ctx) =>
+					res(ctx.data({ getNode: currentSearch[0] as Node }))
+				)
 			);
 
 			const { getByTextWithMarkup } = render(
@@ -249,14 +239,17 @@ describe('Search view', () => {
 			const path = [...parentPath, node];
 			const pathUpdated = [...parentPath, destinationFolder, node];
 			const pathResponse = [path, pathUpdated];
-			const mockedFindNodesQuery = mockFindNodes(getFindNodesVariables({ keywords }), nodes);
 			server.use(
-				graphql.query('findNodes', (req, res, ctx) =>
-					res(ctx.data(mockedFindNodesQuery.result.data))
+				graphql.query<FindNodesQuery, FindNodesQueryVariables>('findNodes', (req, res, ctx) =>
+					res(
+						ctx.data({
+							findNodes: populateNodePage(nodes)
+						})
+					)
 				),
-				graphql.query('getNode', (req, res, ctx) => {
+				graphql.query<GetNodeQuery, GetNodeQueryVariables>('getNode', (req, res, ctx) => {
 					let result = null;
-					const { id } = req.variables;
+					const { node_id: id } = req.variables;
 					switch (id) {
 						case node.id:
 							result = node;
@@ -270,11 +263,11 @@ describe('Search view', () => {
 						default:
 							break;
 					}
-					return res(ctx.data({ getNode: result }));
+					return res(ctx.data({ getNode: result as Node }));
 				}),
-				graphql.query('getPath', (req, res, ctx) => {
+				graphql.query<GetPathQuery, GetPathQueryVariables>('getPath', (req, res, ctx) => {
 					let result = null;
-					const { id } = req.variables;
+					const { node_id: id } = req.variables;
 					switch (id) {
 						case node.id:
 							result = pathResponse.shift() || [];
@@ -290,7 +283,9 @@ describe('Search view', () => {
 					}
 					return res(ctx.data({ getPath: result || [] }));
 				}),
-				graphql.query('getChildren', (req, res, ctx) => res(ctx.data({ getNode: node.parent })))
+				graphql.query<GetChildrenQuery, GetChildrenQueryVariables>('getChildren', (req, res, ctx) =>
+					res(ctx.data({ getNode: node.parent }))
+				)
 			);
 
 			const { getByTextWithMarkup, queryByTextWithMarkup, findByTextWithMarkup } = render(
@@ -359,17 +354,17 @@ describe('Search view', () => {
 			node.parent.permissions.can_write_file = true;
 			node.permissions.can_write_folder = true;
 			node.permissions.can_write_file = true;
-			const mockedFindNodesQuery = mockFindNodes(
-				getFindNodesVariables({ keywords, folderId: folder.id, cascade: true }),
-				nodes
-			);
 			server.use(
-				graphql.query('findNodes', (req, res, ctx) =>
-					res(ctx.data(mockedFindNodesQuery.result.data))
+				graphql.query<FindNodesQuery, FindNodesQueryVariables>('findNodes', (req, res, ctx) =>
+					res(
+						ctx.data({
+							findNodes: populateNodePage(nodes)
+						})
+					)
 				),
-				graphql.query('getNode', (req, res, ctx) => {
+				graphql.query<GetNodeQuery, GetNodeQueryVariables>('getNode', (req, res, ctx) => {
 					let result = null;
-					const { id } = req.variables;
+					const { node_id: id } = req.variables;
 					switch (id) {
 						case node.id:
 							result = node;
@@ -380,7 +375,7 @@ describe('Search view', () => {
 						default:
 							break;
 					}
-					return res(ctx.data({ getNode: result }));
+					return res(ctx.data({ getNode: result as Node }));
 				})
 			);
 
@@ -433,14 +428,17 @@ describe('Search view', () => {
 			node.parent.permissions.can_write_file = true;
 			node.permissions.can_write_folder = true;
 			node.permissions.can_write_file = true;
-			const mockedFindNodesQuery = mockFindNodes(getFindNodesVariables({ keywords }), nodes);
 			server.use(
-				graphql.query('findNodes', (req, res, ctx) =>
-					res(ctx.data(mockedFindNodesQuery.result.data))
+				graphql.query<FindNodesQuery, FindNodesQueryVariables>('findNodes', (req, res, ctx) =>
+					res(
+						ctx.data({
+							findNodes: populateNodePage(nodes)
+						})
+					)
 				),
-				graphql.query('getNode', (req, res, ctx) => {
+				graphql.query<GetNodeQuery, GetNodeQueryVariables>('getNode', (req, res, ctx) => {
 					let result = null;
-					const { id } = req.variables;
+					const { node_id: id } = req.variables;
 					switch (id) {
 						case node.id:
 							result = node;
@@ -451,7 +449,7 @@ describe('Search view', () => {
 						default:
 							break;
 					}
-					return res(ctx.data({ getNode: result }));
+					return res(ctx.data({ getNode: result as Node }));
 				})
 			);
 
@@ -514,17 +512,17 @@ describe('Search view', () => {
 			node.permissions.can_write_file = true;
 			node.rootId = ROOTS.TRASH;
 
-			const mockedFindNodesQuery = mockFindNodes(
-				getFindNodesVariables({ keywords, folderId: ROOTS.TRASH }),
-				nodes
-			);
 			server.use(
-				graphql.query('findNodes', (req, res, ctx) =>
-					res(ctx.data(mockedFindNodesQuery.result.data))
+				graphql.query<FindNodesQuery, FindNodesQueryVariables>('findNodes', (req, res, ctx) =>
+					res(
+						ctx.data({
+							findNodes: populateNodePage(nodes)
+						})
+					)
 				),
-				graphql.query('getNode', (req, res, ctx) => {
+				graphql.query<GetNodeQuery, GetNodeQueryVariables>('getNode', (req, res, ctx) => {
 					let result = null;
-					const { id } = req.variables;
+					const { node_id: id } = req.variables;
 					switch (id) {
 						case node.id:
 							result = node;
@@ -535,7 +533,7 @@ describe('Search view', () => {
 						default:
 							break;
 					}
-					return res(ctx.data({ getNode: result }));
+					return res(ctx.data({ getNode: result as Node }));
 				})
 			);
 
@@ -591,14 +589,17 @@ describe('Search view', () => {
 			node.permissions.can_write_file = true;
 			node.rootId = ROOTS.TRASH;
 
-			const mockedFindNodesQuery = mockFindNodes(getFindNodesVariables({ keywords }), nodes);
 			server.use(
-				graphql.query('findNodes', (req, res, ctx) =>
-					res(ctx.data(mockedFindNodesQuery.result.data))
+				graphql.query<FindNodesQuery, FindNodesQueryVariables>('findNodes', (req, res, ctx) =>
+					res(
+						ctx.data({
+							findNodes: populateNodePage(nodes)
+						})
+					)
 				),
-				graphql.query('getNode', (req, res, ctx) => {
+				graphql.query<GetNodeQuery, GetNodeQueryVariables>('getNode', (req, res, ctx) => {
 					let result = null;
-					const { id } = req.variables;
+					const { node_id: id } = req.variables;
 					switch (id) {
 						case node.id:
 							result = node;
@@ -609,7 +610,7 @@ describe('Search view', () => {
 						default:
 							break;
 					}
-					return res(ctx.data({ getNode: result }));
+					return res(ctx.data({ getNode: result as Node }));
 				})
 			);
 

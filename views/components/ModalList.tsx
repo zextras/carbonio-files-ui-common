@@ -16,7 +16,7 @@ import { ROOTS } from '../../constants';
 import { Breadcrumbs } from '../../design_system_fork/Breadcrumbs';
 import GET_PATH from '../../graphql/queries/getPath.graphql';
 import { NodeListItemType } from '../../types/common';
-import { Node } from '../../types/graphql/types';
+import { GetPathQuery, GetPathQueryVariables, Node } from '../../types/graphql/types';
 import { canBeWriteNodeDestination } from '../../utils/ActionsFactory';
 import { buildCrumbs, decodeError } from '../../utils/utils';
 import { EmptyFolder } from './EmptyFolder';
@@ -73,15 +73,18 @@ export const ModalList: React.VFC<ModalListProps> = ({
 	// const [filter, setFilter] = useState<string>();
 
 	// use a useQuery to load full path only when required so that operations like move that cleanup cache trigger a refetch
-	const { data: pathData, loading: loadingPath } = useQuery(GET_PATH, {
-		variables: {
-			id: folderId
-		},
-		skip: !folderId,
-		onError(err) {
-			console.error(err);
+	const { data: pathData, loading: loadingPath } = useQuery<GetPathQuery, GetPathQueryVariables>(
+		GET_PATH,
+		{
+			variables: {
+				node_id: folderId
+			},
+			skip: !folderId,
+			onError(err) {
+				console.error(err);
+			}
 		}
-	});
+	);
 
 	// for shared with me nodes, build the breadcrumb from the leave to the highest ancestor that has right permissions.
 	// to be valid an ancestor must have can_write_file if moving files, can_write_folder if moving folders,
@@ -100,11 +103,13 @@ export const ModalList: React.VFC<ModalListProps> = ({
 		const validParents = limitNavigation
 			? takeRightWhile(
 					pathData?.getPath,
-					(parent: Pick<Node, 'id' | 'name' | 'permissions' | 'type'>) =>
-						canBeWriteNodeDestination(parent, writingFile, writingFolder)
+					(parent: Pick<Node, 'id' | 'name' | 'permissions' | 'type'> | undefined | null) =>
+						parent && canBeWriteNodeDestination(parent, writingFile, writingFolder)
 			  )
 			: pathData?.getPath;
-		$crumbs.push(...buildCrumbs(validParents, navigateTo, t));
+		if (validParents) {
+			$crumbs.push(...buildCrumbs(validParents, navigateTo, t));
+		}
 		return $crumbs;
 	}, [
 		allowRootNavigation,

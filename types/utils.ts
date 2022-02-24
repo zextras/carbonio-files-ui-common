@@ -29,3 +29,13 @@ export type NonNullableList<T extends Array<unknown>> = Array<NonNullable<Unwrap
 export type NonNullableListItem<T extends Array<unknown>> = Unwrap<NonNullableList<T>>;
 
 export type MakeRequired<T, K extends keyof T> = Partial<Omit<T, K>> & Required<Pick<T, K>>;
+
+export type SnakeToCamelCase<S extends string> = S extends `${infer T}_${infer U}`
+	? `${T}${Capitalize<SnakeToCamelCase<U>>}`
+	: S;
+
+export type SnakeToCamelCaseNested<T> = T extends Record<string, unknown>
+	? {
+			[K in keyof T as SnakeToCamelCase<K & string>]: SnakeToCamelCaseNested<T[K]>;
+	  }
+	: T;

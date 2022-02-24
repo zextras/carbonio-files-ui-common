@@ -32,9 +32,9 @@ export function useUpdateLinkMutation(): UpdateLinkType {
 		(id: string, description?: string, expiresAt?: number) => {
 			return updateLinkMutation({
 				variables: {
-					id,
+					link_id: id,
 					description,
-					expiresAt
+					expires_at: expiresAt
 				}
 			});
 		},

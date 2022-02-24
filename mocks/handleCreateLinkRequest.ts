@@ -14,7 +14,7 @@ const handleCreateLinkRequest: ResponseResolver<
 	GraphQLContext<CreateLinkMutation>,
 	CreateLinkMutation
 > = (req, res, ctx) => {
-	const { nodeId, description, expiresAt } = req.variables;
+	const { node_id: nodeId, description, expires_at: expiresAt } = req.variables;
 	const link = populateLink({ id: nodeId } as Node);
 	link.expires_at = expiresAt;
 	link.description = description;

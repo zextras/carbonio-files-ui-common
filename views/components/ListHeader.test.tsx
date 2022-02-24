@@ -22,7 +22,7 @@ describe('ListHeader', () => {
 	describe('Breadcrumb', () => {
 		test('show only current folder if it has not a parent', async () => {
 			const currentFolder = populateFolder();
-			const mocks = [mockGetParent({ id: currentFolder.id }, currentFolder)];
+			const mocks = [mockGetParent({ node_id: currentFolder.id }, currentFolder)];
 
 			const selectAll = jest.fn();
 			const unSelectAll = jest.fn();
@@ -48,7 +48,7 @@ describe('ListHeader', () => {
 
 		test('by default shows two level (current folder and its parent)', async () => {
 			const { node: currentFolder } = populateParents(populateFolder(), 5);
-			const mocks = [mockGetParent({ id: currentFolder.id }, currentFolder)];
+			const mocks = [mockGetParent({ node_id: currentFolder.id }, currentFolder)];
 
 			const selectAll = jest.fn();
 			const unSelectAll = jest.fn();
@@ -78,8 +78,8 @@ describe('ListHeader', () => {
 		test('consecutive clicks on the cta expand and collapse the path with a single API request to retrieve the full path', async () => {
 			const { node: currentFolder, path } = populateParents(populateFolder(), 5);
 			const mocks = [
-				mockGetParent({ id: currentFolder.id }, currentFolder),
-				mockGetPath({ id: currentFolder.id }, path)
+				mockGetParent({ node_id: currentFolder.id }, currentFolder),
+				mockGetPath({ node_id: currentFolder.id }, path)
 			];
 
 			const selectAll = jest.fn();
@@ -140,9 +140,9 @@ describe('ListHeader', () => {
 		test('if an error occurs when loading full breadcrumb, short breadcrumb stays visible', async () => {
 			const { node: currentFolder } = populateParents(populateFolder(), 5);
 			const mocks = [
-				mockGetParent({ id: currentFolder.id }, currentFolder),
+				mockGetParent({ node_id: currentFolder.id }, currentFolder),
 				{
-					request: mockGetPath({ id: currentFolder.id }, []).request,
+					request: mockGetPath({ node_id: currentFolder.id }, []).request,
 					error: new ApolloError({ graphQLErrors: [generateError('Failed to load getPath')] })
 				}
 			];

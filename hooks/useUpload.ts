@@ -27,8 +27,19 @@ import GET_CHILD from '../graphql/queries/getChild.graphql';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import GET_VERSIONS from '../graphql/queries/getVersions.graphql';
 import { UploadStatus, UploadType } from '../types/common';
-import { File as FilesFile, Folder, GetChildrenQuery, NodeSort } from '../types/graphql/types';
+import {
+	File as FilesFile,
+	Folder,
+	GetChildQuery,
+	GetChildQueryVariables,
+	GetChildrenQuery,
+	GetChildrenQueryVariables,
+	GetVersionsQuery,
+	GetVersionsQueryVariables,
+	NodeSort
+} from '../types/graphql/types';
 import { DeepPick } from '../types/utils';
+import { isFolder } from '../utils/ActionsFactory';
 import { UpdateFolderContentType, useUpdateFolderContent } from './graphql/useUpdateFolderContent';
 
 const addVersionToCache = (
@@ -37,23 +48,29 @@ const addVersionToCache = (
 	version: number
 ): void => {
 	apolloClient
-		.query({
+		.query<GetVersionsQuery, GetVersionsQueryVariables>({
 			query: GET_VERSIONS,
 			fetchPolicy: 'no-cache',
 			variables: {
-				id: nodeId,
+				node_id: nodeId,
 				versions: [version]
 			}
 		})
 		.then((result) => {
 			if (result.data) {
-				apolloClient.cache.modify({
-					fields: {
-						[`getVersions({"id":"${nodeId}"})`](existingVersions) {
-							return [result.data.getVersions[0], ...existingVersions];
-						}
+				const currentData = apolloClient.readQuery<GetVersionsQuery, GetVersionsQueryVariables>({
+					query: GET_VERSIONS,
+					variables: {
+						node_id: nodeId
 					}
 				});
+				if (currentData?.getVersions) {
+					apolloClient.writeQuery<GetVersionsQuery, GetVersionsQueryVariables>({
+						query: GET_VERSIONS,
+						variables: { node_id: nodeId },
+						data: { getVersions: [result.data.getVersions[0], ...currentData.getVersions] }
+					});
+				}
 			}
 		});
 };
@@ -89,25 +106,29 @@ const uploadCompleted = (
 			uploadVar(newState);
 
 			apolloClient
-				.query({
+				.query<GetChildQuery, GetChildQueryVariables>({
 					query: GET_CHILD,
 					fetchPolicy: 'no-cache',
 					variables: {
-						id: nodeId
+						node_id: nodeId as string
 					}
 				})
 				.then((result) => {
-					if (result.data.getNode.parent) {
-						const parentFolder = apolloClient.cache.readQuery<GetChildrenQuery>({
+					if (result?.data?.getNode?.parent) {
+						const parentId = result.data.getNode.parent.id;
+						const parentFolder = apolloClient.cache.readQuery<
+							GetChildrenQuery,
+							GetChildrenQueryVariables
+						>({
 							query: GET_CHILDREN,
 							variables: {
-								id: result.data.getNode.parent.id,
+								node_id: parentId,
 								// load all cached children
-								childrenLimit: Number.MAX_SAFE_INTEGER,
+								children_limit: Number.MAX_SAFE_INTEGER,
 								sort: nodeSort
 							}
 						});
-						if (parentFolder?.getNode?.__typename === 'Folder') {
+						if (parentFolder?.getNode && isFolder(parentFolder.getNode)) {
 							const parentNode = parentFolder.getNode;
 							addNodeToFolder(parentNode, result.data.getNode);
 						}

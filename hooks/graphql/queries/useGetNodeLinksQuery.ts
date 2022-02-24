@@ -17,7 +17,7 @@ export function useGetNodeLinksQuery(
 		GET_NODE_LINKS,
 		{
 			variables: {
-				nodeId
+				node_id: nodeId
 			},
 			skip: !nodeId,
 			notifyOnNetworkStatusChange: true

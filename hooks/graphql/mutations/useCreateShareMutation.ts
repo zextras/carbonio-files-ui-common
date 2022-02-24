@@ -41,10 +41,10 @@ export function useCreateShareMutation(): [
 		(node, shareTargetId, permission, customMessage) => {
 			return createShareMutation({
 				variables: {
-					nodeId: node.id,
-					shareTargetId,
+					node_id: node.id,
+					share_target_id: shareTargetId,
 					permission,
-					customMessage
+					custom_message: customMessage
 				},
 				update(cache, { data }) {
 					if (data?.createShare) {
@@ -52,6 +52,7 @@ export function useCreateShareMutation(): [
 							id: cache.identify(node),
 							fields: {
 								shares(existingShareRefs) {
+									// TODO: move fragment to graphql file and add type
 									const nodeRef = cache.writeFragment({
 										data: data.createShare.node,
 										fragment: gql`
@@ -62,6 +63,7 @@ export function useCreateShareMutation(): [
 									});
 									let targetRef;
 									if (data.createShare.share_target?.__typename === 'User') {
+										// TODO: move fragment to graphql file and add type
 										targetRef = cache.writeFragment({
 											data: data.createShare.share_target,
 											fragment: gql`
@@ -71,6 +73,7 @@ export function useCreateShareMutation(): [
 											`
 										});
 									} else {
+										// TODO: move fragment to graphql file and add type
 										targetRef = cache.writeFragment({
 											data: data.createShare.share_target,
 											fragment: gql`

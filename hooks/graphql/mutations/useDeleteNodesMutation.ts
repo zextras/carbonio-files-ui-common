@@ -47,7 +47,7 @@ export function useDeleteNodesMutation(): DeleteNodesType {
 
 			return deleteNodesMutation({
 				variables: {
-					nodes_ids: nodesIds
+					node_ids: nodesIds
 				},
 				optimisticResponse: {
 					__typename: 'Mutation',
@@ -73,7 +73,7 @@ export function useDeleteNodesMutation(): DeleteNodesType {
 										});
 
 										if (
-											existingNodesRefs.pageToken &&
+											existingNodesRefs.page_token &&
 											size(ordered) === 0 &&
 											size(unOrdered) === 0
 										) {
@@ -82,7 +82,7 @@ export function useDeleteNodesMutation(): DeleteNodesType {
 
 										return {
 											args: existingNodesRefs.args,
-											pageToken: existingNodesRefs.pageToken,
+											page_token: existingNodesRefs.page_token,
 											nodes: {
 												ordered,
 												unOrdered

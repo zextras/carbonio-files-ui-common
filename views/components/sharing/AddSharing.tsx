@@ -38,7 +38,11 @@ import { ShareChipInput } from '../../../design_system_fork/SharesChipInput';
 import GET_ACCOUNT_BY_EMAIL from '../../../graphql/queries/getAccountByEmail.graphql';
 import { useCreateShareMutation } from '../../../hooks/graphql/mutations/useCreateShareMutation';
 import { Contact, Node, Role } from '../../../types/common';
-import { Share } from '../../../types/graphql/types';
+import {
+	GetAccountByEmailQuery,
+	GetAccountByEmailQueryVariables,
+	Share
+} from '../../../types/graphql/types';
 import { AutocompleteRequest, AutocompleteResponse } from '../../../types/network';
 import { getChipLabel, sharePermissionsGetter } from '../../../utils/utils';
 
@@ -163,32 +167,40 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 				inputRef.current.focus();
 			}
 			setSearchText('');
-
-			apolloClient
-				.query({
-					query: GET_ACCOUNT_BY_EMAIL,
-					fetchPolicy: 'no-cache',
-					variables: {
-						email: contact.email
-					}
-				})
-				.then((result) => {
-					const contactWithId = {
-						...contact,
-						id: result.data.getAccountByEmail.id,
-						role: Role.Viewer,
-						sharingAllowed: false
-					};
-					setChips((c) => [...c, contactWithId]);
-				})
-				.catch((err) => {
-					console.error(err);
-				});
-
 			setSearchResult([]);
 			setForceOpen(false);
+			const alreadyInChips = findIndex(chips, ['email', contact.email]) >= 0;
+			if (alreadyInChips) {
+				return;
+			}
+			if (contact.email) {
+				apolloClient
+					.query<GetAccountByEmailQuery, GetAccountByEmailQueryVariables>({
+						query: GET_ACCOUNT_BY_EMAIL,
+						fetchPolicy: 'no-cache',
+						variables: {
+							email: contact.email
+						}
+					})
+					.then((result) => {
+						if (result?.data.getAccountByEmail) {
+							const contactWithId = {
+								...contact,
+								id: result.data.getAccountByEmail.id,
+								role: Role.Viewer,
+								sharingAllowed: false
+							};
+							setChips((c) => [...c, contactWithId]);
+						} else {
+							throw Error('getAccountByEmail: empty result');
+						}
+					})
+					.catch((err) => {
+						console.error(err);
+					});
+			}
 		},
-		[apolloClient]
+		[apolloClient, chips]
 	);
 
 	const search = useMemo(
@@ -266,8 +278,8 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 							console.error(err);
 						});
 				},
-				1000,
-				{ leading: true, trailing: true }
+				500,
+				{ leading: true }
 			),
 		[chips, node]
 	);

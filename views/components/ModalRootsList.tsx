@@ -16,7 +16,7 @@ import { ROOTS } from '../../constants';
 import { Breadcrumbs } from '../../design_system_fork/Breadcrumbs';
 import { useFindNodesQuery } from '../../hooks/graphql/queries/useFindNodesQuery';
 import { NodeListItemType } from '../../types/common';
-import { FindNodesQueryVariables, NodeType } from '../../types/graphql/types';
+import { NodeType } from '../../types/graphql/types';
 import { MakeRequired } from '../../types/utils';
 import { decodeError } from '../../utils/utils';
 import { EmptyFolder } from './EmptyFolder';
@@ -49,7 +49,10 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 	const [t] = useTranslation();
 	// const [filter, setFilter] = useState<string>();
 	const [filterQueryParams, setFilterQueryParam] = useState<
-		Pick<FindNodesQueryVariables, 'flagged' | 'sharedWithMe' | 'folderId' | 'cascade'>
+		Pick<
+			Parameters<typeof useFindNodesQuery>[0],
+			'flagged' | 'sharedWithMe' | 'folderId' | 'cascade'
+		>
 	>({});
 	const {
 		data: findNodesData,

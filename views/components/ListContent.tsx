@@ -18,6 +18,7 @@ import { DRAG_TYPES, LIST_ITEM_HEIGHT } from '../../constants';
 import { DeleteNodesType } from '../../hooks/graphql/mutations/useDeleteNodesMutation';
 import { GetNodeParentType, NodeListItemType, PickIdNodeType } from '../../types/common';
 import { Node } from '../../types/graphql/types';
+import { DeepPick } from '../../types/utils';
 import {
 	Action,
 	ActionItem,
@@ -47,7 +48,9 @@ interface ListContentProps {
 	exitSelectionMode?: () => void;
 	toggleFlag?: (flagValue: boolean, ...nodes: PickIdNodeType[]) => void;
 	renameNode?: (node: Pick<Node, 'id' | 'name'>) => void;
-	markNodesForDeletion?: (...nodes: Array<Pick<NodeListItemType, 'id'>>) => void;
+	markNodesForDeletion?: (
+		...nodes: Array<Pick<NodeListItemType, 'id'> & DeepPick<NodeListItemType, 'owner', 'id'>>
+	) => void;
 	restore?: (
 		...nodes: Array<Pick<NodeListItemType, '__typename' | 'id'> & GetNodeParentType>
 	) => void;
