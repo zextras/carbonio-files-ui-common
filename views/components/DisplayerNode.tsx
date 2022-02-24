@@ -58,8 +58,6 @@ export const DisplayerNode: React.VFC<DisplayerNodeProps> = ({
 	}, [node]);
 
 	const tabs = useMemo(
-		// be careful: the following key is not parsed by i18next-extract, it must be added manually to the en.json file
-		/* i18next-extract-disable-next-line */
 		() =>
 			map(
 				filter(
@@ -68,6 +66,7 @@ export const DisplayerNode: React.VFC<DisplayerNodeProps> = ({
 						displayerTab !== DISPLAYER_TABS.versioning ||
 						(activeNodeIsFile != null && activeNodeIsFile)
 				),
+				/* i18next-extract-disable-next-line */
 				(dTab) => ({ id: dTab, label: t(`displayer.tabs.${dTab}`, dTab) })
 			),
 		[t, activeNodeIsFile]

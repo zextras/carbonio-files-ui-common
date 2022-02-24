@@ -43,6 +43,7 @@ export const EmptyDisplayer: React.VFC<EmptyDisplayerProps> = ({ icons, translat
 
 	const placeholders = useMemo<OneOrMany<{ title: string; message?: string }>>(
 		() =>
+			/* i18next-extract-disable-next-line */
 			t(translationKey, {
 				context: (queryCalled !== false && ((listIsEmpty && 'empty') || 'full')) || '',
 				returnObjects: true,

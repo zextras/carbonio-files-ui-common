@@ -2654,10 +2654,12 @@ describe('Folder List', () => {
 				// right click to open contextual menu
 				const nodeItem = screen.getByTestId(`node-item-${element0.id}`);
 				fireEvent.contextMenu(nodeItem);
-				const renameAction = await screen.findByText(actionRegexp.rename);
+				let renameAction = await screen.findByText(actionRegexp.rename);
 				expect(renameAction).toBeVisible();
 				expect(renameAction.parentElement).toHaveAttribute('disabled', '');
 				selectNodes([element1.id]);
+				fireEvent.contextMenu(nodeItem);
+				renameAction = await screen.findByText(actionRegexp.rename);
 				expect(renameAction).toBeVisible();
 				expect(renameAction.parentElement).not.toHaveAttribute('disabled', '');
 			});

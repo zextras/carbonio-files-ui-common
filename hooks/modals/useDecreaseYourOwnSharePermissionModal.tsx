@@ -28,7 +28,7 @@ export function useDecreaseYourOwnSharePermissionModal(
 			confirmLabel: t('modal.decreaseYourOwnSharePermissions.button.confirm', 'Confirm'),
 			confirmColor: 'error',
 			onConfirm: () => {
-				updateShareAction().then(({ data }) => {
+				updateShareAction().then(() => {
 					updateShareActionCallback && updateShareActionCallback();
 					closeModal();
 				});

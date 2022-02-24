@@ -41,14 +41,16 @@ import FolderView from './FolderView';
 let mockedCreateOptions: CreateOptionsContent['createOptions'];
 
 beforeEach(() => {
-	mockedCreateOptions = {};
+	mockedCreateOptions = [];
 });
 
 jest.mock('../../hooks/useCreateOptions', () => ({
 	useCreateOptions: (): CreateOptionsContent => ({
-		setCreateOptions: jest.fn().mockImplementation((options) => {
-			mockedCreateOptions = options;
-		})
+		setCreateOptions: jest
+			.fn()
+			.mockImplementation((...options: Parameters<CreateOptionsContent['setCreateOptions']>[0]) => {
+				mockedCreateOptions = options;
+			})
 	})
 }));
 
@@ -84,7 +86,7 @@ describe('Folder View', () => {
 			});
 			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`] });
 			await screen.findByText(/nothing here/gi);
-			expect(mockedCreateOptions?.newButton?.secondaryItems).toEqual(
+			expect(map(mockedCreateOptions, (createOption) => createOption.action({}))).toEqual(
 				expect.arrayContaining([expect.objectContaining({ id: 'create-folder', disabled: true })])
 			);
 			expect.assertions(1);
@@ -120,7 +122,7 @@ describe('Folder View', () => {
 			});
 			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`] });
 			await screen.findByText(/nothing here/gi);
-			expect(mockedCreateOptions?.newButton?.secondaryItems).toEqual(
+			expect(map(mockedCreateOptions, (createOption) => createOption.action({}))).toEqual(
 				expect.arrayContaining([expect.objectContaining({ id: 'create-folder', disabled: false })])
 			);
 		});
@@ -287,7 +289,7 @@ describe('Folder View', () => {
 			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`] });
 
 			await screen.findByText(/nothing here/i);
-			expect(mockedCreateOptions?.newButton?.secondaryItems).toEqual(
+			expect(map(mockedCreateOptions, (createOption) => createOption.action({}))).toEqual(
 				expect.arrayContaining([
 					expect.objectContaining({ id: 'create-docs-document', disabled: true }),
 					expect.objectContaining({ id: 'create-docs-spreadsheet', disabled: true }),
@@ -327,7 +329,7 @@ describe('Folder View', () => {
 			});
 			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`] });
 			await screen.findByText(/nothing here/i);
-			expect(mockedCreateOptions?.newButton?.secondaryItems).toEqual(
+			expect(map(mockedCreateOptions, (createOption) => createOption.action({}))).toEqual(
 				expect.arrayContaining([
 					expect.objectContaining({ id: 'create-docs-document', disabled: false }),
 					expect.objectContaining({ id: 'create-docs-spreadsheet', disabled: false }),

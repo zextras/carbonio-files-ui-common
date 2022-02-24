@@ -7,13 +7,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Container, Responsive, Snackbar } from '@zextras/carbonio-design-system';
+// eslint-disable-next-line import/no-unresolved
+import { ACTION_TYPES } from '@zextras/carbonio-shell-ui';
 import noop from 'lodash/noop';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useParams } from 'react-router-dom';
 
 import { useCreateOptions } from '../../hooks/useCreateOptions';
 import { useNavigation } from '../../hooks/useNavigation';
-import { DISPLAYER_WIDTH, LIST_WIDTH, ROOTS } from '../constants';
+import { DISPLAYER_WIDTH, FILES_APP_ID, LIST_WIDTH, ROOTS } from '../constants';
 import { ListContext } from '../contexts';
 import { useUpload } from '../hooks/useUpload';
 import { URLParams } from '../types/common';
@@ -62,66 +64,95 @@ const FilterView: React.VFC = () => {
 	);
 
 	useEffect(() => {
-		setCreateOptions({
-			newButton: {
-				primary: {
+		setCreateOptions(
+			{
+				id: 'upload-file',
+				type: ACTION_TYPES.NEW,
+				action: () => ({
 					id: 'upload-file',
+					primary: true,
+					group: FILES_APP_ID,
+					type: ACTION_TYPES.NEW,
 					label: t('create.options.new.upload', 'Upload'),
 					icon: 'CloudUploadOutline',
-					click: (event) => {
+					click: (event): void => {
 						event && event.stopPropagation();
 						inputElement.click();
 						inputElement.onchange = inputElementOnchange;
 					}
-				},
-				secondaryItems: [
-					{
-						id: 'create-folder',
-						label: t('create.options.new.folder', 'New Folder'),
-						icon: 'FolderOutline',
-						disabled: true,
-						click: noop
-					},
-					{
-						id: 'create-docs-document',
-						label: t('create.options.new.document', 'New Document'),
-						icon: 'FileTextOutline',
-						disabled: true,
-						click: noop
-					},
-					{
-						id: 'create-docs-spreadsheet',
-						label: t('create.options.new.spreadsheet', 'New Spreadsheet'),
-						icon: 'FileCalcOutline',
-						disabled: true,
-						click: noop
-					},
-					{
-						id: 'create-docs-presentation',
-						label: t('create.options.new.presentation', 'New Presentation'),
-						icon: 'FilePresentationOutline',
-						disabled: true,
-						click: noop
-					}
-				]
+				})
+			},
+			{
+				id: 'create-folder',
+				type: ACTION_TYPES.NEW,
+				action: () => ({
+					id: 'create-folder',
+					group: FILES_APP_ID,
+					type: ACTION_TYPES.NEW,
+					label: t('create.options.new.folder', 'New Folder'),
+					icon: 'FolderOutline',
+					disabled: true,
+					click: noop
+				})
+			},
+			{
+				id: 'create-docs-document',
+				type: ACTION_TYPES.NEW,
+				action: () => ({
+					id: 'create-docs-document',
+					group: FILES_APP_ID,
+					type: ACTION_TYPES.NEW,
+					label: t('create.options.new.document', 'New Document'),
+					icon: 'FileTextOutline',
+					disabled: true,
+					click: noop
+				})
+			},
+			{
+				id: 'create-docs-spreadsheet',
+				type: ACTION_TYPES.NEW,
+				action: () => ({
+					id: 'create-docs-spreadsheet',
+					group: FILES_APP_ID,
+					type: ACTION_TYPES.NEW,
+					label: t('create.options.new.spreadsheet', 'New Spreadsheet'),
+					icon: 'FileCalcOutline',
+					disabled: true,
+					click: noop
+				})
+			},
+			{
+				id: 'create-docs-presentation',
+				type: ACTION_TYPES.NEW,
+				action: () => ({
+					id: 'create-docs-presentation',
+					group: FILES_APP_ID,
+					type: ACTION_TYPES.NEW,
+					label: t('create.options.new.presentation', 'New Presentation'),
+					icon: 'FilePresentationOutline',
+					disabled: true,
+					click: noop
+				})
 			}
-		});
+		);
 		return (): void => {
 			setCreateOptions({
-				newButton: {
-					primary: {
-						id: 'upload-file',
-						label: t('create.options.new.upload', 'Upload'),
-						icon: 'CloudUploadOutline',
-						click: (event) => {
-							event && event.stopPropagation();
-							inputElement.click();
-							inputElement.onchange = inputElementOnchange;
-						},
-						disabled: false
+				id: 'upload-file',
+				type: ACTION_TYPES.NEW,
+				action: () => ({
+					id: 'upload-file',
+					primary: true,
+					group: FILES_APP_ID,
+					type: ACTION_TYPES.NEW,
+					label: t('create.options.new.upload', 'Upload'),
+					icon: 'CloudUploadOutline',
+					click: (event): void => {
+						event && event.stopPropagation();
+						inputElement.click();
+						inputElement.onchange = inputElementOnchange;
 					},
-					secondaryItems: []
-				}
+					disabled: false
+				})
 			});
 		};
 	}, [filter, inputElementOnchange, pathname, search, setCreateOptions, t]);
