@@ -76,9 +76,13 @@ export const NodeDetailsDescription: React.VFC<NodeDetailsDescriptionProps> = ({
 	}, [description]);
 
 	const save = useCallback(() => {
-		updateNodeDescription(id, descriptionValue);
-		setEditingDescription(false);
-	}, [descriptionValue, id, updateNodeDescription]);
+		if (!moreThan4096Characters) {
+			if (description !== descriptionValue) {
+				updateNodeDescription(id, descriptionValue);
+			}
+			setEditingDescription(false);
+		}
+	}, [description, descriptionValue, id, moreThan4096Characters, updateNodeDescription]);
 
 	return (
 		<>
@@ -129,6 +133,7 @@ export const NodeDetailsDescription: React.VFC<NodeDetailsDescriptionProps> = ({
 						onChange={changeDescription}
 						hasError={moreThan4096Characters}
 						data-testid="input-description"
+						onEnter={save}
 					/>
 				</Row>
 			)}
