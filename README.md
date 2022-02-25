@@ -37,7 +37,7 @@ Software Foundation](https://www.gnu.org/licenses/licenses.html
 
 See [COPYING](COPYING) file for the project license details
 
-See [THIRDPARTIES](PARTIES) file for other licenses details
+See [THIRDPARTIES](THIRDPARTIES) file for other licenses details
 
 ### Copyright notice
 
