@@ -218,7 +218,8 @@ export async function triggerLoadMore(): Promise<void> {
 }
 
 export function selectNodes(nodesToSelect: string[]): void {
-	forEach(nodesToSelect, (id) => {
+	for (let i = 0; i < nodesToSelect.length; i += 1) {
+		const id = nodesToSelect[i];
 		const node = within(screen.getByTestId(`node-item-${id}`));
 		let clickableItem = node.queryByTestId('file-icon-preview');
 		if (clickableItem == null) {
@@ -227,10 +228,12 @@ export function selectNodes(nodesToSelect: string[]): void {
 		if (clickableItem == null) {
 			clickableItem = node.queryByTestId('checkedAvatar');
 		}
-		if (clickableItem) {
-			userEvent.click(clickableItem, undefined, { skipHover: true });
-		}
-	});
+		act(() => {
+			if (clickableItem) {
+				userEvent.click(clickableItem, undefined, { skipHover: true });
+			}
+		});
+	}
 }
 
 export async function renameNode(newName: string): Promise<void> {
