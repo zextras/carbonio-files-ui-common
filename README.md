@@ -18,6 +18,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 
 ## License
+Carbonio Files UI - Web client for Zextras Carbonio Files module
 
 Copyright (C) 2022 Zextras <https://www.zextras.com>
 
