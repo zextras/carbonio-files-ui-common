@@ -18,13 +18,14 @@ import { NODES_LOAD_LIMIT } from '../../constants';
 import GET_CHILDREN from '../../graphql/queries/getChildren.graphql';
 import { useCopyNodesMutation } from '../../hooks/graphql/mutations/useCopyNodesMutation';
 import { useGetChildrenQuery } from '../../hooks/graphql/queries/useGetChildrenQuery';
-import { GetNodeParentType, Node, NodeListItemType } from '../../types/common';
+import { GetNodeParentType, Node, NodeListItemType, RootListItemType } from '../../types/common';
 import { Folder, GetChildrenQuery, GetChildrenQueryVariables } from '../../types/graphql/types';
 import {
 	ActionsFactoryNodeType,
 	canBeCopyDestination,
 	isFile,
-	isFolder
+	isFolder,
+	isRoot
 } from '../../utils/ActionsFactory';
 import { ModalFooter } from './ModalFooter';
 import { ModalHeader } from './ModalHeader';
@@ -186,10 +187,11 @@ export const CopyNodesModalContent: React.VFC<CopyNodesModalContentProps> = ({
 
 	const setDestinationFolderHandler = useCallback(
 		(
-			node: Pick<NodeListItemType, 'id' | '__typename' | 'disabled'>,
+			node: Pick<NodeListItemType, 'id' | '__typename' | 'disabled'> | RootListItemType,
 			event: React.SyntheticEvent
 		) => {
-			const destinationId = (node && !node.disabled && node.id) || currentFolder?.getNode?.id;
+			const destinationId =
+				(node && !isRoot(node) && !node.disabled && node.id) || currentFolder?.getNode?.id;
 			if (isFolder(node)) {
 				setDestinationFolder(destinationId);
 				event.stopPropagation();

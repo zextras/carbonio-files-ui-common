@@ -58,10 +58,7 @@ interface ListContentProps {
 	moveNodes?: (...nodes: Array<Pick<NodeListItemType, '__typename' | 'id' | 'owner'>>) => void;
 	copyNodes?: (...nodes: Array<Pick<NodeListItemType, '__typename' | 'id'>>) => void;
 	activeNode?: string;
-	setActiveNode?: (
-		node: Pick<NodeListItemType, 'id' | 'disabled' | 'name' | '__typename'>,
-		event: React.SyntheticEvent
-	) => void;
+	setActiveNode?: (node: NodeListItemType, event: React.SyntheticEvent) => void;
 	compact?: boolean;
 	navigateTo?: (id: string, event?: React.SyntheticEvent) => void;
 	loading?: boolean;

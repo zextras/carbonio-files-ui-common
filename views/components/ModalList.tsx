@@ -28,10 +28,7 @@ interface ModalListProps {
 	folderId: string;
 	nodes: Array<NodeListItemType>;
 	activeNode?: string;
-	setActiveNode: (
-		node: Pick<NodeListItemType, 'id' | 'name' | '__typename' | 'disabled'>,
-		event: React.SyntheticEvent
-	) => void;
+	setActiveNode: (node: NodeListItemType, event: React.SyntheticEvent) => void;
 	loadMore: () => void;
 	hasMore: boolean;
 	navigateTo: (id: string, event?: React.SyntheticEvent) => void;

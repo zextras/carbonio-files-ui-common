@@ -14,7 +14,7 @@ import styled from 'styled-components';
 
 import { ROOTS } from '../../constants';
 import { useFindNodesQuery } from '../../hooks/graphql/queries/useFindNodesQuery';
-import { Crumb, NodeListItemType } from '../../types/common';
+import { Crumb, NodeListItemType, RootListItemType } from '../../types/common';
 import { NodeType } from '../../types/graphql/types';
 import { MakeRequired } from '../../types/utils';
 import { decodeError } from '../../utils/utils';
@@ -26,10 +26,7 @@ import { ScrollContainer } from './StyledComponents';
 
 interface RootsListProps {
 	activeNode?: string;
-	setActiveNode: (
-		node: Pick<NodeListItemType, 'id' | 'name' | '__typename' | 'disabled'>,
-		event: React.SyntheticEvent
-	) => void;
+	setActiveNode: (node: NodeListItemType | RootListItemType, event: React.SyntheticEvent) => void;
 	navigateTo: (id: string, event?: React.SyntheticEvent | Event) => void;
 	showTrash?: boolean;
 	checkDisabled: (node: NodeListItemType) => boolean;
@@ -89,6 +86,7 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 						setFilterQueryParam({ sharedWithMe: true, folderId: ROOTS.LOCAL_ROOT, cascade: false });
 						setActiveNode(
 							{
+								__typename: 'Root',
 								id: ROOTS.SHARED_WITH_ME,
 								name: t('modal.roots.sharedWitMe', 'Shared with me')
 							},

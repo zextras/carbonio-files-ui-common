@@ -18,6 +18,7 @@ interface ModalFooterProps {
 	cancelHandler?: (event: React.SyntheticEvent) => void;
 	cancelDisabled?: boolean;
 	cancelButtonColor?: string;
+	children?: React.ReactNode;
 }
 
 export const ModalFooter: React.VFC<ModalFooterProps> = ({
@@ -28,7 +29,8 @@ export const ModalFooter: React.VFC<ModalFooterProps> = ({
 	cancelLabel,
 	cancelHandler,
 	cancelDisabled,
-	cancelButtonColor
+	cancelButtonColor,
+	children
 }) => {
 	const [t] = useTranslation();
 
@@ -46,6 +48,7 @@ export const ModalFooter: React.VFC<ModalFooterProps> = ({
 				padding={{ top: 'small' }}
 				height="auto"
 			>
+				{children}
 				{cancelHandler && (
 					<Padding left="small" onClick={stopPropagation}>
 						<Button
