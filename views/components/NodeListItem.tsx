@@ -7,6 +7,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Container, Icon, Padding, Row, Text, Tooltip } from '@zextras/carbonio-design-system';
+import debounce from 'lodash/debounce';
 import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
 import styled, { css } from 'styled-components';
@@ -21,7 +22,6 @@ import {
 import { useCreateSnackbar } from '../../hooks/useCreateSnackbar';
 import { NodeType, User } from '../../types/graphql/types';
 import { Action, ActionItem, ActionMap, buildActionItems } from '../../utils/ActionsFactory';
-import { invokeWithin } from '../../utils/invokeWithin';
 import {
 	downloadNode,
 	formatDate,
@@ -254,6 +254,12 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 		[itemsMap, permittedContextualMenuActions]
 	);
 
+	const isNavigable = useMemo(
+		() =>
+			type === NodeType.Folder || type === NodeType.Root || some(ROOTS, (rootId) => rootId === id),
+		[id, type]
+	);
+
 	const openNode = useCallback(
 		(event: React.SyntheticEvent) => {
 			// remove text selection on double click
@@ -263,36 +269,48 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 			}
 
 			if (!isSelectionModeActive && !disabled && !trashed) {
-				if (
-					type === NodeType.Folder ||
-					type === NodeType.Root ||
-					some(ROOTS, (rootId) => rootId === id)
-				) {
+				if (isNavigable) {
 					navigateTo(id, event);
-				} else if (
-					permittedContextualMenuActions[Action.OpenWithDocs] &&
-					permittedContextualMenuActions[Action.OpenWithDocs] === true
-				) {
-					openNodeWithDocs(id);
+				} else if (!compact) {
+					if (
+						permittedContextualMenuActions[Action.OpenWithDocs] &&
+						permittedContextualMenuActions[Action.OpenWithDocs] === true
+					) {
+						openNodeWithDocs(id);
+					}
 				}
 			}
 		},
-		[disabled, id, isSelectionModeActive, trashed, navigateTo, permittedContextualMenuActions, type]
+		[
+			isSelectionModeActive,
+			disabled,
+			trashed,
+			isNavigable,
+			compact,
+			navigateTo,
+			id,
+			permittedContextualMenuActions
+		]
 	);
 
-	const setActiveOrOpenNode = useMemo(
-		() => invokeWithin(setActive, openNode, 200),
-		[openNode, setActive]
+	const setActiveDebounced = useMemo(
+		() =>
+			debounce(
+				(event: React.SyntheticEvent) => {
+					setActive(event);
+				},
+				200,
+				{ leading: false, trailing: true }
+			),
+		[setActive]
 	);
-	const setActiveOrOpenNodeCallback = useCallback(
+
+	const doubleClickHandler = useCallback(
 		(event: React.SyntheticEvent) => {
-			if (!compact) {
-				setActiveOrOpenNode(event);
-			} else {
-				setActive(event);
-			}
+			setActiveDebounced.cancel();
+			openNode(event);
 		},
-		[compact, setActive, setActiveOrOpenNode]
+		[openNode, setActiveDebounced]
 	);
 
 	const displayName = useMemo(() => {
@@ -326,8 +344,8 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 			>
 				<ListItemContainer
 					height="fit"
-					onClick={setActiveOrOpenNodeCallback}
-					onDoubleClick={compact ? openNode : undefined}
+					onClick={compact ? setActive : setActiveDebounced}
+					onDoubleClick={doubleClickHandler}
 					data-testid={`node-item-${id}`}
 					crossAlignment="flex-end"
 					contextualMenuActive={isContextualMenuActive}
