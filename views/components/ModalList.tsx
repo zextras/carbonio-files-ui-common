@@ -148,6 +148,7 @@ export const ModalList: React.VFC<ModalListProps> = ({
 				height={48}
 				onClick={stopPropagationClickHandler}
 				mainAlignment="flex-start"
+				flexShrink={0}
 			>
 				{crumbs && <Breadcrumbs crumbs={crumbs} />}
 				{(loading || loadingPath) && (
