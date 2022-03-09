@@ -543,3 +543,10 @@ export const getPreviewSrc = (
 	quality: 'lowest' | 'low' | 'medium' | 'high' | 'highest' // medium as default if not set
 ): string =>
 	`${REST_ENDPOINT}${PREVIEW}/image/${id}/${version}/${weight}x${height}?quality=${quality}`;
+
+export const getPdfPreviewSrc = (id: string, version?: number): string => {
+	const url = `${REST_ENDPOINT}${DOWNLOAD_PATH}/${encodeURIComponent(id)}${
+		version ? `/${version}` : ''
+	}`;
+	return url;
+};

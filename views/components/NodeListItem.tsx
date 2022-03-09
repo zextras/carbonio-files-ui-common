@@ -7,6 +7,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Container, Icon, Padding, Row, Text, Tooltip } from '@zextras/carbonio-design-system';
+import includes from 'lodash/includes';
 import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
 import styled, { css } from 'styled-components';
@@ -26,12 +27,14 @@ import {
 	downloadNode,
 	formatDate,
 	getIconByFileType,
+	getPdfPreviewSrc,
 	getPreviewSrc,
 	humanFileSize,
 	openNodeWithDocs
 } from '../../utils/utils';
 import { ContextualMenu } from './ContextualMenu';
 import { NodeHoverBar } from './NodeHoverBar';
+import PdfPreviewerBase from './previewer/PdfPreviewerBase';
 import Previewer from './previewer/Previewer';
 import {
 	CheckedAvatar,
@@ -147,8 +150,11 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 }) => {
 	const [t] = useTranslation();
 	const [showPreviewer, setShowPreviewer] = useState(false);
+	const [showPdfPreviewer, setShowPdfPreviewer] = useState(false);
 	const showPreviewerCallback = useCallback(() => setShowPreviewer(true), []);
 	const hidePreviewerCallback = useCallback(() => setShowPreviewer(false), []);
+	const showPdfPreviewerCallback = useCallback(() => setShowPdfPreviewer(true), []);
+	const hidePdfPreviewerCallback = useCallback(() => setShowPdfPreviewer(false), []);
 	const userInfo = useUserInfo();
 	const [isContextualMenuActive, setIsContextualMenuActive] = useState(false);
 	const selectIdCallback = useCallback(
@@ -283,6 +289,8 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 					openNodeWithDocs(id);
 				} else if (type === NodeType.Image) {
 					showPreviewerCallback();
+				} else if (includes(mimeType, 'pdf')) {
+					showPdfPreviewerCallback();
 				}
 			}
 		},
@@ -292,9 +300,11 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 			trashed,
 			type,
 			permittedContextualMenuActions,
+			mimeType,
 			id,
 			navigateTo,
-			showPreviewerCallback
+			showPreviewerCallback,
+			showPdfPreviewerCallback
 		]
 	);
 
@@ -514,6 +524,11 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 				show={showPreviewer}
 				onClose={hidePreviewerCallback}
 				closeTooltipLabel={t('previewer.close.tooltip', 'Close')}
+			/>
+			<PdfPreviewerBase
+				show={showPdfPreviewer}
+				src={version ? getPdfPreviewSrc(id, version) : ''}
+				onClose={hidePdfPreviewerCallback}
 			/>
 		</Container>
 	);
