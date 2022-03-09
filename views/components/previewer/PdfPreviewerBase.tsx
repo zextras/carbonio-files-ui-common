@@ -3,12 +3,12 @@
  *
  * SPDX-License-Identifier: AGPL-3.0-only
  */
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 
-import { Portal, useCombinedRefs, Button } from '@zextras/carbonio-design-system';
-import { Document, Page } from 'react-pdf/dist/esm/entry.webpack';
+import { Portal, useCombinedRefs } from '@zextras/carbonio-design-system';
 import styled from 'styled-components';
 
+import Document from './Document';
 import FocusWithin from './FocusWithin';
 
 const Overlay = styled.div`
@@ -38,7 +38,7 @@ const PreviewerContainer = styled.div.attrs({
 	gap: ${({ $gap }): string => $gap};
 	justify-content: center;
 	align-items: center;
-	overflow: hidden;
+	overflow: auto;
 	padding: ${({ $paddingVertical, $paddingHorizontal }): string =>
 		`${$paddingVertical} ${$paddingHorizontal}`};
 	outline: none;
@@ -49,7 +49,7 @@ const PreviewerContainer = styled.div.attrs({
 	}
 `;
 
-export interface PdfPreviewerBaseProps {
+export interface PreviewerBaseProps {
 	/**
 	 * HTML node where to insert the Portal's children.
 	 * The default value is 'window.top.document'.
@@ -73,55 +73,36 @@ export interface PdfPreviewerBaseProps {
 
 // TODO: allow usage of blob as data
 
-const PdfPreviewerBase = React.forwardRef<HTMLDivElement, PdfPreviewerBaseProps>(
-	function PdfPreviewerBaseFn(
-		{ src, footer, header, show = false, container, disablePortal = false, alt, onClose },
-		ref
-	) {
-		const previewerRef: React.MutableRefObject<HTMLDivElement | null> = useCombinedRefs(ref);
+const PreviewerBase = React.forwardRef<HTMLDivElement, PreviewerBaseProps>(function PreviewerBaseFn(
+	{ src, footer, header, show = false, container, disablePortal = false, alt, onClose },
+	ref
+) {
+	const previewerRef: React.MutableRefObject<HTMLDivElement | null> = useCombinedRefs(ref);
 
-		const onOverlayClick = useCallback<React.ReactEventHandler>(
-			(event) => {
-				// TODO: stop propagation or not?
-				event.stopPropagation();
-				previewerRef.current &&
-					!event.isDefaultPrevented() &&
-					(previewerRef.current === event.target ||
-						!previewerRef.current.contains(event.target as Node)) &&
-					onClose(event);
-			},
-			[onClose, previewerRef]
-		);
+	const onOverlayClick = useCallback<React.ReactEventHandler>(
+		(event) => {
+			// TODO: stop propagation or not?
+			event.stopPropagation();
+			previewerRef.current &&
+				!event.isDefaultPrevented() &&
+				(previewerRef.current === event.target ||
+					!previewerRef.current.contains(event.target as Node)) &&
+				onClose(event);
+		},
+		[onClose, previewerRef]
+	);
 
-		const [numPages, setNumPages] = useState(null);
-		const [pageNumber, setPageNumber] = useState(1);
-		const [scale, setScale] = useState(1);
+	return (
+		<Portal show={show} disablePortal={disablePortal} container={container}>
+			<Overlay onClick={onOverlayClick}>
+				<FocusWithin>
+					<PreviewerContainer ref={previewerRef}>
+						<Document url={src} />
+					</PreviewerContainer>
+				</FocusWithin>
+			</Overlay>
+		</Portal>
+	);
+});
 
-		const incrementScale = useCallback((args) => {
-			setScale((prevScale) => prevScale + 0.5);
-		}, []);
-
-		const onDocumentLoadSuccess = useCallback((args) => {
-			setNumPages(args.numPages);
-		}, []);
-
-		return (
-			<Portal show={show} disablePortal={disablePortal} container={container}>
-				<Overlay onClick={onOverlayClick}>
-					<FocusWithin>
-						<PreviewerContainer ref={previewerRef}>
-							<Button label={'scale'} onClick={incrementScale} />
-							<Document file={src} onLoadSuccess={onDocumentLoadSuccess}>
-								{Array.from(new Array(numPages), (el, index) => (
-									<Page scale={scale} key={`page_${index + 1}`} pageNumber={index + 1} />
-								))}
-							</Document>
-						</PreviewerContainer>
-					</FocusWithin>
-				</Overlay>
-			</Portal>
-		);
-	}
-);
-
-export default PdfPreviewerBase;
+export default PreviewerBase;
