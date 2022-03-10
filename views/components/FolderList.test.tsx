@@ -1606,7 +1606,6 @@ describe('Folder List', () => {
 				expect(screen.getByText(currentFolder.name)).toBeVisible();
 				userEvent.click(screen.getByText(destinationFolder.name));
 				await waitFor(() => expect(moveModalButton).not.toHaveAttribute('disabled', ''));
-				// eslint-disable-next-line testing-library/no-unnecessary-act
 				act(() => {
 					userEvent.click(moveModalButton);
 				});
@@ -2518,7 +2517,6 @@ describe('Folder List', () => {
 			// check that the flag action becomes invisible (contextual menu of first node is closed)
 			expect(flagAction).not.toBeInTheDocument();
 			// left click close all the contextual menu
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(node2Item);
 			});
@@ -4591,7 +4589,6 @@ describe('Folder List', () => {
 
 			// load full path
 			await screen.findByText((currentFolder.parent as Folder).name);
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByTestId('icon: ChevronRight'));
 			});
@@ -4719,7 +4716,6 @@ describe('Folder List', () => {
 			expect(sortIcon).toBeInTheDocument();
 			expect(sortIcon).toBeVisible();
 			expect(sortIcon.parentElement).not.toHaveAttribute('disabled', '');
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(sortIcon);
 			});

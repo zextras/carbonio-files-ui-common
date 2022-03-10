@@ -426,7 +426,6 @@ describe('Filter view', () => {
 			expect(within(displayer).getAllByText(node.name)).toHaveLength(2);
 			const restoreAction = within(displayer).getByTestId('icon: RestoreOutline');
 			expect(restoreAction).toBeVisible();
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(restoreAction);
 			});
@@ -495,7 +494,6 @@ describe('Filter view', () => {
 				'icon: DeletePermanentlyOutline'
 			);
 			expect(deletePermanentlyAction).toBeVisible();
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(deletePermanentlyAction);
 			});
@@ -576,7 +574,6 @@ describe('Filter view', () => {
 			expect(screen.queryByText(actionRegexp.download)).not.toBeInTheDocument();
 			expect(screen.queryByText(actionRegexp.copy)).not.toBeInTheDocument();
 			// exit selection mode
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByTestId('icon: ArrowBackOutline'));
 			});

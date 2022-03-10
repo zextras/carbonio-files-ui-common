@@ -94,7 +94,6 @@ describe('Folder Selection Modal Content', () => {
 		const chooseButton = screen.getByRole('button', { name: /choose folder/i });
 		expect(chooseButton).toBeVisible();
 		expect(chooseButton).toHaveAttribute('disabled', '');
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(chooseButton);
 		});
@@ -105,7 +104,6 @@ describe('Folder Selection Modal Content', () => {
 		userEvent.click(screen.getByText(file.name));
 		// choose button becomes active. Opened folder is a valid selection
 		await waitFor(() => expect(chooseButton).not.toHaveAttribute('disabled', ''));
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(chooseButton);
 		});
@@ -123,7 +121,6 @@ describe('Folder Selection Modal Content', () => {
 		userEvent.click(screen.getByText(folder2.name));
 		// choose button becomes active. Other folder is a valid selection
 		await waitFor(() => expect(chooseButton).not.toHaveAttribute('disabled', ''));
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(chooseButton);
 		});
@@ -142,7 +139,6 @@ describe('Folder Selection Modal Content', () => {
 		// choose button becomes active. Other folder is a valid selection
 		await waitFor(() => expect(chooseButton).not.toHaveAttribute('disabled', ''));
 		// click on set folder
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(screen.getByText(folder.name));
 		});
@@ -201,7 +197,6 @@ describe('Folder Selection Modal Content', () => {
 		userEvent.click(screen.getByText(/searched only inside the selected folder/gi));
 		// choose button becomes disabled because roots list entry point is not a valid selection
 		await waitFor(() => expect(chooseButton).toHaveAttribute('disabled'));
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(chooseButton);
 		});
@@ -262,7 +257,6 @@ describe('Folder Selection Modal Content', () => {
 		expect(
 			findStyled(screen.getByTestId(`node-item-${localRoot.id}`), HoverContainer)
 		).not.toHaveStyle('background-color: #d5e3f6');
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(chooseButton);
 		});
@@ -277,7 +271,6 @@ describe('Folder Selection Modal Content', () => {
 		// choose button is disabled because active folder (opened folder) is same as set one
 		expect(chooseButton).toBeVisible();
 		expect(chooseButton).toHaveAttribute('disabled', '');
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(chooseButton);
 		});
@@ -286,7 +279,6 @@ describe('Folder Selection Modal Content', () => {
 		userEvent.click(screen.getByText(folder.name));
 		// choose button is active because folder is a valid selection
 		await waitFor(() => expect(chooseButton).not.toHaveAttribute('disabled', ''));
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(chooseButton);
 		});
@@ -355,7 +347,6 @@ describe('Folder Selection Modal Content', () => {
 		expect(chooseButton).toBeVisible();
 		// choose button is disabled because active folder and cascade have same value as current filter
 		expect(chooseButton).toHaveAttribute('disabled', '');
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(checkboxLabel);
 		});
@@ -363,7 +354,6 @@ describe('Folder Selection Modal Content', () => {
 		expect(checkboxChecked).toBeVisible();
 		// choose button is active because cascade has changed its value
 		expect(chooseButton).not.toHaveAttribute('disabled', '');
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(checkboxChecked);
 		});
@@ -371,12 +361,10 @@ describe('Folder Selection Modal Content', () => {
 		expect(checkboxUnchecked).toBeVisible();
 		// choose button is disabled because active folder and cascade have same value as current filter
 		expect(chooseButton).toHaveAttribute('disabled', '');
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(checkboxUnchecked);
 		});
 		await screen.findByTestId('icon: CheckmarkSquare');
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(chooseButton);
 		});
@@ -454,7 +442,6 @@ describe('Folder Selection Modal Content', () => {
 		expect(screen.getByText(sharedWithMeFilter[0].name)).toBeVisible();
 		expect(getByTextWithMarkup(buildBreadCrumbRegExp('Files', 'Shared with me'))).toBeVisible();
 		expect(chooseButton).not.toHaveAttribute('disabled', '');
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(chooseButton);
 		});
@@ -487,7 +474,6 @@ describe('Folder Selection Modal Content', () => {
 		await screen.findByText((folder.children[0] as Node).name);
 		const chooseButton = screen.getByRole('button', { name: /choose folder/i });
 		expect(chooseButton).not.toHaveAttribute('disabled', '');
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(chooseButton);
 		});
@@ -525,7 +511,6 @@ describe('Folder Selection Modal Content', () => {
 		await screen.findByText((folder.children[0] as Node).name);
 		const chooseButton = screen.getByRole('button', { name: /choose folder/i });
 		expect(chooseButton).not.toHaveAttribute('disabled', '');
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(chooseButton);
 		});

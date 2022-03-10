@@ -53,7 +53,6 @@ describe('Displayer', () => {
 		await screen.findAllByText(node.name);
 		const markForDeletionAction = screen.getByTestId('icon: Trash2Outline');
 		expect(markForDeletionAction).toBeVisible();
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			// wrap in act cause it trigger tooltip
 			userEvent.click(markForDeletionAction);
@@ -108,7 +107,6 @@ describe('Displayer', () => {
 		// folder loading
 		await screen.findByText((parent.children[0] as File | Folder).name);
 		expect(copyButton).not.toHaveAttribute('disabled');
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(copyButton);
 		});
@@ -170,7 +168,6 @@ describe('Displayer', () => {
 		expect(moveButton).toHaveAttribute('disabled');
 		userEvent.click(destinationFolderItem);
 		expect(moveButton).not.toHaveAttribute('disabled');
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(moveButton);
 		});
@@ -232,7 +229,6 @@ describe('Displayer', () => {
 		expect(screen.queryByText(collaborator0Name)).not.toBeInTheDocument();
 		expect(screen.queryByText(collaborator5Name)).not.toBeInTheDocument();
 		expect(screen.getByTestId('icon: MoreHorizontalOutline')).toBeVisible();
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(screen.getByTestId('icon: MoreHorizontalOutline'));
 		});

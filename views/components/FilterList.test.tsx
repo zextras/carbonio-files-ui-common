@@ -228,7 +228,6 @@ describe('Filter list', () => {
 			await screen.findByTestId(`node-item-${node.id}`);
 			expect(screen.getByTestId('node-item', { exact: false })).toBeInTheDocument();
 			// flag the node through the hover bar
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByTestId('icon: FlagOutline'));
 			});
@@ -1065,7 +1064,6 @@ describe('Filter list', () => {
 						'disabled',
 						''
 					);
-					// eslint-disable-next-line testing-library/no-unnecessary-act
 					act(() => {
 						userEvent.click(screen.getByRole('button', { name: actionRegexp.move }));
 					});
@@ -1191,7 +1189,6 @@ describe('Filter list', () => {
 						'disabled',
 						''
 					);
-					// eslint-disable-next-line testing-library/no-unnecessary-act
 					act(() => {
 						userEvent.click(screen.getByRole('button', { name: actionRegexp.copy }));
 					});
@@ -1290,7 +1287,6 @@ describe('Filter list', () => {
 						'disabled',
 						''
 					);
-					// eslint-disable-next-line testing-library/no-unnecessary-act
 					act(() => {
 						userEvent.click(screen.getByRole('button', { name: actionRegexp.copy }));
 					});
@@ -1398,7 +1394,6 @@ describe('Filter list', () => {
 						'disabled',
 						''
 					);
-					// eslint-disable-next-line testing-library/no-unnecessary-act
 					act(() => {
 						userEvent.click(screen.getByRole('button', { name: actionRegexp.copy }));
 					});
@@ -1593,7 +1588,6 @@ describe('Filter list', () => {
 					// check that the flag action becomes invisible (contextual menu of first node is closed)
 					expect(unflagAction1).not.toBeInTheDocument();
 					// left click close all the contextual menu
-					// eslint-disable-next-line testing-library/no-unnecessary-act
 					act(() => {
 						userEvent.click(node2Item);
 					});
@@ -2042,7 +2036,6 @@ describe('Filter list', () => {
 						'disabled',
 						''
 					);
-					// eslint-disable-next-line testing-library/no-unnecessary-act
 					act(() => {
 						userEvent.click(screen.getByRole('button', { name: actionRegexp.move }));
 					});
@@ -2141,7 +2134,6 @@ describe('Filter list', () => {
 						'disabled',
 						''
 					);
-					// eslint-disable-next-line testing-library/no-unnecessary-act
 					act(() => {
 						userEvent.click(screen.getByRole('button', { name: actionRegexp.copy }));
 					});

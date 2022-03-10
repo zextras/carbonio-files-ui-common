@@ -261,7 +261,6 @@ export async function moveNode(destinationFolder: Folder): Promise<void> {
 	await waitFor(() =>
 		expect(screen.getByRole('button', { name: /move/i })).not.toHaveAttribute('disabled', '')
 	);
-	// eslint-disable-next-line testing-library/no-unnecessary-act
 	act(() => {
 		userEvent.click(screen.getByRole('button', { name: /move/i }));
 	});

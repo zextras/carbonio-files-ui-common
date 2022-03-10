@@ -140,7 +140,6 @@ describe('Header Breadcrumbs', () => {
 			expect(screen.queryByText(path[0].name)).not.toBeInTheDocument();
 			expect(screen.getByTestId('icon: ChevronRight')).toBeVisible();
 			expect(screen.queryByTestId('icon: ChevronLeft')).not.toBeInTheDocument();
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByTestId('icon: FolderOutline'));
 			});
@@ -487,7 +486,6 @@ describe('Header Breadcrumbs', () => {
 			expect(screen.queryByText(path[0].name)).not.toBeInTheDocument();
 			expect(screen.getByTestId('icon: ChevronRight')).toBeVisible();
 			expect(screen.queryByTestId('icon: ChevronLeft')).not.toBeInTheDocument();
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByTestId('icon: FolderOutline'));
 			});
@@ -640,7 +638,6 @@ describe('Header Breadcrumbs', () => {
 			expect(screen.getByTestId('icon: ChevronRight')).toBeVisible();
 			expect(screen.queryByTestId('icon: ChevronLeft')).not.toBeInTheDocument();
 			// simulate a drag of a node of the list
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByTestId('icon: FolderOutline'));
 			});
@@ -745,7 +742,6 @@ describe('Header Breadcrumbs', () => {
 			expect(screen.getByTestId('icon: ChevronRight')).toBeVisible();
 			expect(screen.queryByTestId('icon: ChevronLeft')).not.toBeInTheDocument();
 			// simulate a drag of a node of the list
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByTestId('icon: FolderOutline'));
 			});
@@ -859,7 +855,6 @@ describe('Header Breadcrumbs', () => {
 			expect(screen.getByTestId('icon: ChevronRight')).toBeVisible();
 			expect(screen.queryByTestId('icon: ChevronLeft')).not.toBeInTheDocument();
 			// simulate a drag of a node of the list
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByTestId('icon: FolderOutline'));
 			});
