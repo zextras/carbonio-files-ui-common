@@ -98,6 +98,10 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 				});
 			}
 		}
+		// remove click action from last crumb
+		if ($crumbs.length > 0) {
+			delete $crumbs[$crumbs.length - 1].click;
+		}
 		return $crumbs;
 	}, [filterQueryParams, navigateTo, setActiveNode, t]);
 
