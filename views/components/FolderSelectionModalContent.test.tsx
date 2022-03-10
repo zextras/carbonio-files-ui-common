@@ -10,8 +10,6 @@ import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import 'jest-styled-components';
 import map from 'lodash/map';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 import { find as findStyled } from 'styled-components/test-utils';
 
 import { ROOTS } from '../../constants';
