@@ -426,7 +426,10 @@ describe('Filter view', () => {
 			expect(within(displayer).getAllByText(node.name)).toHaveLength(2);
 			const restoreAction = within(displayer).getByTestId('icon: RestoreOutline');
 			expect(restoreAction).toBeVisible();
-			userEvent.click(restoreAction);
+			// eslint-disable-next-line testing-library/no-unnecessary-act
+			act(() => {
+				userEvent.click(restoreAction);
+			});
 			await waitFor(() =>
 				expect(screen.queryAllByTestId('node-item-', { exact: false })).toHaveLength(
 					nodes.length - 1
@@ -492,7 +495,10 @@ describe('Filter view', () => {
 				'icon: DeletePermanentlyOutline'
 			);
 			expect(deletePermanentlyAction).toBeVisible();
-			userEvent.click(deletePermanentlyAction);
+			// eslint-disable-next-line testing-library/no-unnecessary-act
+			act(() => {
+				userEvent.click(deletePermanentlyAction);
+			});
 			const deletePermanentlyConfirm = await screen.findByRole('button', {
 				name: actionRegexp.deletePermanently
 			});
