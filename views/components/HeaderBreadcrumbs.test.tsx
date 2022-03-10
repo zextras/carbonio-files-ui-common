@@ -353,7 +353,10 @@ describe('Header Breadcrumbs', () => {
 			// wait for navigation to start
 			await waitFor(() => expect(mockedUseNavigationHook.navigateToFolder).toHaveBeenCalled());
 			fireEvent.dragLeave(destinationCrumbItem, { dataTransfer: dataTransfer() });
-			expect(mockedUseNavigationHook.navigateToFolder).toHaveBeenCalledWith(parent.id);
+			expect(mockedUseNavigationHook.navigateToFolder).toHaveBeenCalledWith(
+				parent.id,
+				expect.objectContaining({ type: 'dragenter' })
+			);
 		});
 
 		test('Long hover on a crumb without permissions does not trigger navigation', async () => {
