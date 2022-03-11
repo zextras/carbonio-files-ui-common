@@ -486,6 +486,17 @@ export function hexToRGBA(hexColor: string, alpha = 1): string {
 	return `rgba(${+r},${+g},${+b},${+alpha})`;
 }
 
+export function encodeBase64(str: string): string {
+	// took from https://stackoverflow.com/a/30106551/17280436
+	// window.btoa is not enough for cyrillic
+	// see also https://developer.mozilla.org/en-US/docs/Glossary/Base64#the_unicode_problem
+	return window.btoa(
+		encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) =>
+			String.fromCharCode(parseInt(p1, 16))
+		)
+	);
+}
+
 export const docsHandledMimeTypes = [
 	'text/rtf',
 	'text/plain',
