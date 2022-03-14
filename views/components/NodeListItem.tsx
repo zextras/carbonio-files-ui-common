@@ -92,6 +92,7 @@ interface NodeListItemProps {
 	compact?: boolean;
 	navigateTo?: (id: string, event?: React.SyntheticEvent) => void;
 	disabled?: boolean;
+	selectable?: boolean;
 	trashed?: boolean;
 	deletePermanentlyCallback?: () => void;
 	selectionContextualMenuActionsItems?: ActionItem[];
@@ -129,7 +130,8 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 	setActive = (): void => undefined,
 	compact,
 	navigateTo = (): void => undefined,
-	disabled,
+	disabled = false,
+	selectable = true,
 	trashed,
 	deletePermanentlyCallback,
 	selectionContextualMenuActionsItems,
@@ -265,13 +267,11 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 			if (!isSelectionModeActive && !disabled && !trashed) {
 				if (isNavigable) {
 					navigateTo(id, event);
-				} else if (!compact) {
-					if (
-						permittedContextualMenuActions[Action.OpenWithDocs] &&
-						permittedContextualMenuActions[Action.OpenWithDocs] === true
-					) {
-						openNodeWithDocs(id);
-					}
+				} else if (
+					permittedContextualMenuActions[Action.OpenWithDocs] &&
+					permittedContextualMenuActions[Action.OpenWithDocs] === true
+				) {
+					openNodeWithDocs(id);
 				}
 			}
 		},
@@ -280,7 +280,6 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 			disabled,
 			trashed,
 			isNavigable,
-			compact,
 			navigateTo,
 			id,
 			permittedContextualMenuActions
@@ -343,7 +342,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 					data-testid={`node-item-${id}`}
 					crossAlignment="flex-end"
 					contextualMenuActive={isContextualMenuActive}
-					disableHover={isContextualMenuActive || dragging || disabled}
+					disableHover={isContextualMenuActive || dragging || disabled || !selectable}
 					disabled={disabled}
 				>
 					<HoverContainer
@@ -360,7 +359,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 							selected={isSelected}
 							onClick={selectIdCallback}
 							compact={compact}
-							disabled={disabled}
+							disabled={disabled || !selectable}
 							icon={getIconByFileType(type, mimeType || id)}
 						/>
 						<Container

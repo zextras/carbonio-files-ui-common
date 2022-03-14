@@ -67,8 +67,6 @@ export const ModalList: React.VFC<ModalListProps> = ({
 		listRef.current && listRef.current.scrollTo(0, 0);
 	}, [folderId]);
 
-	// const [filter, setFilter] = useState<string>();
-
 	// use a useQuery to load full path only when required so that operations like move that cleanup cache trigger a refetch
 	const { data: pathData, loading: loadingPath } = useQuery<GetPathQuery, GetPathQueryVariables>(
 		GET_PATH,
@@ -101,6 +99,7 @@ export const ModalList: React.VFC<ModalListProps> = ({
 			? takeRightWhile(
 					pathData?.getPath,
 					(parent: Pick<Node, 'id' | 'name' | 'permissions' | 'type'> | undefined | null) =>
+						// TODO: it might be convenient to move this check in parent component through the checkDisabled function
 						parent && canBeWriteNodeDestination(parent, writingFile, writingFolder)
 			  )
 			: pathData?.getPath;
@@ -121,15 +120,6 @@ export const ModalList: React.VFC<ModalListProps> = ({
 		writingFile,
 		writingFolder
 	]);
-
-	/*
-	// TODO uncomment when filter inside modal is implemented
-	const filterChangeHandler = useCallback(
-		({ target: { value } }: React.ChangeEvent<HTMLInputElement>) => {
-			setFilter(value);
-		},
-		[]
-	); */
 
 	const stopPropagationClickHandler = (event: React.MouseEvent): void => {
 		event.stopPropagation();
@@ -158,15 +148,6 @@ export const ModalList: React.VFC<ModalListProps> = ({
 					</Row>
 				)}
 			</Row>
-			{/*
-			// TODO uncomment when filter inside modal is implemented
-			<Input
-				label={t('node.move.modal.input.filter', 'Filter folders')}
-				backgroundColor="gray5"
-				value={filter}
-				onChange={filterChangeHandler}
-				onClick={stopPropagationClickHandler}
-			/> */}
 			{error && <p>Error: {decodeError(error, t)}</p>}
 			<Container mainAlignment="flex-start" minHeight="0">
 				{nodes.length > 0 ? (

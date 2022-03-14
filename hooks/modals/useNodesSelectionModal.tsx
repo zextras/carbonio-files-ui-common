@@ -10,6 +10,7 @@ import { ApolloProvider } from '@apollo/client';
 import { useModal } from '@zextras/carbonio-design-system';
 
 import buildClient from '../../apollo';
+import { RootListItemType } from '../../types/common';
 import { BaseNodeFragment } from '../../types/graphql/types';
 import { ArrayOneOrMore } from '../../types/utils';
 import { NodesSelectionModalContent } from '../../views/components/NodesSelectionModalContent';
@@ -20,7 +21,7 @@ export type OpenNodesSelectionModal = (args: {
 	title: string;
 	confirmLabel: string;
 	confirmAction: (nodes: ArrayOneOrMore<IntegrationNode>) => void;
-	isValidSelection?: (node: IntegrationNode) => boolean;
+	isValidSelection?: (node: IntegrationNode | RootListItemType) => boolean;
 	maxSelected?: number;
 }) => void;
 

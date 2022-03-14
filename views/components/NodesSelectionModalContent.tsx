@@ -26,7 +26,7 @@ import {
 	GetBaseNodeQueryVariables
 } from '../../types/graphql/types';
 import { ArrayOneOrMore } from '../../types/utils';
-import { isFolder } from '../../utils/ActionsFactory';
+import { isFile, isFolder } from '../../utils/ActionsFactory';
 import { LoadingIcon } from './LoadingIcon';
 import { ModalFooter } from './ModalFooter';
 import { ModalHeader } from './ModalHeader';
@@ -40,7 +40,7 @@ interface NodesSelectionModalContentProps {
 	confirmAction: (nodes: ArrayOneOrMore<NodeWithMetadata>) => void;
 	confirmLabel: string;
 	closeAction: () => void;
-	isValidSelection?: (node: NodeWithMetadata) => boolean;
+	isValidSelection?: (node: NodeWithMetadata | RootListItemType) => boolean;
 	maxSelected?: number;
 	disabledTooltip?: string;
 }
@@ -74,11 +74,18 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 
 	useErrorHandler(error, 'NODES_SELECTION_MODAL_CONTENT');
 
-	const checkNodeDisabled = useCallback(
-		(node: NodeWithMetadata) =>
-			// folders are never disabled since they must be navigable
-			!isFolder(node) && !isValidSelection(node),
+	const checkSelectable = useCallback(
+		(node: NodeWithMetadata | RootListItemType) =>
+			// folders and roots are never disabled since they must be navigable
+			isValidSelection(node),
 		[isValidSelection]
+	);
+
+	const checkDisabled = useCallback(
+		(node: NodeWithMetadata | RootListItemType) =>
+			// folders and roots are never disabled since they must be navigable
+			isFile(node) && !checkSelectable(node),
+		[checkSelectable]
 	);
 
 	const nodes = useMemo<Array<NodeListItemType>>(() => {
@@ -93,7 +100,8 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 					if (node) {
 						result.push({
 							...node,
-							disabled: checkNodeDisabled(node)
+							disabled: checkDisabled(node),
+							selectable: checkSelectable(node)
 						});
 					}
 					return result;
@@ -102,7 +110,7 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 			);
 		}
 		return [];
-	}, [checkNodeDisabled, currentFolder]);
+	}, [checkDisabled, checkSelectable, currentFolder]);
 
 	const apolloClient = useApolloClient();
 
@@ -268,7 +276,8 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 							activeNode={(selectedNodes?.length === 1 && selectedNodes[0].id) || undefined}
 							setActiveNode={setSelectedNodeHandler}
 							navigateTo={navigateTo}
-							checkDisabled={checkNodeDisabled}
+							checkDisabled={checkDisabled}
+							checkSelectable={checkSelectable}
 							showTrash={false}
 						/>
 					)) || (
@@ -287,7 +296,7 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 				confirmHandler={confirmHandler}
 				confirmDisabled={confirmDisabled}
 			>
-				{selectedNodes && (
+				{maxSelected > 1 && selectedNodes && (
 					<Container mainAlignment="flex-start" crossAlignment="center" orientation="horizontal">
 						<Text size="small" weight="light">
 							{t('modal.nodesSelection.selectedCount', '{{count}} element selected', {

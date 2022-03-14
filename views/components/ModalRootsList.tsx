@@ -7,6 +7,7 @@
 import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Container, Row } from '@zextras/carbonio-design-system';
+import forEach from 'lodash/forEach';
 import isEmpty from 'lodash/isEmpty';
 import reduce from 'lodash/reduce';
 import { useTranslation } from 'react-i18next';
@@ -15,8 +16,7 @@ import styled from 'styled-components';
 import { ROOTS } from '../../constants';
 import { useFindNodesQuery } from '../../hooks/graphql/queries/useFindNodesQuery';
 import { Crumb, NodeListItemType, RootListItemType } from '../../types/common';
-import { NodeType } from '../../types/graphql/types';
-import { MakeRequired } from '../../types/utils';
+import { MakeOptional, NodeType } from '../../types/graphql/types';
 import { decodeError } from '../../utils/utils';
 import { InteractiveBreadcrumbs } from '../InteractiveBreadcrumbs';
 import { EmptyFolder } from './EmptyFolder';
@@ -29,7 +29,8 @@ interface RootsListProps {
 	setActiveNode: (node: NodeListItemType | RootListItemType, event: React.SyntheticEvent) => void;
 	navigateTo: (id: string, event?: React.SyntheticEvent | Event) => void;
 	showTrash?: boolean;
-	checkDisabled: (node: NodeListItemType) => boolean;
+	checkDisabled: (node: NodeListItemType | RootListItemType) => boolean;
+	checkSelectable: (node: NodeListItemType | RootListItemType) => boolean;
 }
 
 const ModalContainer = styled(Container)`
@@ -41,10 +42,10 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 	setActiveNode,
 	navigateTo,
 	showTrash = false,
-	checkDisabled
+	checkDisabled,
+	checkSelectable
 }) => {
 	const [t] = useTranslation();
-	// const [filter, setFilter] = useState<string>();
 	const [filterQueryParams, setFilterQueryParam] = useState<
 		Pick<
 			Parameters<typeof useFindNodesQuery>[0],
@@ -86,9 +87,9 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 						setFilterQueryParam({ sharedWithMe: true, folderId: ROOTS.LOCAL_ROOT, cascade: false });
 						setActiveNode(
 							{
-								__typename: 'Root',
 								id: ROOTS.SHARED_WITH_ME,
-								name: t('modal.roots.sharedWitMe', 'Shared with me')
+								name: t('modal.roots.sharedWitMe', 'Shared with me'),
+								type: NodeType.Root
 							},
 							event
 						);
@@ -111,7 +112,8 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 					if (node) {
 						result.push({
 							...node,
-							disabled: checkDisabled(node)
+							disabled: checkDisabled(node),
+							selectable: checkSelectable(node)
 						});
 					}
 					return result;
@@ -120,16 +122,40 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 			);
 		}
 		return undefined;
-	}, [checkDisabled, filterQueryParams, findNodesData]);
+	}, [checkDisabled, checkSelectable, filterQueryParams, findNodesData?.findNodes]);
 
 	const rootNodes = useMemo<NodeListItemType[]>(() => {
-		const roots: Array<MakeRequired<NodeListItemType, 'id' | 'name' | 'type'>> = [];
+		const roots: Array<
+			| RootListItemType
+			| MakeOptional<
+					Pick<
+						NodeListItemType,
+						'id' | 'name' | 'type' | '__typename' | 'permissions' | 'disabled' | 'selectable'
+					>,
+					'permissions'
+			  >
+		> = [];
 		roots.push(
 			{
 				id: ROOTS.LOCAL_ROOT,
 				name: t('modal.roots.filesHome', 'Home'),
 				type: NodeType.Root,
-				__typename: 'Folder' // trick to make local root a valid destination
+				// FIXME: find a way to load permissions for root nodes
+				// trick to make local root a valid destination
+				__typename: 'Folder',
+				permissions: {
+					__typename: 'Permissions',
+					can_write_file: true,
+					can_write_folder: true,
+					can_read: true,
+					can_add_version: false,
+					can_change_link: false,
+					can_change_share: false,
+					can_delete: false,
+					can_read_link: false,
+					can_read_share: false,
+					can_share: false
+				}
 			},
 			{
 				id: ROOTS.SHARED_WITH_ME,
@@ -144,8 +170,14 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 				type: NodeType.Root
 			});
 		}
+
+		forEach(roots, (root) => {
+			root.disabled = checkDisabled(root);
+			root.selectable = checkSelectable(root);
+		});
+
 		return roots as NodeListItemType[];
-	}, [showTrash, t]);
+	}, [checkDisabled, checkSelectable, showTrash, t]);
 
 	const rootNavigationHandler = useCallback<typeof navigateTo>(
 		(id, event) => {
@@ -163,13 +195,6 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 		},
 		[navigateTo]
 	);
-
-	// const filterChangeHandler = useCallback(
-	// 	({ target: { value } }: React.ChangeEvent<HTMLInputElement>) => {
-	// 		setFilter(value);
-	// 	},
-	// 	[]
-	// );
 
 	const stopPropagationClickHandler = (event: React.MouseEvent): void => {
 		event.stopPropagation();
@@ -198,15 +223,6 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 					</Row>
 				)}
 			</Row>
-			{/*
-			// TODO uncomment when filter inside modal is implemented
-			<Input
-				label={t('node.move.modal.input.filter', 'Filter folders')}
-				backgroundColor="gray5"
-				value={filter}
-				onChange={filterChangeHandler}
-				onClick={stopPropagationClickHandler}
-			/> */}
 			{error && <p>Error: {decodeError(error, t)}</p>}
 			<Container mainAlignment="flex-start" minHeight="0" height="40vh">
 				{nodes &&

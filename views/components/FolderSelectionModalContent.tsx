@@ -15,7 +15,7 @@ import { useTranslation } from 'react-i18next';
 import BASE_NODE from '../../graphql/fragments/baseNode.graphql';
 import { useGetChildrenQuery } from '../../hooks/graphql/queries/useGetChildrenQuery';
 import { useGetPathQuery } from '../../hooks/graphql/queries/useGetPathQuery';
-import { NodeListItemType } from '../../types/common';
+import { NodeListItemType, RootListItemType } from '../../types/common';
 import { BaseNodeFragment, Folder } from '../../types/graphql/types';
 import { isFile } from '../../utils/ActionsFactory';
 import { ModalFooter } from './ModalFooter';
@@ -72,6 +72,16 @@ export const FolderSelectionModalContent: React.VFC<FolderSelectionModalContentP
 		}
 	}, [currentFilterPathData, folderId, t]);
 
+	const checkSelectable = useCallback(
+		(node: NodeListItemType | RootListItemType) => !isFile(node),
+		[]
+	);
+
+	const checkDisabled = useCallback(
+		(node: NodeListItemType | RootListItemType) => isFile(node),
+		[]
+	);
+
 	const nodes = useMemo<Array<NodeListItemType>>(() => {
 		if (
 			currentFolder?.getNode?.__typename === 'Folder' &&
@@ -83,7 +93,8 @@ export const FolderSelectionModalContent: React.VFC<FolderSelectionModalContentP
 					if (node) {
 						result.push({
 							...node,
-							disabled: isFile(node)
+							disabled: checkDisabled(node),
+							selectable: checkSelectable(node)
 						});
 					}
 					return result;
@@ -92,7 +103,7 @@ export const FolderSelectionModalContent: React.VFC<FolderSelectionModalContentP
 			);
 		}
 		return [];
-	}, [currentFolder]);
+	}, [checkDisabled, checkSelectable, currentFolder?.getNode]);
 
 	const closeHandler = useCallback(() => {
 		setSelectedFolder(undefined);
@@ -193,7 +204,8 @@ export const FolderSelectionModalContent: React.VFC<FolderSelectionModalContentP
 						activeNode={selectedFolder?.id}
 						setActiveNode={setDestinationFolderHandler}
 						navigateTo={navigateTo}
-						checkDisabled={isFile}
+						checkDisabled={checkDisabled}
+						checkSelectable={checkSelectable}
 						showTrash
 					/>
 				)) || (

@@ -4,8 +4,16 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { Avatar, Button, Container, IconButton, Row, Text } from '@zextras/carbonio-design-system';
-import styled, { css, FlattenSimpleInterpolation } from 'styled-components';
+import {
+	Avatar,
+	Button,
+	Container,
+	IconButton,
+	Row,
+	Text,
+	getColor
+} from '@zextras/carbonio-design-system';
+import styled, { css, SimpleInterpolation } from 'styled-components';
 
 import {
 	LIST_ITEM_AVATAR_HEIGHT,
@@ -39,35 +47,46 @@ export const HoverBarContainer = styled(Row)`
 	);
 `;
 
-export const ListItemContainer = styled(Container).attrs(
-	({ contextualMenuActive, disabled, theme }) => ({
-		backgroundColor:
-			(disabled && theme.palette.gray5.disabled) ||
-			(contextualMenuActive && theme.palette.gray6.hover)
-	})
-)`
+export const ListItemContainer = styled(Container).attrs<
+	{
+		contextualMenuActive: boolean;
+		disabled: boolean;
+	},
+	{ backgroundColor?: string }
+>(({ contextualMenuActive, disabled, theme }) => ({
+	backgroundColor:
+		(disabled && getColor('gray6.disabled', theme)) ||
+		(contextualMenuActive && getColor('gray6.hover', theme))
+}))<{
+	contextualMenuActive: boolean;
+	disabled: boolean;
+	disableHover: boolean;
+}>`
 	${HoverContainer} {
-		background-color: ${(props): string => props.backgroundColor};
+		background-color: ${({ backgroundColor }): string => backgroundColor};
 	}
 	${HoverBarContainer} {
 		display: none;
 	}
 
-	${({ disableHover, theme }): string | FlattenSimpleInterpolation =>
-		(!disableHover &&
-			css`
-				cursor: pointer;
-				&:hover {
-					${HoverBarContainer} {
-						display: flex;
-					}
-
-					${HoverContainer} {
-						background-color: ${theme.palette.gray6.hover};
-					}
+	${({ disableHover, theme }): SimpleInterpolation =>
+		!disableHover &&
+		css`
+			&:hover {
+				${HoverBarContainer} {
+					display: flex;
 				}
-			`) ||
-		''}
+
+				${HoverContainer} {
+					background-color: ${getColor('gray6.hover', theme)};
+				}
+			}
+		`}
+	${({ disabled }): SimpleInterpolation =>
+		!disabled &&
+		css`
+			cursor: pointer;
+		`}
 `;
 
 export const CheckedAvatar = styled(Avatar)`

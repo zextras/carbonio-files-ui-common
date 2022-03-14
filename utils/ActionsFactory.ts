@@ -366,8 +366,8 @@ export function canMove(
 			if (!isBoolean(node.permissions.can_write_file)) {
 				throw Error('can_write_file not defined');
 			}
-			// a file can be moved if it has can_write_file permission and it has a parent which has can_write_file permission.
-			// If a node is shared with me and its parent is the LOCAL_ROOT, then the node cannot be moved (its a direct share)
+			// a file can be moved if it has can_write_file permission, and it has a parent which has can_write_file permission.
+			// If a node is shared with me and its parent is the LOCAL_ROOT, then the node cannot be moved (it's a direct share)
 			canMoveResult =
 				node.permissions.can_write_file &&
 				!!node.parent &&

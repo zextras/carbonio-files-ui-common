@@ -16,7 +16,6 @@ import {
 	MakeOptional,
 	Maybe,
 	Permissions,
-	Root,
 	Share
 } from './graphql/types';
 import { SnakeToCamelCase } from './utils';
@@ -86,10 +85,14 @@ export enum Role {
 
 export type NodeListItemType = ChildFragment & {
 	disabled?: boolean;
+	selectable?: boolean;
 	shares?: Array<Pick<Share, '__typename' | 'created_at'> | null | undefined>;
 };
 
-export type RootListItemType = Root;
+export type RootListItemType = Pick<
+	NodeListItemType,
+	'__typename' | 'id' | 'name' | 'type' | 'disabled' | 'selectable'
+>;
 
 export type SortableNode = Pick<Node, 'id' | 'name' | 'updated_at' | 'type'> &
 	MakeOptional<Pick<File, 'size'>, 'size'>;

@@ -336,6 +336,7 @@ export const NodeListItemWrapper: React.VFC<NodeListItemWrapperProps> = ({
 					compact={compact}
 					navigateTo={navigateTo}
 					disabled={node.disabled || isDragged}
+					selectable={node.selectable}
 					trashed={node.rootId === ROOTS.TRASH}
 					selectionContextualMenuActionsItems={selectionContextualMenuActionsItems}
 					dragging={dragging}
