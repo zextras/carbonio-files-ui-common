@@ -23,7 +23,7 @@ import { useActiveNode } from '../../../hooks/useActiveNode';
 import { useNavigation } from '../../../hooks/useNavigation';
 import useUserInfo from '../../../hooks/useUserInfo';
 import { DRAG_TYPES, ROOTS } from '../../constants';
-import { ListContext } from '../../contexts';
+import { ListContext, NodeAvatarIconContext } from '../../contexts';
 import {
 	DeleteNodesType,
 	useDeleteNodesMutation
@@ -502,7 +502,12 @@ export const List: React.VFC<ListProps> = ({
 				{(): JSX.Element => (
 					<Container background="gray6" mainAlignment="flex-start">
 						{nodes.length > 0 && (
-							<>
+							<NodeAvatarIconContext.Provider
+								value={{
+									tooltipLabel: t('selectionMode.node.tooltip', 'Activate selection mode'),
+									tooltipDisabled: false
+								}}
+							>
 								<ListContent
 									nodes={nodes}
 									selectedMap={selectedMap}
@@ -531,7 +536,7 @@ export const List: React.VFC<ListProps> = ({
 									React.cloneElement(fillerWithActions, {
 										children: <Container height="fill" data-testid="fillerContainer" />
 									})}
-							</>
+							</NodeAvatarIconContext.Provider>
 						)}
 						{nodes.length === 0 && !loading && !fillerWithActions && (
 							<EmptyFolder mainList={mainList} message={emptyListMessage} />

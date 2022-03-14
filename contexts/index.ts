@@ -18,3 +18,8 @@ export const ListContext = createContext<{
 		// not implemented
 	}
 });
+
+export const NodeAvatarIconContext = createContext<{
+	tooltipLabel?: string;
+	tooltipDisabled: boolean | ((avatarDisabled: boolean) => boolean);
+}>({ tooltipDisabled: true });

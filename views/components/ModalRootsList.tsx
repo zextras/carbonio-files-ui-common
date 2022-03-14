@@ -22,7 +22,7 @@ import { InteractiveBreadcrumbs } from '../InteractiveBreadcrumbs';
 import { EmptyFolder } from './EmptyFolder';
 import { ListContent } from './ListContent';
 import { LoadingIcon } from './LoadingIcon';
-import { ScrollContainer } from './StyledComponents';
+import { ScrollContainer } from './ScrollContainer';
 
 interface RootsListProps {
 	activeNode?: string;
@@ -224,7 +224,7 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 						/>
 					) : (
 						!loading && (
-							<ScrollContainer mainAlignment="flex-start">
+							<ScrollContainer>
 								<EmptyFolder
 									message={t('empty.filter.hint', "It looks like there's nothing here.")}
 								/>
@@ -244,7 +244,7 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 							ref={listRef}
 						/>
 					) : (
-						<ScrollContainer mainAlignment="flex-start">
+						<ScrollContainer>
 							<EmptyFolder
 								message={t('empty.filter.hint', "It looks like there's nothing here.")}
 							/>

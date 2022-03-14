@@ -19,15 +19,9 @@ import { Maybe, Node } from '../../types/graphql/types';
 import { Action, buildActionItems } from '../../utils/ActionsFactory';
 import { buildCrumbs, humanFileSize, scrollToNodeItem } from '../../utils/utils';
 import { ContextualMenu } from './ContextualMenu';
+import { NodeAvatarIcon } from './NodeAvatarIcon';
 import { NodeHoverBar } from './NodeHoverBar';
-import {
-	CheckedAvatar,
-	FileIconPreview,
-	HoverBarContainer,
-	HoverContainer,
-	ListItemContainer,
-	UncheckedAvatar
-} from './StyledComponents';
+import { HoverBarContainer, HoverContainer, ListItemContainer } from './StyledComponents';
 
 interface UploadListItemProps {
 	id: string;
@@ -175,34 +169,12 @@ export const UploadListItem: React.VFC<UploadListItemProps> = React.memo(
 						padding={{ all: 'small' }}
 						width="fill"
 					>
-						{isSelectionModeActive ? (
-							<>
-								{isSelected ? (
-									<CheckedAvatar
-										label=""
-										data-testid={`checkedAvatar`}
-										icon="Checkmark"
-										background="primary"
-										onClick={selectIdCallback}
-									/>
-								) : (
-									<UncheckedAvatar
-										label=""
-										background="gray6"
-										data-testid={`unCheckedAvatar`}
-										onClick={selectIdCallback}
-									/>
-								)}
-							</>
-						) : (
-							<FileIconPreview
-								icon="CloudUploadOutline"
-								background="gray3"
-								label="."
-								onClick={selectIdCallback}
-								data-testid="file-icon-preview"
-							/>
-						)}
+						<NodeAvatarIcon
+							selectionModeActive={isSelectionModeActive}
+							selected={isSelected}
+							onClick={selectIdCallback}
+							icon="CloudUploadOutline"
+						/>
 						<Container
 							orientation="vertical"
 							crossAlignment="flex-start"

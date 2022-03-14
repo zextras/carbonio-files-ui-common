@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ApolloError, useApolloClient } from '@apollo/client';
 import { Container, Text } from '@zextras/carbonio-design-system';
@@ -12,6 +12,7 @@ import reduce from 'lodash/reduce';
 import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
 
+import { NodeAvatarIconContext } from '../../contexts';
 import CHILD from '../../graphql/fragments/child.graphql';
 import GET_BASE_NODE from '../../graphql/queries/getBaseNode.graphql';
 import { useGetChildrenQuery } from '../../hooks/graphql/queries/useGetChildrenQuery';
@@ -40,6 +41,8 @@ interface NodesSelectionModalContentProps {
 	confirmLabel: string;
 	closeAction: () => void;
 	isValidSelection?: (node: NodeWithMetadata) => boolean;
+	maxSelected?: number;
+	disabledTooltip?: string;
 }
 
 export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentProps> = ({
@@ -47,13 +50,17 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 	confirmAction,
 	confirmLabel,
 	closeAction,
-	isValidSelection = (): boolean => true // by default all nodes are active
+	isValidSelection = (): boolean => true, // by default all nodes are active,
+	maxSelected = 1,
+	disabledTooltip
 }) => {
 	const [t] = useTranslation();
 	const [selectedNodes, setSelectedNodes] = useState<
 		ArrayOneOrMore<NodeWithMetadata> | undefined
 	>();
 	const [openedFolder, setOpenedFolder] = useState<string>('');
+	const mainContainerRef = useRef<HTMLDivElement | null>(null);
+
 	const {
 		data: currentFolder,
 		loading,
@@ -67,6 +74,13 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 
 	useErrorHandler(error, 'NODES_SELECTION_MODAL_CONTENT');
 
+	const checkNodeDisabled = useCallback(
+		(node: NodeWithMetadata) =>
+			// folders are never disabled since they must be navigable
+			!isFolder(node) && !isValidSelection(node),
+		[isValidSelection]
+	);
+
 	const nodes = useMemo<Array<NodeListItemType>>(() => {
 		if (
 			currentFolder?.getNode &&
@@ -79,7 +93,7 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 					if (node) {
 						result.push({
 							...node,
-							disabled: !isValidSelection(node)
+							disabled: checkNodeDisabled(node)
 						});
 					}
 					return result;
@@ -88,7 +102,7 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 			);
 		}
 		return [];
-	}, [isValidSelection, currentFolder]);
+	}, [checkNodeDisabled, currentFolder]);
 
 	const apolloClient = useApolloClient();
 
@@ -193,12 +207,28 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 		setSelectedNodeHandler(currentFolder?.getNode);
 	}, [currentFolder?.getNode, setSelectedNodeHandler]);
 
-	const modalHeight = useMemo(() => (nodes?.length >= 10 ? '60vh' : '40vh'), [nodes?.length]);
-
-	const checkDisabled = useCallback(
-		(node: NodeWithMetadata) => !isValidSelection(node),
-		[isValidSelection]
+	const clickModalHandler = useCallback(
+		(event) => {
+			if (event.target === mainContainerRef.current?.parentElement) {
+				resetSelectedNodesHandler();
+			}
+		},
+		[resetSelectedNodesHandler]
 	);
+
+	useEffect(() => {
+		// since with modal manager we have not control on modal container, set the reset action through the main container parent
+		// it's quite an ugly solution, let's say it's a TODO: find a better solution
+		const containerParentElement = mainContainerRef?.current?.parentElement;
+		containerParentElement && containerParentElement.addEventListener('click', clickModalHandler);
+
+		return (): void => {
+			containerParentElement &&
+				containerParentElement.removeEventListener('click', clickModalHandler);
+		};
+	}, [clickModalHandler]);
+
+	const modalHeight = useMemo(() => (nodes?.length >= 10 ? '60vh' : '40vh'), [nodes?.length]);
 
 	return (
 		<Container
@@ -209,37 +239,49 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 			height={modalHeight}
 			maxHeight="60vh"
 			onClick={resetSelectedNodesHandler}
+			ref={mainContainerRef}
 		>
 			<ModalHeader title={title} closeHandler={closeHandler} />
-			{currentFolder?.getNode ? (
-				<ModalList
-					folderId={currentFolder.getNode.id}
-					nodes={nodes}
-					activeNode={(selectedNodes?.length === 1 && selectedNodes[0].id) || undefined}
-					setActiveNode={setSelectedNodeHandler}
-					loadMore={loadMore}
-					hasMore={hasMore}
-					navigateTo={navigateTo}
-					error={getChildrenError}
-					loading={loading}
-					limitNavigation={false}
-					allowRootNavigation
-				/>
-			) : (
-				(!loading && (
-					<ModalRootsList
+			<NodeAvatarIconContext.Provider
+				value={{
+					tooltipLabel: disabledTooltip,
+					tooltipDisabled: (nodeDisabled: boolean): boolean => nodeDisabled
+				}}
+			>
+				{currentFolder?.getNode ? (
+					<ModalList
+						folderId={currentFolder.getNode.id}
+						nodes={nodes}
 						activeNode={(selectedNodes?.length === 1 && selectedNodes[0].id) || undefined}
 						setActiveNode={setSelectedNodeHandler}
+						loadMore={loadMore}
+						hasMore={hasMore}
 						navigateTo={navigateTo}
-						checkDisabled={checkDisabled}
-						showTrash={false}
+						error={getChildrenError}
+						loading={loading}
+						limitNavigation={false}
+						allowRootNavigation
 					/>
-				)) || (
-					<Container mainAlignment="flex-end" crossAlignment="flex-start" orientation="horizontal">
-						<LoadingIcon icon="Refresh" color="primary" />
-					</Container>
-				)
-			)}
+				) : (
+					(!loading && (
+						<ModalRootsList
+							activeNode={(selectedNodes?.length === 1 && selectedNodes[0].id) || undefined}
+							setActiveNode={setSelectedNodeHandler}
+							navigateTo={navigateTo}
+							checkDisabled={checkNodeDisabled}
+							showTrash={false}
+						/>
+					)) || (
+						<Container
+							mainAlignment="flex-end"
+							crossAlignment="flex-start"
+							orientation="horizontal"
+						>
+							<LoadingIcon icon="Refresh" color="primary" />
+						</Container>
+					)
+				)}
+			</NodeAvatarIconContext.Provider>
 			<ModalFooter
 				confirmLabel={confirmLabel}
 				confirmHandler={confirmHandler}

@@ -22,7 +22,7 @@ import { InteractiveBreadcrumbs } from '../InteractiveBreadcrumbs';
 import { EmptyFolder } from './EmptyFolder';
 import { ListContent } from './ListContent';
 import { LoadingIcon } from './LoadingIcon';
-import { ScrollContainer } from './StyledComponents';
+import { ScrollContainer } from './ScrollContainer';
 
 interface ModalListProps {
 	folderId: string;
@@ -183,7 +183,7 @@ export const ModalList: React.VFC<ModalListProps> = ({
 					/>
 				) : (
 					!loading && (
-						<ScrollContainer mainAlignment="flex-start">
+						<ScrollContainer>
 							<EmptyFolder
 								message={t('empty.folder.hint', "It looks like there's nothing here.")}
 							/>

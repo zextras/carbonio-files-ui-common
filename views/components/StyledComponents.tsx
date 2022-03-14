@@ -7,14 +7,15 @@
 import { Avatar, Button, Container, IconButton, Row, Text } from '@zextras/carbonio-design-system';
 import styled, { css, FlattenSimpleInterpolation } from 'styled-components';
 
-import { LIST_ITEM_AVATAR_HEIGHT } from '../../constants';
+import {
+	LIST_ITEM_AVATAR_HEIGHT,
+	LIST_ITEM_AVATAR_HEIGHT_COMPACT,
+	LIST_ITEM_AVATAR_ICON_HEIGHT,
+	LIST_ITEM_AVATAR_ICON_HEIGHT_COMPACT
+} from '../../constants';
 
 export const DisplayerContentContainer = styled(Container)`
 	padding-bottom: 32px;
-`;
-
-export const ScrollContainer = styled(Container)`
-	overflow-y: auto;
 `;
 
 export const HoverContainer = styled(Row)`
@@ -92,17 +93,24 @@ export const UncheckedAvatar = styled(Avatar)`
 	box-sizing: border-box;
 `;
 
-export const FileIconPreview = styled(Avatar)`
+export const FileIconPreview = styled(Avatar)<{ $compact?: boolean }>`
 	border-radius: 8px;
-	height: ${LIST_ITEM_AVATAR_HEIGHT}px;
-	width: ${LIST_ITEM_AVATAR_HEIGHT}px;
+	height: ${({ $compact }): number =>
+		$compact ? LIST_ITEM_AVATAR_HEIGHT_COMPACT : LIST_ITEM_AVATAR_HEIGHT}px;
+	width: ${({ $compact }): number =>
+		$compact ? LIST_ITEM_AVATAR_HEIGHT_COMPACT : LIST_ITEM_AVATAR_HEIGHT}px;
 	flex: 0 0 auto;
 	align-self: center;
 
 	& > svg {
-		color: ${(props): string => props.theme.palette.gray1.regular} !important;
-		width: 24px;
-		height: 24px;
+		width: ${({ $compact }): number =>
+			$compact ? LIST_ITEM_AVATAR_ICON_HEIGHT_COMPACT : LIST_ITEM_AVATAR_ICON_HEIGHT}px;
+		height: ${({ $compact }): number =>
+			$compact ? LIST_ITEM_AVATAR_ICON_HEIGHT_COMPACT : LIST_ITEM_AVATAR_ICON_HEIGHT}px;
+		min-width: ${({ $compact }): number =>
+			$compact ? LIST_ITEM_AVATAR_ICON_HEIGHT_COMPACT : LIST_ITEM_AVATAR_ICON_HEIGHT}px;
+		min-height: ${({ $compact }): number =>
+			$compact ? LIST_ITEM_AVATAR_ICON_HEIGHT_COMPACT : LIST_ITEM_AVATAR_ICON_HEIGHT}px;
 	}
 `;
 

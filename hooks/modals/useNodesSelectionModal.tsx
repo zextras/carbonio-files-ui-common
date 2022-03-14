@@ -21,6 +21,7 @@ export type OpenNodesSelectionModal = (args: {
 	confirmLabel: string;
 	confirmAction: (nodes: ArrayOneOrMore<IntegrationNode>) => void;
 	isValidSelection?: (node: IntegrationNode) => boolean;
+	maxSelected?: number;
 }) => void;
 
 export function useNodesSelectionModal(): {
@@ -30,7 +31,7 @@ export function useNodesSelectionModal(): {
 	const apolloClient = buildClient();
 
 	const openModal = useCallback<OpenNodesSelectionModal>(
-		({ title, confirmLabel, confirmAction, isValidSelection }) => {
+		({ title, confirmLabel, confirmAction, isValidSelection, maxSelected }) => {
 			const closeModal = createModal(
 				{
 					maxHeight: '60vh',
@@ -42,6 +43,7 @@ export function useNodesSelectionModal(): {
 								confirmLabel={confirmLabel}
 								closeAction={(): void => closeModal()}
 								isValidSelection={isValidSelection}
+								maxSelected={maxSelected}
 							/>
 						</ApolloProvider>
 					)

@@ -4,9 +4,8 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Row, useCombinedRefs } from '@zextras/carbonio-design-system';
 import filter from 'lodash/filter';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
@@ -14,7 +13,7 @@ import styled from 'styled-components';
 
 import useUserInfo from '../../../hooks/useUserInfo';
 import { draggedItemsVar } from '../../apollo/dragAndDropVar';
-import { DRAG_TYPES, LIST_ITEM_HEIGHT } from '../../constants';
+import { DRAG_TYPES } from '../../constants';
 import { DeleteNodesType } from '../../hooks/graphql/mutations/useDeleteNodesMutation';
 import { GetNodeParentType, NodeListItemType, PickIdNodeType } from '../../types/common';
 import { Node } from '../../types/graphql/types';
@@ -27,10 +26,9 @@ import {
 	isFile
 } from '../../utils/ActionsFactory';
 import { Draggable } from './Draggable';
-import { LoadingIcon } from './LoadingIcon';
 import { NodeListItem } from './NodeListItem';
 import { NodeListItemWrapper } from './NodeListItemWrapper';
-import { ScrollContainer } from './StyledComponents';
+import { ScrollContainer } from './ScrollContainer';
 
 const DragImageContainer = styled.div`
 	position: absolute;
@@ -89,8 +87,8 @@ export const ListContent = React.forwardRef<HTMLDivElement, ListContentProps>(
 			setActiveNode,
 			compact,
 			navigateTo,
-			loading,
-			hasMore,
+			loading = false,
+			hasMore = false,
 			loadMore = (): void => undefined,
 			draggable = false,
 			customCheckers,
@@ -99,9 +97,6 @@ export const ListContent = React.forwardRef<HTMLDivElement, ListContentProps>(
 		},
 		ref
 	) {
-		const loadMoreRef = useRef<HTMLElement>(null);
-		const loadMoreObserverRef = useRef<IntersectionObserver>();
-		const scrollContainerRef = useCombinedRefs(ref) as React.MutableRefObject<HTMLDivElement>;
 		const dragImageRef = useRef<HTMLDivElement>(null);
 
 		const { me } = useUserInfo();
@@ -225,59 +220,16 @@ export const ListContent = React.forwardRef<HTMLDivElement, ListContentProps>(
 			]
 		);
 
-		useEffect(() => {
-			// init the observer that let to load more items when scroll reaches bottom
-			const options = {
-				// root element is the scrollable container
-				root: scrollContainerRef.current,
-				// call action when entire element is visible
-				threshold: 0.5
-			};
-			loadMoreObserverRef.current = new IntersectionObserver(async (entries) => {
-				const entry = entries[0];
-				if (entry.isIntersecting) {
-					await loadMore();
-				}
-			}, options);
-
-			return (): void => {
-				// disconnect all observed element because current the observer is going to be recreated
-				loadMoreObserverRef.current && loadMoreObserverRef.current.disconnect();
-			};
-		}, [loadMore, scrollContainerRef]);
-
-		useEffect(() => {
-			// attach the observer to the element that is going to trigger the action
-			if (hasMore && !loading) {
-				if (loadMoreRef.current && loadMoreObserverRef.current) {
-					loadMoreObserverRef.current.observe(loadMoreRef.current);
-				}
-			}
-
-			return (): void => {
-				loadMoreObserverRef.current && loadMoreObserverRef.current.disconnect();
-			};
-		}, [hasMore, loading, loadMore]);
-
 		return (
 			<>
 				<ScrollContainer
-					mainAlignment="flex-start"
-					height="auto"
-					maxHeight="100%"
-					ref={scrollContainerRef}
+					loading={loading}
+					hasMore={hasMore}
+					loadMore={loadMore}
+					ref={ref}
+					fillerWithActions={fillerWithActions}
 				>
 					{items}
-					{/* TODO: replace icon button with a placeholder? */}
-					{hasMore && (
-						<Row minHeight={LIST_ITEM_HEIGHT}>
-							<LoadingIcon icon="Refresh" onClick={loadMore} ref={loadMoreRef} />
-						</Row>
-					)}
-					{fillerWithActions &&
-						React.cloneElement(fillerWithActions, {
-							children: <Row height={LIST_ITEM_HEIGHT / 2} />
-						})}
 				</ScrollContainer>
 				<DragImageContainer ref={dragImageRef}>{dragImage}</DragImageContainer>
 			</>

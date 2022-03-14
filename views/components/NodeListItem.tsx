@@ -6,7 +6,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Container, Icon, Padding, Row, Text, Tooltip } from '@zextras/carbonio-design-system';
+import { Container, Icon, Padding, Row, Text } from '@zextras/carbonio-design-system';
 import debounce from 'lodash/debounce';
 import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
@@ -30,15 +30,9 @@ import {
 	openNodeWithDocs
 } from '../../utils/utils';
 import { ContextualMenu } from './ContextualMenu';
+import { NodeAvatarIcon } from './NodeAvatarIcon';
 import { NodeHoverBar } from './NodeHoverBar';
-import {
-	CheckedAvatar,
-	FileIconPreview,
-	HoverBarContainer,
-	HoverContainer,
-	ListItemContainer,
-	UncheckedAvatar
-} from './StyledComponents';
+import { HoverBarContainer, HoverContainer, ListItemContainer } from './StyledComponents';
 
 const CustomText = styled(Text)`
 	text-transform: uppercase;
@@ -361,46 +355,14 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 						width="fill"
 						background={isActive ? 'highlight' : 'gray6'}
 					>
-						{isSelectionModeActive ? (
-							<>
-								{isSelected ? (
-									<CheckedAvatar
-										label=""
-										data-testid={`checkedAvatar`}
-										icon="Checkmark"
-										background="primary"
-										onClick={selectIdCallback}
-									/>
-								) : (
-									<UncheckedAvatar
-										label=""
-										background="gray6"
-										data-testid={`unCheckedAvatar`}
-										onClick={selectIdCallback}
-									/>
-								)}
-							</>
-						) : (
-							<>
-								{!compact ? (
-									<Tooltip label={t('selectionMode.node.tooltip', 'Activate selection mode')}>
-										<FileIconPreview
-											icon={getIconByFileType(type, mimeType || id)}
-											background="gray3"
-											label="."
-											onClick={selectIdCallback}
-											data-testid="file-icon-preview"
-										/>
-									</Tooltip>
-								) : (
-									<Icon
-										size="large"
-										icon={`${getIconByFileType(type, mimeType || id)}Outline`}
-										disabled={disabled}
-									/>
-								)}
-							</>
-						)}
+						<NodeAvatarIcon
+							selectionModeActive={isSelectionModeActive}
+							selected={isSelected}
+							onClick={selectIdCallback}
+							compact={compact}
+							disabled={disabled}
+							icon={getIconByFileType(type, mimeType || id)}
+						/>
 						<Container
 							orientation="vertical"
 							crossAlignment="flex-start"
