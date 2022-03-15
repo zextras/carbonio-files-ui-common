@@ -46,6 +46,7 @@ interface NodesSelectionModalContentProps {
 	maxSelection?: number;
 	disabledTooltip?: string;
 	canSelectOpenedFolder?: boolean;
+	description?: string;
 }
 
 export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentProps> = ({
@@ -56,7 +57,8 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 	isValidSelection = (): boolean => true, // by default all nodes are active,
 	maxSelection,
 	disabledTooltip,
-	canSelectOpenedFolder
+	canSelectOpenedFolder,
+	description
 }) => {
 	const [t] = useTranslation();
 	const [openedFolder, setOpenedFolder] = useState<string>('');
@@ -292,10 +294,20 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 			ref={mainContainerRef}
 		>
 			<ModalHeader title={title} closeHandler={closeHandler} />
+			<Container
+				padding={{ vertical: 'small' }}
+				mainAlignment="center"
+				crossAlignment="flex-start"
+				height="fit"
+			>
+				<Text overflow="break-word" size="small">
+					{description}
+				</Text>
+			</Container>
 			<NodeAvatarIconContext.Provider
 				value={{
 					tooltipLabel: disabledTooltip,
-					tooltipDisabled: (nodeDisabled: boolean): boolean => nodeDisabled
+					tooltipDisabled: (nodeDisabled: boolean): boolean => !nodeDisabled
 				}}
 			>
 				{currentFolder?.getNode ? (
