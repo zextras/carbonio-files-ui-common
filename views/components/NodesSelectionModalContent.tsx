@@ -15,6 +15,7 @@ import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
 
 import { NodeAvatarIconContext } from '../../contexts';
+import BASE_NODE from '../../graphql/fragments/baseNode.graphql';
 import CHILD from '../../graphql/fragments/child.graphql';
 import GET_BASE_NODE from '../../graphql/queries/getBaseNode.graphql';
 import { useGetChildrenQuery } from '../../hooks/graphql/queries/useGetChildrenQuery';
@@ -61,34 +62,12 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 	description
 }) => {
 	const [t] = useTranslation();
+	const apolloClient = useApolloClient();
 	const [openedFolder, setOpenedFolder] = useState<string>('');
 	const mainContainerRef = useRef<HTMLDivElement | null>(null);
 	const [selectedNodes, setSelectedNodes] = useState<NodeWithMetadata[]>([]);
 	const selectedNodesIds = useMemo(() => map(selectedNodes, (node) => node.id), [selectedNodes]);
 	const navigationOccurredRef = useRef(false);
-
-	const selectId = useCallback(
-		(node: NodeWithMetadata) => {
-			setSelectedNodes((prevState) => {
-				if (!maxSelection || maxSelection > 1) {
-					const previousNodes = [...prevState];
-					const index = findIndex(previousNodes, (prevNode) => prevNode.id === node.id);
-					if (index > -1) {
-						previousNodes.splice(index, 1);
-					} else {
-						previousNodes.push(node);
-					}
-					return previousNodes;
-				}
-				return [node];
-			});
-		},
-		[maxSelection]
-	);
-
-	const unSelectAll = useCallback(() => {
-		setSelectedNodes((prevState) => (prevState.length > 0 ? [] : prevState));
-	}, []);
 
 	const {
 		data: currentFolder,
@@ -97,6 +76,50 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 		hasMore,
 		loadMore
 	} = useGetChildrenQuery(openedFolder);
+
+	const selectId = useCallback(
+		(node: NodeWithMetadata) => {
+			setSelectedNodes((prevState) => {
+				if (!maxSelection || maxSelection > 1) {
+					const currentFolderNode = currentFolder?.getNode;
+					if (prevState.length === 1) {
+						// if previous selected node is the opened folder and user is selecting a node from the list,
+						// reset the selection to contains only the list node
+						if (prevState[0].id === currentFolderNode?.id && node.id !== currentFolderNode?.id) {
+							return [node];
+						}
+						// if previous selected node is the one to deselect and opened folder is a potentially valid selection,
+						// try to set opened folder as selected node
+						if (prevState[0].id === node.id && canSelectOpenedFolder && currentFolderNode) {
+							// current folder base node has to be already in cache because of previous navigation
+							// so read data directly from cache
+							const cachedNode = apolloClient.readFragment({
+								fragment: BASE_NODE,
+								fragmentName: 'BaseNode',
+								id: apolloClient.cache.identify(currentFolderNode)
+							});
+							return cachedNode ? [cachedNode] : [];
+						}
+					}
+					const newSelection = [...prevState];
+					const index = findIndex(newSelection, (prevNode) => prevNode.id === node.id);
+					if (index > -1) {
+						newSelection.splice(index, 1);
+					} else {
+						newSelection.push(node);
+					}
+					return newSelection;
+				}
+				return [node];
+			});
+		},
+		[apolloClient, canSelectOpenedFolder, currentFolder?.getNode, maxSelection]
+	);
+
+	const unSelectAll = useCallback(() => {
+		setSelectedNodes((prevState) => (prevState.length > 0 ? [] : prevState));
+	}, []);
+
 	const [error, setError] = useState<ApolloError | undefined>();
 	// load roots data to check whether a node from root list is a valid root or a fake one
 	const { data: rootsData } = useGetRootsListQuery();
@@ -140,8 +163,6 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 		}
 		return [];
 	}, [checkDisabled, checkSelectable, currentFolder]);
-
-	const apolloClient = useApolloClient();
 
 	const getBaseNodeData = useCallback(
 		(node: Pick<NodeListItemType, 'id'>) =>
@@ -245,18 +266,26 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 		}
 	}, [confirmAction, selectedNodes]);
 
-	const confirmDisabled = useMemo(() => selectedNodes.length < 1, [selectedNodes]);
+	const confirmDisabled = useMemo(
+		() => selectedNodes.length < 1 || (!!maxSelection && selectedNodes.length > maxSelection),
+		[maxSelection, selectedNodes.length]
+	);
 
 	const resetSelectedNodesHandler = useCallback(() => {
-		if (canSelectOpenedFolder && (maxSelection === 1 || selectedNodes.length === 0)) {
-			setSelectedNodeHandler(currentFolder?.getNode, undefined, true);
+		if (maxSelection === 1 || selectedNodes.length === 0) {
+			if (canSelectOpenedFolder) {
+				setSelectedNodeHandler(currentFolder?.getNode, undefined, true);
+			} else if (selectedNodes.length > 0) {
+				unSelectAll();
+			}
 		}
 	}, [
 		canSelectOpenedFolder,
 		currentFolder?.getNode,
 		maxSelection,
 		selectedNodes.length,
-		setSelectedNodeHandler
+		setSelectedNodeHandler,
+		unSelectAll
 	]);
 
 	const clickModalHandler = useCallback(
@@ -353,7 +382,11 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 				{(!maxSelection || maxSelection > 1) && selectedNodes.length > 0 && (
 					<Container mainAlignment="flex-start" crossAlignment="center" orientation="horizontal">
 						<Text size="small" weight="light">
-							{t('modal.nodesSelection.selectedCount', '{{count}} element selected', {
+							{t('modal.nodesSelection.selectedCount', {
+								defaultValue:
+									selectedNodes.length === 1
+										? '{{count}} element selected'
+										: '{{count}} elements selected',
 								count: selectedNodes.length
 							})}
 						</Text>
