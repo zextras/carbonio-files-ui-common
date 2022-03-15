@@ -326,6 +326,12 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 		setIsContextualMenuActive(false);
 	}, []);
 
+	const preventTextSelection = useCallback<React.MouseEventHandler>((e: React.MouseEvent): void => {
+		if (e.detail > 1) {
+			e.preventDefault();
+		}
+	}, []);
+
 	return (
 		<Container id={id} data-testid={`nodeListItem-${id}`}>
 			<ContextualMenu
@@ -346,6 +352,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 					contextualMenuActive={isContextualMenuActive}
 					disableHover={isContextualMenuActive || dragging || disabled || !selectable}
 					disabled={disabled}
+					onMouseDown={preventTextSelection}
 				>
 					<HoverContainer
 						height={compact ? LIST_ITEM_HEIGHT_COMPACT : LIST_ITEM_HEIGHT}
