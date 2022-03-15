@@ -16,6 +16,7 @@ import { ROOTS } from '../../constants';
 import GET_PATH from '../../graphql/queries/getPath.graphql';
 import { Crumb, NodeListItemType } from '../../types/common';
 import { GetPathQuery, GetPathQueryVariables, Node } from '../../types/graphql/types';
+import { OneOrMany } from '../../types/utils';
 import { canBeWriteNodeDestination } from '../../utils/ActionsFactory';
 import { buildCrumbs, decodeError } from '../../utils/utils';
 import { InteractiveBreadcrumbs } from '../InteractiveBreadcrumbs';
@@ -27,7 +28,7 @@ import { ScrollContainer } from './ScrollContainer';
 interface ModalListProps {
 	folderId: string;
 	nodes: Array<NodeListItemType>;
-	activeNode?: string;
+	activeNodes?: OneOrMany<string>;
 	setActiveNode: (node: NodeListItemType, event: React.SyntheticEvent) => void;
 	loadMore: () => void;
 	hasMore: boolean;
@@ -47,7 +48,7 @@ const ModalContainer = styled(Container)`
 export const ModalList: React.VFC<ModalListProps> = ({
 	folderId,
 	nodes,
-	activeNode,
+	activeNodes,
 	setActiveNode,
 	loadMore,
 	hasMore,
@@ -153,7 +154,7 @@ export const ModalList: React.VFC<ModalListProps> = ({
 				{nodes.length > 0 ? (
 					<ListContent
 						nodes={nodes}
-						activeNode={activeNode}
+						activeNodes={activeNodes}
 						setActiveNode={setActiveNode}
 						compact
 						navigateTo={navigateTo}

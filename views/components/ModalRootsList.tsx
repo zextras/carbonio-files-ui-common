@@ -17,6 +17,7 @@ import { ROOTS } from '../../constants';
 import { useFindNodesQuery } from '../../hooks/graphql/queries/useFindNodesQuery';
 import { Crumb, NodeListItemType, RootListItemType } from '../../types/common';
 import { MakeOptional, NodeType } from '../../types/graphql/types';
+import { OneOrMany } from '../../types/utils';
 import { decodeError } from '../../utils/utils';
 import { InteractiveBreadcrumbs } from '../InteractiveBreadcrumbs';
 import { EmptyFolder } from './EmptyFolder';
@@ -25,7 +26,7 @@ import { LoadingIcon } from './LoadingIcon';
 import { ScrollContainer } from './ScrollContainer';
 
 interface RootsListProps {
-	activeNode?: string;
+	activeNodes?: OneOrMany<string>;
 	setActiveNode: (node: NodeListItemType | RootListItemType, event: React.SyntheticEvent) => void;
 	navigateTo: (id: string, event?: React.SyntheticEvent | Event) => void;
 	showTrash?: boolean;
@@ -38,7 +39,7 @@ const ModalContainer = styled(Container)`
 `;
 
 export const ModalRootsList: React.VFC<RootsListProps> = ({
-	activeNode,
+	activeNodes,
 	setActiveNode,
 	navigateTo,
 	showTrash = false,
@@ -229,7 +230,7 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 					(nodes.length > 0 ? (
 						<ListContent
 							nodes={nodes}
-							activeNode={activeNode}
+							activeNodes={activeNodes}
 							setActiveNode={setActiveNode}
 							compact
 							navigateTo={navigateTo}
@@ -255,7 +256,7 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 							nodes={rootNodes}
 							compact
 							navigateTo={rootNavigationHandler}
-							activeNode={activeNode}
+							activeNodes={activeNodes}
 							setActiveNode={setActiveNode}
 							ref={listRef}
 						/>

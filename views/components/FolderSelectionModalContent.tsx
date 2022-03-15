@@ -188,7 +188,7 @@ export const FolderSelectionModalContent: React.VFC<FolderSelectionModalContentP
 				<ModalList
 					folderId={currentFolder.getNode.id}
 					nodes={nodes}
-					activeNode={selectedFolder?.id}
+					activeNodes={selectedFolder?.id}
 					setActiveNode={setDestinationFolderHandler}
 					loadMore={loadMore}
 					hasMore={hasMore}
@@ -201,7 +201,7 @@ export const FolderSelectionModalContent: React.VFC<FolderSelectionModalContentP
 			) : (
 				(!loading && (
 					<ModalRootsList
-						activeNode={selectedFolder?.id}
+						activeNodes={selectedFolder?.id}
 						setActiveNode={setDestinationFolderHandler}
 						navigateTo={navigateTo}
 						checkDisabled={checkDisabled}

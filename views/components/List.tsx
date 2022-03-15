@@ -190,9 +190,13 @@ export const List: React.VFC<ListProps> = ({
 		[actionsToRemove, actionsToRemoveIfInsideTrash, actionCheckers, me, selectedNodes]
 	);
 
-	const setActiveNodeHandler = useCallback<(node: Pick<NodeListItemType, 'id'>) => void>(
-		(node) => {
-			setActiveNode(node.id);
+	const setActiveNodeHandler = useCallback<
+		(node: Pick<NodeListItemType, 'id'>, event?: React.SyntheticEvent) => void
+	>(
+		(node, event) => {
+			if (!event?.defaultPrevented) {
+				setActiveNode(node.id);
+			}
 		},
 		[setActiveNode]
 	);
@@ -521,7 +525,7 @@ export const List: React.VFC<ListProps> = ({
 									deletePermanently={deletePermanently}
 									moveNodes={openMoveNodesModalAction}
 									copyNodes={openCopyNodesModalAction}
-									activeNode={activeNode}
+									activeNodes={activeNode}
 									setActiveNode={setActiveNodeHandler}
 									navigateTo={navigateToFolder}
 									loading={loading}

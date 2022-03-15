@@ -236,7 +236,7 @@ export const CopyNodesModalContent: React.VFC<CopyNodesModalContentProps> = ({
 				<ModalList
 					folderId={currentFolder.getNode.id}
 					nodes={nodes}
-					activeNode={destinationFolder}
+					activeNodes={destinationFolder}
 					setActiveNode={setDestinationFolderHandler}
 					loadMore={loadMore}
 					hasMore={hasMore}
@@ -251,7 +251,7 @@ export const CopyNodesModalContent: React.VFC<CopyNodesModalContentProps> = ({
 			) : (
 				(!loading && (
 					<ModalRootsList
-						activeNode={destinationFolder}
+						activeNodes={destinationFolder}
 						setActiveNode={setDestinationFolderHandler}
 						navigateTo={navigateTo}
 						checkDisabled={checkDisabled}

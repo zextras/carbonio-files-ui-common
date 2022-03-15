@@ -122,7 +122,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 	// Selection props
 	isSelected,
 	isSelectionModeActive,
-	selectId = (): void => undefined,
+	selectId,
 	permittedHoverBarActions = {},
 	permittedContextualMenuActions = {},
 	renameNode,
@@ -142,8 +142,10 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 	const [isContextualMenuActive, setIsContextualMenuActive] = useState(false);
 	const selectIdCallback = useCallback(
 		(event: React.SyntheticEvent) => {
-			event.stopPropagation();
-			selectId(id);
+			if (selectId) {
+				event.preventDefault();
+				selectId(id);
+			}
 		},
 		[id, selectId]
 	);

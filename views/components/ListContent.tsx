@@ -17,7 +17,7 @@ import { DRAG_TYPES } from '../../constants';
 import { DeleteNodesType } from '../../hooks/graphql/mutations/useDeleteNodesMutation';
 import { GetNodeParentType, NodeListItemType, PickIdNodeType } from '../../types/common';
 import { Node } from '../../types/graphql/types';
-import { DeepPick } from '../../types/utils';
+import { DeepPick, OneOrMany } from '../../types/utils';
 import {
 	Action,
 	ActionItem,
@@ -55,7 +55,7 @@ interface ListContentProps {
 	deletePermanently?: DeleteNodesType;
 	moveNodes?: (...nodes: Array<Pick<NodeListItemType, '__typename' | 'id' | 'owner'>>) => void;
 	copyNodes?: (...nodes: Array<Pick<NodeListItemType, '__typename' | 'id'>>) => void;
-	activeNode?: string;
+	activeNodes?: OneOrMany<string>;
 	setActiveNode?: (node: NodeListItemType, event: React.SyntheticEvent) => void;
 	compact?: boolean;
 	navigateTo?: (id: string, event?: React.SyntheticEvent) => void;
@@ -83,7 +83,7 @@ export const ListContent = React.forwardRef<HTMLDivElement, ListContentProps>(
 			deletePermanently,
 			moveNodes,
 			copyNodes,
-			activeNode,
+			activeNodes,
 			setActiveNode,
 			compact,
 			navigateTo,
@@ -184,7 +184,10 @@ export const ListContent = React.forwardRef<HTMLDivElement, ListContentProps>(
 							selectId={selectId}
 							exitSelectionMode={exitSelectionMode}
 							renameNode={renameNode}
-							isActive={activeNode === node.id}
+							isActive={
+								activeNodes === node.id ||
+								(activeNodes instanceof Array && activeNodes.includes(node.id))
+							}
 							setActive={setActiveNode}
 							compact={compact}
 							navigateTo={navigateTo}
@@ -211,7 +214,7 @@ export const ListContent = React.forwardRef<HTMLDivElement, ListContentProps>(
 				selectId,
 				exitSelectionMode,
 				renameNode,
-				activeNode,
+				activeNodes,
 				setActiveNode,
 				compact,
 				navigateTo,

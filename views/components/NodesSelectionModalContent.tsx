@@ -8,6 +8,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { ApolloError, useApolloClient } from '@apollo/client';
 import { Container, Text } from '@zextras/carbonio-design-system';
+import findIndex from 'lodash/findIndex';
+import map from 'lodash/map';
 import reduce from 'lodash/reduce';
 import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
@@ -41,8 +43,9 @@ interface NodesSelectionModalContentProps {
 	confirmLabel: string;
 	closeAction: () => void;
 	isValidSelection?: (node: NodeWithMetadata | RootListItemType) => boolean;
-	maxSelected?: number;
+	maxSelection?: number;
 	disabledTooltip?: string;
+	canSelectOpenedFolder?: boolean;
 }
 
 export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentProps> = ({
@@ -51,15 +54,39 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 	confirmLabel,
 	closeAction,
 	isValidSelection = (): boolean => true, // by default all nodes are active,
-	maxSelected = 1,
-	disabledTooltip
+	maxSelection,
+	disabledTooltip,
+	canSelectOpenedFolder
 }) => {
 	const [t] = useTranslation();
-	const [selectedNodes, setSelectedNodes] = useState<
-		ArrayOneOrMore<NodeWithMetadata> | undefined
-	>();
 	const [openedFolder, setOpenedFolder] = useState<string>('');
 	const mainContainerRef = useRef<HTMLDivElement | null>(null);
+	const [selectedNodes, setSelectedNodes] = useState<NodeWithMetadata[]>([]);
+	const selectedNodesIds = useMemo(() => map(selectedNodes, (node) => node.id), [selectedNodes]);
+	const navigationOccurredRef = useRef(false);
+
+	const selectId = useCallback(
+		(node: NodeWithMetadata) => {
+			setSelectedNodes((prevState) => {
+				if (!maxSelection || maxSelection > 1) {
+					const previousNodes = [...prevState];
+					const index = findIndex(previousNodes, (prevNode) => prevNode.id === node.id);
+					if (index > -1) {
+						previousNodes.splice(index, 1);
+					} else {
+						previousNodes.push(node);
+					}
+					return previousNodes;
+				}
+				return [node];
+			});
+		},
+		[maxSelection]
+	);
+
+	const unSelectAll = useCallback(() => {
+		setSelectedNodes((prevState) => (prevState.length > 0 ? [] : prevState));
+	}, []);
 
 	const {
 		data: currentFolder,
@@ -129,7 +156,8 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 	const setSelectedNodeHandler = useCallback(
 		(
 			node: Pick<NodeListItemType | RootListItemType, 'id' | '__typename'> | null | undefined,
-			event?: React.SyntheticEvent
+			event?: React.SyntheticEvent,
+			reset?: boolean
 		) => {
 			/**
 			 * Internal util function to set state
@@ -138,20 +166,21 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 				nodeWithMetadata: NodeWithMetadata | null | undefined
 			): void => {
 				// if is a node already loaded
-				if (nodeWithMetadata && isValidSelection(nodeWithMetadata)) {
+				if (
+					nodeWithMetadata &&
+					isValidSelection(nodeWithMetadata) &&
+					(canSelectOpenedFolder || nodeWithMetadata.id !== currentFolder?.getNode?.id)
+				) {
+					event && event.stopPropagation();
 					// if is valid set it directly
-					setSelectedNodes([nodeWithMetadata]);
-				} else if (nodeWithMetadata?.id && nodeWithMetadata.id !== currentFolder?.getNode?.id) {
-					// if node is not the opened folder, try to set currentFolder as the selected node
-					setSelectedNodeHandler(currentFolder?.getNode);
-				} else {
-					// otherwise, reset state to undefined
-					setSelectedNodes(undefined);
+					selectId(nodeWithMetadata);
 				}
 			};
 
-			// TODO: manage multiple selection
-			event && event.stopPropagation();
+			navigationOccurredRef.current = false;
+			if (reset) {
+				unSelectAll();
+			}
 			const cachedNode = node?.id
 				? apolloClient.readFragment<ChildFragment>({
 						fragment: CHILD,
@@ -167,35 +196,39 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 				// if node is a Root load data in order to check its validity
 				getBaseNodeData(node)
 					.then((result) => {
-						setSelectedNodeIfValid(result?.data.getNode);
+						// avoid to set active node if navigation occurred while query was executing
+						if (!navigationOccurredRef.current) {
+							setSelectedNodeIfValid(result?.data.getNode);
+						}
 					})
 					.catch((err) => {
 						setError(err);
-						// TODO: in case of multiple selection, leave state as it is and reset selection check icon instead
-						// current root potentially is a valid selection, but cannot be read because of some error
-						// reset state so that it is clear that no item is selected
-						setSelectedNodes(undefined);
 					});
-			} else {
-				// node is not in cache nor is a valid root
-				setSelectedNodeIfValid(undefined);
 			}
 		},
 		[
 			apolloClient,
-			currentFolder?.getNode,
+			canSelectOpenedFolder,
+			currentFolder?.getNode?.id,
 			getBaseNodeData,
 			isValidSelection,
-			rootsData?.getRootsList
+			rootsData?.getRootsList,
+			selectId,
+			unSelectAll
 		]
 	);
 
 	const navigateTo = useCallback(
 		(id: string) => {
 			setOpenedFolder(id || '');
-			setSelectedNodeHandler({ id, __typename: 'Folder' });
+			navigationOccurredRef.current = true;
+			if (canSelectOpenedFolder && id) {
+				setSelectedNodeHandler({ id, __typename: 'Folder' }, undefined, true);
+			} else {
+				unSelectAll();
+			}
 		},
-		[setSelectedNodeHandler]
+		[canSelectOpenedFolder, setSelectedNodeHandler, unSelectAll]
 	);
 
 	const closeHandler = useCallback(() => {
@@ -204,16 +237,25 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 	}, [closeAction, setSelectedNodeHandler]);
 
 	const confirmHandler = useCallback(() => {
-		if (selectedNodes) {
-			confirmAction(selectedNodes);
+		// read all nodes from cache
+		if (selectedNodes.length > 0) {
+			confirmAction(selectedNodes as ArrayOneOrMore<NodeWithMetadata>);
 		}
 	}, [confirmAction, selectedNodes]);
 
-	const confirmDisabled = useMemo(() => !selectedNodes, [selectedNodes]);
+	const confirmDisabled = useMemo(() => selectedNodes.length < 1, [selectedNodes]);
 
 	const resetSelectedNodesHandler = useCallback(() => {
-		setSelectedNodeHandler(currentFolder?.getNode);
-	}, [currentFolder?.getNode, setSelectedNodeHandler]);
+		if (canSelectOpenedFolder && (maxSelection === 1 || selectedNodes.length === 0)) {
+			setSelectedNodeHandler(currentFolder?.getNode, undefined, true);
+		}
+	}, [
+		canSelectOpenedFolder,
+		currentFolder?.getNode,
+		maxSelection,
+		selectedNodes.length,
+		setSelectedNodeHandler
+	]);
 
 	const clickModalHandler = useCallback(
 		(event) => {
@@ -260,7 +302,7 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 					<ModalList
 						folderId={currentFolder.getNode.id}
 						nodes={nodes}
-						activeNode={(selectedNodes?.length === 1 && selectedNodes[0].id) || undefined}
+						activeNodes={selectedNodesIds}
 						setActiveNode={setSelectedNodeHandler}
 						loadMore={loadMore}
 						hasMore={hasMore}
@@ -273,7 +315,7 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 				) : (
 					(!loading && (
 						<ModalRootsList
-							activeNode={(selectedNodes?.length === 1 && selectedNodes[0].id) || undefined}
+							activeNodes={selectedNodesIds}
 							setActiveNode={setSelectedNodeHandler}
 							navigateTo={navigateTo}
 							checkDisabled={checkDisabled}
@@ -296,7 +338,7 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 				confirmHandler={confirmHandler}
 				confirmDisabled={confirmDisabled}
 			>
-				{maxSelected > 1 && selectedNodes && (
+				{(!maxSelection || maxSelection > 1) && selectedNodes.length > 0 && (
 					<Container mainAlignment="flex-start" crossAlignment="center" orientation="horizontal">
 						<Text size="small" weight="light">
 							{t('modal.nodesSelection.selectedCount', '{{count}} element selected', {

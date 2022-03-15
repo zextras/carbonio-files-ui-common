@@ -10,20 +10,11 @@ import { ApolloProvider } from '@apollo/client';
 import { useModal } from '@zextras/carbonio-design-system';
 
 import buildClient from '../../apollo';
-import { RootListItemType } from '../../types/common';
-import { BaseNodeFragment } from '../../types/graphql/types';
-import { ArrayOneOrMore } from '../../types/utils';
 import { NodesSelectionModalContent } from '../../views/components/NodesSelectionModalContent';
 
-type IntegrationNode = BaseNodeFragment;
-
-export type OpenNodesSelectionModal = (args: {
-	title: string;
-	confirmLabel: string;
-	confirmAction: (nodes: ArrayOneOrMore<IntegrationNode>) => void;
-	isValidSelection?: (node: IntegrationNode | RootListItemType) => boolean;
-	maxSelected?: number;
-}) => void;
+export type OpenNodesSelectionModal = (
+	args: Omit<React.ComponentPropsWithoutRef<typeof NodesSelectionModalContent>, 'closeAction'>
+) => void;
 
 export function useNodesSelectionModal(): {
 	openNodesSelectionModal: OpenNodesSelectionModal;
@@ -32,20 +23,13 @@ export function useNodesSelectionModal(): {
 	const apolloClient = buildClient();
 
 	const openModal = useCallback<OpenNodesSelectionModal>(
-		({ title, confirmLabel, confirmAction, isValidSelection, maxSelected }) => {
+		(props) => {
 			const closeModal = createModal(
 				{
 					maxHeight: '60vh',
 					children: (
 						<ApolloProvider client={apolloClient}>
-							<NodesSelectionModalContent
-								title={title}
-								confirmAction={confirmAction}
-								confirmLabel={confirmLabel}
-								closeAction={(): void => closeModal()}
-								isValidSelection={isValidSelection}
-								maxSelected={maxSelected}
-							/>
+							<NodesSelectionModalContent closeAction={(): void => closeModal()} {...props} />
 						</ApolloProvider>
 					)
 				},

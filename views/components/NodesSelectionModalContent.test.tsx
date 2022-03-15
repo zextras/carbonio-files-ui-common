@@ -51,6 +51,7 @@ describe('Nodes Selection Modal Content', () => {
 					confirmLabel="Select"
 					title="Select nodes"
 					closeAction={closeAction}
+					maxSelection={1}
 				/>,
 				{
 					mocks: []
@@ -95,6 +96,7 @@ describe('Nodes Selection Modal Content', () => {
 					confirmLabel="Select"
 					title="Select nodes"
 					closeAction={closeAction}
+					maxSelection={1}
 				/>,
 				{
 					mocks
@@ -113,33 +115,12 @@ describe('Nodes Selection Modal Content', () => {
 			act(() => {
 				userEvent.click(confirmButton);
 			});
-			expect(confirmAction).toHaveBeenCalled();
+			await waitFor(() => expect(confirmAction).toHaveBeenCalled());
 			expect(confirmAction).toHaveBeenCalledWith(
 				expect.arrayContaining([
 					expect.objectContaining({
 						id: folder.id,
 						name: folder.name
-					})
-				])
-			);
-			// confirm leave selection as it is in the modal
-			expect(confirmButton).not.toHaveAttribute('disabled', '');
-			// click on a file
-			act(() => {
-				userEvent.click(screen.getByText(file.name));
-			});
-			// confirm button becomes active
-			await waitFor(() => expect(confirmButton).not.toHaveAttribute('disabled', ''));
-			// click on confirm button
-			act(() => {
-				userEvent.click(confirmButton);
-			});
-			expect(confirmAction).toHaveBeenCalled();
-			expect(confirmAction).toHaveBeenCalledWith(
-				expect.arrayContaining([
-					expect.objectContaining({
-						id: file.id,
-						name: file.name
 					})
 				])
 			);
@@ -164,6 +145,7 @@ describe('Nodes Selection Modal Content', () => {
 					confirmLabel="Select"
 					title="Select nodes"
 					closeAction={closeAction}
+					maxSelection={1}
 				/>,
 				{
 					mocks
@@ -195,7 +177,7 @@ describe('Nodes Selection Modal Content', () => {
 			);
 		});
 
-		test('confirm button is enabled when navigating inside a folder', async () => {
+		test('confirm button is enabled when navigating inside a folder if opened folder is selectable by prop', async () => {
 			const localRoot = populateLocalRoot();
 			const folder = populateFolder();
 			const file = populateFile();
@@ -216,6 +198,8 @@ describe('Nodes Selection Modal Content', () => {
 					confirmLabel="Select"
 					title="Select nodes"
 					closeAction={closeAction}
+					canSelectOpenedFolder
+					maxSelection={1}
 				/>,
 				{
 					mocks
@@ -261,6 +245,71 @@ describe('Nodes Selection Modal Content', () => {
 			expect(confirmButton).not.toHaveAttribute('disabled', '');
 		});
 
+		test('confirm button is disabled when navigating inside a folder if opened folder is not selectable by prop', async () => {
+			const localRoot = populateLocalRoot();
+			const folder = populateFolder();
+			const file = populateFile();
+			localRoot.children = [folder, file];
+			folder.parent = localRoot;
+			file.parent = localRoot;
+
+			const mocks = [
+				mockGetRootsList(),
+				mockGetPath({ node_id: localRoot.id }, [localRoot]),
+				mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+				mockGetBaseNode({ node_id: localRoot.id }, localRoot)
+			];
+
+			const { findByTextWithMarkup } = render(
+				<NodesSelectionModalContent
+					confirmAction={confirmAction}
+					confirmLabel="Select"
+					title="Select nodes"
+					closeAction={closeAction}
+					canSelectOpenedFolder={false}
+					maxSelection={1}
+				/>,
+				{
+					mocks
+				}
+			);
+			await screen.findByText(/home/i);
+			// wait for root list query to be executed
+			await waitFor(() =>
+				expect(
+					global.apolloClient.readQuery<GetRootsListQuery, GetRootsListQueryVariables>(
+						mockGetRootsList().request
+					)?.getRootsList || null
+				).not.toBeNull()
+			);
+			// confirm button is disabled
+			let confirmButton = screen.getByRole('button', { name: /select/i });
+			expect(confirmButton).toBeVisible();
+			expect(confirmButton).toHaveAttribute('disabled', '');
+			userEvent.dblClick(screen.getByText(/home/i));
+			await screen.findByText(folder.name);
+			const breadcrumbItem = await findByTextWithMarkup(
+				buildBreadCrumbRegExp('Files', localRoot.name)
+			);
+			expect(breadcrumbItem).toBeVisible();
+			expect(screen.getByText(folder.name)).toBeVisible();
+			expect(screen.getByText(file.name)).toBeVisible();
+			// all nodes are enabled
+			expect(screen.getByTestId(`node-item-${file.id}`)).not.toHaveAttribute('disabled', '');
+			expect(screen.getByTestId(`node-item-${folder.id}`)).not.toHaveAttribute('disabled', '');
+			expect(screen.getByTestId(`node-item-${folder.id}`)).not.toHaveAttribute('disabled', '');
+			// confirm button is enabled because navigation set opened folder as selected node
+			confirmButton = screen.getByRole('button', { name: /select/i });
+			expect(confirmButton).toBeVisible();
+			expect(confirmButton).toHaveAttribute('disabled', '');
+			act(() => {
+				userEvent.click(confirmButton);
+			});
+			expect(confirmAction).not.toHaveBeenCalled();
+			// confirm leave selection as it is and button remains disabled
+			expect(confirmButton).toHaveAttribute('disabled', '');
+		});
+
 		test('local root item is valid, other roots are not valid', async () => {
 			const localRoot = populateFolder(2, ROOTS.LOCAL_ROOT);
 
@@ -272,6 +321,7 @@ describe('Nodes Selection Modal Content', () => {
 					confirmLabel="Select"
 					title="Select nodes"
 					closeAction={closeAction}
+					maxSelection={1}
 				/>,
 				{
 					mocks
@@ -317,7 +367,7 @@ describe('Nodes Selection Modal Content', () => {
 			);
 		});
 
-		test('navigation through breadcrumb reset active folder', async () => {
+		test('navigation through breadcrumb reset active folder and set opened folder if is selectable by prop', async () => {
 			const localRoot = populateFolder(2, ROOTS.LOCAL_ROOT);
 			const folder = populateFolder();
 			localRoot.children.push(folder);
@@ -338,6 +388,8 @@ describe('Nodes Selection Modal Content', () => {
 					confirmLabel="Select"
 					title="Select nodes"
 					closeAction={closeAction}
+					canSelectOpenedFolder
+					maxSelection={1}
 				/>,
 				{
 					mocks
@@ -373,7 +425,7 @@ describe('Nodes Selection Modal Content', () => {
 				buildBreadCrumbRegExp('Files', folder.parent.name)
 			);
 			expect(breadcrumbItem).toBeVisible();
-			// confirm button is disabled because of navigation
+			// confirm button is enabled because of navigation
 			const confirmButton = screen.getByRole('button', { name: /select/i });
 			expect(confirmButton).toBeVisible();
 			expect(confirmButton).not.toHaveAttribute('disabled', '');
@@ -440,6 +492,103 @@ describe('Nodes Selection Modal Content', () => {
 			);
 		});
 
+		test('navigation through breadcrumb reset active folder and disable confirm button if opened folder is not selectable by prop', async () => {
+			const localRoot = populateFolder(2, ROOTS.LOCAL_ROOT);
+			const folder = populateFolder();
+			localRoot.children.push(folder);
+			folder.parent = localRoot;
+
+			const mocks = [
+				mockGetRootsList(),
+				mockGetBaseNode({ node_id: localRoot.id }, localRoot),
+				mockGetPath({ node_id: localRoot.id }, [localRoot]),
+				mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+				mockGetPath({ node_id: folder.id }, [localRoot, folder]),
+				mockGetChildren(getChildrenVariables(folder.id), folder)
+			];
+
+			const { findByTextWithMarkup } = render(
+				<NodesSelectionModalContent
+					confirmAction={confirmAction}
+					confirmLabel="Select"
+					title="Select nodes"
+					closeAction={closeAction}
+					maxSelection={1}
+				/>,
+				{
+					mocks
+				}
+			);
+
+			await screen.findByText(/home/i);
+			// wait for root list query to be executed
+			await waitFor(() =>
+				expect(
+					global.apolloClient.readQuery<GetRootsListQuery, GetRootsListQueryVariables>(
+						mockGetRootsList().request
+					)?.getRootsList || null
+				).not.toBeNull()
+			);
+			let breadcrumbItem = await findByTextWithMarkup(buildBreadCrumbRegExp('Files'));
+			expect(breadcrumbItem).toBeVisible();
+			expect(screen.getByText(/home/i)).toBeVisible();
+			act(() => {
+				userEvent.click(screen.getByText(/home/i));
+			});
+			// ugly but it's the only way to check the item is visibly active
+			await waitFor(() =>
+				expect(
+					findStyled(screen.getByTestId(`node-item-${localRoot.id}`), HoverContainer)
+				).toHaveStyle('background-color: #d5e3f6')
+			);
+			userEvent.dblClick(screen.getByText(/home/i));
+			await screen.findByText(folder.name);
+			expect(screen.getByText(folder.name)).toBeVisible();
+			expect(screen.getByText((localRoot.children[0] as Node).name)).toBeVisible();
+			breadcrumbItem = await findByTextWithMarkup(buildBreadCrumbRegExp('Files', localRoot.name));
+			expect(breadcrumbItem).toBeVisible();
+			// confirm button is disabled because of navigation
+			const confirmButton = screen.getByRole('button', { name: /select/i });
+			expect(confirmButton).toBeVisible();
+			expect(confirmButton).toHaveAttribute('disabled', '');
+			// navigate inside a sub-folder
+			userEvent.dblClick(screen.getByText(folder.name));
+			await screen.findByText(/nothing here/i);
+			await findByTextWithMarkup(buildBreadCrumbRegExp('Files', localRoot.name, folder.name));
+			// navigate back to the local root through breadcrumb
+			act(() => {
+				userEvent.click(screen.getByText(localRoot.name));
+			});
+			// wait roots list to be rendered
+			await screen.findByText(folder.name);
+			expect(screen.queryByText(/nothing here/i)).not.toBeInTheDocument();
+			expect(screen.getByText(folder.name)).toBeVisible();
+			// confirm button is disabled because opened folder is not selectable by prop
+			expect(confirmButton).toHaveAttribute('disabled', '');
+			act(() => {
+				userEvent.click(confirmButton);
+			});
+			expect(confirmAction).not.toHaveBeenCalled();
+			// select a valid node
+			act(() => {
+				userEvent.click(screen.getByText(folder.name));
+			});
+			// confirm button is active because folder is a valid selection
+			await waitFor(() => expect(confirmButton).not.toHaveAttribute('disabled', ''));
+			act(() => {
+				userEvent.click(confirmButton);
+			});
+			expect(confirmAction).toHaveBeenCalled();
+			expect(confirmAction).toHaveBeenCalledWith(
+				expect.arrayContaining([
+					expect.objectContaining({
+						id: folder.id,
+						name: folder.name
+					})
+				])
+			);
+		});
+
 		test('shared with me root is navigable', async () => {
 			const sharedWithMeFilter = populateNodes(4);
 			const mocks = [
@@ -459,6 +608,7 @@ describe('Nodes Selection Modal Content', () => {
 					confirmLabel="Select"
 					title="Select nodes"
 					closeAction={closeAction}
+					maxSelection={1}
 				/>,
 				{
 					mocks
@@ -520,6 +670,7 @@ describe('Nodes Selection Modal Content', () => {
 					confirmLabel="Select"
 					title="Select nodes"
 					closeAction={closeAction}
+					maxSelection={1}
 				/>,
 				{
 					mocks
@@ -573,6 +724,7 @@ describe('Nodes Selection Modal Content', () => {
 					confirmLabel="Confirm"
 					closeAction={closeAction}
 					isValidSelection={isValidSelection}
+					maxSelection={1}
 				/>,
 				{ mocks }
 			);
