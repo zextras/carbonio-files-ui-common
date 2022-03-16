@@ -40,6 +40,7 @@ import {
 } from '../types/graphql/types';
 import { DeepPick } from '../types/utils';
 import { isFolder } from '../utils/ActionsFactory';
+import { encodeBase64 } from '../utils/utils';
 import { UpdateFolderContentType, useUpdateFolderContent } from './graphql/useUpdateFolderContent';
 
 const addVersionToCache = (
@@ -214,7 +215,7 @@ const upload = (
 	const url = `${REST_ENDPOINT}${UPLOAD_PATH}`;
 	xhr.open('POST', url, true);
 
-	xhr.setRequestHeader('Filename', fileEnriched.file.name);
+	xhr.setRequestHeader('Filename', encodeBase64(fileEnriched.file.name));
 	xhr.setRequestHeader('ParentId', fileEnriched.parentId);
 
 	if (xhr.upload) {
@@ -250,7 +251,7 @@ const uploadVersion = (
 	xhr.open('POST', url, true);
 
 	xhr.setRequestHeader('NodeId', fileEnriched.id);
-	xhr.setRequestHeader('Filename', fileEnriched.file.name);
+	xhr.setRequestHeader('Filename', encodeBase64(fileEnriched.file.name));
 	xhr.setRequestHeader('OverwriteVersion', `${overwriteVersion}`);
 
 	if (xhr.upload) {
