@@ -263,8 +263,9 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 		// read all nodes from cache
 		if (selectedNodes.length > 0) {
 			confirmAction(selectedNodes as ArrayOneOrMore<NodeWithMetadata>);
+			closeAction();
 		}
-	}, [confirmAction, selectedNodes]);
+	}, [closeAction, confirmAction, selectedNodes]);
 
 	const confirmDisabled = useMemo(
 		() => selectedNodes.length < 1 || (!!maxSelection && selectedNodes.length > maxSelection),
