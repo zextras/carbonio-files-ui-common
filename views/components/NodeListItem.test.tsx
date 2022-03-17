@@ -6,10 +6,10 @@
 
 import React from 'react';
 
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import { ROOTS } from '../../constants';
+import { PREVIEW, REST_ENDPOINT, ROOTS } from '../../constants';
 import { populateFile, populateFolder, populateNode, populateUser } from '../../mocks/mockUtils';
 import { NodeType, User } from '../../types/graphql/types';
 import { getPermittedHoverBarActions } from '../../utils/ActionsFactory';
@@ -336,5 +336,56 @@ describe('Node List Item', () => {
 		expect(screen.getByTestId('icon: Home')).toBeVisible();
 	});
 
-	// TODO: double click on file open file?
+	test('Double click on image open previewer to show image with original dimensions', async () => {
+		const node = populateFile();
+		node.type = NodeType.Image;
+		node.extension = 'jpg';
+
+		render(
+			<NodeListItem
+				id={node.id}
+				name={node.name}
+				type={node.type}
+				extension={node.extension}
+				size={node.size}
+				version={node.version}
+			/>
+		);
+		expect(screen.getByText(node.name)).toBeInTheDocument();
+		expect(screen.getByText(node.name)).toBeVisible();
+		expect(screen.getByText(humanFileSize(node.size))).toBeVisible();
+		expect(screen.getByText(node.extension)).toBeVisible();
+		userEvent.dblClick(screen.getByTestId(`node-item-${node.id}`));
+		await waitFor(() => expect(screen.getAllByText(node.name)).toHaveLength(2));
+		expect(screen.getAllByText(RegExp(humanFileSize(node.size)))).toHaveLength(2);
+		expect(screen.getByAltText(node.name)).toBeInTheDocument();
+		expect(screen.getByAltText(node.name)).toBeVisible();
+		expect(screen.getByRole('img')).toHaveAttribute(
+			'src',
+			`${REST_ENDPOINT}${PREVIEW}/image/${node.id}/${node.version}/0x0?quality=high`
+		);
+	});
+
+	test('Double click on node that is not an image does not open previewer', async () => {
+		const node = populateFile();
+		node.type = NodeType.Text;
+		node.extension = 'txt';
+
+		render(
+			<NodeListItem
+				id={node.id}
+				name={node.name}
+				type={node.type}
+				extension={node.extension}
+				size={node.size}
+				version={node.version}
+			/>
+		);
+		expect(screen.getByText(node.name)).toBeInTheDocument();
+		expect(screen.getByText(node.name)).toBeVisible();
+		expect(screen.getByText(humanFileSize(node.size))).toBeVisible();
+		expect(screen.getByText(node.extension)).toBeVisible();
+		userEvent.dblClick(screen.getByTestId(`node-item-${node.id}`));
+		expect(screen.queryByRole('img')).not.toBeInTheDocument();
+	});
 });

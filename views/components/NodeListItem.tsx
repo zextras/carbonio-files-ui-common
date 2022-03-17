@@ -26,11 +26,13 @@ import {
 	downloadNode,
 	formatDate,
 	getIconByFileType,
+	getPreviewSrc,
 	humanFileSize,
 	openNodeWithDocs
 } from '../../utils/utils';
 import { ContextualMenu } from './ContextualMenu';
 import { NodeHoverBar } from './NodeHoverBar';
+import Previewer from './previewer/Previewer';
 import {
 	CheckedAvatar,
 	FileIconPreview,
@@ -102,6 +104,7 @@ interface NodeListItemProps {
 	deletePermanentlyCallback?: () => void;
 	selectionContextualMenuActionsItems?: ActionItem[];
 	dragging?: boolean;
+	version?: number;
 }
 
 const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
@@ -139,9 +142,13 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 	trashed,
 	deletePermanentlyCallback,
 	selectionContextualMenuActionsItems,
-	dragging = false
+	dragging = false,
+	version
 }) => {
 	const [t] = useTranslation();
+	const [showPreviewer, setShowPreviewer] = useState(false);
+	const showPreviewerCallback = useCallback(() => setShowPreviewer(true), []);
+	const hidePreviewerCallback = useCallback(() => setShowPreviewer(false), []);
 	const userInfo = useUserInfo();
 	const [isContextualMenuActive, setIsContextualMenuActive] = useState(false);
 	const selectIdCallback = useCallback(
@@ -274,10 +281,21 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 					permittedContextualMenuActions[Action.OpenWithDocs] === true
 				) {
 					openNodeWithDocs(id);
+				} else if (type === NodeType.Image) {
+					showPreviewerCallback();
 				}
 			}
 		},
-		[disabled, id, isSelectionModeActive, trashed, navigateTo, permittedContextualMenuActions, type]
+		[
+			isSelectionModeActive,
+			disabled,
+			trashed,
+			type,
+			permittedContextualMenuActions,
+			id,
+			navigateTo,
+			showPreviewerCallback
+		]
 	);
 
 	const setActiveOrOpenNode = useMemo(
@@ -487,6 +505,16 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 					)}
 				</ListItemContainer>
 			</ContextualMenu>
+			<Previewer
+				filename={name}
+				extension={extension || undefined}
+				size={(size && humanFileSize(size)) || undefined}
+				actions={[]}
+				src={version ? getPreviewSrc(id, version, 0, 0, 'high') : ''}
+				show={showPreviewer}
+				onClose={hidePreviewerCallback}
+				closeTooltipLabel={t('previewer.close.tooltip', 'Close')}
+			/>
 		</Container>
 	);
 };

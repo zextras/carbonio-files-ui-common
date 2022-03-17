@@ -18,7 +18,14 @@ import moment, { Moment } from 'moment-timezone';
 import { TFunction } from 'react-i18next';
 
 import { searchParamsVar } from '../apollo/searchVar';
-import { DOCS_ENDPOINT, DOWNLOAD_PATH, OPEN_FILE_PATH, REST_ENDPOINT, ROOTS } from '../constants';
+import {
+	DOCS_ENDPOINT,
+	DOWNLOAD_PATH,
+	OPEN_FILE_PATH,
+	PREVIEW,
+	REST_ENDPOINT,
+	ROOTS
+} from '../constants';
 import { Crumb, CrumbNode, OrderTrend, OrderType, Role, SortableNode } from '../types/common';
 import { Maybe, Node, NodeSort, NodeType, SharePermission } from '../types/graphql/types';
 
@@ -535,3 +542,15 @@ export const docsHandledMimeTypes = [
 	'application/vnd.sun.xml.writer.global',
 	'application/vnd.sun.xml.writer.template'
 ];
+
+/**
+ * Get preview src
+ */
+export const getPreviewSrc = (
+	id: string,
+	version: number,
+	weight: number,
+	height: number,
+	quality: 'lowest' | 'low' | 'medium' | 'high' | 'highest' // medium as default if not set
+): string =>
+	`${REST_ENDPOINT}${PREVIEW}/image/${id}/${version}/${weight}x${height}?quality=${quality}`;
