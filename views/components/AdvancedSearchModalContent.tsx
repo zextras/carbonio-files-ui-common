@@ -6,7 +6,15 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { ChipInput, Container, CustomModal, getColor, Row } from '@zextras/carbonio-design-system';
+import {
+	ChipInput,
+	ChipInputProps,
+	ChipItem,
+	Container,
+	CustomModal,
+	getColor,
+	Row
+} from '@zextras/carbonio-design-system';
 import every from 'lodash/every';
 import isArray from 'lodash/isArray';
 import isEmpty from 'lodash/isEmpty';
@@ -16,7 +24,7 @@ import styled from 'styled-components';
 
 import { useActiveNode } from '../../../hooks/useActiveNode';
 import { ROOTS } from '../../constants';
-import { AdvancedFilters, ChipProps } from '../../types/common';
+import { AdvancedFilters } from '../../types/common';
 import { Folder } from '../../types/graphql/types';
 import { AdvancedSwitch } from './AdvancedSwitch';
 import { FolderSelectionModalContent } from './FolderSelectionModalContent';
@@ -101,25 +109,31 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 	);
 
 	const keywordsOnChange = useCallback(
-		(newKeywords: AdvancedFilters['keywords']) => {
-			updateFilter('keywords', newKeywords);
+		(newKeywords: ChipItem[]) => {
+			// FIXME: fix types
+			updateFilter('keywords', newKeywords as AdvancedFilters['keywords']);
 			setKeywordsHasTextContent(false);
 		},
 		[updateFilter]
 	);
 
-	const keywordsOnAdd = useCallback<(keyword: string) => ChipProps>(
-		(keyword: string) => ({
-			label: keyword,
-			hasAvatar: false,
-			value: keyword,
-			background: 'gray2'
-		}),
+	const keywordsOnAdd = useCallback<NonNullable<ChipInputProps['onAdd']>>(
+		(keyword: string | unknown) => {
+			if (typeof keyword === 'string') {
+				return {
+					label: keyword,
+					hasAvatar: false,
+					value: keyword,
+					background: 'gray2'
+				};
+			}
+			throw new Error('invalid keywords received');
+		},
 		[]
 	);
 
-	const keywordsOnType = useCallback(
-		({ textContent }: React.KeyboardEvent & { textContent: string }) => {
+	const keywordsOnType = useCallback<NonNullable<ChipInputProps['onInputType']>>(
+		({ textContent }) => {
 			setKeywordsHasTextContent(!isEmpty(textContent));
 		},
 		[]
@@ -162,7 +176,7 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 	);
 
 	const folderOnChange = useCallback(
-		(folder: Pick<Folder, 'id' | 'name'> | never[], cascade?: boolean) => {
+		(folder: Pick<Folder, 'id' | 'name'> | ChipItem[], cascade?: boolean) => {
 			if (!isArray(folder) && !isEmpty(folder)) {
 				updateFilter('folderId', {
 					/* i18next-extract-disable-next-line */

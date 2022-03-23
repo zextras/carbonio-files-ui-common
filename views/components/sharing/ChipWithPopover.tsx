@@ -4,27 +4,21 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-/* eslint-disable arrow-body-style */
 import React, { useCallback, useRef, useState } from 'react';
 
-import { Popover, Chip } from '@zextras/carbonio-design-system';
+import { Popover, Chip, ChipProps, getColor } from '@zextras/carbonio-design-system';
 import styled from 'styled-components';
-
-import { ChipProps } from '../../../types/common';
 
 const CustomPopover = styled(Popover)`
 	z-index: 1000;
 `;
 
-const ActiveChip = styled(Chip)`
-	background: ${({ background, active, theme }): string => {
-		return !active ? background : theme.palette[background].active;
-	}};
+const ActiveChip = styled(Chip)<{ $active: boolean }>`
+	background: ${({ background, $active, theme }): string =>
+		getColor(`${background}.${$active ? 'active' : 'regular'}`, theme)};
 `;
 
 export interface ChipWithPopoverProps extends ChipProps {
-	onClose?: (event: React.SyntheticEvent) => void;
-	background?: string;
 	openPopoverOnClick?: boolean;
 	onClick?: (event: React.SyntheticEvent) => void;
 	children: (closePopover: () => void) => JSX.Element;
@@ -48,7 +42,7 @@ export const ChipWithPopover: React.VFC<ChipWithPopoverProps> = ({
 	}, [open, setOpen]);
 
 	const onCloseChip = useCallback(
-		(ev: React.SyntheticEvent) => {
+		(ev: React.MouseEvent<HTMLButtonElement> | KeyboardEvent) => {
 			if (ref && ref.current) {
 				// required to close all opened popover
 				ref.current.click();
@@ -76,7 +70,7 @@ export const ChipWithPopover: React.VFC<ChipWithPopoverProps> = ({
 		<>
 			<div ref={ref}>
 				<ActiveChip
-					active={open}
+					$active={open}
 					background={background}
 					onClose={onClose ? onCloseChip : undefined}
 					onClick={openPopoverOnClick || onClick ? onClickChip : undefined}

@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-/* eslint-disable no-nested-ternary */
 import React, { useCallback, useMemo, useState } from 'react';
 
 import {
@@ -100,7 +99,7 @@ export const AddPublicLinkComponent: React.FC<AddPublicLinkComponentProps> = ({
 						{status === PublicLinkRowStatus.OPEN && (
 							<>
 								<Button
-									isSmall
+									size="small"
 									type="outlined"
 									color="secondary"
 									label={t('publicLink.addLink.undo', 'Undo')}
@@ -108,7 +107,7 @@ export const AddPublicLinkComponent: React.FC<AddPublicLinkComponentProps> = ({
 								/>
 								<Padding right="small" />
 								<Button
-									isSmall
+									size="small"
 									type="outlined"
 									label={t('publicLink.addLink.generateLink', 'Generate Link')}
 									onClick={onGenerateCallback}
@@ -119,7 +118,7 @@ export const AddPublicLinkComponent: React.FC<AddPublicLinkComponentProps> = ({
 						{status !== PublicLinkRowStatus.OPEN && (
 							<Button
 								disabled={status === PublicLinkRowStatus.DISABLED}
-								isSmall
+								size="small"
 								type="outlined"
 								label={t('publicLink.addLink.addLink', 'Add Link')}
 								onClick={onAddLink}

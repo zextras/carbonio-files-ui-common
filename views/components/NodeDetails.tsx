@@ -7,7 +7,15 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ApolloError, useQuery } from '@apollo/client';
-import { Avatar, Container, Padding, Row, Text, Tooltip } from '@zextras/carbonio-design-system';
+import {
+	Avatar,
+	Container,
+	Padding,
+	Row,
+	Text,
+	Tooltip,
+	useSnackbar
+} from '@zextras/carbonio-design-system';
 import reduce from 'lodash/reduce';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
@@ -19,7 +27,6 @@ import { useInternalLink } from '../../../hooks/useInternalLink';
 import { useNavigation } from '../../../hooks/useNavigation';
 import { DISPLAYER_TABS, ROOTS } from '../../constants';
 import GET_PATH from '../../graphql/queries/getPath.graphql';
-import { useCreateSnackbar } from '../../hooks/useCreateSnackbar';
 import useQueryParam from '../../hooks/useQueryParam';
 import { HoverSwitchComponent } from '../../HoverSwitchComponent';
 import { Crumb, Node, URLParams } from '../../types/common';
@@ -232,7 +239,7 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 		)
 	);
 	const [crumbsRequested, setCrumbsRequested] = useState<boolean>(false);
-	const createSnackbar = useCreateSnackbar();
+	const createSnackbar = useSnackbar();
 
 	// TODO: investigate if this can be requested with lazy query or move into custom hook to better handle error
 	// use a useQuery to load full path only when required so that operations like move that cleanup cache trigger a refetch

@@ -7,7 +7,14 @@
 /* eslint-disable no-nested-ternary */
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Container, Divider, Padding, Text, useModal } from '@zextras/carbonio-design-system';
+import {
+	Container,
+	Divider,
+	Padding,
+	Text,
+	useModal,
+	useSnackbar
+} from '@zextras/carbonio-design-system';
 import filter from 'lodash/filter';
 import map from 'lodash/map';
 import size from 'lodash/size';
@@ -19,7 +26,6 @@ import { useCreateLinkMutation } from '../../../../hooks/graphql/mutations/useCr
 import { useDeleteLinksMutation } from '../../../../hooks/graphql/mutations/useDeleteLinksMutation';
 import { useUpdateLinkMutation } from '../../../../hooks/graphql/mutations/useUpdateLinkMutation';
 import { useGetNodeLinksQuery } from '../../../../hooks/graphql/queries/useGetNodeLinksQuery';
-import { useCreateSnackbar } from '../../../../hooks/useCreateSnackbar';
 import { PublicLinkRowStatus } from '../../../../types/common';
 import { Link } from '../../../../types/graphql/types';
 import { copyToClipboard } from '../../../../utils/utils';
@@ -41,7 +47,7 @@ export const PublicLink: React.FC<AddPublicLinkProps> = ({
 }) => {
 	const [t] = useTranslation();
 	const { zimbraPrefTimeZoneId } = useUserInfo();
-	const createSnackbar = useCreateSnackbar();
+	const createSnackbar = useSnackbar();
 	const createModal = useModal();
 
 	const { data: getLinksQueryData } = useGetNodeLinksQuery(nodeId);

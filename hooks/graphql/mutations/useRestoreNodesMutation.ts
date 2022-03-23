@@ -7,6 +7,7 @@
 import { useCallback, useMemo } from 'react';
 
 import { FetchResult, useMutation } from '@apollo/client';
+import { useSnackbar } from '@zextras/carbonio-design-system';
 import filter from 'lodash/filter';
 import find from 'lodash/find';
 import forEach from 'lodash/forEach';
@@ -26,7 +27,6 @@ import { FindNodesCachedObject } from '../../../types/apollo';
 import { GetNodeParentType, Node } from '../../../types/common';
 import { RestoreNodesMutation, RestoreNodesMutationVariables } from '../../../types/graphql/types';
 import { isSearchView, isTrashView } from '../../../utils/utils';
-import { useCreateSnackbar } from '../../useCreateSnackbar';
 import { useErrorHandler } from '../../useErrorHandler';
 
 type UseRestoreRequiredNodeType = Pick<Node, 'id' | '__typename'> & GetNodeParentType;
@@ -41,7 +41,7 @@ export type RestoreType = (
  * Can return error: ErrorCode.NODE_WRITE_ERROR
  */
 export function useRestoreNodesMutation(): RestoreType {
-	const createSnackbar = useCreateSnackbar();
+	const createSnackbar = useSnackbar();
 	const [t] = useTranslation();
 	const { navigateToFolder } = useNavigation();
 	const params = useParams<{ filter: string }>();

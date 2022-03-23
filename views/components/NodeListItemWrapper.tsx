@@ -7,6 +7,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useReactiveVar } from '@apollo/client';
+import { useSnackbar } from '@zextras/carbonio-design-system';
 import difference from 'lodash/difference';
 import isEmpty from 'lodash/isEmpty';
 import some from 'lodash/some';
@@ -21,7 +22,6 @@ import { DRAG_TYPES, ROOTS } from '../../constants';
 import { DeleteNodesType } from '../../hooks/graphql/mutations/useDeleteNodesMutation';
 import { useMoveNodesMutation } from '../../hooks/graphql/mutations/useMoveNodesMutation';
 import { useDeletePermanentlyModal } from '../../hooks/modals/useDeletePermanentlyModal';
-import { useCreateSnackbar } from '../../hooks/useCreateSnackbar';
 import { useUpload } from '../../hooks/useUpload';
 import { NodeListItemType, URLParams } from '../../types/common';
 import {
@@ -85,7 +85,7 @@ export const NodeListItemWrapper: React.VFC<NodeListItemWrapperProps> = ({
 	const [dropzoneEnabled, setDropzoneEnabled] = useState(isFolder(node));
 	const { moveNodes: moveNodesMutation } = useMoveNodesMutation();
 	const { add } = useUpload();
-	const createSnackbar = useCreateSnackbar();
+	const createSnackbar = useSnackbar();
 
 	// timer to start navigation
 	const navigationTimerRef = useRef<NodeJS.Timer | null>(null);

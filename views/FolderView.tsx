@@ -354,7 +354,7 @@ const FolderView: React.VFC = () => {
 				borderRadius="none"
 				maxHeight="100%"
 			>
-				<Responsive mode="desktop" target={window.top}>
+				<Responsive mode="desktop">
 					<Container
 						width={LIST_WIDTH}
 						mainAlignment="flex-start"
@@ -384,7 +384,7 @@ const FolderView: React.VFC = () => {
 						<Displayer translationKey="displayer.folder" />
 					</Container>
 				</Responsive>
-				<Responsive mode="mobile" target={window.top}>
+				<Responsive mode="mobile">
 					<List
 						nodes={nodes}
 						folderId={currentFolderId}

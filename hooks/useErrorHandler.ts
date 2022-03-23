@@ -7,15 +7,15 @@
 import { useEffect } from 'react';
 
 import { ApolloError } from '@apollo/client';
+import { useSnackbar } from '@zextras/carbonio-design-system';
 import { useTranslation } from 'react-i18next';
 
 import { captureException } from '../../utils/utils';
 import { decodeError } from '../utils/utils';
-import { useCreateSnackbar } from './useCreateSnackbar';
 
 export function useErrorHandler(error: ApolloError | undefined, consoleErrorName: string): void {
 	const [t] = useTranslation();
-	const createSnackbar = useCreateSnackbar();
+	const createSnackbar = useSnackbar();
 
 	useEffect(() => {
 		if (error) {

@@ -16,7 +16,7 @@ import { NodeSort } from '../../types/graphql/types';
 import { getInverseOrder, nodeSortGetter } from '../../utils/utils';
 
 export const SortingComponent: React.VFC = () => {
-	const buttonRef = useRef(undefined);
+	const buttonRef = useRef<HTMLButtonElement>(null);
 	const nodeSort = useReactiveVar(nodeSortVar);
 	const [t] = useTranslation();
 
@@ -146,7 +146,12 @@ export const SortingComponent: React.VFC = () => {
 				itemIconSize="large"
 				selectedBackgroundColor="highlight"
 			>
-				<IconButton icon={iconButtonIconProps} size="large" ref={buttonRef} />
+				<IconButton
+					icon={iconButtonIconProps}
+					size="large"
+					ref={buttonRef}
+					onClick={(): void => undefined}
+				/>
 			</Dropdown>
 		</Tooltip>
 	);

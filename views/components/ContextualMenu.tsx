@@ -17,6 +17,7 @@ interface ContextualMenuProps {
 	onClose: () => void;
 	actions: ActionItem[];
 	disableRestoreFocus?: boolean;
+	children: React.ReactElement;
 }
 
 type ContextualMenuElement = HTMLDivElement & {
@@ -28,7 +29,7 @@ const CustomDropdown = styled(Dropdown)`
 	height: 100%;
 `;
 
-export const ContextualMenu: React.FC<ContextualMenuProps> = ({
+export const ContextualMenu: React.VFC<ContextualMenuProps> = ({
 	children,
 	disabled = false,
 	onOpen,

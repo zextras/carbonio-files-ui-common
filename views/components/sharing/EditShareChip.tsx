@@ -4,11 +4,10 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-/* eslint-disable arrow-body-style */
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { FetchResult, useLazyQuery } from '@apollo/client';
-import { Text, Tooltip } from '@zextras/carbonio-design-system';
+import { ChipAction, Text, Tooltip, useSnackbar } from '@zextras/carbonio-design-system';
 import filter from 'lodash/filter';
 import map from 'lodash/map';
 import { useTranslation } from 'react-i18next';
@@ -19,9 +18,8 @@ import GET_PERMISSIONS from '../../../graphql/queries/getPermissions.graphql';
 import { useDeleteShareMutation } from '../../../hooks/graphql/mutations/useDeleteShareMutation';
 import { useUpdateShareMutation } from '../../../hooks/graphql/mutations/useUpdateShareMutation';
 import { useDecreaseYourOwnSharePermissionModal } from '../../../hooks/modals/useDecreaseYourOwnSharePermissionModal';
-import { useCreateSnackbar } from '../../../hooks/useCreateSnackbar';
 import { useDeleteShareModal } from '../../../hooks/useDeleteShareModal';
-import { ChipActionsType, Role } from '../../../types/common';
+import { Role } from '../../../types/common';
 import {
 	DeleteNodesMutation,
 	File,
@@ -82,7 +80,7 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 }) => {
 	const [updateShare] = useUpdateShareMutation();
 	const [t] = useTranslation();
-	const createSnackbar = useCreateSnackbar();
+	const createSnackbar = useSnackbar();
 
 	const [getPermissionsLazy] = useLazyQuery<GetPermissionsQuery, GetPermissionsQueryVariables>(
 		GET_PERMISSIONS,
@@ -142,13 +140,15 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 		}
 	};
 
-	const updateShareCallback = useCallback(() => {
-		return updateShare(
-			share.node,
-			share.share_target?.id as string,
-			sharePermissionsGetter(rowIdxToRoleMap[activeRow], checkboxValue)
-		);
-	}, [activeRow, checkboxValue, share, updateShare]);
+	const updateShareCallback = useCallback(
+		() =>
+			updateShare(
+				share.node,
+				share.share_target?.id as string,
+				sharePermissionsGetter(rowIdxToRoleMap[activeRow], checkboxValue)
+			),
+		[activeRow, checkboxValue, share, updateShare]
+	);
 
 	const { openDeletePermanentlyModal } = useDecreaseYourOwnSharePermissionModal(
 		updateShareCallback,
@@ -210,8 +210,8 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 		[yourselfChip, share.share_target, t]
 	);
 
-	const actions: Array<ChipActionsType> = useMemo(() => {
-		const icons: Array<ChipActionsType> = [];
+	const actions = useMemo<ChipAction[]>(() => {
+		const icons: ChipAction[] = [];
 		if (
 			share.permission === SharePermission.ReadOnly ||
 			share.permission === SharePermission.ReadAndShare
@@ -245,7 +245,7 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 			});
 		}
 
-		const buttons: Array<ChipActionsType> = [];
+		const buttons: ChipAction[] = [];
 		if (permissions.can_share || yourselfChip) {
 			buttons.push({
 				icon: 'Close',

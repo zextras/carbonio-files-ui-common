@@ -7,12 +7,13 @@
 /* eslint-disable arrow-body-style */
 import React, { useMemo } from 'react';
 
+import { ChipAction, ChipProps } from '@zextras/carbonio-design-system';
 import filter from 'lodash/filter';
 import toLower from 'lodash/toLower';
 
 import { useActiveNode } from '../../../../hooks/useActiveNode';
 import { useGetNodeQuery } from '../../../hooks/graphql/queries/useGetNodeQuery';
-import { ChipActionsType, ChipProps, Role } from '../../../types/common';
+import { Role } from '../../../types/common';
 import { Node } from '../../../types/graphql/types';
 import { isFile, isFolder } from '../../../utils/ActionsFactory';
 import { ChipWithPopover } from './ChipWithPopover';
@@ -84,8 +85,8 @@ export const AddShareChip: React.FC<AddShareChipProps> = ({
 		});
 	}, [node]);
 
-	const actions: Array<ChipActionsType> = useMemo(() => {
-		const icons: Array<ChipActionsType> = [];
+	const actions = useMemo<ChipAction[]>(() => {
+		const icons: ChipAction[] = [];
 		if (value.role === Role.Viewer) {
 			icons.push({ icon: 'EyeOutline', id: 'EyeOutline', type: 'icon', color: 'gray0' });
 		} else {

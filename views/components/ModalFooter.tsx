@@ -11,11 +11,11 @@ import { useTranslation } from 'react-i18next';
 
 interface ModalFooterProps {
 	confirmLabel: string;
-	confirmHandler: (event: React.SyntheticEvent) => void;
+	confirmHandler: (event: React.MouseEvent<HTMLButtonElement> | KeyboardEvent) => void;
 	confirmDisabled?: boolean;
 	confirmDisabledTooltip?: string;
 	cancelLabel?: string;
-	cancelHandler?: (event: React.SyntheticEvent) => void;
+	cancelHandler?: (event: React.MouseEvent<HTMLButtonElement> | KeyboardEvent) => void;
 	cancelDisabled?: boolean;
 	cancelButtonColor?: string;
 	children?: React.ReactNode;

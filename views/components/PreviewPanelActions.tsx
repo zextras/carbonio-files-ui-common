@@ -8,7 +8,14 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Container, Dropdown, IconButton, Padding, Tooltip } from '@zextras/carbonio-design-system';
+import {
+	Container,
+	Dropdown,
+	DropdownItem,
+	IconButton,
+	Padding,
+	Tooltip
+} from '@zextras/carbonio-design-system';
 import difference from 'lodash/difference';
 import map from 'lodash/map';
 import union from 'lodash/union';
@@ -255,29 +262,33 @@ export const PreviewPanelActions: React.VFC<PreviewPanelActionsParams> = ({ node
 	const permittedPreviewPanelPrimaryActionsIconButtons = map(
 		permittedPreviewPanelPrimaryActions,
 		(value: boolean, key: Action) => {
+			const item = itemsMap[key];
 			return (
-				<Padding left="extrasmall" key={itemsMap[key]?.label}>
-					<Tooltip label={itemsMap[key]?.label}>
-						<IconButton
-							icon={itemsMap[key]?.icon}
-							size="medium"
-							key={key}
-							onClick={(ev: React.MouseEvent<HTMLButtonElement>): void => {
-								if (ev) ev.preventDefault();
-								if (itemsMap && itemsMap[key]?.click) {
-									const clickFn = itemsMap[key]?.click as () => void;
-									clickFn();
-								}
-							}}
-							disabled={!permittedPreviewPanelPrimaryActions[key]}
-						/>
-					</Tooltip>
-				</Padding>
+				(item && (
+					<Padding left="extrasmall" key={item.label}>
+						<Tooltip label={item.label}>
+							<IconButton
+								icon={item.icon}
+								size="medium"
+								key={key}
+								onClick={(ev: React.MouseEvent<HTMLButtonElement> | KeyboardEvent): void => {
+									if (ev) ev.preventDefault();
+									if (itemsMap && itemsMap[key]?.click) {
+										const clickFn = itemsMap[key]?.click as () => void;
+										clickFn();
+									}
+								}}
+								disabled={!permittedPreviewPanelPrimaryActions[key]}
+							/>
+						</Tooltip>
+					</Padding>
+				)) ||
+				null
 			);
 		}
 	);
 
-	const permittedPreviewPanelSecondaryActionsItems = useMemo(
+	const permittedPreviewPanelSecondaryActionsItems = useMemo<DropdownItem[]>(
 		() => buildActionItems(itemsMap, permittedPreviewPanelSecondaryActions),
 		[itemsMap, permittedPreviewPanelSecondaryActions]
 	);
@@ -295,7 +306,7 @@ export const PreviewPanelActions: React.VFC<PreviewPanelActionsParams> = ({ node
 			{permittedPreviewPanelSecondaryActionsItems.length > 0 && (
 				<Padding left="extrasmall">
 					<Dropdown placement="right-end" items={permittedPreviewPanelSecondaryActionsItems}>
-						<IconButton size="medium" icon="MoreVertical" />
+						<IconButton size="medium" icon="MoreVertical" onClick={(): void => undefined} />
 					</Dropdown>
 				</Padding>
 			)}

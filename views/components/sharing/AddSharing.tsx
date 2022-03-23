@@ -41,10 +41,6 @@ import { Share } from '../../../types/graphql/types';
 import { AutocompleteRequest, AutocompleteResponse } from '../../../types/network';
 import { getChipLabel, sharePermissionsGetter } from '../../../utils/utils';
 
-const Gray5Input = styled(Input)`
-	background-color: ${({ theme }): string => theme.palette.gray5.regular};
-`;
-
 const emailRegex =
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars, max-len, no-control-regex
 	/(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
@@ -371,7 +367,8 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 				</Text>
 			</Container>
 
-			<Gray5Input
+			<Input
+				backgroundColor="gray5"
 				autoComplete="on"
 				label={t(
 					'displayer.share.addShare.input.label',

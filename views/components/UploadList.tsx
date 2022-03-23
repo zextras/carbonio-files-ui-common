@@ -7,7 +7,7 @@
 import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 
 import { useReactiveVar } from '@apollo/client';
-import { Container } from '@zextras/carbonio-design-system';
+import { Container, useSnackbar } from '@zextras/carbonio-design-system';
 import filter from 'lodash/filter';
 import includes from 'lodash/includes';
 import map from 'lodash/map';
@@ -19,7 +19,6 @@ import { useNavigation } from '../../../hooks/useNavigation';
 import { uploadVar } from '../../apollo/uploadVar';
 import { DRAG_TYPES, ROOTS } from '../../constants';
 import { ListContext } from '../../contexts';
-import { useCreateSnackbar } from '../../hooks/useCreateSnackbar';
 import useSelection from '../../hooks/useSelection';
 import { useUpload } from '../../hooks/useUpload';
 import { UploadType } from '../../types/common';
@@ -136,7 +135,7 @@ export const UploadList: React.VFC = () => {
 		[itemsMap, permittedUploadActions]
 	);
 
-	const createSnackbar = useCreateSnackbar();
+	const createSnackbar = useSnackbar();
 
 	const uploadWithDragAndDrop = useCallback(
 		(event) => {

@@ -6,12 +6,12 @@
 
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
-import { Container, Icon, Padding, Row, Text } from '@zextras/carbonio-design-system';
+import { Container, Icon, Padding, Row, Text, useSnackbar } from '@zextras/carbonio-design-system';
 import { PreviewsManagerContext } from '@zextras/carbonio-ui-preview';
 import debounce from 'lodash/debounce';
 import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 
 import { useActiveNode } from '../../../hooks/useActiveNode';
 import { useSendViaMail } from '../../../hooks/useSendViaMail';
@@ -24,7 +24,6 @@ import {
 	PREVIEW_TYPE,
 	ROOTS
 } from '../../constants';
-import { useCreateSnackbar } from '../../hooks/useCreateSnackbar';
 import { NodeType, User } from '../../types/graphql/types';
 import { Action, ActionItem, ActionMap, buildActionItems } from '../../utils/ActionsFactory';
 import {
@@ -46,28 +45,6 @@ import { HoverBarContainer, HoverContainer, ListItemContainer } from './StyledCo
 
 const CustomText = styled(Text)`
 	text-transform: uppercase;
-`;
-
-const FlexContainer = styled(Container)`
-	flex-grow: ${({ flexGrow }): number => flexGrow || 1};
-	flex-shrink: ${({ flexShrink }): number => flexShrink || 1};
-	flex-basis: ${({ flexBasis }): string => flexBasis || 'auto'};
-	${({ margin }): string =>
-		margin &&
-		`
-		${
-			margin.left &&
-			css`
-				margin-left: ${margin.left};
-			`
-		}
-		${
-			margin.right &&
-			css`
-				margin-left: ${margin.left};
-			`
-		}
-	`}
 `;
 
 interface NodeListItemProps {
@@ -171,7 +148,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 		[id, selectId]
 	);
 
-	const createSnackbar = useCreateSnackbar();
+	const createSnackbar = useSnackbar();
 
 	const { sendViaMail } = useSendViaMail();
 
@@ -452,9 +429,9 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 					onDoubleClick={doubleClickHandler}
 					data-testid={`node-item-${id}`}
 					crossAlignment="flex-end"
-					contextualMenuActive={isContextualMenuActive}
-					disableHover={isContextualMenuActive || dragging || disabled}
-					disabled={disabled}
+					$contextualMenuActive={isContextualMenuActive}
+					$disableHover={isContextualMenuActive || dragging || disabled}
+					$disabled={disabled}
 					onMouseDown={preventTextSelection}
 				>
 					<HoverContainer
@@ -531,8 +508,10 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 									wrap="nowrap"
 									mainAlignment="flex-start"
 								>
-									<FlexContainer
+									<Container
+										flexGrow={1}
 										flexShrink={0}
+										flexBasis="auto"
 										mainAlignment="flex-start"
 										orientation="horizontal"
 										width="fit"
@@ -548,12 +527,14 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 												</CustomText>
 											</Padding>
 										)}
-									</FlexContainer>
+									</Container>
 									{displayName && (
-										<FlexContainer
+										<Container
 											width="fit"
 											minWidth={0}
+											flexGrow={1}
 											flexShrink={1}
+											flexBasis="auto"
 											orientation="horizontal"
 											mainAlignment="flex-end"
 											padding={{ left: 'small' }}
@@ -561,7 +542,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 											<Text size="extrasmall" overflow="ellipsis">
 												{displayName}
 											</Text>
-										</FlexContainer>
+										</Container>
 									)}
 								</Row>
 							)}

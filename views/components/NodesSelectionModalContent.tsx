@@ -176,7 +176,7 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 	const setSelectedNodeHandler = useCallback(
 		(
 			node: Pick<NodeListItemType | RootListItemType, 'id' | '__typename'> | null | undefined,
-			event?: React.SyntheticEvent,
+			event?: React.SyntheticEvent | Event,
 			reset?: boolean
 		) => {
 			/**
@@ -367,7 +367,7 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 							crossAlignment="flex-start"
 							orientation="horizontal"
 						>
-							<LoadingIcon icon="Refresh" color="primary" />
+							<LoadingIcon icon="Refresh" iconColor="primary" />
 						</Container>
 					)
 				)}

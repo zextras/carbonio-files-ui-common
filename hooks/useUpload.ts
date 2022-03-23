@@ -7,6 +7,7 @@
 import { useCallback, useMemo } from 'react';
 
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client';
+import { useSnackbar } from '@zextras/carbonio-design-system';
 import find from 'lodash/find';
 import forEach from 'lodash/forEach';
 import includes from 'lodash/includes';
@@ -46,7 +47,6 @@ import { isFolder } from '../utils/ActionsFactory';
 import { encodeBase64 } from '../utils/utils';
 import { UpdateFolderContentType, useUpdateFolderContent } from './graphql/useUpdateFolderContent';
 import { useMoreInfoModal } from './modals/useMoreInfoModal';
-import { useCreateSnackbar } from './useCreateSnackbar';
 
 // KNOWN ISSUE: Since that folders are actually files, this is the only way to distinguish them from another kind of file.
 // Although this method doesn't give you absolute certainty that a file is a folder:
@@ -300,7 +300,7 @@ export const useUpload: UseUploadHook = () => {
 	const { addNodeToFolder } = useUpdateFolderContent(apolloClient);
 
 	const [t] = useTranslation();
-	const createSnackbar = useCreateSnackbar();
+	const createSnackbar = useSnackbar();
 	const { openMoreInfoModal } = useMoreInfoModal();
 
 	const createSnackbarForUploadError = useCallback(

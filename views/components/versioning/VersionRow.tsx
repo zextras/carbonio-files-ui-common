@@ -12,7 +12,8 @@ import {
 	Text,
 	Dropdown,
 	Tooltip,
-	Container
+	Container,
+	useSnackbar
 } from '@zextras/carbonio-design-system';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
@@ -20,7 +21,6 @@ import styled from 'styled-components';
 import { CloneVersionType } from '../../../hooks/graphql/mutations/useCloneVersionMutation';
 import { DeleteVersionsType } from '../../../hooks/graphql/mutations/useDeleteVersionsMutation';
 import { KeepVersionsType } from '../../../hooks/graphql/mutations/useKeepVersionsMutation';
-import { useCreateSnackbar } from '../../../hooks/useCreateSnackbar';
 import { downloadNode, formatDate, humanFileSize, openNodeWithDocs } from '../../../utils/utils';
 import { GridItem } from './GridElements';
 
@@ -68,7 +68,7 @@ export const VersionRow: React.VFC<{
 	zimbraPrefTimeZoneId
 }) => {
 	const [t] = useTranslation();
-	const createSnackbar = useCreateSnackbar();
+	const createSnackbar = useSnackbar();
 
 	const deleteVersionCallback = useCallback(() => {
 		deleteVersions(nodeId, [version]);
@@ -273,7 +273,7 @@ export const VersionRow: React.VFC<{
 					</Tooltip>
 				)}
 				<Dropdown placement="bottom-end" items={items}>
-					<IconButton size="small" icon="MoreVerticalOutline" />
+					<IconButton size="small" icon="MoreVerticalOutline" onClick={(): void => undefined} />
 				</Dropdown>
 			</GridItem>
 		</>

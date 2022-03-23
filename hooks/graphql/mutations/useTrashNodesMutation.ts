@@ -7,6 +7,7 @@
 import { useCallback, useMemo } from 'react';
 
 import { FetchResult, gql, useMutation } from '@apollo/client';
+import { useSnackbar } from '@zextras/carbonio-design-system';
 import filter from 'lodash/filter';
 import find from 'lodash/find';
 import forEach from 'lodash/forEach';
@@ -33,7 +34,6 @@ import {
 } from '../../../types/graphql/types';
 import { DeepPick } from '../../../types/utils';
 import { isTrashedVisible } from '../../../utils/utils';
-import { useCreateSnackbar } from '../../useCreateSnackbar';
 import { useErrorHandler } from '../../useErrorHandler';
 import { useUpload } from '../../useUpload';
 import { useUpdateFolderContent } from '../useUpdateFolderContent';
@@ -48,7 +48,7 @@ export type TrashNodesType = (
  * Can return error: ErrorCode.NODE_WRITE_ERROR
  */
 export function useTrashNodesMutation(): TrashNodesType {
-	const createSnackbar = useCreateSnackbar();
+	const createSnackbar = useSnackbar();
 	const { removeByNodeId } = useUpload();
 	const [t] = useTranslation();
 	const { navigateTo } = useNavigation();

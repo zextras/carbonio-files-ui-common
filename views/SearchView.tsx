@@ -155,7 +155,7 @@ export const SearchView: React.VFC<SearchViewProps> = ({
 				setQueryCalled: setSearchExecuted
 			}}
 		>
-			<Container minHeght={0} maxHeight="100%" mainAlignment="flex-start">
+			<Container minHeight={0} maxHeight="100%" mainAlignment="flex-start">
 				{resultsHeader}
 				<Container
 					orientation="horizontal"
@@ -168,7 +168,7 @@ export const SearchView: React.VFC<SearchViewProps> = ({
 					maxHeight="100%"
 					minHeight={0}
 				>
-					<Responsive mode="desktop" target={window.top}>
+					<Responsive mode="desktop">
 						<Container
 							width={listWidth}
 							mainAlignment="flex-start"
@@ -188,7 +188,7 @@ export const SearchView: React.VFC<SearchViewProps> = ({
 							<Displayer translationKey="displayer.search" icons={['SearchOutline']} />
 						</Container>
 					</Responsive>
-					<Responsive mode="mobile" target={window.top}>
+					<Responsive mode="mobile">
 						<SearchList />
 					</Responsive>
 				</Container>
@@ -199,7 +199,6 @@ export const SearchView: React.VFC<SearchViewProps> = ({
 					label={t('uploads.destination.home', "Upload occurred in Files' Home")}
 					actionLabel={t('snackbar.upload.goToFolder', 'Go to folder')}
 					onActionClick={uploadSnackbarAction}
-					replace={false}
 				/>
 			</Container>
 		</ListContext.Provider>

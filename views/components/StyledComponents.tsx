@@ -4,15 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import {
-	Avatar,
-	Button,
-	Container,
-	IconButton,
-	Row,
-	Text,
-	getColor
-} from '@zextras/carbonio-design-system';
+import { Avatar, Button, Container, Row, Text, getColor } from '@zextras/carbonio-design-system';
 import styled, { css, SimpleInterpolation } from 'styled-components';
 
 import {
@@ -49,28 +41,29 @@ export const HoverBarContainer = styled(Row)`
 
 export const ListItemContainer = styled(Container).attrs<
 	{
-		contextualMenuActive: boolean;
-		disabled: boolean;
+		$contextualMenuActive: boolean;
+		$disabled?: boolean;
 	},
 	{ backgroundColor?: string }
->(({ contextualMenuActive, disabled, theme }) => ({
+>(({ $contextualMenuActive, $disabled, theme }) => ({
 	backgroundColor:
-		(disabled && getColor('gray6.disabled', theme)) ||
-		(contextualMenuActive && getColor('gray6.hover', theme))
+		($disabled && getColor('gray6.disabled', theme)) ||
+		($contextualMenuActive && getColor('gray6.hover', theme)) ||
+		undefined
 }))<{
-	contextualMenuActive: boolean;
-	disabled: boolean;
-	disableHover: boolean;
+	$contextualMenuActive: boolean;
+	$disabled?: boolean;
+	$disableHover?: boolean;
 }>`
 	${HoverContainer} {
-		background-color: ${({ backgroundColor }): string => backgroundColor};
+		background-color: ${({ backgroundColor }): SimpleInterpolation => backgroundColor};
 	}
 	${HoverBarContainer} {
 		display: none;
 	}
 
-	${({ disableHover, theme }): SimpleInterpolation =>
-		!disableHover &&
+	${({ $disableHover, theme }): SimpleInterpolation =>
+		!$disableHover &&
 		css`
 			&:hover {
 				${HoverBarContainer} {
@@ -82,8 +75,8 @@ export const ListItemContainer = styled(Container).attrs<
 				}
 			}
 		`}
-	${({ disabled }): SimpleInterpolation =>
-		!disabled &&
+	${({ $disabled }): SimpleInterpolation =>
+		!$disabled &&
 		css`
 			cursor: pointer;
 		`}
@@ -141,21 +134,13 @@ export const RoundedButton = styled(Button)`
 	}
 `;
 
-export const CenteredText = styled(Text)`
+export const CenteredText = styled(Text)<{ $width?: string }>`
 	text-align: center;
-	width: ${({ width }): string => width || 'auto'};
+	width: ${({ $width }): string => $width || 'auto'};
 `;
 
 export const InlineText = styled(Text)`
 	display: inline;
-`;
-
-export const RotatedIconButton = styled(IconButton)`
-	 {
-		svg {
-			transform: ${({ degrees }): string => `rotate(${degrees}deg)`};
-		}
-	}
 `;
 
 export const OverFlowHiddenRow = styled(Row)`
