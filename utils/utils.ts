@@ -20,7 +20,14 @@ import moment, { Moment } from 'moment-timezone';
 import { TFunction } from 'react-i18next';
 
 import { searchParamsVar } from '../apollo/searchVar';
-import { DOCS_ENDPOINT, DOWNLOAD_PATH, OPEN_FILE_PATH, REST_ENDPOINT, ROOTS } from '../constants';
+import {
+	DOCS_ENDPOINT,
+	DOWNLOAD_PATH,
+	OPEN_FILE_PATH,
+	PREVIEW,
+	REST_ENDPOINT,
+	ROOTS
+} from '../constants';
 import { Crumb, CrumbNode, OrderTrend, OrderType, Role, SortableNode } from '../types/common';
 import { Maybe, Node, NodeSort, NodeType, SharePermission } from '../types/graphql/types';
 
@@ -487,6 +494,17 @@ export function hexToRGBA(hexColor: string, alpha = 1): string {
 	return `rgba(${+r},${+g},${+b},${+alpha})`;
 }
 
+export function encodeBase64(str: string): string {
+	// took from https://stackoverflow.com/a/30106551/17280436
+	// window.btoa is not enough for cyrillic
+	// see also https://developer.mozilla.org/en-US/docs/Glossary/Base64#the_unicode_problem
+	return window.btoa(
+		encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) =>
+			String.fromCharCode(parseInt(p1, 16))
+		)
+	);
+}
+
 export const docsHandledMimeTypes = [
 	'text/rtf',
 	'text/plain',
@@ -525,3 +543,15 @@ export const docsHandledMimeTypes = [
 	'application/vnd.sun.xml.writer.global',
 	'application/vnd.sun.xml.writer.template'
 ];
+
+/**
+ * Get preview src
+ */
+export const getPreviewSrc = (
+	id: string,
+	version: number,
+	weight: number,
+	height: number,
+	quality: 'lowest' | 'low' | 'medium' | 'high' | 'highest' // medium as default if not set
+): string =>
+	`${REST_ENDPOINT}${PREVIEW}/image/${id}/${version}/${weight}x${height}?quality=${quality}`;
