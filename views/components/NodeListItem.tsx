@@ -361,7 +361,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 					data-testid={`node-item-${id}`}
 					crossAlignment="flex-end"
 					contextualMenuActive={isContextualMenuActive}
-					disableHover={isContextualMenuActive || dragging || disabled || !selectable}
+					disableHover={isContextualMenuActive || dragging || disabled}
 					disabled={disabled}
 					onMouseDown={preventTextSelection}
 				>
@@ -379,7 +379,8 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 							selected={isSelected}
 							onClick={selectIdCallback}
 							compact={compact}
-							disabled={disabled || !selectable}
+							disabled={disabled}
+							selectable={selectable}
 							icon={getIconByFileType(type, mimeType || id)}
 						/>
 						<Container

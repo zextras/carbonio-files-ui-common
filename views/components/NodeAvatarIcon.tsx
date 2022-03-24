@@ -16,6 +16,7 @@ interface NodeAvatarIconParams {
 	onClick?: (event: React.SyntheticEvent) => void;
 	compact?: boolean;
 	disabled?: boolean;
+	selectable?: boolean;
 	icon: string;
 }
 
@@ -25,6 +26,7 @@ export const NodeAvatarIcon: React.VFC<NodeAvatarIconParams> = ({
 	onClick,
 	compact,
 	disabled,
+	selectable,
 	icon
 }) => {
 	const { tooltipLabel, tooltipDisabled } = useContext(NodeAvatarIconContext);
@@ -51,7 +53,8 @@ export const NodeAvatarIcon: React.VFC<NodeAvatarIconParams> = ({
 				disabled={
 					!tooltipLabel ||
 					tooltipDisabled === true ||
-					(tooltipDisabled !== false && tooltipDisabled(!!disabled))
+					(tooltipDisabled !== false &&
+						tooltipDisabled({ disabled: !!disabled, selectable: !!selectable }))
 				}
 			>
 				<FileIconPreview

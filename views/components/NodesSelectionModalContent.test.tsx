@@ -283,7 +283,7 @@ describe('Nodes Selection Modal Content', () => {
 		expect(confirmAction).not.toHaveBeenCalled();
 	});
 
-	test('Disabled nodes show a tooltip on hover if provided', async () => {
+	test('Non selectable nodes show a tooltip on hover if provided', async () => {
 		const mocks = [mockGetRootsList()];
 
 		const isValidSelection = jest.fn().mockReturnValue(false);
@@ -297,7 +297,7 @@ describe('Nodes Selection Modal Content', () => {
 				canSelectOpenedFolder={false}
 				maxSelection={undefined}
 				isValidSelection={isValidSelection}
-				disabledTooltip="Node is disabled"
+				disabledTooltip="Node is not selectable"
 			/>,
 			{
 				mocks
@@ -316,26 +316,26 @@ describe('Nodes Selection Modal Content', () => {
 		expect(screen.getByText(/shared with me/i)).toBeVisible();
 		const nodeAvatarIcons = screen.getAllByTestId('file-icon-preview');
 		expect(nodeAvatarIcons).toHaveLength(2);
-		expect(nodeAvatarIcons[0]).toHaveAttribute('disabled', '');
-		expect(nodeAvatarIcons[1]).toHaveAttribute('disabled', '');
+		expect(nodeAvatarIcons[0]).not.toHaveAttribute('disabled', '');
+		expect(nodeAvatarIcons[1]).not.toHaveAttribute('disabled', '');
 		act(() => {
 			userEvent.hover(nodeAvatarIcons[0]);
 		});
-		await screen.findByText('Node is disabled');
-		expect(screen.getByText('Node is disabled')).toBeVisible();
+		await screen.findByText('Node is not selectable');
+		expect(screen.getByText('Node is not selectable')).toBeVisible();
 		act(() => {
 			userEvent.unhover(nodeAvatarIcons[0]);
 		});
-		expect(screen.queryByText('Node is disabled')).not.toBeInTheDocument();
+		expect(screen.queryByText('Node is not selectable')).not.toBeInTheDocument();
 		act(() => {
 			userEvent.hover(nodeAvatarIcons[1]);
 		});
-		await screen.findByText('Node is disabled');
-		expect(screen.getByText('Node is disabled')).toBeVisible();
+		await screen.findByText('Node is not selectable');
+		expect(screen.getByText('Node is not selectable')).toBeVisible();
 		act(() => {
 			userEvent.unhover(nodeAvatarIcons[1]);
 		});
-		expect(screen.queryByText('Node is disabled')).not.toBeInTheDocument();
+		expect(screen.queryByText('Node is not selectable')).not.toBeInTheDocument();
 	});
 
 	describe('Single selection', () => {

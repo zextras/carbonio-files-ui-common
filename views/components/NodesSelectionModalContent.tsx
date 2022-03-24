@@ -337,7 +337,7 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 			<NodeAvatarIconContext.Provider
 				value={{
 					tooltipLabel: disabledTooltip,
-					tooltipDisabled: (nodeDisabled: boolean): boolean => !nodeDisabled
+					tooltipDisabled: ({ selectable }): boolean => selectable
 				}}
 			>
 				{currentFolder?.getNode ? (
