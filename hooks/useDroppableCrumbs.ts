@@ -147,7 +147,7 @@ export function useDroppableCrumbs(
 					if (validDestination && !actionTimer.current) {
 						// if mouse is hovering a child node start the actionTimer to trigger the click action
 						actionTimer.current = setTimeout(() => {
-							crumb.click && crumb.click(crumb.id);
+							crumb.click && crumb.click(event);
 						}, 1500);
 					}
 				} else {
@@ -171,7 +171,7 @@ export function useDroppableCrumbs(
 				if (!actionTimer.current) {
 					// trigger action even if the upload is disabled because there could be parent folders with right permissions
 					actionTimer.current = setTimeout(() => {
-						crumb.click && crumb.click(crumb.id);
+						crumb.click && crumb.click(event);
 					}, 1500);
 				}
 			}

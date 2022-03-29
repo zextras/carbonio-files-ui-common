@@ -19,7 +19,7 @@ import some from 'lodash/some';
 
 import { ROOTS } from '../constants';
 import { GetNodeParentType, Node, UploadStatus, UploadType } from '../types/common';
-import { File as FilesFile, File, Folder, MakeOptional } from '../types/graphql/types';
+import { File as FilesFile, File, Folder, MakeOptional, Root } from '../types/graphql/types';
 import { OneOrMany } from '../types/utils';
 import { docsHandledMimeTypes } from './utils';
 
@@ -126,12 +126,16 @@ const uploadActions: Action[] = [Action.removeUpload, Action.RetryUpload, Action
 
 export const trashedNodeActions: Action[] = [Action.Restore, Action.DeletePermanently];
 
-export function isFile(node: Pick<ActionsFactoryNodeType, '__typename'>): node is File {
+export function isFile(node: { __typename?: string }): node is File {
 	return node.__typename === 'File';
 }
 
-export function isFolder(node: Pick<ActionsFactoryNodeType, '__typename'>): node is Folder {
+export function isFolder(node: { __typename?: string }): node is Folder {
 	return node.__typename === 'Folder';
+}
+
+export function isRoot(node: { __typename?: string }): node is Root {
+	return node.__typename === 'Root';
 }
 
 export function hasWritePermission(
@@ -362,8 +366,8 @@ export function canMove(
 			if (!isBoolean(node.permissions.can_write_file)) {
 				throw Error('can_write_file not defined');
 			}
-			// a file can be moved if it has can_write_file permission and it has a parent which has can_write_file permission.
-			// If a node is shared with me and its parent is the LOCAL_ROOT, then the node cannot be moved (its a direct share)
+			// a file can be moved if it has can_write_file permission, and it has a parent which has can_write_file permission.
+			// If a node is shared with me and its parent is the LOCAL_ROOT, then the node cannot be moved (it's a direct share)
 			canMoveResult =
 				node.permissions.can_write_file &&
 				!!node.parent &&

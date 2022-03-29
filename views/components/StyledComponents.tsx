@@ -4,17 +4,26 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { Avatar, Button, Container, IconButton, Row, Text } from '@zextras/carbonio-design-system';
-import styled, { css, FlattenSimpleInterpolation } from 'styled-components';
+import {
+	Avatar,
+	Button,
+	Container,
+	IconButton,
+	Row,
+	Text,
+	getColor
+} from '@zextras/carbonio-design-system';
+import styled, { css, SimpleInterpolation } from 'styled-components';
 
-import { LIST_ITEM_AVATAR_HEIGHT } from '../../constants';
+import {
+	LIST_ITEM_AVATAR_HEIGHT,
+	LIST_ITEM_AVATAR_HEIGHT_COMPACT,
+	LIST_ITEM_AVATAR_ICON_HEIGHT,
+	LIST_ITEM_AVATAR_ICON_HEIGHT_COMPACT
+} from '../../constants';
 
 export const DisplayerContentContainer = styled(Container)`
 	padding-bottom: 32px;
-`;
-
-export const ScrollContainer = styled(Container)`
-	overflow-y: auto;
 `;
 
 export const HoverContainer = styled(Row)`
@@ -38,35 +47,46 @@ export const HoverBarContainer = styled(Row)`
 	);
 `;
 
-export const ListItemContainer = styled(Container).attrs(
-	({ contextualMenuActive, disabled, theme }) => ({
-		backgroundColor:
-			(disabled && theme.palette.gray5.disabled) ||
-			(contextualMenuActive && theme.palette.gray6.hover)
-	})
-)`
+export const ListItemContainer = styled(Container).attrs<
+	{
+		contextualMenuActive: boolean;
+		disabled: boolean;
+	},
+	{ backgroundColor?: string }
+>(({ contextualMenuActive, disabled, theme }) => ({
+	backgroundColor:
+		(disabled && getColor('gray6.disabled', theme)) ||
+		(contextualMenuActive && getColor('gray6.hover', theme))
+}))<{
+	contextualMenuActive: boolean;
+	disabled: boolean;
+	disableHover: boolean;
+}>`
 	${HoverContainer} {
-		background-color: ${(props): string => props.backgroundColor};
+		background-color: ${({ backgroundColor }): string => backgroundColor};
 	}
 	${HoverBarContainer} {
 		display: none;
 	}
 
-	${({ disableHover, theme }): string | FlattenSimpleInterpolation =>
-		(!disableHover &&
-			css`
-				cursor: pointer;
-				&:hover {
-					${HoverBarContainer} {
-						display: flex;
-					}
-
-					${HoverContainer} {
-						background-color: ${theme.palette.gray6.hover};
-					}
+	${({ disableHover, theme }): SimpleInterpolation =>
+		!disableHover &&
+		css`
+			&:hover {
+				${HoverBarContainer} {
+					display: flex;
 				}
-			`) ||
-		''}
+
+				${HoverContainer} {
+					background-color: ${getColor('gray6.hover', theme)};
+				}
+			}
+		`}
+	${({ disabled }): SimpleInterpolation =>
+		!disabled &&
+		css`
+			cursor: pointer;
+		`}
 `;
 
 export const CheckedAvatar = styled(Avatar)`
@@ -92,17 +112,24 @@ export const UncheckedAvatar = styled(Avatar)`
 	box-sizing: border-box;
 `;
 
-export const FileIconPreview = styled(Avatar)`
+export const FileIconPreview = styled(Avatar)<{ $compact?: boolean }>`
 	border-radius: 8px;
-	height: ${LIST_ITEM_AVATAR_HEIGHT}px;
-	width: ${LIST_ITEM_AVATAR_HEIGHT}px;
+	height: ${({ $compact }): number =>
+		$compact ? LIST_ITEM_AVATAR_HEIGHT_COMPACT : LIST_ITEM_AVATAR_HEIGHT}px;
+	width: ${({ $compact }): number =>
+		$compact ? LIST_ITEM_AVATAR_HEIGHT_COMPACT : LIST_ITEM_AVATAR_HEIGHT}px;
 	flex: 0 0 auto;
 	align-self: center;
 
 	& > svg {
-		color: ${(props): string => props.theme.palette.gray1.regular} !important;
-		width: 24px;
-		height: 24px;
+		width: ${({ $compact }): number =>
+			$compact ? LIST_ITEM_AVATAR_ICON_HEIGHT_COMPACT : LIST_ITEM_AVATAR_ICON_HEIGHT}px;
+		height: ${({ $compact }): number =>
+			$compact ? LIST_ITEM_AVATAR_ICON_HEIGHT_COMPACT : LIST_ITEM_AVATAR_ICON_HEIGHT}px;
+		min-width: ${({ $compact }): number =>
+			$compact ? LIST_ITEM_AVATAR_ICON_HEIGHT_COMPACT : LIST_ITEM_AVATAR_ICON_HEIGHT}px;
+		min-height: ${({ $compact }): number =>
+			$compact ? LIST_ITEM_AVATAR_ICON_HEIGHT_COMPACT : LIST_ITEM_AVATAR_ICON_HEIGHT}px;
 	}
 `;
 

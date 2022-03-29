@@ -31,7 +31,8 @@ import {
 } from '../../utils/ActionsFactory';
 import { Dropzone } from './Dropzone';
 import { EmptyFolder } from './EmptyFolder';
-import { RoundedButton, ScrollContainer } from './StyledComponents';
+import { ScrollContainer } from './ScrollContainer';
+import { RoundedButton } from './StyledComponents';
 import { UploadListItemWrapper } from './UploadListItemWrapper';
 
 export const UploadList: React.VFC = () => {
@@ -207,9 +208,7 @@ export const UploadList: React.VFC = () => {
 			>
 				{(): JSX.Element =>
 					items.length > 0 ? (
-						<ScrollContainer mainAlignment="flex-start" height="auto" maxHeight="100%">
-							{items}
-						</ScrollContainer>
+						<ScrollContainer>{items}</ScrollContainer>
 					) : (
 						<EmptyFolder message={t('empty.filter.hint', "It looks like there's nothing here.")} />
 					)

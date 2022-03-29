@@ -338,7 +338,6 @@ describe('Add Sharing', () => {
 		expect(screen.getByText(/editor/i)).toBeVisible();
 		expect(screen.getByText(/sharing allowed/i)).toBeVisible();
 		// click outside to close popover
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(screen.getByText(/add new people or groups/i));
 		});
@@ -434,7 +433,6 @@ describe('Add Sharing', () => {
 		// double check that the popover is kept open
 		expect(screen.getByText(/viewer/i)).toBeVisible();
 		// now select the share permission
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(screen.getByTestId('icon: Square'));
 		});
@@ -448,7 +446,6 @@ describe('Add Sharing', () => {
 		expect(screen.queryByTestId('icon: Square')).not.toBeInTheDocument();
 		expect(screen.getByTestId('icon: CheckmarkSquare')).toBeVisible();
 		// close popover
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(screen.getByText(/add new people or groups/i));
 		});
@@ -542,14 +539,12 @@ describe('Add Sharing', () => {
 		// click on editor shouldn't do anything
 		userEvent.click(screen.getByText(/editor/i));
 		// click on share should set share permissions
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(screen.getByTestId('icon: Square'));
 		});
 		// chip is updated
 		await screen.findByTestId('icon: Share');
 		// close popover
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(screen.getByText(/add new people or groups/i));
 		});
@@ -865,7 +860,6 @@ describe('Add Sharing', () => {
 		await waitFor(() => expect(screen.getAllByTestId('icon: Edit2Outline')).toHaveLength(2));
 
 		// edit second share to allow re-share
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(screen.getByText(user2.full_name), undefined, { skipHover: true });
 		});
@@ -879,14 +873,12 @@ describe('Add Sharing', () => {
 				})
 		);
 		// select the share permission
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(screen.getByTestId('icon: Square'));
 		});
 		// chip is updated, only this chip has the share icon
 		await screen.findByTestId('icon: Share');
 		// close popover
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(screen.getByText(/add new people or groups/i));
 		});

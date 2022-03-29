@@ -12,6 +12,7 @@ import {
 	FULL_SHARES_LOAD_LIMIT,
 	NODES_LOAD_LIMIT,
 	NODES_SORT_DEFAULT,
+	ROOTS,
 	SHARES_LOAD_LIMIT
 } from '../constants';
 import CLONE_VERSION from '../graphql/mutations/cloneVersion.graphql';
@@ -37,6 +38,7 @@ import GET_NODE from '../graphql/queries/getNode.graphql';
 import GET_NODE_LINKS from '../graphql/queries/getNodeLinks.graphql';
 import GET_PARENT from '../graphql/queries/getParent.graphql';
 import GET_PATH from '../graphql/queries/getPath.graphql';
+import GET_ROOTS_LIST from '../graphql/queries/getRootsList.graphql';
 import GET_SHARES from '../graphql/queries/getShares.graphql';
 import GET_VERSIONS from '../graphql/queries/getVersions.graphql';
 import { populateNodePage } from '../mocks/mockUtils';
@@ -97,7 +99,9 @@ import {
 	GetVersionsQuery,
 	DeleteVersionsMutation,
 	KeepVersionsMutation,
-	CloneVersionMutation
+	CloneVersionMutation,
+	GetRootsListQuery,
+	GetRootsListQueryVariables
 } from '../types/graphql/types';
 
 type Id = string;
@@ -741,6 +745,26 @@ export function mockCloneVersion(
 		result: {
 			data: {
 				cloneVersion: file
+			}
+		}
+	};
+}
+
+/**
+ * Get root list mock
+ */
+export function mockGetRootsList(): Mock<GetRootsListQuery, GetRootsListQueryVariables> {
+	return {
+		request: {
+			query: GET_ROOTS_LIST,
+			variables: {}
+		},
+		result: {
+			data: {
+				getRootsList: [
+					{ __typename: 'Root', id: ROOTS.LOCAL_ROOT, name: ROOTS.LOCAL_ROOT },
+					{ __typename: 'Root', id: ROOTS.TRASH, name: ROOTS.TRASH }
+				]
 			}
 		}
 	};

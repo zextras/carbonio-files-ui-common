@@ -18,14 +18,9 @@ import { NODES_LOAD_LIMIT } from '../../constants';
 import GET_CHILDREN from '../../graphql/queries/getChildren.graphql';
 import { useCopyNodesMutation } from '../../hooks/graphql/mutations/useCopyNodesMutation';
 import { useGetChildrenQuery } from '../../hooks/graphql/queries/useGetChildrenQuery';
-import { GetNodeParentType, Node, NodeListItemType } from '../../types/common';
+import { GetNodeParentType, Node, NodeListItemType, RootListItemType } from '../../types/common';
 import { Folder, GetChildrenQuery, GetChildrenQueryVariables } from '../../types/graphql/types';
-import {
-	ActionsFactoryNodeType,
-	canBeCopyDestination,
-	isFile,
-	isFolder
-} from '../../utils/ActionsFactory';
+import { canBeCopyDestination, isFile, isFolder, isRoot } from '../../utils/ActionsFactory';
 import { ModalFooter } from './ModalFooter';
 import { ModalHeader } from './ModalHeader';
 import { ModalList } from './ModalList';
@@ -101,15 +96,25 @@ export const CopyNodesModalContent: React.VFC<CopyNodesModalContentProps> = ({
 		[nodesToCopy]
 	);
 
-	const checkDisabled = useCallback(
-		(node: Pick<ActionsFactoryNodeType, '__typename' | 'permissions' | 'id'>) =>
-			!canBeCopyDestination(node, nodesToCopy),
+	const checkSelectable = useCallback(
+		(node: Pick<NodeListItemType, '__typename' | 'permissions' | 'id'> | RootListItemType) =>
+			// a node is selectable if it can be a copy destination
+			isFolder(node) && canBeCopyDestination(node, nodesToCopy),
 		[nodesToCopy]
+	);
+
+	const checkDisabled = useCallback(
+		(node: Pick<NodeListItemType, '__typename' | 'permissions' | 'id'> | RootListItemType) =>
+			// a node is disabled (not interactive) if it is a file or if it is a folder which is not selectable
+			// roots which are not a file and not a folder are enabled
+			isFile(node) || (isFolder(node) && !checkSelectable(node)),
+		[checkSelectable]
 	);
 
 	const nodes = useMemo<Array<NodeListItemType>>(() => {
 		if (
-			currentFolder?.getNode?.__typename === 'Folder' &&
+			currentFolder?.getNode &&
+			isFolder(currentFolder.getNode) &&
 			currentFolder.getNode.children.length > 0
 		) {
 			return reduce(
@@ -118,7 +123,8 @@ export const CopyNodesModalContent: React.VFC<CopyNodesModalContentProps> = ({
 					if (node) {
 						result.push({
 							...node,
-							disabled: checkDisabled(node)
+							disabled: checkDisabled(node),
+							selectable: checkSelectable(node)
 						});
 					}
 					return result;
@@ -127,7 +133,7 @@ export const CopyNodesModalContent: React.VFC<CopyNodesModalContentProps> = ({
 			);
 		}
 		return [];
-	}, [checkDisabled, currentFolder]);
+	}, [checkDisabled, checkSelectable, currentFolder?.getNode]);
 
 	const closeHandler = useCallback(() => {
 		setDestinationFolder(undefined);
@@ -186,10 +192,11 @@ export const CopyNodesModalContent: React.VFC<CopyNodesModalContentProps> = ({
 
 	const setDestinationFolderHandler = useCallback(
 		(
-			node: Pick<NodeListItemType, 'id' | '__typename' | 'disabled'>,
+			node: Pick<NodeListItemType, 'id' | '__typename' | 'disabled'> | RootListItemType,
 			event: React.SyntheticEvent
 		) => {
-			const destinationId = (node && !node.disabled && node.id) || currentFolder?.getNode?.id;
+			const destinationId =
+				(node && !isRoot(node) && !node.disabled && node.id) || currentFolder?.getNode?.id;
 			if (isFolder(node)) {
 				setDestinationFolder(destinationId);
 				event.stopPropagation();
@@ -229,7 +236,7 @@ export const CopyNodesModalContent: React.VFC<CopyNodesModalContentProps> = ({
 				<ModalList
 					folderId={currentFolder.getNode.id}
 					nodes={nodes}
-					activeNode={destinationFolder}
+					activeNodes={destinationFolder}
 					setActiveNode={setDestinationFolderHandler}
 					loadMore={loadMore}
 					hasMore={hasMore}
@@ -244,10 +251,11 @@ export const CopyNodesModalContent: React.VFC<CopyNodesModalContentProps> = ({
 			) : (
 				(!loading && (
 					<ModalRootsList
-						activeNode={destinationFolder}
+						activeNodes={destinationFolder}
 						setActiveNode={setDestinationFolderHandler}
 						navigateTo={navigateTo}
 						checkDisabled={checkDisabled}
+						checkSelectable={checkSelectable}
 					/>
 				)) || <Container />
 			)}

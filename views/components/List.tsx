@@ -23,7 +23,7 @@ import { useActiveNode } from '../../../hooks/useActiveNode';
 import { useNavigation } from '../../../hooks/useNavigation';
 import useUserInfo from '../../../hooks/useUserInfo';
 import { DRAG_TYPES, ROOTS } from '../../constants';
-import { ListContext } from '../../contexts';
+import { ListContext, NodeAvatarIconContext } from '../../contexts';
 import {
 	DeleteNodesType,
 	useDeleteNodesMutation
@@ -190,9 +190,13 @@ export const List: React.VFC<ListProps> = ({
 		[actionsToRemove, actionsToRemoveIfInsideTrash, actionCheckers, me, selectedNodes]
 	);
 
-	const setActiveNodeHandler = useCallback<(node: Pick<NodeListItemType, 'id'>) => void>(
-		(node) => {
-			setActiveNode(node.id);
+	const setActiveNodeHandler = useCallback<
+		(node: Pick<NodeListItemType, 'id'>, event?: React.SyntheticEvent) => void
+	>(
+		(node, event) => {
+			if (!event?.defaultPrevented) {
+				setActiveNode(node.id);
+			}
 		},
 		[setActiveNode]
 	);
@@ -502,7 +506,12 @@ export const List: React.VFC<ListProps> = ({
 				{(): JSX.Element => (
 					<Container background="gray6" mainAlignment="flex-start">
 						{nodes.length > 0 && (
-							<>
+							<NodeAvatarIconContext.Provider
+								value={{
+									tooltipLabel: t('selectionMode.node.tooltip', 'Activate selection mode'),
+									tooltipDisabled: false
+								}}
+							>
 								<ListContent
 									nodes={nodes}
 									selectedMap={selectedMap}
@@ -516,7 +525,7 @@ export const List: React.VFC<ListProps> = ({
 									deletePermanently={deletePermanently}
 									moveNodes={openMoveNodesModalAction}
 									copyNodes={openCopyNodesModalAction}
-									activeNode={activeNode}
+									activeNodes={activeNode}
 									setActiveNode={setActiveNodeHandler}
 									navigateTo={navigateToFolder}
 									loading={loading}
@@ -531,7 +540,7 @@ export const List: React.VFC<ListProps> = ({
 									React.cloneElement(fillerWithActions, {
 										children: <Container height="fill" data-testid="fillerContainer" />
 									})}
-							</>
+							</NodeAvatarIconContext.Provider>
 						)}
 						{nodes.length === 0 && !loading && !fillerWithActions && (
 							<EmptyFolder mainList={mainList} message={emptyListMessage} />

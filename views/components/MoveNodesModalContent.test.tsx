@@ -213,13 +213,11 @@ describe('Move Nodes Modal', () => {
 		const folderItem = await screen.findByText(folder.name);
 		const confirmButton = screen.getByRole('button', { name: actionRegexp.move });
 		expect(confirmButton).toHaveAttribute('disabled', '');
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.hover(confirmButton);
 		});
 		await screen.findByText(/you can't perform this action here/i);
 		expect(screen.getByText(/you can't perform this action here/i)).toBeVisible();
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.unhover(confirmButton);
 		});
@@ -229,7 +227,6 @@ describe('Move Nodes Modal', () => {
 		userEvent.dblClick(folderItem);
 		await screen.findByText(/It looks like there's nothing here./gi);
 		expect(confirmButton).not.toHaveAttribute('disabled', '');
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(confirmButton);
 		});
@@ -291,7 +288,6 @@ describe('Move Nodes Modal', () => {
 		expect(confirmButton).toHaveAttribute('disabled', '');
 		userEvent.click(folderItem);
 		expect(confirmButton).not.toHaveAttribute('disabled', '');
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(confirmButton);
 		});

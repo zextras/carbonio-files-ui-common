@@ -6,7 +6,8 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Container, Icon, Padding, Row, Text, Tooltip } from '@zextras/carbonio-design-system';
+import { Container, Icon, Padding, Row, Text } from '@zextras/carbonio-design-system';
+import debounce from 'lodash/debounce';
 import includes from 'lodash/includes';
 import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
@@ -26,7 +27,6 @@ import {
 import { useCreateSnackbar } from '../../hooks/useCreateSnackbar';
 import { NodeType, User } from '../../types/graphql/types';
 import { Action, ActionItem, ActionMap, buildActionItems } from '../../utils/ActionsFactory';
-import { invokeWithin } from '../../utils/invokeWithin';
 import {
 	downloadNode,
 	formatDate,
@@ -37,17 +37,11 @@ import {
 	openNodeWithDocs
 } from '../../utils/utils';
 import { ContextualMenu } from './ContextualMenu';
+import { NodeAvatarIcon } from './NodeAvatarIcon';
 import { NodeHoverBar } from './NodeHoverBar';
 import PdfPreviewer from './previewer/PdfPreviewer';
 import Previewer from './previewer/Previewer';
-import {
-	CheckedAvatar,
-	FileIconPreview,
-	HoverBarContainer,
-	HoverContainer,
-	ListItemContainer,
-	UncheckedAvatar
-} from './StyledComponents';
+import { HoverBarContainer, HoverContainer, ListItemContainer } from './StyledComponents';
 
 const CustomText = styled(Text)`
 	text-transform: uppercase;
@@ -107,6 +101,7 @@ interface NodeListItemProps {
 	compact?: boolean;
 	navigateTo?: (id: string, event?: React.SyntheticEvent) => void;
 	disabled?: boolean;
+	selectable?: boolean;
 	trashed?: boolean;
 	deletePermanentlyCallback?: () => void;
 	selectionContextualMenuActionsItems?: ActionItem[];
@@ -137,7 +132,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 	// Selection props
 	isSelected,
 	isSelectionModeActive,
-	selectId = (): void => undefined,
+	selectId,
 	permittedHoverBarActions = {},
 	permittedContextualMenuActions = {},
 	renameNode,
@@ -145,7 +140,8 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 	setActive = (): void => undefined,
 	compact,
 	navigateTo = (): void => undefined,
-	disabled,
+	disabled = false,
+	selectable = true,
 	trashed,
 	deletePermanentlyCallback,
 	selectionContextualMenuActionsItems,
@@ -159,7 +155,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 	const hidePreviewerCallback = useCallback(() => setShowPreviewer(false), []);
 	const showPdfPreviewerCallback = useCallback(() => setShowPdfPreviewer(true), []);
 	const hidePdfPreviewerCallback = useCallback(() => setShowPdfPreviewer(false), []);
-	const { activeNodeId, setActiveNode } = useActiveNode();
+	const { setActiveNode } = useActiveNode();
 
 	const usePdfPreviewerFallback = useMemo(() => {
 		if (size) {
@@ -171,8 +167,10 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 	const [isContextualMenuActive, setIsContextualMenuActive] = useState(false);
 	const selectIdCallback = useCallback(
 		(event: React.SyntheticEvent) => {
-			event.stopPropagation();
-			selectId(id);
+			if (selectId) {
+				event.preventDefault();
+				selectId(id);
+			}
 		},
 		[id, selectId]
 	);
@@ -279,6 +277,12 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 		[itemsMap, permittedContextualMenuActions]
 	);
 
+	const isNavigable = useMemo(
+		() =>
+			type === NodeType.Folder || type === NodeType.Root || some(ROOTS, (rootId) => rootId === id),
+		[id, type]
+	);
+
 	const openNode = useCallback(
 		(event: React.SyntheticEvent) => {
 			// remove text selection on double click
@@ -288,11 +292,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 			}
 
 			if (!isSelectionModeActive && !disabled && !trashed) {
-				if (
-					type === NodeType.Folder ||
-					type === NodeType.Root ||
-					some(ROOTS, (rootId) => rootId === id)
-				) {
+				if (isNavigable) {
 					navigateTo(id, event);
 				} else if (
 					permittedContextualMenuActions[Action.OpenWithDocs] &&
@@ -310,29 +310,35 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 			isSelectionModeActive,
 			disabled,
 			trashed,
-			type,
+			isNavigable,
 			permittedContextualMenuActions,
 			mimeType,
-			id,
-			navigateTo,
 			showPreviewerCallback,
-			showPdfPreviewerCallback
+			showPdfPreviewerCallback,
+			type,
+			navigateTo,
+			id
 		]
 	);
 
-	const setActiveOrOpenNode = useMemo(
-		() => invokeWithin(setActive, openNode, 200),
-		[openNode, setActive]
+	const setActiveDebounced = useMemo(
+		() =>
+			debounce(
+				(event: React.SyntheticEvent) => {
+					setActive(event);
+				},
+				200,
+				{ leading: false, trailing: true }
+			),
+		[setActive]
 	);
-	const setActiveOrOpenNodeCallback = useCallback(
+
+	const doubleClickHandler = useCallback(
 		(event: React.SyntheticEvent) => {
-			if (!compact) {
-				setActiveOrOpenNode(event);
-			} else {
-				setActive(event);
-			}
+			setActiveDebounced.cancel();
+			openNode(event);
 		},
-		[compact, setActive, setActiveOrOpenNode]
+		[openNode, setActiveDebounced]
 	);
 
 	const displayName = useMemo(() => {
@@ -353,6 +359,12 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 		setIsContextualMenuActive(false);
 	}, []);
 
+	const preventTextSelection = useCallback<React.MouseEventHandler>((e: React.MouseEvent): void => {
+		if (e.detail > 1) {
+			e.preventDefault();
+		}
+	}, []);
+
 	return (
 		<Container id={id} data-testid={`nodeListItem-${id}`}>
 			<ContextualMenu
@@ -366,13 +378,14 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 			>
 				<ListItemContainer
 					height="fit"
-					onClick={setActiveOrOpenNodeCallback}
-					onDoubleClick={compact ? openNode : undefined}
+					onClick={compact ? setActive : setActiveDebounced}
+					onDoubleClick={doubleClickHandler}
 					data-testid={`node-item-${id}`}
 					crossAlignment="flex-end"
 					contextualMenuActive={isContextualMenuActive}
 					disableHover={isContextualMenuActive || dragging || disabled}
 					disabled={disabled}
+					onMouseDown={preventTextSelection}
 				>
 					<HoverContainer
 						height={compact ? LIST_ITEM_HEIGHT_COMPACT : LIST_ITEM_HEIGHT}
@@ -383,46 +396,15 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 						width="fill"
 						background={isActive ? 'highlight' : 'gray6'}
 					>
-						{isSelectionModeActive ? (
-							<>
-								{isSelected ? (
-									<CheckedAvatar
-										label=""
-										data-testid={`checkedAvatar`}
-										icon="Checkmark"
-										background="primary"
-										onClick={selectIdCallback}
-									/>
-								) : (
-									<UncheckedAvatar
-										label=""
-										background="gray6"
-										data-testid={`unCheckedAvatar`}
-										onClick={selectIdCallback}
-									/>
-								)}
-							</>
-						) : (
-							<>
-								{!compact ? (
-									<Tooltip label={t('selectionMode.node.tooltip', 'Activate selection mode')}>
-										<FileIconPreview
-											icon={getIconByFileType(type, mimeType || id)}
-											background="gray3"
-											label="."
-											onClick={selectIdCallback}
-											data-testid="file-icon-preview"
-										/>
-									</Tooltip>
-								) : (
-									<Icon
-										size="large"
-										icon={`${getIconByFileType(type, mimeType || id)}Outline`}
-										disabled={disabled}
-									/>
-								)}
-							</>
-						)}
+						<NodeAvatarIcon
+							selectionModeActive={isSelectionModeActive}
+							selected={isSelected}
+							onClick={selectIdCallback}
+							compact={compact}
+							disabled={disabled}
+							selectable={selectable}
+							icon={getIconByFileType(type, mimeType || id)}
+						/>
 						<Container
 							orientation="vertical"
 							crossAlignment="flex-start"

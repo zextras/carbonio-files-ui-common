@@ -127,7 +127,6 @@ describe('Search view', () => {
 		expect(
 			within(selectionModeHeader).queryByTestId('icon: DeletePermanentlyOutline')
 		).not.toBeInTheDocument();
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(screen.getByTestId('icon: MoreVertical'));
 		});

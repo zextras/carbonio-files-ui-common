@@ -77,9 +77,13 @@ export const MoveNodesModalContent: React.VFC<MoveNodesModalContentProps> = ({
 				currentFolder.getNode.children,
 				(result: NodeListItemType[], node) => {
 					if (node) {
+						// in move modal, if a node cannot be a move destination, then it is fully disabled
+						// and cannot be navigated if it is a folder (out of workspace)
+						const isSelectable = node && canBeMoveDestination(node, nodesToMove, me);
 						result.push({
 							...node,
-							disabled: !node || !canBeMoveDestination(node, nodesToMove, me)
+							disabled: !isSelectable,
+							selectable: isSelectable
 						});
 					}
 					return result;
@@ -193,7 +197,7 @@ export const MoveNodesModalContent: React.VFC<MoveNodesModalContentProps> = ({
 			<ModalList
 				folderId={currentFolder?.getNode?.id || ''}
 				nodes={nodes}
-				activeNode={destinationFolder}
+				activeNodes={destinationFolder}
 				setActiveNode={setDestinationFolderHandler}
 				loadMore={loadMore}
 				hasMore={hasMore}

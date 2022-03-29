@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { ApolloError, useApolloClient, useQuery } from '@apollo/client';
 import size from 'lodash/size';
@@ -26,8 +26,7 @@ import { buildCrumbs } from '../utils/utils';
 export type UseBreadcrumbType = (
 	folderId?: string,
 	labels?: Crumb[],
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	crumbAction?: (id: string, ...args: any[]) => void
+	crumbAction?: (id: string, event?: React.SyntheticEvent) => void
 ) => {
 	data: Crumb[] | undefined;
 	toggleExpanded: () => void;
