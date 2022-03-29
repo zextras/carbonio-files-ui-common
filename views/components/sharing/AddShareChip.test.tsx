@@ -35,7 +35,6 @@ describe('Add Share Chip', () => {
 		expect(screen.queryByTestId('icon: Share')).not.toBeInTheDocument();
 		expect(screen.getByTestId('icon: Close')).toBeVisible();
 
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(screen.getByTestId('icon: Close'));
 		});
@@ -61,7 +60,6 @@ describe('Add Share Chip', () => {
 		expect(screen.queryByTestId('icon: Share')).not.toBeInTheDocument();
 		expect(screen.getByTestId('icon: Close')).toBeVisible();
 
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(screen.getByTestId('icon: Close'));
 		});
@@ -87,7 +85,6 @@ describe('Add Share Chip', () => {
 		expect(screen.getByTestId('icon: Share')).toBeVisible();
 		expect(screen.getByTestId('icon: Close')).toBeVisible();
 
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(screen.getByTestId('icon: Close'));
 		});
@@ -113,7 +110,6 @@ describe('Add Share Chip', () => {
 		expect(screen.getByTestId('icon: Share')).toBeVisible();
 		expect(screen.getByTestId('icon: Close')).toBeVisible();
 
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(screen.getByTestId('icon: Close'));
 		});
@@ -135,7 +131,6 @@ describe('Add Share Chip', () => {
 
 		expect(screen.getByText('Someone Name')).toBeVisible();
 
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(screen.getByText('Someone Name'));
 		});
@@ -179,7 +174,6 @@ describe('Add Share Chip', () => {
 
 			expect(screen.getByText('Someone Name')).toBeVisible();
 
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByText('Someone Name'));
 			});
@@ -221,7 +215,6 @@ describe('Add Share Chip', () => {
 
 			expect(screen.getByText('Someone Name')).toBeVisible();
 
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByText('Someone Name'));
 			});
@@ -266,7 +259,6 @@ describe('Add Share Chip', () => {
 
 			expect(screen.getByText('Someone Name')).toBeVisible();
 
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByText('Someone Name'));
 			});
@@ -315,7 +307,6 @@ describe('Add Share Chip', () => {
 
 			expect(screen.getByText('Someone Name')).toBeVisible();
 
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByText('Someone Name'));
 			});

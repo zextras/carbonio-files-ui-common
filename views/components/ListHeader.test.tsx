@@ -110,7 +110,6 @@ describe('ListHeader', () => {
 			// by default only 2 levels are shown
 			expect(getByTextWithMarkup(shortBreadcrumbRegExp)).toBeVisible();
 			// user clicks on the cta
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByTestId('icon: FolderOutline'));
 			});
@@ -119,7 +118,6 @@ describe('ListHeader', () => {
 			// all levels are now shown
 			expect(getByTextWithMarkup(fullBreadcrumbRegExp)).toBeVisible();
 			// user clicks again on the cta
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByTestId('icon: FolderOutline'));
 			});
@@ -127,7 +125,6 @@ describe('ListHeader', () => {
 			expect(getByTextWithMarkup(shortBreadcrumbRegExp)).toBeVisible();
 			expect(screen.queryByText(path[0].name)).not.toBeInTheDocument();
 			// user clicks on the cta
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByTestId('icon: FolderOutline'));
 			});
@@ -174,7 +171,6 @@ describe('ListHeader', () => {
 			// by default only 2 levels are shown
 			expect(getByTextWithMarkup(shortBreadcrumbRegExp)).toBeVisible();
 			// user clicks on the cta
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByTestId('icon: FolderOutline'));
 			});

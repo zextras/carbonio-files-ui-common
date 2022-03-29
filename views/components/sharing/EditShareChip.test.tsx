@@ -77,7 +77,6 @@ describe('Edit Share Chip', () => {
 			render(<EditShareChip share={share} permissions={node.permissions} yourselfChip={false} />);
 
 			expect(screen.getByText(user.full_name)).toBeVisible();
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByText(user.full_name));
 			});
@@ -148,7 +147,6 @@ describe('Edit Share Chip', () => {
 			render(<EditShareChip share={share} permissions={node.permissions} yourselfChip={false} />);
 
 			expect(screen.getByText(user.full_name)).toBeVisible();
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByText(user.full_name));
 			});
@@ -228,7 +226,6 @@ describe('Edit Share Chip', () => {
 
 			expect(screen.getByText(user.full_name)).toBeVisible();
 			expect(screen.getByTestId('icon: Close')).toBeVisible();
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByTestId('icon: Close'));
 			});
@@ -245,7 +242,6 @@ describe('Edit Share Chip', () => {
 			render(<EditShareChip share={share} permissions={node.permissions} yourselfChip={false} />);
 
 			expect(screen.getByText(user.full_name)).toBeVisible();
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByText(user.full_name));
 			});
@@ -320,7 +316,6 @@ describe('Edit Share Chip', () => {
 			render(<EditShareChip share={share} permissions={node.permissions} yourselfChip={false} />);
 
 			expect(screen.getByText(user.full_name)).toBeVisible();
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByText(user.full_name));
 			});
@@ -352,7 +347,6 @@ describe('Edit Share Chip', () => {
 		expect(screen.queryByText(user.full_name)).not.toBeInTheDocument();
 		expect(screen.getByText(/you/i)).toBeVisible();
 		expect(screen.getByTestId('icon: Close')).toBeVisible();
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(screen.getByTestId('icon: Close'));
 		});
@@ -395,7 +389,6 @@ describe('Edit Share Chip', () => {
 
 		expect(screen.getByText(user.full_name)).toBeVisible();
 		expect(screen.getByTestId('icon: Close')).toBeVisible();
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(screen.getByTestId('icon: Close'));
 		});
@@ -445,7 +438,6 @@ describe('Edit Share Chip', () => {
 			});
 
 			expect(screen.getByText(user.full_name)).toBeVisible();
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByText(user.full_name));
 			});
@@ -490,7 +482,6 @@ describe('Edit Share Chip', () => {
 			});
 
 			expect(screen.getByText(user.full_name)).toBeVisible();
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByText(user.full_name));
 			});
@@ -533,7 +524,6 @@ describe('Edit Share Chip', () => {
 			});
 
 			expect(screen.getByText(user.full_name)).toBeVisible();
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByText(user.full_name));
 			});
@@ -547,7 +537,6 @@ describe('Edit Share Chip', () => {
 			// FIXME: I can't understand why this click cause a
 			//   Warning: An update to EditShareChip inside a test was not wrapped in act(...).
 			//   even if there are the await statements after the click
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByTestId('icon: Square'));
 			});
@@ -588,7 +577,6 @@ describe('Edit Share Chip', () => {
 			});
 
 			expect(screen.getByText(user.full_name)).toBeVisible();
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByText(user.full_name));
 			});
@@ -597,7 +585,6 @@ describe('Edit Share Chip', () => {
 			// FIXME: I can't understand why this click cause a
 			//   Warning: An update to EditShareChip inside a test was not wrapped in act(...).
 			//   even if there are the await statements after the click
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByTestId('icon: Square'));
 			});

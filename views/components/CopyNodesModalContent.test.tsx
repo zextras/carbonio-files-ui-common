@@ -377,7 +377,6 @@ describe('Copy Nodes Modal', () => {
 		await screen.findByText(folder.name);
 		const confirmButton = screen.getByRole('button', { name: actionRegexp.copy });
 		expect(confirmButton).not.toHaveAttribute('disabled');
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(confirmButton);
 		});
@@ -445,7 +444,6 @@ describe('Copy Nodes Modal', () => {
 		userEvent.dblClick(folderItem);
 		await screen.findByText(/It looks like there's nothing here./gi);
 		expect(confirmButton).not.toHaveAttribute('disabled');
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(confirmButton);
 		});
@@ -511,7 +509,6 @@ describe('Copy Nodes Modal', () => {
 		const confirmButton = screen.getByRole('button', { name: actionRegexp.copy });
 		userEvent.click(folderItem);
 		expect(confirmButton).not.toHaveAttribute('disabled');
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(confirmButton);
 		});
@@ -594,25 +591,21 @@ describe('Copy Nodes Modal', () => {
 		expect(screen.getByText(/shared with me/i)).toBeVisible();
 		const confirmButton = screen.getByRole('button', { name: actionRegexp.copy });
 		expect(confirmButton).toHaveAttribute('disabled');
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.hover(confirmButton, undefined);
 		});
 		await screen.findByText(/you can't perform this action here/i);
 		expect(screen.getByText(/you can't perform this action here/i)).toBeVisible();
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.unhover(confirmButton);
 		});
 		expect(screen.queryByText(/you can't perform this action here/i)).not.toBeInTheDocument();
 		userEvent.click(screen.getByText('Home'));
 		expect(confirmButton).not.toHaveAttribute('disabled');
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.hover(confirmButton);
 		});
 		expect(screen.queryByText(/you can't perform this action here/i)).not.toBeInTheDocument();
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(confirmButton);
 		});
@@ -673,7 +666,6 @@ describe('Copy Nodes Modal', () => {
 		expect(confirmButton).toHaveAttribute('disabled');
 		userEvent.click(screen.getByText('Home'));
 		expect(confirmButton).not.toHaveAttribute('disabled');
-		// eslint-disable-next-line testing-library/no-unnecessary-act
 		act(() => {
 			userEvent.click(confirmButton);
 		});

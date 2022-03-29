@@ -8,6 +8,8 @@ import { Maybe } from './graphql/types';
 
 export type OneOrMany<T> = T | T[];
 
+export type ArrayOneOrMore<T> = [T] & T[];
+
 export type DeepPick<T, K extends keyof T, KK extends keyof NonNullable<T[K]>> = {
 	[P in K]: T[P] extends Record<KK, unknown> ? Pick<T[P], KK> : T[P];
 };

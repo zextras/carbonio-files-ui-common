@@ -120,7 +120,6 @@ describe('Node Sharing', () => {
 			expect(screen.getByText(/you$/i)).toBeVisible();
 			// only 1 icon close is shown, and it is the one of the logged user chip
 			expect(screen.getByTestId('icon: Close')).toBeVisible();
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByTestId('icon: Close'));
 			});
@@ -195,7 +194,6 @@ describe('Node Sharing', () => {
 			await screen.findByText(user.full_name);
 			// only 1 icon close is shown, and it is the one of the collaborator
 			expect(screen.getByTestId('icon: Close')).toBeVisible();
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByTestId('icon: Close'));
 			});
@@ -245,7 +243,6 @@ describe('Node Sharing', () => {
 			expect(screen.queryByTestId('icon: Edit2Outline')).not.toBeInTheDocument();
 			expect(screen.queryByTestId('icon: Share')).not.toBeInTheDocument();
 			// open on chip to open popover
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByText(getChipLabel(shareToUpdate.share_target)));
 			});
@@ -258,7 +255,6 @@ describe('Node Sharing', () => {
 			await waitFor(() =>
 				expect(screen.getByRole('button', { name: /save/i })).not.toHaveAttribute('disabled')
 			);
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByTestId('icon: Square'));
 			});
@@ -376,7 +372,6 @@ describe('Node Sharing', () => {
 			// so now we have 2 icons EyeOutline, one inside the popover and one in the existing share chip
 			expect(screen.getAllByTestId('icon: EyeOutline')).toHaveLength(2);
 			// give share permissions to the new share
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByTestId('icon: Square'));
 			});
@@ -384,14 +379,12 @@ describe('Node Sharing', () => {
 			// icon share is now visible on chip
 			expect(screen.getByTestId('icon: Share')).toBeVisible();
 			// click on chip to close popover
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByText(user.full_name), undefined, { skipHover: true });
 			});
 			// await waitForElementToBeRemoved(screen.queryByText(/viewer/i));
 			expect(screen.queryByText(/viewer/i)).not.toBeInTheDocument();
 			// click on share button to complete the creation of the new share
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			userEvent.click(screen.getByRole('button', { name: /share/i }));
 			// and then a new chip is created in the collaborators list
 			await screen.findByText(user.full_name);
@@ -480,7 +473,6 @@ describe('Node Sharing', () => {
 			const chipInput = screen.getByText(/Add new people or groups/i);
 			// type just the first character because the network search is requested only one time with first character.
 			// All characters typed after the first one are just used to filter out the result obtained before
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.type(chipInput, user1.full_name[0]);
 			});
@@ -498,7 +490,6 @@ describe('Node Sharing', () => {
 			// new share is created with read-only permissions by default so now there are 2 icons EyeOutline
 			expect(screen.getAllByTestId('icon: EyeOutline')).toHaveLength(2);
 			// change permissions on the new share
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByText(user1.full_name));
 			});
@@ -519,7 +510,6 @@ describe('Node Sharing', () => {
 			// now create the second share
 			// type just the first character because the network search is requested only one time with first character.
 			// All characters typed after the first one are just used to filter out the result obtained before
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.type(chipInput, user2.full_name[0]);
 			});
@@ -550,7 +540,6 @@ describe('Node Sharing', () => {
 					})
 			);
 			// click on the checkbox to set read and share permissions
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByTestId('icon: Square'));
 			});
@@ -558,7 +547,6 @@ describe('Node Sharing', () => {
 			// the chip is updated immediately so the icon share is shown
 			await screen.findByTestId('icon: Share');
 			// click outside to close popover
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByText(/the standard message/i));
 			});

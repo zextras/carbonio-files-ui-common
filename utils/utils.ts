@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
+import React from 'react';
+
 import { ApolloError } from '@apollo/client';
 import { Location } from 'history';
 import { chain } from 'lodash';
@@ -82,7 +84,7 @@ export const getIconByFileType = (type: NodeType, subType?: Maybe<string>): stri
 
 const buildCrumbsRecursive = (
 	node: CrumbNode,
-	clickHandler?: (id: string) => void,
+	clickHandler?: (id: string, event: React.SyntheticEvent) => void,
 	t?: TFunction,
 	nodeClickCondition: (node: Pick<Node, 'id' | 'name' | 'type'>) => boolean = (): boolean => true
 ): Crumb[] => {
@@ -93,7 +95,7 @@ const buildCrumbsRecursive = (
 
 	let handlerFunction;
 	if (clickHandler && node && nodeClickCondition(node)) {
-		handlerFunction = (): void => clickHandler(node.id);
+		handlerFunction = (event: React.SyntheticEvent): void => clickHandler(node.id, event);
 	}
 	if (node.name) {
 		result.push({
@@ -116,8 +118,7 @@ const buildCrumbsRecursive = (
  */
 export const buildCrumbs = (
 	nodes: CrumbNode | Array<Maybe<Pick<Node, 'id' | 'name' | 'type'>> | undefined>,
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	clickHandler?: (id: string, ...args: any[]) => void,
+	clickHandler?: (id: string, event: React.SyntheticEvent) => void,
 	t?: TFunction,
 	nodeClickCondition: (node: Pick<Node, 'id' | 'name' | 'type'>) => boolean = (): boolean => true
 ): Crumb[] => {
@@ -134,7 +135,7 @@ export const buildCrumbs = (
 					label: (t && t('node.alias.name', $node.name, { context: $node.id })) || $node.name,
 					click:
 						node && clickHandler && nodeClickCondition(node)
-							? (): void => clickHandler($node.id)
+							? (event: React.SyntheticEvent): void => clickHandler($node.id, event)
 							: undefined
 				};
 			})

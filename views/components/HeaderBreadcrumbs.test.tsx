@@ -140,7 +140,6 @@ describe('Header Breadcrumbs', () => {
 			expect(screen.queryByText(path[0].name)).not.toBeInTheDocument();
 			expect(screen.getByTestId('icon: ChevronRight')).toBeVisible();
 			expect(screen.queryByTestId('icon: ChevronLeft')).not.toBeInTheDocument();
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByTestId('icon: FolderOutline'));
 			});
@@ -353,7 +352,10 @@ describe('Header Breadcrumbs', () => {
 			// wait for navigation to start
 			await waitFor(() => expect(mockedUseNavigationHook.navigateToFolder).toHaveBeenCalled());
 			fireEvent.dragLeave(destinationCrumbItem, { dataTransfer: dataTransfer() });
-			expect(mockedUseNavigationHook.navigateToFolder).toHaveBeenCalledWith(parent.id);
+			expect(mockedUseNavigationHook.navigateToFolder).toHaveBeenCalledWith(
+				parent.id,
+				expect.objectContaining({ type: 'dragenter' })
+			);
 		});
 
 		test('Long hover on a crumb without permissions does not trigger navigation', async () => {
@@ -484,7 +486,6 @@ describe('Header Breadcrumbs', () => {
 			expect(screen.queryByText(path[0].name)).not.toBeInTheDocument();
 			expect(screen.getByTestId('icon: ChevronRight')).toBeVisible();
 			expect(screen.queryByTestId('icon: ChevronLeft')).not.toBeInTheDocument();
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByTestId('icon: FolderOutline'));
 			});
@@ -637,7 +638,6 @@ describe('Header Breadcrumbs', () => {
 			expect(screen.getByTestId('icon: ChevronRight')).toBeVisible();
 			expect(screen.queryByTestId('icon: ChevronLeft')).not.toBeInTheDocument();
 			// simulate a drag of a node of the list
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByTestId('icon: FolderOutline'));
 			});
@@ -742,7 +742,6 @@ describe('Header Breadcrumbs', () => {
 			expect(screen.getByTestId('icon: ChevronRight')).toBeVisible();
 			expect(screen.queryByTestId('icon: ChevronLeft')).not.toBeInTheDocument();
 			// simulate a drag of a node of the list
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByTestId('icon: FolderOutline'));
 			});
@@ -856,7 +855,6 @@ describe('Header Breadcrumbs', () => {
 			expect(screen.getByTestId('icon: ChevronRight')).toBeVisible();
 			expect(screen.queryByTestId('icon: ChevronLeft')).not.toBeInTheDocument();
 			// simulate a drag of a node of the list
-			// eslint-disable-next-line testing-library/no-unnecessary-act
 			act(() => {
 				userEvent.click(screen.getByTestId('icon: FolderOutline'));
 			});

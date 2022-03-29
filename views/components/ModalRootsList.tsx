@@ -7,32 +7,31 @@
 import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Container, Row } from '@zextras/carbonio-design-system';
+import forEach from 'lodash/forEach';
 import isEmpty from 'lodash/isEmpty';
 import reduce from 'lodash/reduce';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 
 import { ROOTS } from '../../constants';
-import { Breadcrumbs } from '../../design_system_fork/Breadcrumbs';
 import { useFindNodesQuery } from '../../hooks/graphql/queries/useFindNodesQuery';
-import { NodeListItemType } from '../../types/common';
-import { NodeType } from '../../types/graphql/types';
-import { MakeRequired } from '../../types/utils';
+import { Crumb, NodeListItemType, RootListItemType } from '../../types/common';
+import { MakeOptional, NodeType } from '../../types/graphql/types';
+import { OneOrMany } from '../../types/utils';
 import { decodeError } from '../../utils/utils';
+import { InteractiveBreadcrumbs } from '../InteractiveBreadcrumbs';
 import { EmptyFolder } from './EmptyFolder';
 import { ListContent } from './ListContent';
 import { LoadingIcon } from './LoadingIcon';
-import { ScrollContainer } from './StyledComponents';
+import { ScrollContainer } from './ScrollContainer';
 
 interface RootsListProps {
-	activeNode?: string;
-	setActiveNode: (
-		node: Pick<NodeListItemType, 'id' | 'name' | '__typename' | 'disabled'>,
-		event: React.SyntheticEvent
-	) => void;
-	navigateTo: (id: string, event?: React.SyntheticEvent) => void;
+	activeNodes?: OneOrMany<string>;
+	setActiveNode: (node: NodeListItemType | RootListItemType, event: React.SyntheticEvent) => void;
+	navigateTo: (id: string, event?: React.SyntheticEvent | Event) => void;
 	showTrash?: boolean;
-	checkDisabled: (node: NodeListItemType) => boolean;
+	checkDisabled: (node: NodeListItemType | RootListItemType) => boolean;
+	checkSelectable: (node: NodeListItemType | RootListItemType) => boolean;
 }
 
 const ModalContainer = styled(Container)`
@@ -40,14 +39,14 @@ const ModalContainer = styled(Container)`
 `;
 
 export const ModalRootsList: React.VFC<RootsListProps> = ({
-	activeNode,
+	activeNodes,
 	setActiveNode,
 	navigateTo,
 	showTrash = false,
-	checkDisabled
+	checkDisabled,
+	checkSelectable
 }) => {
 	const [t] = useTranslation();
-	// const [filter, setFilter] = useState<string>();
 	const [filterQueryParams, setFilterQueryParam] = useState<
 		Pick<
 			Parameters<typeof useFindNodesQuery>[0],
@@ -69,12 +68,12 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 		listRef.current && listRef.current.scrollTo(0, 0);
 	}, [filterQueryParams]);
 
-	const crumbs = useMemo(() => {
-		const $crumbs = [];
+	const crumbs = useMemo<Crumb[]>(() => {
+		const $crumbs: Crumb[] = [];
 		$crumbs.push({
 			id: ROOTS.ENTRY_POINT,
 			label: t('modal.roots.rootsList', 'Files'),
-			click: (event: React.MouseEvent) => {
+			click: (event: React.SyntheticEvent) => {
 				setFilterQueryParam({});
 				navigateTo('', event);
 			}
@@ -85,18 +84,23 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 				$crumbs.push({
 					id: 'sharedWithMe',
 					label: t('modal.roots.sharedWitMe', 'Shared with me'),
-					click: (event: React.MouseEvent) => {
+					click: (event: React.SyntheticEvent) => {
 						setFilterQueryParam({ sharedWithMe: true, folderId: ROOTS.LOCAL_ROOT, cascade: false });
 						setActiveNode(
 							{
 								id: ROOTS.SHARED_WITH_ME,
-								name: t('modal.roots.sharedWitMe', 'Shared with me')
+								name: t('modal.roots.sharedWitMe', 'Shared with me'),
+								type: NodeType.Root
 							},
 							event
 						);
 					}
 				});
 			}
+		}
+		// remove click action from last crumb
+		if ($crumbs.length > 0) {
+			delete $crumbs[$crumbs.length - 1].click;
 		}
 		return $crumbs;
 	}, [filterQueryParams, navigateTo, setActiveNode, t]);
@@ -109,7 +113,8 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 					if (node) {
 						result.push({
 							...node,
-							disabled: checkDisabled(node)
+							disabled: checkDisabled(node),
+							selectable: checkSelectable(node)
 						});
 					}
 					return result;
@@ -118,16 +123,40 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 			);
 		}
 		return undefined;
-	}, [checkDisabled, filterQueryParams, findNodesData]);
+	}, [checkDisabled, checkSelectable, filterQueryParams, findNodesData?.findNodes]);
 
 	const rootNodes = useMemo<NodeListItemType[]>(() => {
-		const roots: Array<MakeRequired<NodeListItemType, 'id' | 'name' | 'type'>> = [];
+		const roots: Array<
+			| RootListItemType
+			| MakeOptional<
+					Pick<
+						NodeListItemType,
+						'id' | 'name' | 'type' | '__typename' | 'permissions' | 'disabled' | 'selectable'
+					>,
+					'permissions'
+			  >
+		> = [];
 		roots.push(
 			{
 				id: ROOTS.LOCAL_ROOT,
 				name: t('modal.roots.filesHome', 'Home'),
 				type: NodeType.Root,
-				__typename: 'Folder' // trick to make local root a valid destination
+				// FIXME: find a way to load permissions for root nodes
+				// trick to make local root a valid destination
+				__typename: 'Folder',
+				permissions: {
+					__typename: 'Permissions',
+					can_write_file: true,
+					can_write_folder: true,
+					can_read: true,
+					can_add_version: false,
+					can_change_link: false,
+					can_change_share: false,
+					can_delete: false,
+					can_read_link: false,
+					can_read_share: false,
+					can_share: false
+				}
 			},
 			{
 				id: ROOTS.SHARED_WITH_ME,
@@ -142,8 +171,14 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 				type: NodeType.Root
 			});
 		}
+
+		forEach(roots, (root) => {
+			root.disabled = checkDisabled(root);
+			root.selectable = checkSelectable(root);
+		});
+
 		return roots as NodeListItemType[];
-	}, [showTrash, t]);
+	}, [checkDisabled, checkSelectable, showTrash, t]);
 
 	const rootNavigationHandler = useCallback<typeof navigateTo>(
 		(id, event) => {
@@ -162,13 +197,6 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 		[navigateTo]
 	);
 
-	// const filterChangeHandler = useCallback(
-	// 	({ target: { value } }: React.ChangeEvent<HTMLInputElement>) => {
-	// 		setFilter(value);
-	// 	},
-	// 	[]
-	// );
-
 	const stopPropagationClickHandler = (event: React.MouseEvent): void => {
 		event.stopPropagation();
 	};
@@ -184,33 +212,25 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 			<Row
 				width="fill"
 				wrap="nowrap"
-				mainAlignment="flex-start"
 				height={48}
 				onClick={stopPropagationClickHandler}
+				mainAlignment="flex-start"
+				flexShrink={0}
 			>
-				{crumbs && <Breadcrumbs crumbs={crumbs} />}
+				{crumbs && <InteractiveBreadcrumbs crumbs={crumbs} />}
 				{loading && (
 					<Row mainAlignment="flex-end" wrap="nowrap" flexGrow={1}>
 						<LoadingIcon icon="Refresh" color="primary" />
 					</Row>
 				)}
 			</Row>
-			{/*
-			// TODO uncomment when filter inside modal is implemented
-			<Input
-				label={t('node.move.modal.input.filter', 'Filter folders')}
-				backgroundColor="gray5"
-				value={filter}
-				onChange={filterChangeHandler}
-				onClick={stopPropagationClickHandler}
-			/> */}
 			{error && <p>Error: {decodeError(error, t)}</p>}
 			<Container mainAlignment="flex-start" minHeight="0" height="40vh">
 				{nodes &&
 					(nodes.length > 0 ? (
 						<ListContent
 							nodes={nodes}
-							activeNode={activeNode}
+							activeNodes={activeNodes}
 							setActiveNode={setActiveNode}
 							compact
 							navigateTo={navigateTo}
@@ -221,7 +241,7 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 						/>
 					) : (
 						!loading && (
-							<ScrollContainer mainAlignment="flex-start">
+							<ScrollContainer>
 								<EmptyFolder
 									message={t('empty.filter.hint', "It looks like there's nothing here.")}
 								/>
@@ -236,12 +256,12 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 							nodes={rootNodes}
 							compact
 							navigateTo={rootNavigationHandler}
-							activeNode={activeNode}
+							activeNodes={activeNodes}
 							setActiveNode={setActiveNode}
 							ref={listRef}
 						/>
 					) : (
-						<ScrollContainer mainAlignment="flex-start">
+						<ScrollContainer>
 							<EmptyFolder
 								message={t('empty.filter.hint', "It looks like there's nothing here.")}
 							/>

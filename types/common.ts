@@ -62,7 +62,7 @@ export type GetNodeParentType = {
 export type Crumb = {
 	id: string;
 	label: string;
-	click?: (id?: string) => void;
+	click?: (event: React.SyntheticEvent) => void;
 };
 
 export type CrumbNode = Pick<Node, 'id' | 'name' | 'type'> & {
@@ -85,8 +85,14 @@ export enum Role {
 
 export type NodeListItemType = ChildFragment & {
 	disabled?: boolean;
+	selectable?: boolean;
 	shares?: Array<Pick<Share, '__typename' | 'created_at'> | null | undefined>;
 };
+
+export type RootListItemType = Pick<
+	NodeListItemType,
+	'__typename' | 'id' | 'name' | 'type' | 'disabled' | 'selectable'
+>;
 
 export type SortableNode = Pick<Node, 'id' | 'name' | 'updated_at' | 'type'> &
 	MakeOptional<Pick<File, 'size'>, 'size'>;

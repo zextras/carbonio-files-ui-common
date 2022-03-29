@@ -13,25 +13,23 @@ import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 
 import { ROOTS } from '../../constants';
-import { Breadcrumbs } from '../../design_system_fork/Breadcrumbs';
 import GET_PATH from '../../graphql/queries/getPath.graphql';
-import { NodeListItemType } from '../../types/common';
+import { Crumb, NodeListItemType } from '../../types/common';
 import { GetPathQuery, GetPathQueryVariables, Node } from '../../types/graphql/types';
+import { OneOrMany } from '../../types/utils';
 import { canBeWriteNodeDestination } from '../../utils/ActionsFactory';
 import { buildCrumbs, decodeError } from '../../utils/utils';
+import { InteractiveBreadcrumbs } from '../InteractiveBreadcrumbs';
 import { EmptyFolder } from './EmptyFolder';
 import { ListContent } from './ListContent';
 import { LoadingIcon } from './LoadingIcon';
-import { ScrollContainer } from './StyledComponents';
+import { ScrollContainer } from './ScrollContainer';
 
 interface ModalListProps {
 	folderId: string;
 	nodes: Array<NodeListItemType>;
-	activeNode?: string;
-	setActiveNode: (
-		node: Pick<NodeListItemType, 'id' | 'name' | '__typename' | 'disabled'>,
-		event: React.SyntheticEvent
-	) => void;
+	activeNodes?: OneOrMany<string>;
+	setActiveNode: (node: NodeListItemType, event: React.SyntheticEvent) => void;
 	loadMore: () => void;
 	hasMore: boolean;
 	navigateTo: (id: string, event?: React.SyntheticEvent) => void;
@@ -50,7 +48,7 @@ const ModalContainer = styled(Container)`
 export const ModalList: React.VFC<ModalListProps> = ({
 	folderId,
 	nodes,
-	activeNode,
+	activeNodes,
 	setActiveNode,
 	loadMore,
 	hasMore,
@@ -70,8 +68,6 @@ export const ModalList: React.VFC<ModalListProps> = ({
 		listRef.current && listRef.current.scrollTo(0, 0);
 	}, [folderId]);
 
-	// const [filter, setFilter] = useState<string>();
-
 	// use a useQuery to load full path only when required so that operations like move that cleanup cache trigger a refetch
 	const { data: pathData, loading: loadingPath } = useQuery<GetPathQuery, GetPathQueryVariables>(
 		GET_PATH,
@@ -89,13 +85,13 @@ export const ModalList: React.VFC<ModalListProps> = ({
 	// for shared with me nodes, build the breadcrumb from the leave to the highest ancestor that has right permissions.
 	// to be valid an ancestor must have can_write_file if moving files, can_write_folder if moving folders,
 	// can_write_file and can_write_folder if moving both files and folders
-	const crumbs = useMemo(() => {
-		const $crumbs = [];
+	const crumbs = useMemo<Crumb[]>(() => {
+		const $crumbs: Crumb[] = [];
 		if (allowRootNavigation) {
 			$crumbs.push({
 				id: ROOTS.ENTRY_POINT,
 				label: t('modal.roots.rootsList', 'Files'),
-				click: (event: React.MouseEvent) => {
+				click: (event: React.SyntheticEvent) => {
 					navigateTo('', event);
 				}
 			});
@@ -104,11 +100,16 @@ export const ModalList: React.VFC<ModalListProps> = ({
 			? takeRightWhile(
 					pathData?.getPath,
 					(parent: Pick<Node, 'id' | 'name' | 'permissions' | 'type'> | undefined | null) =>
+						// TODO: it might be convenient to move this check in parent component through the checkDisabled function
 						parent && canBeWriteNodeDestination(parent, writingFile, writingFolder)
 			  )
 			: pathData?.getPath;
 		if (validParents) {
 			$crumbs.push(...buildCrumbs(validParents, navigateTo, t));
+		}
+		// remove click action from last crumb
+		if ($crumbs.length > 0) {
+			delete $crumbs[$crumbs.length - 1].click;
 		}
 		return $crumbs;
 	}, [
@@ -120,15 +121,6 @@ export const ModalList: React.VFC<ModalListProps> = ({
 		writingFile,
 		writingFolder
 	]);
-
-	/*
-	// TODO uncomment when filter inside modal is implemented
-	const filterChangeHandler = useCallback(
-		({ target: { value } }: React.ChangeEvent<HTMLInputElement>) => {
-			setFilter(value);
-		},
-		[]
-	); */
 
 	const stopPropagationClickHandler = (event: React.MouseEvent): void => {
 		event.stopPropagation();
@@ -148,29 +140,21 @@ export const ModalList: React.VFC<ModalListProps> = ({
 				height={48}
 				onClick={stopPropagationClickHandler}
 				mainAlignment="flex-start"
+				flexShrink={0}
 			>
-				{crumbs && <Breadcrumbs crumbs={crumbs} />}
+				{crumbs && <InteractiveBreadcrumbs crumbs={crumbs} />}
 				{(loading || loadingPath) && (
 					<Row mainAlignment="flex-end" wrap="nowrap" flexGrow={1}>
 						<LoadingIcon icon="Refresh" color="primary" />
 					</Row>
 				)}
 			</Row>
-			{/*
-			// TODO uncomment when filter inside modal is implemented
-			<Input
-				label={t('node.move.modal.input.filter', 'Filter folders')}
-				backgroundColor="gray5"
-				value={filter}
-				onChange={filterChangeHandler}
-				onClick={stopPropagationClickHandler}
-			/> */}
 			{error && <p>Error: {decodeError(error, t)}</p>}
 			<Container mainAlignment="flex-start" minHeight="0">
 				{nodes.length > 0 ? (
 					<ListContent
 						nodes={nodes}
-						activeNode={activeNode}
+						activeNodes={activeNodes}
 						setActiveNode={setActiveNode}
 						compact
 						navigateTo={navigateTo}
@@ -181,7 +165,7 @@ export const ModalList: React.VFC<ModalListProps> = ({
 					/>
 				) : (
 					!loading && (
-						<ScrollContainer mainAlignment="flex-start">
+						<ScrollContainer>
 							<EmptyFolder
 								message={t('empty.folder.hint', "It looks like there's nothing here.")}
 							/>
