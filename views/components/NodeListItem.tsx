@@ -12,11 +12,15 @@ import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
 import styled, { css } from 'styled-components';
 
+import { useActiveNode } from '../../../hooks/useActiveNode';
 import useUserInfo from '../../../hooks/useUserInfo';
 import {
+	DISPLAYER_TABS,
+	DOWNLOAD_PATH,
 	LIST_ITEM_AVATAR_HEIGHT,
 	LIST_ITEM_HEIGHT,
 	LIST_ITEM_HEIGHT_COMPACT,
+	REST_ENDPOINT,
 	ROOTS
 } from '../../constants';
 import { useCreateSnackbar } from '../../hooks/useCreateSnackbar';
@@ -34,7 +38,7 @@ import {
 } from '../../utils/utils';
 import { ContextualMenu } from './ContextualMenu';
 import { NodeHoverBar } from './NodeHoverBar';
-import PdfPreviewerBase from './previewer/PdfPreviewerBase';
+import PdfPreviewer from './previewer/PdfPreviewer';
 import Previewer from './previewer/Previewer';
 import {
 	CheckedAvatar,
@@ -155,6 +159,14 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 	const hidePreviewerCallback = useCallback(() => setShowPreviewer(false), []);
 	const showPdfPreviewerCallback = useCallback(() => setShowPdfPreviewer(true), []);
 	const hidePdfPreviewerCallback = useCallback(() => setShowPdfPreviewer(false), []);
+	const { activeNodeId, setActiveNode } = useActiveNode();
+
+	const usePdfPreviewerFallback = useMemo(() => {
+		if (size) {
+			return size > 10485760; // 20971520;
+		}
+		return true;
+	}, [size]);
 	const userInfo = useUserInfo();
 	const [isContextualMenuActive, setIsContextualMenuActive] = useState(false);
 	const selectIdCallback = useCallback(
@@ -493,9 +505,17 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 											mainAlignment="flex-end"
 											padding={{ left: 'small' }}
 										>
-											<Text size="extrasmall" overflow="ellipsis">
-												{displayName}
-											</Text>
+											<a
+												target="_blank"
+												href={`${REST_ENDPOINT}${DOWNLOAD_PATH}/${encodeURIComponent(
+													id
+												)}/${version}`}
+												rel="nofollow noreferrer noopener"
+											>
+												<Text size="extrasmall" overflow="ellipsis">
+													{displayName}
+												</Text>
+											</a>
 										</FlexContainer>
 									)}
 								</Row>
@@ -525,9 +545,33 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 				onClose={hidePreviewerCallback}
 				closeTooltipLabel={t('previewer.close.tooltip', 'Close')}
 			/>
-			<PdfPreviewerBase
-				show={showPdfPreviewer}
+			<PdfPreviewer
+				filename={name}
+				extension={extension || undefined}
+				size={(size && humanFileSize(size)) || undefined}
+				useFallback={usePdfPreviewerFallback}
+				actions={[
+					{
+						icon: 'DriveOutline',
+						id: 'DriveOutline',
+						tooltipLabel: t('previewer.actions.tooltip.addCollaborator', 'Add collaborator'),
+						onClick: (): void => setActiveNode(id, DISPLAYER_TABS.sharing)
+					},
+					{
+						icon: 'DownloadOutline',
+						tooltipLabel: t('previewer.actions.tooltip.download', 'Download'),
+						id: 'DownloadOutline',
+						onClick: (): void => downloadNode(id)
+					}
+				]}
+				leftAction={{
+					id: 'close-action',
+					icon: 'ArrowBackOutline',
+					onClick: hidePdfPreviewerCallback,
+					tooltipLabel: t('previewer.close.tooltip', 'Close')
+				}}
 				src={version ? getPdfPreviewSrc(id, version) : ''}
+				show={showPdfPreviewer}
 				onClose={hidePdfPreviewerCallback}
 			/>
 		</Container>

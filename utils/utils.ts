@@ -555,9 +555,5 @@ export const getPreviewSrc = (
 ): string =>
 	`${REST_ENDPOINT}${PREVIEW}/image/${id}/${version}/${weight}x${height}?quality=${quality}`;
 
-export const getPdfPreviewSrc = (id: string, version?: number): string => {
-	const url = `${REST_ENDPOINT}${DOWNLOAD_PATH}/${encodeURIComponent(id)}${
-		version ? `/${version}` : ''
-	}`;
-	return url;
-};
+export const getPdfPreviewSrc = (id: string, version?: number): string =>
+	`${REST_ENDPOINT}${PREVIEW}/pdf/${id}/${version}`;
