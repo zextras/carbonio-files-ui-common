@@ -6,19 +6,27 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import {
-	IconButton,
 	Container,
+	IconButton,
 	Padding,
 	Portal,
+	Tooltip,
 	useCombinedRefs
 } from '@zextras/carbonio-design-system';
+import map from 'lodash/map';
 import { Document, Page } from 'react-pdf/dist/esm/entry.webpack';
 import styled from 'styled-components';
 
 import FocusWithin from './FocusWithin';
 import Header, { HeaderProps } from './Header';
 import { PreviewCriteriaAlternativeContent } from './PreviewCriteriaAlternativeContent';
-import map from "lodash/map";
+
+const CustomIconButton = styled(IconButton)`
+	& > svg {
+		width: 20px;
+		height: 20px;
+	}
+`;
 
 const Overlay = styled.div`
 	height: 100vh;
@@ -46,35 +54,51 @@ const ExternalContainer = styled.div`
 	max-width: 100vw;
 	display: flex;
 	flex-direction: column;
+	position: relative;
+`;
+
+const Navigator = styled.div`
+	padding: 8px;
+	display: flex;
+	position: absolute;
+	z-index: 1;
+	bottom: 16px;
+	background-color: ${({ theme }): string => theme.palette.gray0.regular};
+	align-self: center;
 `;
 
 const PreviewerContainer = styled.div`
 	display: flex;
-	flex-grow: 1;
 	flex-direction: column;
-	justify-content: center;
-	align-items: center;
-	overflow: hidden;
+	flex-grow: 1;
+	//  https://bhch.github.io/posts/2021/04/centring-flex-items-and-allowing-overflow-scroll/
+	//justify-content: center;
+	//align-items: center;
+	// justify-content and align-items conflict with overflow management
+	overflow: auto;
 	outline: none;
+
+	&::-webkit-scrollbar {
+		width: 7px;
+		height: 7px;
+	}
+
+	&::-webkit-scrollbar-track {
+		background-color: transparent;
+	}
+
+	&::-webkit-scrollbar-thumb {
+		background-color: ${({ theme }): string => theme.palette.gray3.regular};
+		border-radius: 4px;
+	}
+
 	& > .react-pdf__Document {
-		padding-right: 17px;
+		//padding-right: 17px;
 		padding-bottom: 16px;
-		overflow: auto;
+		margin: auto;
 		display: flex;
 		gap: 16px;
 		flex-direction: column;
-		&::-webkit-scrollbar {
-			width: 7px;
-		}
-
-		&::-webkit-scrollbar-track {
-			background-color: transparent;
-		}
-
-		&::-webkit-scrollbar-thumb {
-			background-color: ${({ theme }): string => theme.palette.gray3.regular};
-			border-radius: 4px;
-		}
 	}
 `;
 
@@ -96,6 +120,8 @@ type PdfPreviewerProps = Partial<HeaderProps> & {
 	/** CustomContent */
 	customContent?: React.ReactElement;
 };
+
+const zoomStep = [800, 1000, 1200, 1400, 1600, 2000, 2400, 3200];
 
 const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(function PreviewerFn(
 	{
@@ -130,19 +156,71 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 	);
 
 	const [numPages, setNumPages] = useState(null);
-	const [scale, setScale] = useState(1);
+
+	const [currentZoomStep, setCurrentZoomStep] = useState(0);
+
+	const [useFitToWidth, setUseFitToWidth] = useState(false);
+	const [currentWidth, setCurrentWidth] = useState(0);
+
+	const increaseOfOneStep = useCallback(
+		(ev) => {
+			ev.stopPropagation();
+			if (zoomStep[currentZoomStep] !== zoomStep[zoomStep.length - 1]) {
+				setCurrentZoomStep(currentZoomStep + 1);
+				setUseFitToWidth(false);
+			}
+		},
+		[currentZoomStep]
+	);
+
+	const fitToWidth = useCallback(
+		(ev) => {
+			ev.stopPropagation();
+			if (previewerRef.current) {
+				// console.log(previewerRef.current?.clientWidth);
+				// console.log(previewerRef.current?.offsetWidth);
+				setCurrentWidth(previewerRef.current?.clientWidth);
+				setUseFitToWidth(true);
+			}
+		},
+		[previewerRef]
+	);
+
+	const resetWidth = useCallback((ev) => {
+		ev.stopPropagation();
+		setCurrentZoomStep(0);
+		setUseFitToWidth(false);
+	}, []);
+
+	const decreaseOfOneStep = useCallback(
+		(ev) => {
+			ev.stopPropagation();
+			if (currentZoomStep > 0) {
+				setCurrentZoomStep(currentZoomStep - 1);
+				setUseFitToWidth(false);
+			}
+		},
+		[currentZoomStep]
+	);
+
+	// could be useful for future implementations
+	// const onPageLoadSuccess = useCallback(({ originalHeight, originalWidth, width, height }) => {
+	// 	console.log(originalHeight, originalWidth, width, height);
+	// }, []);
 
 	const pageElements = useMemo(() => {
 		if (numPages) {
-			const a = new Array(numPages);
-			// eslint-disable-next-line arrow-body-style
-			const mapped = map(a, (el, index, sasso) => {
-				return <Page scale={scale} key={`page_${index + 1}`} pageNumber={index + 1} />;
-			});
-			return mapped;
+			return map(new Array(numPages), (el, index) => (
+				<Page
+					key={`page_${index + 1}`}
+					pageNumber={index + 1}
+					// onLoadSuccess={index === 0 ? onPageLoadSuccess : undefined}
+					width={useFitToWidth ? currentWidth : zoomStep[currentZoomStep]}
+				/>
+			));
 		}
 		return [];
-	}, [numPages, scale]);
+	}, [currentWidth, currentZoomStep, numPages, useFitToWidth]);
 
 	const onDocumentLoadSuccess = useCallback((args) => {
 		setNumPages(args.numPages);
@@ -160,6 +238,47 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 			<Overlay onClick={onOverlayClick}>
 				<FocusWithin>
 					<ExternalContainer>
+						{!$customContent && (
+							<Navigator>
+								<Tooltip
+									disabled={currentZoomStep === 0}
+									label={'Decrease of one step'}
+									key={'Minus'}
+								>
+									<CustomIconButton
+										disabled={currentZoomStep === 0}
+										icon="Minus"
+										size="small"
+										backgroundColor="gray0"
+										iconColor="gray6"
+										onClick={decreaseOfOneStep}
+									/>
+								</Tooltip>
+								<Tooltip label={useFitToWidth ? 'Reset' : 'Fit to width'} key={'MaximizeOutline'}>
+									<CustomIconButton
+										icon={useFitToWidth ? 'MinimizeOutline' : 'MaximizeOutline'}
+										size="small"
+										backgroundColor="gray0"
+										iconColor="gray6"
+										onClick={useFitToWidth ? resetWidth : fitToWidth}
+									/>
+								</Tooltip>
+								<Tooltip
+									label={'Increase of one step'}
+									key={'Plus'}
+									disabled={currentZoomStep === zoomStep.length - 1}
+								>
+									<CustomIconButton
+										icon="Plus"
+										size="small"
+										backgroundColor="gray0"
+										iconColor="gray6"
+										onClick={increaseOfOneStep}
+										disabled={currentZoomStep === zoomStep.length - 1}
+									/>
+								</Tooltip>
+							</Navigator>
+						)}
 						<Header
 							actions={actions}
 							filename={filename}
@@ -182,9 +301,6 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 							<PreviewerContainer ref={previewerRef}>
 								{!$customContent ? (
 									<Document file={src} onLoadSuccess={onDocumentLoadSuccess}>
-										{/*{Array.from(new Array(numPages), (el, index) => (*/}
-										{/*	<Page scale={scale} key={`page_${index + 1}`} pageNumber={index + 1} />*/}
-										{/*))}*/}
 										{pageElements}
 									</Document>
 								) : (
