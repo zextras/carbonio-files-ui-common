@@ -60,13 +60,15 @@ const ExternalContainer = styled.div`
 `;
 
 const Navigator = styled.div`
-	padding: 8px;
 	display: flex;
 	position: absolute;
 	z-index: 1;
 	bottom: 16px;
 	background-color: ${({ theme }): string => theme.palette.gray0.regular};
 	align-self: center;
+	border-radius: 4px;
+	gap: 8px;
+	padding: 8px 16px;
 `;
 
 const PreviewerContainer = styled.div`
@@ -162,8 +164,16 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 	const [currentZoom, setCurrentZoom] = useState(zoomStep[0]);
 	const [incrementable, setIncrementable] = useState(true);
 	const [decrementable, setDecrementable] = useState(false);
-
 	const [fitToWidthActive, setFitToWidthActive] = useState(false);
+
+	useEffect(() => {
+		if (!show) {
+			setCurrentZoom(zoomStep[0]);
+			setIncrementable(true);
+			setDecrementable(false);
+			setFitToWidthActive(false);
+		}
+	}, [show]);
 
 	const increaseOfOneStep = useCallback(
 		(ev) => {
@@ -272,7 +282,7 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 					<ExternalContainer>
 						{!$customContent && (
 							<Navigator onClick={(ev): void => ev.stopPropagation()}>
-								<Tooltip disabled={!decrementable} label={'Decrease of one step'} key={'Minus'}>
+								<Tooltip disabled={!decrementable} label={'Zoom out'}>
 									<CustomIconButton
 										disabled={!decrementable}
 										icon="Minus"
@@ -282,10 +292,7 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 										onClick={decreaseOfOneStep}
 									/>
 								</Tooltip>
-								<Tooltip
-									label={fitToWidthActive ? 'Reset' : 'Fit to width'}
-									key={'MaximizeOutline'}
-								>
+								<Tooltip label={fitToWidthActive ? 'Reset zoom' : 'Fit to width'}>
 									<CustomIconButton
 										icon={fitToWidthActive ? 'MinimizeOutline' : 'MaximizeOutline'}
 										size="small"
@@ -294,7 +301,7 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 										onClick={fitToWidthActive ? resetWidth : fitToWidth}
 									/>
 								</Tooltip>
-								<Tooltip label={'Increase of one step'} key={'Plus'} disabled={!incrementable}>
+								<Tooltip label={'Zoom in'} disabled={!incrementable}>
 									<CustomIconButton
 										icon="Plus"
 										size="small"
