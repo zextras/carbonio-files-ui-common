@@ -7,11 +7,10 @@
 import React, { useEffect, useState } from 'react';
 
 import { Container, Responsive } from '@zextras/carbonio-design-system';
-// eslint-disable-next-line import/no-unresolved
-import { ACTION_TYPES } from '@zextras/carbonio-shell-ui';
 import noop from 'lodash/noop';
 import { useTranslation } from 'react-i18next';
 
+import { ACTION_TYPES } from '../../constants';
 import { useCreateOptions } from '../../hooks/useCreateOptions';
 import { DISPLAYER_WIDTH, FILES_APP_ID, LIST_WIDTH } from '../constants';
 import { ListContext } from '../contexts';
