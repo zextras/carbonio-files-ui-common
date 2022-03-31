@@ -218,6 +218,15 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 		[previewerRef]
 	);
 
+	useEffect(() => {
+		if (show && fitToWidthActive) {
+			window.addEventListener('resize', fitToWidth);
+		}
+		return (): void => {
+			window.removeEventListener('resize', fitToWidth);
+		};
+	}, [fitToWidth, previewerRef, show, fitToWidthActive]);
+
 	const resetWidth = useCallback((ev) => {
 		ev.stopPropagation();
 		setCurrentZoom(zoomStep[0]);
@@ -318,7 +327,7 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 							</Container>
 							<PreviewerContainer ref={previewerRef}>
 								{!$customContent ? (
-									<Document file={src} onLoadSuccess={onDocumentLoadSuccess}>
+									<Document file={{ url: src }} onLoadSuccess={onDocumentLoadSuccess}>
 										{pageElements}
 									</Document>
 								) : (
