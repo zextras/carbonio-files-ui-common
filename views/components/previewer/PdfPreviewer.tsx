@@ -123,6 +123,8 @@ type PdfPreviewerProps = Partial<HeaderProps> & {
 	useFallback?: boolean;
 	/** CustomContent */
 	customContent?: React.ReactElement;
+	/** Whether a text layer should be rendered */
+	renderTextLayer?: boolean;
 };
 
 const zoomStep = [800, 1000, 1200, 1400, 1600, 2000, 2400, 3200];
@@ -140,7 +142,8 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 		onClose,
 		useFallback = false,
 		customContent,
-		leftAction
+		leftAction,
+		renderTextLayer = false
 	},
 	ref
 ) {
@@ -258,11 +261,12 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 					pageNumber={index + 1}
 					// onLoadSuccess={index === 0 ? onPageLoadSuccess : undefined}
 					width={currentZoom}
+					renderTextLayer={renderTextLayer}
 				/>
 			));
 		}
 		return [];
-	}, [currentZoom, numPages]);
+	}, [currentZoom, numPages, renderTextLayer]);
 
 	const onDocumentLoadSuccess = useCallback((args) => {
 		setNumPages(args.numPages);
