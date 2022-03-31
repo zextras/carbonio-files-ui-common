@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: AGPL-3.0-only
  */
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
 	Container,
@@ -13,6 +13,8 @@ import {
 	Tooltip,
 	useCombinedRefs
 } from '@zextras/carbonio-design-system';
+import findIndex from 'lodash/findIndex';
+import findLastIndex from 'lodash/findLastIndex';
 import map from 'lodash/map';
 import { Document, Page } from 'react-pdf/dist/esm/entry.webpack';
 import styled from 'styled-components';
@@ -157,30 +159,60 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 
 	const [numPages, setNumPages] = useState(null);
 
-	const [currentZoomStep, setCurrentZoomStep] = useState(0);
+	const [currentZoom, setCurrentZoom] = useState(zoomStep[0]);
+	const [incrementable, setIncrementable] = useState(true);
+	const [decrementable, setDecrementable] = useState(false);
 
-	const [useFitToWidth, setUseFitToWidth] = useState(false);
-	const [currentWidth, setCurrentWidth] = useState(0);
+	const [fitToWidthActive, setFitToWidthActive] = useState(false);
 
 	const increaseOfOneStep = useCallback(
 		(ev) => {
 			ev.stopPropagation();
-			if (zoomStep[currentZoomStep] !== zoomStep[zoomStep.length - 1]) {
-				setCurrentZoomStep(currentZoomStep + 1);
-				setUseFitToWidth(false);
+			if (incrementable) {
+				const targetIndex = findIndex(zoomStep, (step) => step > currentZoom);
+				if (targetIndex >= 0) {
+					setCurrentZoom(zoomStep[targetIndex]);
+					if (targetIndex === zoomStep.length - 1) {
+						setIncrementable(false);
+					}
+					if (targetIndex > 0) {
+						setDecrementable(true);
+					}
+				}
 			}
+			setFitToWidthActive(false);
 		},
-		[currentZoomStep]
+		[currentZoom, incrementable]
+	);
+
+	const decreaseOfOneStep = useCallback(
+		(ev) => {
+			ev.stopPropagation();
+			if (decrementable) {
+				const targetIndex = findLastIndex(zoomStep, (step) => step < currentZoom);
+				if (targetIndex >= 0) {
+					setCurrentZoom(zoomStep[targetIndex]);
+					if (targetIndex === 0) {
+						setDecrementable(false);
+					}
+					if (targetIndex < zoomStep.length - 1) {
+						setIncrementable(true);
+					}
+				}
+			}
+			setFitToWidthActive(false);
+		},
+		[currentZoom, decrementable]
 	);
 
 	const fitToWidth = useCallback(
 		(ev) => {
 			ev.stopPropagation();
 			if (previewerRef.current) {
-				// console.log(previewerRef.current?.clientWidth);
-				// console.log(previewerRef.current?.offsetWidth);
-				setCurrentWidth(previewerRef.current?.clientWidth);
-				setUseFitToWidth(true);
+				setCurrentZoom(previewerRef.current?.clientWidth);
+				setIncrementable(previewerRef.current?.clientWidth < zoomStep[zoomStep.length - 1]);
+				setDecrementable(previewerRef.current?.clientWidth > zoomStep[0]);
+				setFitToWidthActive(true);
 			}
 		},
 		[previewerRef]
@@ -188,20 +220,11 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 
 	const resetWidth = useCallback((ev) => {
 		ev.stopPropagation();
-		setCurrentZoomStep(0);
-		setUseFitToWidth(false);
+		setCurrentZoom(zoomStep[0]);
+		setIncrementable(true);
+		setDecrementable(false);
+		setFitToWidthActive(false);
 	}, []);
-
-	const decreaseOfOneStep = useCallback(
-		(ev) => {
-			ev.stopPropagation();
-			if (currentZoomStep > 0) {
-				setCurrentZoomStep(currentZoomStep - 1);
-				setUseFitToWidth(false);
-			}
-		},
-		[currentZoomStep]
-	);
 
 	// could be useful for future implementations
 	// const onPageLoadSuccess = useCallback(({ originalHeight, originalWidth, width, height }) => {
@@ -215,12 +238,12 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 					key={`page_${index + 1}`}
 					pageNumber={index + 1}
 					// onLoadSuccess={index === 0 ? onPageLoadSuccess : undefined}
-					width={useFitToWidth ? currentWidth : zoomStep[currentZoomStep]}
+					width={currentZoom}
 				/>
 			));
 		}
 		return [];
-	}, [currentWidth, currentZoomStep, numPages, useFitToWidth]);
+	}, [currentZoom, numPages]);
 
 	const onDocumentLoadSuccess = useCallback((args) => {
 		setNumPages(args.numPages);
@@ -239,14 +262,10 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 				<FocusWithin>
 					<ExternalContainer>
 						{!$customContent && (
-							<Navigator>
-								<Tooltip
-									disabled={currentZoomStep === 0}
-									label={'Decrease of one step'}
-									key={'Minus'}
-								>
+							<Navigator onClick={(ev): void => ev.stopPropagation()}>
+								<Tooltip disabled={!decrementable} label={'Decrease of one step'} key={'Minus'}>
 									<CustomIconButton
-										disabled={currentZoomStep === 0}
+										disabled={!decrementable}
 										icon="Minus"
 										size="small"
 										backgroundColor="gray0"
@@ -254,27 +273,26 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 										onClick={decreaseOfOneStep}
 									/>
 								</Tooltip>
-								<Tooltip label={useFitToWidth ? 'Reset' : 'Fit to width'} key={'MaximizeOutline'}>
+								<Tooltip
+									label={fitToWidthActive ? 'Reset' : 'Fit to width'}
+									key={'MaximizeOutline'}
+								>
 									<CustomIconButton
-										icon={useFitToWidth ? 'MinimizeOutline' : 'MaximizeOutline'}
+										icon={fitToWidthActive ? 'MinimizeOutline' : 'MaximizeOutline'}
 										size="small"
 										backgroundColor="gray0"
 										iconColor="gray6"
-										onClick={useFitToWidth ? resetWidth : fitToWidth}
+										onClick={fitToWidthActive ? resetWidth : fitToWidth}
 									/>
 								</Tooltip>
-								<Tooltip
-									label={'Increase of one step'}
-									key={'Plus'}
-									disabled={currentZoomStep === zoomStep.length - 1}
-								>
+								<Tooltip label={'Increase of one step'} key={'Plus'} disabled={!incrementable}>
 									<CustomIconButton
 										icon="Plus"
 										size="small"
 										backgroundColor="gray0"
 										iconColor="gray6"
 										onClick={increaseOfOneStep}
-										disabled={currentZoomStep === zoomStep.length - 1}
+										disabled={!incrementable}
 									/>
 								</Tooltip>
 							</Navigator>
