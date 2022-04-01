@@ -26,7 +26,12 @@ import { graphql, rest } from 'msw';
 
 import server from '../../../mocks/server';
 import { nodeListCursorVar } from '../../apollo/nodeListCursorVar';
-import { DOCS_ENDPOINT, CREATE_FILE_PATH, NODES_LOAD_LIMIT, NODES_SORT_DEFAULT } from '../../constants';
+import {
+	DOCS_ENDPOINT,
+	CREATE_FILE_PATH,
+	NODES_LOAD_LIMIT,
+	NODES_SORT_DEFAULT
+} from '../../constants';
 import GET_CHILDREN from '../../graphql/queries/getChildren.graphql';
 import {
 	CreateDocsFileRequestBody,
