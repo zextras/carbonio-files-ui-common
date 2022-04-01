@@ -26,7 +26,7 @@ import { graphql, rest } from 'msw';
 
 import server from '../../../mocks/server';
 import { nodeListCursorVar } from '../../apollo/nodeListCursorVar';
-import { DOCS_ENDPOINT, DOCS_PATH, NODES_LOAD_LIMIT, NODES_SORT_DEFAULT } from '../../constants';
+import { DOCS_ENDPOINT, CREATE_FILE_PATH, NODES_LOAD_LIMIT, NODES_SORT_DEFAULT } from '../../constants';
 import GET_CHILDREN from '../../graphql/queries/getChildren.graphql';
 import {
 	CreateDocsFileRequestBody,
@@ -3592,7 +3592,7 @@ describe('Folder List', () => {
 			];
 
 			server.use(
-				rest.post(`${DOCS_ENDPOINT}${DOCS_PATH}`, (req, res, ctx) =>
+				rest.post(`${DOCS_ENDPOINT}${CREATE_FILE_PATH}`, (req, res, ctx) =>
 					res(ctx.status(500, 'Error! Name already assigned'))
 				),
 				graphql.query<GetNodeQuery, GetNodeQueryVariables>('getNode', (req, res, ctx) =>
@@ -3661,7 +3661,7 @@ describe('Folder List', () => {
 			];
 
 			server.use(
-				rest.post(DOCS_ENDPOINT + DOCS_PATH, (req, res, ctx) =>
+				rest.post(DOCS_ENDPOINT + CREATE_FILE_PATH, (req, res, ctx) =>
 					res(
 						ctx.json({
 							nodeId: node2.id
@@ -3760,7 +3760,7 @@ describe('Folder List', () => {
 
 			server.use(
 				rest.post<CreateDocsFileRequestBody, CreateDocsFileResponse>(
-					`${DOCS_ENDPOINT}${DOCS_PATH}`,
+					`${DOCS_ENDPOINT}${CREATE_FILE_PATH}`,
 					(req, res, ctx) =>
 						res(
 							ctx.json({

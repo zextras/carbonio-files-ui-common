@@ -10,7 +10,7 @@ import { ApolloClient, FetchResult, NormalizedCacheObject, useReactiveVar } from
 
 import buildClient from '../apollo';
 import { nodeSortVar } from '../apollo/nodeSortVar';
-import { DOCS_ENDPOINT, DOCS_PATH, NODES_LOAD_LIMIT, SHARES_LOAD_LIMIT } from '../constants';
+import { DOCS_ENDPOINT, CREATE_FILE_PATH, NODES_LOAD_LIMIT, SHARES_LOAD_LIMIT } from '../constants';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import GET_NODE from '../graphql/queries/getNode.graphql';
 import { CreateDocsFile, DocsType } from '../types/common';
@@ -116,12 +116,12 @@ export const useCreateDocsFile: UseCreateDocsFile = () => {
 			new Promise<FetchResult<CreateDocsFile>>((resolve, reject) => {
 				const file = { name, type, parentId: parentFolder.id };
 				const body = {
-					name: file.name,
+					filename: file.name,
 					type: file.type,
-					parentId: file.parentId
+					destinationFolderId: file.parentId
 				};
 				const xhr = new XMLHttpRequest();
-				const url = `${DOCS_ENDPOINT}${DOCS_PATH}`;
+				const url = `${DOCS_ENDPOINT}${CREATE_FILE_PATH}`;
 				xhr.open('POST', url, true);
 				xhr.setRequestHeader('Content-Type', 'application/json');
 
