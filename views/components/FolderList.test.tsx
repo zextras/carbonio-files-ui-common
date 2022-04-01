@@ -3770,8 +3770,8 @@ describe('Folder List', () => {
 						res(
 							ctx.json({
 								nodeId:
-									(req.body.name === node2.name && node2.id) ||
-									(req.body.name === node1.name && node1.id) ||
+									(req.body.filename === node2.name && node2.id) ||
+									(req.body.filename === node1.name && node1.id) ||
 									null
 							})
 						)
