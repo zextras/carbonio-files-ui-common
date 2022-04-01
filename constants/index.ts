@@ -46,13 +46,13 @@ export const SHARE_CHIP_SIZE = 'small';
 // keep endpoint without trailing slash
 export const GRAPHQL_ENDPOINT = '/services/files/graphql';
 export const REST_ENDPOINT = '/services/files';
-export const DOCS_ENDPOINT = '/zx/docs/v1';
+export const DOCS_ENDPOINT = '/services/docs';
 // add leading slash in path
-export const OPEN_FILE_PATH = '/openFile';
+export const OPEN_FILE_PATH = '/files/open';
 export const DOWNLOAD_PATH = '/download';
 export const UPLOAD_PATH = '/upload';
 export const UPLOAD_VERSION_PATH = '/upload-version';
-export const DOCS_PATH = '/createFile';
+export const CREATE_FILE_PATH = '/files/create';
 export const PREVIEW = '/preview';
 
 export const FILES_ROUTE = 'files';

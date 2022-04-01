@@ -266,7 +266,7 @@ const docsTabMap: { [url: string]: Window } = {};
 export const openNodeWithDocs = (id: string, version?: number): void => {
 	if (id) {
 		const url = `${DOCS_ENDPOINT}${OPEN_FILE_PATH}/${encodeURIComponent(id)}${
-			version ? `/${version}` : ''
+			version ? `?version=${version}` : ''
 		}`;
 		if (docsTabMap[url] == null || (docsTabMap[url] != null && docsTabMap[url].closed)) {
 			docsTabMap[url] = window.open(url, url) as Window;

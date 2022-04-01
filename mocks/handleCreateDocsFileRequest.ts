@@ -14,8 +14,8 @@ export interface CreateDocsFileResponse {
 }
 
 export interface CreateDocsFileRequestBody {
-	name: string;
-	parentId: string;
+	filename: string;
+	destinationFolderId: string;
 	type: DocsType;
 }
 
