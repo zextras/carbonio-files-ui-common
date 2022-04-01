@@ -47,10 +47,10 @@ All non-software material (such as, for example, names, images, logos, sounds) i
 Where not specified, all source files owned by Zextras s.r.l. are licensed under AGPL-3.0-only
 
 
-[contributors-badge]: https://img.shields.io/github/contributors/zextras/carbonio-files-ui "Contributors"
-[contributors]: https://github.com/zextras/carbonio-files-ui/graphs/contributors "Contributors"
-[activity-badge]: https://img.shields.io/github/commit-activity/m/zextras/carbonio-files-ui "Activity"
-[activity]: https://github.com/zextras/carbonio-files-ui/pulse "Activity"
+[contributors-badge]: https://img.shields.io/github/contributors/zextras/carbonio-files-ui-common "Contributors"
+[contributors]: https://github.com/zextras/carbonio-files-ui-common/graphs/contributors "Contributors"
+[activity-badge]: https://img.shields.io/github/commit-activity/m/zextras/carbonio-files-ui-common "Activity"
+[activity]: https://github.com/zextras/carbonio-files-ui-common/pulse "Activity"
 [license-badge]: https://img.shields.io/badge/license-AGPL%203-green "License AGPL 3"
 [project-badge]: https://img.shields.io/badge/project-carbonio-informational "Project Carbonio"
 [project]: https://www.zextras.com/carbonio/ "Project Carbonio"
