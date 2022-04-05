@@ -52,12 +52,11 @@ interface HeaderAction {
 	tooltipPlacement?: React.ComponentPropsWithRef<typeof Tooltip>['placement'];
 	/** Disabled status for the action */
 	disabled?: boolean;
-	sizeLimit?: number;
 }
 
 export interface HeaderProps {
 	/** Left Action for the previewer */
-	leftAction?: HeaderAction;
+	closeAction?: HeaderAction;
 	/** Actions for the previewer */
 	actions: HeaderAction[];
 	/** Extension of the file, shown as info */
@@ -68,19 +67,19 @@ export interface HeaderProps {
 	size: string;
 }
 
-const Header: React.VFC<HeaderProps> = ({ leftAction, actions, filename, extension, size }) => (
+const Header: React.VFC<HeaderProps> = ({ closeAction, actions, filename, extension, size }) => (
 	<HeaderContainer>
 		<LeftContainer>
-			{leftAction && (
+			{closeAction && (
 				<Tooltip
-					label={leftAction.tooltipLabel}
-					disabled={!leftAction.tooltipLabel}
-					key={leftAction.id}
-					placement={leftAction.tooltipPlacement}
+					label={closeAction.tooltipLabel}
+					disabled={!closeAction.tooltipLabel}
+					key={closeAction.id}
+					placement={closeAction.tooltipPlacement}
 				>
 					<IconButton
-						onClick={leftAction.onClick}
-						icon={leftAction.icon}
+						onClick={closeAction.onClick}
+						icon={closeAction.icon}
 						size="medium"
 						backgroundColor="transparent"
 						iconColor="gray6"

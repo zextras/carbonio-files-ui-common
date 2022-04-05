@@ -39,8 +39,7 @@ import {
 import { ContextualMenu } from './ContextualMenu';
 import { NodeAvatarIcon } from './NodeAvatarIcon';
 import { NodeHoverBar } from './NodeHoverBar';
-import PdfPreviewer from './previewer/PdfPreviewer';
-import Previewer from './previewer/Previewer';
+import { usePreviewer } from './previewer/PreviewerManager';
 import { HoverBarContainer, HoverContainer, ListItemContainer } from './StyledComponents';
 
 const CustomText = styled(Text)`
@@ -149,12 +148,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 	version
 }) => {
 	const [t] = useTranslation();
-	const [showPreviewer, setShowPreviewer] = useState(false);
-	const [showPdfPreviewer, setShowPdfPreviewer] = useState(false);
-	const showPreviewerCallback = useCallback(() => setShowPreviewer(true), []);
-	const hidePreviewerCallback = useCallback(() => setShowPreviewer(false), []);
-	const showPdfPreviewerCallback = useCallback(() => setShowPdfPreviewer(true), []);
-	const hidePdfPreviewerCallback = useCallback(() => setShowPdfPreviewer(false), []);
+	const { createPreviewer } = usePreviewer();
 	const { setActiveNode } = useActiveNode();
 
 	const usePdfPreviewerFallback = useMemo(() => {
@@ -300,9 +294,60 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 				) {
 					openNodeWithDocs(id);
 				} else if (type === NodeType.Image) {
-					showPreviewerCallback();
+					createPreviewer({
+						previewerType: 'image',
+						filename: name,
+						extension: extension || undefined,
+						size: (size && humanFileSize(size)) || undefined,
+						actions: [
+							{
+								icon: 'DriveOutline',
+								id: 'DriveOutline',
+								tooltipLabel: t('previewer.actions.tooltip.addCollaborator', 'Add collaborator'),
+								onClick: (): void => setActiveNode(id, DISPLAYER_TABS.sharing)
+							},
+							{
+								icon: 'DownloadOutline',
+								tooltipLabel: t('previewer.actions.tooltip.download', 'Download'),
+								id: 'DownloadOutline',
+								onClick: (): void => downloadNode(id)
+							}
+						],
+						closeAction: {
+							id: 'close-action',
+							icon: 'ArrowBackOutline',
+							tooltipLabel: t('previewer.close.tooltip', 'Close')
+						},
+						src: version ? getPreviewSrc(id, version, 0, 0, 'high') : ''
+					});
 				} else if (includes(mimeType, 'pdf')) {
-					showPdfPreviewerCallback();
+					createPreviewer({
+						previewerType: 'pdf',
+						filename: name,
+						extension: extension || undefined,
+						size: (size && humanFileSize(size)) || undefined,
+						useFallback: usePdfPreviewerFallback,
+						actions: [
+							{
+								icon: 'DriveOutline',
+								id: 'DriveOutline',
+								tooltipLabel: t('previewer.actions.tooltip.addCollaborator', 'Add collaborator'),
+								onClick: (): void => setActiveNode(id, DISPLAYER_TABS.sharing)
+							},
+							{
+								icon: 'DownloadOutline',
+								tooltipLabel: t('previewer.actions.tooltip.download', 'Download'),
+								id: 'DownloadOutline',
+								onClick: (): void => downloadNode(id)
+							}
+						],
+						closeAction: {
+							id: 'close-action',
+							icon: 'ArrowBackOutline',
+							tooltipLabel: t('previewer.close.tooltip', 'Close')
+						},
+						src: version ? getPdfPreviewSrc(id, version) : ''
+					});
 				}
 			}
 		},
@@ -312,12 +357,18 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 			trashed,
 			isNavigable,
 			permittedContextualMenuActions,
-			mimeType,
-			showPreviewerCallback,
-			showPdfPreviewerCallback,
 			type,
+			mimeType,
 			navigateTo,
-			id
+			id,
+			createPreviewer,
+			name,
+			extension,
+			size,
+			t,
+			version,
+			setActiveNode,
+			usePdfPreviewerFallback
 		]
 	);
 
@@ -517,45 +568,6 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 					)}
 				</ListItemContainer>
 			</ContextualMenu>
-			<Previewer
-				filename={name}
-				extension={extension || undefined}
-				size={(size && humanFileSize(size)) || undefined}
-				actions={[]}
-				src={version ? getPreviewSrc(id, version, 0, 0, 'high') : ''}
-				show={showPreviewer}
-				onClose={hidePreviewerCallback}
-				closeTooltipLabel={t('previewer.close.tooltip', 'Close')}
-			/>
-			<PdfPreviewer
-				filename={name}
-				extension={extension || undefined}
-				size={(size && humanFileSize(size)) || undefined}
-				useFallback={usePdfPreviewerFallback}
-				actions={[
-					{
-						icon: 'DriveOutline',
-						id: 'DriveOutline',
-						tooltipLabel: t('previewer.actions.tooltip.addCollaborator', 'Add collaborator'),
-						onClick: (): void => setActiveNode(id, DISPLAYER_TABS.sharing)
-					},
-					{
-						icon: 'DownloadOutline',
-						tooltipLabel: t('previewer.actions.tooltip.download', 'Download'),
-						id: 'DownloadOutline',
-						onClick: (): void => downloadNode(id)
-					}
-				]}
-				leftAction={{
-					id: 'close-action',
-					icon: 'ArrowBackOutline',
-					onClick: hidePdfPreviewerCallback,
-					tooltipLabel: t('previewer.close.tooltip', 'Close')
-				}}
-				src={version ? getPdfPreviewSrc(id, version) : ''}
-				show={showPdfPreviewer}
-				onClose={hidePdfPreviewerCallback}
-			/>
 		</Container>
 	);
 };

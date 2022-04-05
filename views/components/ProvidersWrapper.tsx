@@ -11,6 +11,7 @@ import { ModalManager, SnackbarManager } from '@zextras/carbonio-design-system';
 
 import StyledWrapper from '../../../StyledWrapper';
 import buildClient from '../../apollo';
+import { PreviewerManager } from './previewer/PreviewerManager';
 
 export const ProvidersWrapper: React.FC = ({ children }) => {
 	const apolloClient = useMemo(() => buildClient(), []);
@@ -18,7 +19,9 @@ export const ProvidersWrapper: React.FC = ({ children }) => {
 		<StyledWrapper>
 			<ApolloProvider client={apolloClient}>
 				<SnackbarManager>
-					<ModalManager>{children}</ModalManager>
+					<ModalManager>
+						<PreviewerManager>{children}</PreviewerManager>
+					</ModalManager>
 				</SnackbarManager>
 			</ApolloProvider>
 		</StyledWrapper>

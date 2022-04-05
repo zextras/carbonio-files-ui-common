@@ -8,7 +8,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
 	Container,
 	IconButton,
-	Padding,
 	Portal,
 	Tooltip,
 	useCombinedRefs
@@ -106,7 +105,7 @@ const PreviewerContainer = styled.div`
 	}
 `;
 
-type PdfPreviewerProps = Partial<HeaderProps> & {
+export type PdfPreviewerProps = Partial<HeaderProps> & {
 	/**
 	 * HTML node where to insert the Portal's children.
 	 * The default value is 'window.top.document'.
@@ -139,10 +138,10 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 		filename = '',
 		size = '',
 		actions = [],
+		closeAction,
 		onClose,
 		useFallback = false,
 		customContent,
-		leftAction,
 		renderTextLayer = false
 	},
 	ref
@@ -322,20 +321,21 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 							filename={filename}
 							extension={extension}
 							size={size}
-							leftAction={leftAction}
+							closeAction={closeAction}
 						/>
 						<MiddleContainer orientation="horizontal" crossAlignment="unset" minHeight={0}>
-							<Container width="fit">
-								<Padding left="small" right="small">
-									<IconButton
-										icon="ArrowBackOutline"
-										size="medium"
-										backgroundColor="gray0"
-										iconColor="gray6"
-										borderRadius="round"
-									/>
-								</Padding>
-							</Container>
+							{/* TODO: uncomment when navigation between items will be implemented */}
+							{/* <Container width="fit"> */}
+							{/*	<Padding left="small" right="small"> */}
+							{/*		<IconButton */}
+							{/*			icon="ArrowBackOutline" */}
+							{/*			size="medium" */}
+							{/*			backgroundColor="gray0" */}
+							{/*			iconColor="gray6" */}
+							{/*			borderRadius="round" */}
+							{/*		/> */}
+							{/*	</Padding> */}
+							{/* </Container> */}
 							<PreviewerContainer ref={previewerRef}>
 								{!$customContent ? (
 									<Document file={{ url: src }} onLoadSuccess={onDocumentLoadSuccess}>
@@ -345,17 +345,18 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 									$customContent
 								)}
 							</PreviewerContainer>
-							<Container width="fit">
-								<Padding left="small" right="small">
-									<IconButton
-										icon="ArrowForwardOutline"
-										size="medium"
-										backgroundColor="gray0"
-										iconColor="gray6"
-										borderRadius="round"
-									/>
-								</Padding>
-							</Container>
+							{/* TODO: uncomment when navigation between items will be implemented */}
+							{/* <Container width="fit"> */}
+							{/*	<Padding left="small" right="small"> */}
+							{/*		<IconButton */}
+							{/*			icon="ArrowForwardOutline" */}
+							{/*			size="medium" */}
+							{/*			backgroundColor="gray0" */}
+							{/*			iconColor="gray6" */}
+							{/*			borderRadius="round" */}
+							{/*		/> */}
+							{/*	</Padding> */}
+							{/* </Container> */}
 						</MiddleContainer>
 					</ExternalContainer>
 				</FocusWithin>
