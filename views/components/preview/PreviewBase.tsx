@@ -26,7 +26,7 @@ const Overlay = styled.div`
 	z-index: 1003;
 `;
 
-const PreviewerContainer = styled.div.attrs({
+const PreviewContainer = styled.div.attrs({
 	$paddingVertical: '32px',
 	$paddingHorizontal: '16px',
 	$gap: '8px'
@@ -62,7 +62,7 @@ const Image = styled.img`
 	border-radius: 4px;
 `;
 
-export interface PreviewerBaseProps {
+export interface PreviewBaseProps {
 	/**
 	 * HTML node where to insert the Portal's children.
 	 * The default value is 'window.top.document'.
@@ -70,27 +70,27 @@ export interface PreviewerBaseProps {
 	container?: React.RefObject<HTMLElement>;
 	/** Flag to disable the Portal implementation */
 	disablePortal?: boolean;
-	/** previewer footer */
+	/** preview footer */
 	footer?: React.ReactElement;
-	/** previewer header */
+	/** preview header */
 	header?: React.ReactElement;
 	/** Flag to show or hide Portal's content */
 	show: boolean;
-	/** previewer img source */
+	/** preview img source */
 	src: string;
 	/** Alternative text for image */
 	alt?: string;
-	/** Callback to hide the previewer */
+	/** Callback to hide the preview */
 	onClose: (e: React.SyntheticEvent | KeyboardEvent) => void;
 }
 
 // TODO: allow usage of blob as data
 
-const PreviewerBase = React.forwardRef<HTMLDivElement, PreviewerBaseProps>(function PreviewerBaseFn(
+const PreviewBase = React.forwardRef<HTMLDivElement, PreviewBaseProps>(function PreviewBaseFn(
 	{ src, footer, header, show = false, container, disablePortal = false, alt, onClose },
 	ref
 ) {
-	const previewerRef: React.MutableRefObject<HTMLDivElement | null> = useCombinedRefs(ref);
+	const previewRef: React.MutableRefObject<HTMLDivElement | null> = useCombinedRefs(ref);
 	const imageRef = useRef<HTMLImageElement | null>(null);
 	const headerRef = useRef<HTMLDivElement | null>(null);
 	const footerRef = useRef<HTMLDivElement | null>(null);
@@ -140,20 +140,20 @@ const PreviewerBase = React.forwardRef<HTMLDivElement, PreviewerBaseProps>(funct
 		(event) => {
 			// TODO: stop propagation or not?
 			event.stopPropagation();
-			previewerRef.current &&
+			previewRef.current &&
 				!event.isDefaultPrevented() &&
-				(previewerRef.current === event.target ||
-					!previewerRef.current.contains(event.target as Node)) &&
+				(previewRef.current === event.target ||
+					!previewRef.current.contains(event.target as Node)) &&
 				onClose(event);
 		},
-		[onClose, previewerRef]
+		[onClose, previewRef]
 	);
 
 	return (
 		<Portal show={show} disablePortal={disablePortal} container={container}>
 			<Overlay onClick={onOverlayClick}>
 				<FocusWithin>
-					<PreviewerContainer ref={previewerRef}>
+					<PreviewContainer ref={previewRef}>
 						<Header ref={headerRef} imageWidth={imageWidth}>
 							{header}
 						</Header>
@@ -167,11 +167,11 @@ const PreviewerBase = React.forwardRef<HTMLDivElement, PreviewerBaseProps>(funct
 						<Footer ref={footerRef} imageWidth={imageWidth}>
 							{footer}
 						</Footer>
-					</PreviewerContainer>
+					</PreviewContainer>
 				</FocusWithin>
 			</Overlay>
 		</Portal>
 	);
 });
 
-export default PreviewerBase;
+export default PreviewBase;

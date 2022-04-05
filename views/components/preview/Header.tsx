@@ -55,9 +55,9 @@ interface HeaderAction {
 }
 
 export interface HeaderProps {
-	/** Left Action for the previewer */
+	/** Left Action for the preview */
 	closeAction?: HeaderAction;
-	/** Actions for the previewer */
+	/** Actions for the preview */
 	actions: HeaderAction[];
 	/** Extension of the file, shown as info */
 	extension: string;

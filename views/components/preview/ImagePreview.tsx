@@ -50,7 +50,7 @@ const Image = styled.img`
 	border-radius: 4px;
 `;
 
-const PreviewerContainer = styled.div.attrs({
+const PreviewContainer = styled.div.attrs({
 	$paddingVertical: '32px',
 	$paddingHorizontal: '16px',
 	$gap: '8px'
@@ -69,7 +69,7 @@ const PreviewerContainer = styled.div.attrs({
 	flex-grow: 1;
 `;
 
-export type ImagePreviewerProps = Partial<HeaderProps> & {
+export type ImagePreviewProps = Partial<HeaderProps> & {
 	/**
 	 * HTML node where to insert the Portal's children.
 	 * The default value is 'window.top.document'.
@@ -79,15 +79,15 @@ export type ImagePreviewerProps = Partial<HeaderProps> & {
 	disablePortal?: boolean;
 	/** Flag to show or hide Portal's content */
 	show: boolean;
-	/** previewer img source */
+	/** preview img source */
 	src: string;
-	/** Callback to hide the previewer */
+	/** Callback to hide the preview */
 	onClose: (e: React.SyntheticEvent | KeyboardEvent) => void;
 	/** Alternative text for image */
 	alt?: string;
 };
 
-const ImagePreviewer = React.forwardRef<HTMLDivElement, ImagePreviewerProps>(function PreviewerFn(
+const ImagePreview = React.forwardRef<HTMLDivElement, ImagePreviewProps>(function PreviewFn(
 	{
 		src,
 		show,
@@ -103,7 +103,7 @@ const ImagePreviewer = React.forwardRef<HTMLDivElement, ImagePreviewerProps>(fun
 	},
 	ref
 ) {
-	const previewerRef: React.MutableRefObject<HTMLDivElement | null> = useCombinedRefs(ref);
+	const previewRef: React.MutableRefObject<HTMLDivElement | null> = useCombinedRefs(ref);
 	const imageRef = useRef<HTMLImageElement | null>(null);
 
 	const escapeEvent = useCallback<(e: KeyboardEvent) => void>(
@@ -129,13 +129,13 @@ const ImagePreviewer = React.forwardRef<HTMLDivElement, ImagePreviewerProps>(fun
 		(event) => {
 			// TODO: stop propagation or not?
 			event.stopPropagation();
-			previewerRef.current &&
+			previewRef.current &&
 				!event.isDefaultPrevented() &&
-				(previewerRef.current === event.target ||
-					!previewerRef.current.contains(event.target as Node)) &&
+				(previewRef.current === event.target ||
+					!previewRef.current.contains(event.target as Node)) &&
 				onClose(event);
 		},
-		[onClose, previewerRef]
+		[onClose, previewRef]
 	);
 
 	return (
@@ -163,14 +163,14 @@ const ImagePreviewer = React.forwardRef<HTMLDivElement, ImagePreviewerProps>(fun
 							{/*		/> */}
 							{/*	</Padding> */}
 							{/* </Container> */}
-							<PreviewerContainer ref={previewerRef}>
+							<PreviewContainer ref={previewRef}>
 								<Image
 									alt={alt}
 									src={src}
 									onError={(): void => console.log('TODO handle error')}
 									ref={imageRef}
 								/>
-							</PreviewerContainer>
+							</PreviewContainer>
 							{/* TODO: uncomment when navigation between items will be implemented */}
 							{/* <Container width="fit"> */}
 							{/*	<Padding left="small" right="small"> */}
@@ -191,4 +191,4 @@ const ImagePreviewer = React.forwardRef<HTMLDivElement, ImagePreviewerProps>(fun
 	);
 });
 
-export default ImagePreviewer;
+export default ImagePreview;

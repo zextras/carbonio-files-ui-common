@@ -78,7 +78,7 @@ const Navigator = styled.div`
 	padding: 8px 16px;
 `;
 
-const PreviewerContainer = styled.div`
+const PreviewContainer = styled.div`
 	display: flex;
 	flex-direction: column;
 	flex-grow: 1;
@@ -117,7 +117,7 @@ const PreviewerContainer = styled.div`
 	}
 `;
 
-export type PdfPreviewerProps = Partial<HeaderProps> & {
+export type PdfPreviewProps = Partial<HeaderProps> & {
 	/**
 	 * HTML node where to insert the Portal's children.
 	 * The default value is 'window.top.document'.
@@ -127,9 +127,9 @@ export type PdfPreviewerProps = Partial<HeaderProps> & {
 	disablePortal?: boolean;
 	/** Flag to show or hide Portal's content */
 	show: boolean;
-	/** previewer img source */
+	/** preview img source */
 	src: string;
-	/** Callback to hide the previewer */
+	/** Callback to hide the preview */
 	onClose: (e: React.SyntheticEvent | KeyboardEvent) => void;
 	useFallback?: boolean;
 	/** CustomContent */
@@ -142,7 +142,7 @@ export type PdfPreviewerProps = Partial<HeaderProps> & {
 
 const zoomStep = [800, 1000, 1200, 1400, 1600, 2000, 2400, 3200];
 
-const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(function PreviewerFn(
+const PdfPreview = React.forwardRef<HTMLDivElement, PdfPreviewProps>(function PreviewFn(
 	{
 		src,
 		show,
@@ -161,7 +161,7 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 	},
 	ref
 ) {
-	const previewerRef: React.MutableRefObject<HTMLDivElement | null> = useCombinedRefs(ref);
+	const previewRef: React.MutableRefObject<HTMLDivElement | null> = useCombinedRefs(ref);
 
 	const [numPages, setNumPages] = useState(null);
 
@@ -183,13 +183,13 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 			// TODO: stop propagation or not?
 			event.stopPropagation();
 			((!useFallback && numPages) || useFallback) &&
-				previewerRef.current &&
+				previewRef.current &&
 				!event.isDefaultPrevented() &&
-				(previewerRef.current === event.target ||
-					!previewerRef.current.contains(event.target as Node)) &&
+				(previewRef.current === event.target ||
+					!previewRef.current.contains(event.target as Node)) &&
 				onClose(event);
 		},
-		[numPages, onClose, previewerRef, useFallback]
+		[numPages, onClose, previewRef, useFallback]
 	);
 
 	const [currentZoom, setCurrentZoom] = useState(zoomStep[0]);
@@ -249,14 +249,14 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 	const fitToWidth = useCallback(
 		(ev) => {
 			ev.stopPropagation();
-			if (previewerRef.current) {
-				setCurrentZoom(previewerRef.current?.clientWidth);
-				setIncrementable(previewerRef.current?.clientWidth < zoomStep[zoomStep.length - 1]);
-				setDecrementable(previewerRef.current?.clientWidth > zoomStep[0]);
+			if (previewRef.current) {
+				setCurrentZoom(previewRef.current?.clientWidth);
+				setIncrementable(previewRef.current?.clientWidth < zoomStep[zoomStep.length - 1]);
+				setDecrementable(previewRef.current?.clientWidth > zoomStep[0]);
 				setFitToWidthActive(true);
 			}
 		},
-		[previewerRef]
+		[previewRef]
 	);
 
 	useEffect(() => {
@@ -266,7 +266,7 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 		return (): void => {
 			window.removeEventListener('resize', fitToWidth);
 		};
-	}, [fitToWidth, previewerRef, show, fitToWidthActive]);
+	}, [fitToWidth, previewRef, show, fitToWidthActive]);
 
 	const resetWidth = useCallback((ev) => {
 		ev.stopPropagation();
@@ -369,7 +369,7 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 							{/*		/> */}
 							{/*	</Padding> */}
 							{/* </Container> */}
-							<PreviewerContainer ref={previewerRef}>
+							<PreviewContainer ref={previewRef}>
 								{!$customContent ? (
 									<Document file={file} onLoadSuccess={onDocumentLoadSuccess}>
 										{pageElements}
@@ -377,7 +377,7 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 								) : (
 									$customContent
 								)}
-							</PreviewerContainer>
+							</PreviewContainer>
 							{/* TODO: uncomment when navigation between items will be implemented */}
 							{/* <Container width="fit"> */}
 							{/*	<Padding left="small" right="small"> */}
@@ -398,4 +398,4 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 	);
 });
 
-export default PdfPreviewer;
+export default PdfPreview;

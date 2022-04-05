@@ -9,9 +9,9 @@ import { IconButton, Text, Tooltip } from '@zextras/carbonio-design-system';
 import map from 'lodash/map';
 import styled from 'styled-components';
 
-import PreviewerBase from './PreviewerBase';
+import PreviewBase from './PreviewBase';
 
-type PreviewerProps = Omit<React.ComponentPropsWithRef<typeof PreviewerBase>, 'Header' | 'Footer'> &
+type PreviewProps = Omit<React.ComponentPropsWithRef<typeof PreviewBase>, 'Header' | 'Footer'> &
 	Partial<FooterProps> &
 	Partial<HeaderProps> & {
 		closeTooltipLabel?: string;
@@ -66,7 +66,7 @@ interface HeaderAction {
 }
 
 interface HeaderProps {
-	/** Actions for the previewer */
+	/** Actions for the preview */
 	actions: HeaderAction[];
 }
 
@@ -92,7 +92,7 @@ const Header: React.VFC<HeaderProps> = ({ actions }) => (
 	</HeaderContainer>
 );
 
-const Previewer = React.forwardRef<HTMLDivElement, PreviewerProps>(function PreviewerFn(
+const Preview = React.forwardRef<HTMLDivElement, PreviewProps>(function PreviewFn(
 	{
 		src,
 		show,
@@ -124,7 +124,7 @@ const Previewer = React.forwardRef<HTMLDivElement, PreviewerProps>(function Prev
 	);
 
 	return (
-		<PreviewerBase
+		<PreviewBase
 			footer={<Footer filename={filename} extension={extension} size={size} />}
 			src={src}
 			header={<Header actions={$actions} />}
@@ -138,4 +138,4 @@ const Previewer = React.forwardRef<HTMLDivElement, PreviewerProps>(function Prev
 	);
 });
 
-export default Previewer;
+export default Preview;
