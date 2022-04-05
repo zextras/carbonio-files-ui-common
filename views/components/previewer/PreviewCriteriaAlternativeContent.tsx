@@ -22,14 +22,15 @@ const AttachmentLink = styled.a`
 `;
 
 interface PreviewCriteriaAlternativeContentProps {
-	downloadSrc: string;
-	openSrc: string;
+	downloadSrc?: string;
+	openSrc?: string;
 }
 
 export const PreviewCriteriaAlternativeContent: React.VFC<
 	PreviewCriteriaAlternativeContentProps
 > = ({ downloadSrc, openSrc }) => {
 	const ancRef = useRef<HTMLAnchorElement>(null);
+	const ancRef2 = useRef<HTMLAnchorElement>(null);
 
 	const downloadClick = useCallback(
 		(ev) => {
@@ -41,6 +42,16 @@ export const PreviewCriteriaAlternativeContent: React.VFC<
 		[ancRef]
 	);
 
+	const openClick = useCallback(
+		(ev) => {
+			ev.preventDefault();
+			if (ancRef2.current) {
+				ancRef2.current.click();
+			}
+		},
+		[ancRef2]
+	);
+
 	return (
 		<FakeModalContainer
 			background="gray0"
@@ -50,21 +61,34 @@ export const PreviewCriteriaAlternativeContent: React.VFC<
 			gap="16px"
 		>
 			<Text size="large" color="gray6">
-				{'Whoopsie Doopsie!'}
+				{'This item cannot be displayed'}
 			</Text>
 			<Text size="medium" color="gray6" weight="bold">
-				{'This file exceedes the maximum limit of weight we support and cannot be displayed'}
+				{'This file exceeds the maximum weight we support and thus, it cannot be displayed'}
 			</Text>
 			<ContainerWithGap orientation="horizontal" height="fit" gap="8px">
-				<Button label="DOWNLOAD FILE" icon="DownloadOutline" size="fill" onClick={downloadClick} />
-				{/* <Button label="OPEN ON A SEPARATE TAB" icon="DiagonalArrowRightUp" size="fill" /> */}
+				{downloadSrc && (
+					<Button
+						label="DOWNLOAD FILE"
+						icon="DownloadOutline"
+						size="fill"
+						onClick={downloadClick}
+					/>
+				)}
+				{openSrc && (
+					<Button
+						label="OPEN IN A SEPARATE TAB"
+						icon="DiagonalArrowRightUp"
+						size="fill"
+						onClick={openClick}
+					/>
+				)}
 			</ContainerWithGap>
 			<Text size="small" color="gray6">
-				{'Please, download it or open it on another tab'}
+				{'Please, download it or open it in a separate tab'}
 			</Text>
-			<AttachmentLink rel="noopener" ref={ancRef} href={downloadSrc} />
+			{downloadSrc && <AttachmentLink rel="noopener" ref={ancRef} href={downloadSrc} />}
+			{openSrc && <AttachmentLink rel="noopener" ref={ancRef2} href={openSrc} />}
 		</FakeModalContainer>
 	);
 };
-
-// <AttachmentLink href={downloadSrc} rel="nofollow noreferrer noopener">

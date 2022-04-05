@@ -136,6 +136,8 @@ export type PdfPreviewerProps = Partial<HeaderProps> & {
 	customContent?: React.ReactElement;
 	/** Whether a text layer should be rendered */
 	renderTextLayer?: boolean;
+	/** Src that allow open in separate tab */
+	openSrc?: string;
 };
 
 const zoomStep = [800, 1000, 1200, 1400, 1600, 2000, 2400, 3200];
@@ -154,7 +156,8 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 		onClose,
 		useFallback = false,
 		customContent,
-		renderTextLayer = false
+		renderTextLayer = false,
+		openSrc
 	},
 	ref
 ) {
@@ -179,14 +182,14 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 		(event) => {
 			// TODO: stop propagation or not?
 			event.stopPropagation();
-			numPages &&
+			((!useFallback && numPages) || useFallback) &&
 				previewerRef.current &&
 				!event.isDefaultPrevented() &&
 				(previewerRef.current === event.target ||
 					!previewerRef.current.contains(event.target as Node)) &&
 				onClose(event);
 		},
-		[numPages, onClose, previewerRef]
+		[numPages, onClose, previewerRef, useFallback]
 	);
 
 	const [currentZoom, setCurrentZoom] = useState(zoomStep[0]);
@@ -301,10 +304,12 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 
 	const $customContent = useMemo(() => {
 		if (useFallback) {
-			return customContent || <PreviewCriteriaAlternativeContent downloadSrc={src} openSrc={src} />;
+			return (
+				customContent || <PreviewCriteriaAlternativeContent downloadSrc={src} openSrc={openSrc} />
+			);
 		}
 		return undefined;
-	}, [customContent, src, useFallback]);
+	}, [customContent, openSrc, src, useFallback]);
 
 	return (
 		<Portal show={show} disablePortal={disablePortal} container={container}>
