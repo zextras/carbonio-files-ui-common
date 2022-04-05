@@ -16,13 +16,21 @@ import findIndex from 'lodash/findIndex';
 import findLastIndex from 'lodash/findLastIndex';
 import map from 'lodash/map';
 import { Document, Page } from 'react-pdf/dist/esm/entry.webpack';
-import styled from 'styled-components';
+import styled, { css, SimpleInterpolation } from 'styled-components';
 
 import FocusWithin from './FocusWithin';
 import Header, { HeaderProps } from './Header';
 import { PreviewCriteriaAlternativeContent } from './PreviewCriteriaAlternativeContent';
 
 const CustomIconButton = styled(IconButton)`
+	${({ disabled }): SimpleInterpolation =>
+		disabled &&
+		css`
+			background: rgba(204, 204, 204, 0.2);
+			& > svg {
+				background: unset;
+			}
+		`};
 	& > svg {
 		width: 20px;
 		height: 20px;
@@ -103,6 +111,10 @@ const PreviewerContainer = styled.div`
 		gap: 16px;
 		flex-direction: column;
 	}
+
+	& .react-pdf__message {
+		color: white;
+	}
 `;
 
 export type PdfPreviewerProps = Partial<HeaderProps> & {
@@ -148,20 +160,34 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 ) {
 	const previewerRef: React.MutableRefObject<HTMLDivElement | null> = useCombinedRefs(ref);
 
+	const [numPages, setNumPages] = useState(null);
+
+	const $closeAction = useMemo(() => {
+		if (closeAction) {
+			if (closeAction.onClick) {
+				return closeAction;
+			}
+			return {
+				...closeAction,
+				onClick: onClose
+			};
+		}
+		return closeAction;
+	}, [closeAction, onClose]);
+
 	const onOverlayClick = useCallback<React.ReactEventHandler>(
 		(event) => {
 			// TODO: stop propagation or not?
 			event.stopPropagation();
-			previewerRef.current &&
+			numPages &&
+				previewerRef.current &&
 				!event.isDefaultPrevented() &&
 				(previewerRef.current === event.target ||
 					!previewerRef.current.contains(event.target as Node)) &&
 				onClose(event);
 		},
-		[onClose, previewerRef]
+		[numPages, onClose, previewerRef]
 	);
-
-	const [numPages, setNumPages] = useState(null);
 
 	const [currentZoom, setCurrentZoom] = useState(zoomStep[0]);
 	const [incrementable, setIncrementable] = useState(true);
@@ -271,6 +297,8 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 		setNumPages(args.numPages);
 	}, []);
 
+	const file = useMemo(() => ({ url: src }), [src]);
+
 	const $customContent = useMemo(() => {
 		if (useFallback) {
 			return customContent || <PreviewCriteriaAlternativeContent downloadSrc={src} openSrc={src} />;
@@ -285,7 +313,7 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 					<ExternalContainer>
 						{!$customContent && (
 							<Navigator onClick={(ev): void => ev.stopPropagation()}>
-								<Tooltip disabled={!decrementable} label={'Zoom out'}>
+								<Tooltip label={decrementable ? 'Zoom out' : 'Minimum zoom level reached'}>
 									<CustomIconButton
 										disabled={!decrementable}
 										icon="Minus"
@@ -304,7 +332,7 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 										onClick={fitToWidthActive ? resetWidth : fitToWidth}
 									/>
 								</Tooltip>
-								<Tooltip label={'Zoom in'} disabled={!incrementable}>
+								<Tooltip label={incrementable ? 'Zoom in' : 'Maximum zoom level reached'}>
 									<CustomIconButton
 										icon="Plus"
 										size="small"
@@ -321,7 +349,7 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 							filename={filename}
 							extension={extension}
 							size={size}
-							closeAction={closeAction}
+							closeAction={$closeAction}
 						/>
 						<MiddleContainer orientation="horizontal" crossAlignment="unset" minHeight={0}>
 							{/* TODO: uncomment when navigation between items will be implemented */}
@@ -338,7 +366,7 @@ const PdfPreviewer = React.forwardRef<HTMLDivElement, PdfPreviewerProps>(functio
 							{/* </Container> */}
 							<PreviewerContainer ref={previewerRef}>
 								{!$customContent ? (
-									<Document file={{ url: src }} onLoadSuccess={onDocumentLoadSuccess}>
+									<Document file={file} onLoadSuccess={onDocumentLoadSuccess}>
 										{pageElements}
 									</Document>
 								) : (

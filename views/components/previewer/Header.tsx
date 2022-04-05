@@ -44,7 +44,7 @@ interface HeaderAction {
 	/** id used as key */
 	id: string;
 	/** Action called on click */
-	onClick: React.ReactEventHandler;
+	onClick?: React.ReactEventHandler;
 	/** Icon from the theme */
 	icon: string;
 	/** Label to show as tooltip for the action */
