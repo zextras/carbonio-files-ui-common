@@ -6,9 +6,9 @@
 
 import React from 'react';
 
+import { faker } from '@faker-js/faker';
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import faker from 'faker';
 
 import { UseUpdateNodeDescriptionMutationHook } from '../../hooks/graphql/mutations/useUpdateNodeDescriptionMutation';
 import { populateFile } from '../../mocks/mockUtils';

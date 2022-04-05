@@ -7,6 +7,7 @@
 import React from 'react';
 
 import { ApolloError, gql } from '@apollo/client';
+import { faker } from '@faker-js/faker';
 import {
 	act,
 	fireEvent,
@@ -16,7 +17,6 @@ import {
 	within
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import faker from 'faker';
 import findIndex from 'lodash/findIndex';
 import forEach from 'lodash/forEach';
 import includes from 'lodash/includes';
