@@ -292,13 +292,13 @@ describe('Folder List', () => {
 			);
 			await createNode(node2);
 			await waitFor(() =>
-				expect(screen.getAllByText(/Error! Name already assigned/g)).toHaveLength(2)
+				expect(screen.getAllByText(/Error! Name already assigned/)).toHaveLength(2)
 			);
 			await waitFor(() =>
 				// eslint-disable-next-line jest-dom/prefer-in-document
-				expect(screen.getAllByText(/Error! Name already assigned/g)).toHaveLength(1)
+				expect(screen.getAllByText(/Error! Name already assigned/)).toHaveLength(1)
 			);
-			const error = screen.getByText(/Error! Name already assigned/g);
+			const error = screen.getByText(/Error! Name already assigned/);
 			expect(error).toBeVisible();
 			const inputFieldDiv = screen.getByTestId('input-name');
 			const inputField = within(inputFieldDiv).getByRole('textbox');
@@ -930,7 +930,7 @@ describe('Folder List', () => {
 				userEvent.click(screen.getByTestId('icon: MoreVertical'));
 				// check that the rename action becomes visible
 				await renameNode(newName);
-				const error = await screen.findByText(/Error! Name already assigned/g);
+				const error = await screen.findByText(/Error! Name already assigned/);
 				const inputFieldDiv = screen.getByTestId('input-name');
 				const inputField = within(inputFieldDiv).getByRole('textbox');
 				expect(error).toBeVisible();
@@ -3636,7 +3636,7 @@ describe('Folder List', () => {
 				/>
 			);
 			await createNode(node2);
-			const error = await screen.findByText(/Error! Name already assigned/g);
+			const error = await screen.findByText(/Error! Name already assigned/);
 			expect(error).toBeVisible();
 			const inputFieldDiv = screen.getByTestId('input-name');
 			const inputField = within(inputFieldDiv).getByRole('textbox');
@@ -3932,7 +3932,7 @@ describe('Folder List', () => {
 
 			await screen.findByTestId('dropzone-overlay');
 			expect(
-				screen.getByText(/Drop here your attachments to quick-add them to this folder/gm)
+				screen.getByText(/Drop here your attachments to quick-add them to this folder/m)
 			).toBeVisible();
 
 			fireEvent.drop(screen.getByText(/nothing here/i), {
@@ -3947,7 +3947,7 @@ describe('Folder List', () => {
 				currentFolder.children.length + uploadedFiles.length
 			);
 			expect(
-				screen.queryByText(/Drop here your attachments to quick-add them to this folder/gm)
+				screen.queryByText(/Drop here your attachments to quick-add them to this folder/m)
 			).not.toBeInTheDocument();
 		});
 
@@ -4000,7 +4000,7 @@ describe('Folder List', () => {
 			});
 
 			await screen.findByTestId('dropzone-overlay');
-			expect(screen.getByText(/You cannot drop an attachment in this area/gm)).toBeVisible();
+			expect(screen.getByText(/You cannot drop an attachment in this area/m)).toBeVisible();
 
 			fireEvent.drop(screen.getByText(/nothing here/i), {
 				dataTransfer: dataTransferObj
@@ -4010,7 +4010,7 @@ describe('Folder List', () => {
 			expect(screen.queryByText(uploadedFiles[1].name)).not.toBeInTheDocument();
 			expect(screen.queryByTestId('node-item', { exact: false })).not.toBeInTheDocument();
 			expect(
-				screen.queryByText(/You cannot drop an attachment in this area/gm)
+				screen.queryByText(/You cannot drop an attachment in this area/m)
 			).not.toBeInTheDocument();
 		});
 
@@ -4069,7 +4069,7 @@ describe('Folder List', () => {
 
 			await screen.findByTestId('dropzone-overlay');
 			expect(
-				screen.queryByText(/Drop here your attachments to quick-add them to this folder/gm)
+				screen.queryByText(/Drop here your attachments to quick-add them to this folder/m)
 			).not.toBeInTheDocument();
 
 			fireEvent.drop(screen.getByText(destinationFolder.name), {
@@ -4141,7 +4141,7 @@ describe('Folder List', () => {
 
 			await screen.findByTestId('dropzone-overlay');
 			expect(
-				screen.queryByText(/Drop here your attachments to quick-add them to this folder/gm)
+				screen.queryByText(/Drop here your attachments to quick-add them to this folder/m)
 			).not.toBeInTheDocument();
 
 			fireEvent.drop(screen.getByText(destinationFolder.name), {
@@ -4211,7 +4211,7 @@ describe('Folder List', () => {
 
 			await screen.findByTestId('dropzone-overlay');
 			expect(
-				screen.queryByText(/Drop here your attachments to quick-add them to this folder/gm)
+				screen.queryByText(/Drop here your attachments to quick-add them to this folder/m)
 			).toBeVisible();
 
 			fireEvent.drop(screen.getByText(destinationFile.name), {
@@ -4226,7 +4226,7 @@ describe('Folder List', () => {
 				currentFolder.children.length + uploadedFiles.length
 			);
 			expect(
-				screen.queryByText(/Drop here your attachments to quick-add them to this folder/gm)
+				screen.queryByText(/Drop here your attachments to quick-add them to this folder/m)
 			).not.toBeInTheDocument();
 		});
 

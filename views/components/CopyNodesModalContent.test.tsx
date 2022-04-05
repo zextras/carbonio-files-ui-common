@@ -277,7 +277,7 @@ describe('Copy Nodes Modal', () => {
 
 		// navigate inside folder of shared with me filter
 		userEvent.dblClick(screen.getByText(sharedWithMeFilter[0].name));
-		await screen.findByText(/It looks like there's nothing here./g);
+		await screen.findByText(/It looks like there's nothing here./);
 		// breadcrumb is updated
 		expect(
 			getByTextWithMarkup(buildBreadCrumbRegExp('Files', sharedWithMeFilter[0].name))
@@ -442,7 +442,7 @@ describe('Copy Nodes Modal', () => {
 		userEvent.click(folderItem);
 		expect(confirmButton).not.toHaveAttribute('disabled');
 		userEvent.dblClick(folderItem);
-		await screen.findByText(/It looks like there's nothing here./gi);
+		await screen.findByText(/It looks like there's nothing here./i);
 		expect(confirmButton).not.toHaveAttribute('disabled');
 		act(() => {
 			userEvent.click(confirmButton);

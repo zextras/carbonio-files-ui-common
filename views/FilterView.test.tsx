@@ -89,7 +89,7 @@ describe('Filter view', () => {
 			render(<Route path="/filter/:filter?" component={FilterView} />, {
 				initialRouterEntries: ['/filter/']
 			});
-			const message = await screen.findByText(/missing filter/gi);
+			const message = await screen.findByText(/missing filter/i);
 			expect(mockedRequestHandler).not.toHaveBeenCalled();
 			expect(message).toBeVisible();
 		});
@@ -115,7 +115,7 @@ describe('Filter view', () => {
 				expect.anything(),
 				expect.anything()
 			);
-			expect(screen.queryByText(/missing filter/gi)).not.toBeInTheDocument();
+			expect(screen.queryByText(/missing filter/i)).not.toBeInTheDocument();
 		});
 
 		test('My Trash filter sharedWithMe=false and includes only trashed nodes', async () => {
@@ -139,7 +139,7 @@ describe('Filter view', () => {
 				expect.anything(),
 				expect.anything()
 			);
-			expect(screen.queryByText(/missing filter/gi)).not.toBeInTheDocument();
+			expect(screen.queryByText(/missing filter/i)).not.toBeInTheDocument();
 		});
 
 		test('Shared trash filter has sharedWithMe=true and includes only trashed nodes', async () => {
@@ -163,7 +163,7 @@ describe('Filter view', () => {
 				expect.anything(),
 				expect.anything()
 			);
-			expect(screen.queryByText(/missing filter/gi)).not.toBeInTheDocument();
+			expect(screen.queryByText(/missing filter/i)).not.toBeInTheDocument();
 		});
 
 		test('Shared by me filter has sharedByMe=true and excludes trashed nodes', async () => {
@@ -188,7 +188,7 @@ describe('Filter view', () => {
 				expect.anything(),
 				expect.anything()
 			);
-			expect(screen.queryByText(/missing filter/gi)).not.toBeInTheDocument();
+			expect(screen.queryByText(/missing filter/i)).not.toBeInTheDocument();
 		});
 
 		test('Shared with me filter has sharedWithMe=true and excludes trashed nodes', async () => {
@@ -213,7 +213,7 @@ describe('Filter view', () => {
 				expect.anything(),
 				expect.anything()
 			);
-			expect(screen.queryByText(/missing filter/gi)).not.toBeInTheDocument();
+			expect(screen.queryByText(/missing filter/i)).not.toBeInTheDocument();
 		});
 	});
 

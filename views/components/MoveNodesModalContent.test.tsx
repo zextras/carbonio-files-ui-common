@@ -225,7 +225,7 @@ describe('Move Nodes Modal', () => {
 		userEvent.click(folderItem);
 		expect(confirmButton).not.toHaveAttribute('disabled', '');
 		userEvent.dblClick(folderItem);
-		await screen.findByText(/It looks like there's nothing here./gi);
+		await screen.findByText(/It looks like there's nothing here./i);
 		expect(confirmButton).not.toHaveAttribute('disabled', '');
 		act(() => {
 			userEvent.click(confirmButton);
