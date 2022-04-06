@@ -165,7 +165,7 @@ const ImagePreview = React.forwardRef<HTMLDivElement, ImagePreviewProps>(functio
 							{/* </Container> */}
 							<PreviewContainer ref={previewRef}>
 								<Image
-									alt={alt}
+									alt={alt ?? filename}
 									src={src}
 									onError={(): void => console.log('TODO handle error')}
 									ref={imageRef}

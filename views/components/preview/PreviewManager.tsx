@@ -11,7 +11,7 @@ import { PreviewWrapper, PreviewWrapperProps } from './PreviewWrapper';
 const PreviewsManagerContext = createContext<{
 	createPreview: (args: PreviewWrapperProps) => void;
 }>({
-	createPreview: () => console.log('')
+	createPreview: () => undefined
 });
 
 const PreviewManager: React.FC = ({ children }) => {
@@ -39,7 +39,7 @@ const PreviewManager: React.FC = ({ children }) => {
 				dispatchPreviews({ type: 'empty' });
 			};
 
-			const preview = <PreviewWrapper {...props} show onClose={closePreview} />;
+			const preview = <PreviewWrapper key={props.src} {...props} show onClose={closePreview} />;
 
 			dispatchPreviews({
 				type: 'set',
