@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import { Container, Icon, Padding, Row, Text } from '@zextras/carbonio-design-system';
 import debounce from 'lodash/debounce';
@@ -39,7 +39,7 @@ import {
 import { ContextualMenu } from './ContextualMenu';
 import { NodeAvatarIcon } from './NodeAvatarIcon';
 import { NodeHoverBar } from './NodeHoverBar';
-import { usePreview } from './preview/PreviewManager';
+import { PreviewsManagerContext } from './preview/PreviewManager';
 import { HoverBarContainer, HoverContainer, ListItemContainer } from './StyledComponents';
 
 const CustomText = styled(Text)`
@@ -148,7 +148,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 	version
 }) => {
 	const [t] = useTranslation();
-	const { createPreview } = usePreview();
+	const { createPreview } = useContext(PreviewsManagerContext);
 	const { setActiveNode } = useActiveNode();
 
 	const usePdfPreviewFallback = useMemo(() => {
