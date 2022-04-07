@@ -17,11 +17,9 @@ import { useActiveNode } from '../../../hooks/useActiveNode';
 import useUserInfo from '../../../hooks/useUserInfo';
 import {
 	DISPLAYER_TABS,
-	DOWNLOAD_PATH,
 	LIST_ITEM_AVATAR_HEIGHT,
 	LIST_ITEM_HEIGHT,
 	LIST_ITEM_HEIGHT_COMPACT,
-	REST_ENDPOINT,
 	ROOTS
 } from '../../constants';
 import { useCreateSnackbar } from '../../hooks/useCreateSnackbar';
@@ -153,7 +151,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 
 	const usePdfPreviewFallback = useMemo(() => {
 		if (size) {
-			return size > 10485760; // 20971520;
+			return size > 20971520;
 		}
 		return true;
 	}, [size]);
@@ -538,17 +536,9 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 											mainAlignment="flex-end"
 											padding={{ left: 'small' }}
 										>
-											<a
-												target="_blank"
-												href={`${REST_ENDPOINT}${DOWNLOAD_PATH}/${encodeURIComponent(
-													id
-												)}/${version}`}
-												rel="nofollow noreferrer noopener"
-											>
-												<Text size="extrasmall" overflow="ellipsis">
-													{displayName}
-												</Text>
-											</a>
+											<Text size="extrasmall" overflow="ellipsis">
+												{displayName}
+											</Text>
 										</FlexContainer>
 									)}
 								</Row>
