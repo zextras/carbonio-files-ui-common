@@ -407,7 +407,7 @@ describe('Versioning', () => {
 		];
 
 		server.use(
-			rest.post<UploadRequestBody, UploadVersionResponse, UploadVersionRequestParams>(
+			rest.post<UploadRequestBody, UploadVersionRequestParams, UploadVersionResponse>(
 				`${REST_ENDPOINT}${UPLOAD_VERSION_PATH}`,
 				(req, res, ctx) =>
 					res(

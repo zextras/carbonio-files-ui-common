@@ -5,17 +5,17 @@
  */
 
 import { faker } from '@faker-js/faker';
-import { ResponseResolver, RestContext, RestRequest } from 'msw';
+import { PathParams, ResponseResolver, RestContext, RestRequest } from 'msw';
 
 export interface UploadVersionResponse {
 	nodeId: string;
 	version: number;
 }
 
-export interface UploadVersionRequestParams {
+export interface UploadVersionRequestParams extends PathParams {
 	Filename: string;
-	NodeId?: string;
-	OverwriteVersion?: string;
+	NodeId: string;
+	OverwriteVersion: string;
 }
 
 export interface UploadRequestBody {

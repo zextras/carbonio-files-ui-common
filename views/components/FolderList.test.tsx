@@ -3764,7 +3764,7 @@ describe('Folder List', () => {
 			];
 
 			server.use(
-				rest.post<CreateDocsFileRequestBody, CreateDocsFileResponse>(
+				rest.post<CreateDocsFileRequestBody, never, CreateDocsFileResponse>(
 					`${DOCS_ENDPOINT}${CREATE_FILE_PATH}`,
 					(req, res, ctx) =>
 						res(
