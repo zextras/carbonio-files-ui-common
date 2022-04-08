@@ -32,7 +32,7 @@ export const PreviewCriteriaAlternativeContent: React.VFC<
 	const ancRef = useRef<HTMLAnchorElement>(null);
 	const ancRef2 = useRef<HTMLAnchorElement>(null);
 
-	const downloadClick = useCallback(
+	const downloadClick = useCallback<React.ReactEventHandler>(
 		(ev) => {
 			ev.preventDefault();
 			if (ancRef.current) {
@@ -42,7 +42,7 @@ export const PreviewCriteriaAlternativeContent: React.VFC<
 		[ancRef]
 	);
 
-	const openClick = useCallback(
+	const openClick = useCallback<React.ReactEventHandler>(
 		(ev) => {
 			ev.preventDefault();
 			if (ancRef2.current) {

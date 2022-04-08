@@ -15,6 +15,7 @@ import {
 import findIndex from 'lodash/findIndex';
 import findLastIndex from 'lodash/findLastIndex';
 import map from 'lodash/map';
+import type { DocumentProps } from 'react-pdf';
 import { Document, Page } from 'react-pdf/dist/esm/entry.webpack';
 import styled, { css, SimpleInterpolation } from 'styled-components';
 
@@ -131,6 +132,7 @@ export type PdfPreviewProps = Partial<HeaderProps> & {
 	src: string;
 	/** Callback to hide the preview */
 	onClose: (e: React.SyntheticEvent | KeyboardEvent) => void;
+	/** use fallback content if you don't want to view the pdf for some reason; content can be customizable with customContent */
 	useFallback?: boolean;
 	/** CustomContent */
 	customContent?: React.ReactElement;
@@ -163,16 +165,13 @@ const PdfPreview = React.forwardRef<HTMLDivElement, PdfPreviewProps>(function Pr
 ) {
 	const previewRef: React.MutableRefObject<HTMLDivElement | null> = useCombinedRefs(ref);
 
-	const [numPages, setNumPages] = useState(null);
+	const [numPages, setNumPages] = useState<number | null>(null);
 
 	const $closeAction = useMemo(() => {
 		if (closeAction) {
-			if (closeAction.onClick) {
-				return closeAction;
-			}
 			return {
-				...closeAction,
-				onClick: onClose
+				onClick: onClose,
+				...closeAction
 			};
 		}
 		return closeAction;
@@ -182,7 +181,7 @@ const PdfPreview = React.forwardRef<HTMLDivElement, PdfPreviewProps>(function Pr
 		(event) => {
 			// TODO: stop propagation or not?
 			event.stopPropagation();
-			((!useFallback && numPages) || useFallback) &&
+			(useFallback || numPages) &&
 				previewRef.current &&
 				!event.isDefaultPrevented() &&
 				(previewRef.current === event.target ||
@@ -206,7 +205,7 @@ const PdfPreview = React.forwardRef<HTMLDivElement, PdfPreviewProps>(function Pr
 		}
 	}, [show]);
 
-	const increaseOfOneStep = useCallback(
+	const increaseOfOneStep = useCallback<React.ReactEventHandler>(
 		(ev) => {
 			ev.stopPropagation();
 			if (incrementable) {
@@ -226,7 +225,7 @@ const PdfPreview = React.forwardRef<HTMLDivElement, PdfPreviewProps>(function Pr
 		[currentZoom, incrementable]
 	);
 
-	const decreaseOfOneStep = useCallback(
+	const decreaseOfOneStep = useCallback<React.ReactEventHandler>(
 		(ev) => {
 			ev.stopPropagation();
 			if (decrementable) {
@@ -247,7 +246,7 @@ const PdfPreview = React.forwardRef<HTMLDivElement, PdfPreviewProps>(function Pr
 	);
 
 	const fitToWidth = useCallback(
-		(ev) => {
+		(ev: Event) => {
 			ev.stopPropagation();
 			if (previewRef.current) {
 				setCurrentZoom(previewRef.current?.clientWidth);
@@ -268,7 +267,7 @@ const PdfPreview = React.forwardRef<HTMLDivElement, PdfPreviewProps>(function Pr
 		};
 	}, [fitToWidth, previewRef, show, fitToWidthActive]);
 
-	const resetWidth = useCallback((ev) => {
+	const resetWidth = useCallback<React.ReactEventHandler>((ev) => {
 		ev.stopPropagation();
 		setCurrentZoom(zoomStep[0]);
 		setIncrementable(true);
@@ -296,7 +295,7 @@ const PdfPreview = React.forwardRef<HTMLDivElement, PdfPreviewProps>(function Pr
 		return [];
 	}, [currentZoom, numPages, renderTextLayer]);
 
-	const onDocumentLoadSuccess = useCallback((args) => {
+	const onDocumentLoadSuccess = useCallback<NonNullable<DocumentProps['onLoadSuccess']>>((args) => {
 		setNumPages(args.numPages);
 	}, []);
 
@@ -370,12 +369,10 @@ const PdfPreview = React.forwardRef<HTMLDivElement, PdfPreviewProps>(function Pr
 							{/*	</Padding> */}
 							{/* </Container> */}
 							<PreviewContainer ref={previewRef}>
-								{!$customContent ? (
+								{$customContent || (
 									<Document file={file} onLoadSuccess={onDocumentLoadSuccess}>
 										{pageElements}
 									</Document>
-								) : (
-									$customContent
 								)}
 							</PreviewContainer>
 							{/* TODO: uncomment when navigation between items will be implemented */}

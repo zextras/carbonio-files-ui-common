@@ -6,13 +6,14 @@
 
 import React, { useCallback, createContext, useReducer } from 'react';
 
+import { MakeOptional } from '../../../types/utils';
 import { ImagePreviewProps } from './ImagePreview';
 import { PdfPreviewProps } from './PdfPreview';
-import { PreviewWrapper } from './PreviewWrapper';
+import { PreviewWrapper, PreviewWrapperProps } from './PreviewWrapper';
 
 type CreatePreviewArgType = (
-	| Omit<ImagePreviewProps, 'show' | 'onClose'>
-	| Omit<PdfPreviewProps, 'show' | 'onClose'>
+	| MakeOptional<Omit<ImagePreviewProps, 'show'>, 'onClose'>
+	| MakeOptional<Omit<PdfPreviewProps, 'show'>, 'onClose'>
 ) & {
 	previewType: 'pdf' | 'image';
 };
@@ -44,10 +45,10 @@ const PreviewManager: React.FC = ({ children }) => {
 		[]
 	);
 
-	const createPreview = useCallback(
+	const createPreview = useCallback<(args: CreatePreviewArgType) => void>(
 		({ onClose, ...props }) => {
-			const closePreview = (): void => {
-				if (onClose) onClose();
+			const closePreview: PreviewWrapperProps['onClose'] = (ev) => {
+				if (onClose) onClose(ev);
 				dispatchPreviews({ type: 'empty' });
 			};
 
