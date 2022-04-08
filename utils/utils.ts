@@ -26,9 +26,18 @@ import {
 	OPEN_FILE_PATH,
 	PREVIEW,
 	REST_ENDPOINT,
-	ROOTS
+	ROOTS,
+	UPLOAD_TO_PATH
 } from '../constants';
-import { Crumb, CrumbNode, OrderTrend, OrderType, Role, SortableNode } from '../types/common';
+import {
+	Crumb,
+	CrumbNode,
+	OrderTrend,
+	OrderType,
+	Role,
+	SortableNode,
+	TargetModule
+} from '../types/common';
 import { Maybe, Node, NodeSort, NodeType, SharePermission } from '../types/graphql/types';
 
 /**
@@ -555,3 +564,50 @@ export const getPreviewSrc = (
 	quality: 'lowest' | 'low' | 'medium' | 'high' | 'highest' // medium as default if not set
 ): string =>
 	`${REST_ENDPOINT}${PREVIEW}/image/${id}/${version}/${weight}x${height}?quality=${quality}`;
+
+const uploadToCompleted = (
+	xhr: XMLHttpRequest,
+	resolve: (value: { attachmentId: string } | PromiseLike<{ attachmentId: string }>) => void,
+	reject: (reason?: { statusText: string; status: number }) => void
+): void => {
+	switch (xhr.status) {
+		case 200: {
+			const response = JSON.parse(xhr.response);
+			resolve({ attachmentId: response.attachmentId });
+			break;
+		}
+		case 400:
+		case 404:
+		case 500:
+		default: {
+			reject({ statusText: xhr.statusText, status: xhr.status });
+		}
+	}
+};
+
+export function uploadToTargetModule(args: {
+	nodeId: string;
+	targetModule: TargetModule;
+}): Promise<{ attachmentId: string }> {
+	const { nodeId, targetModule } = args;
+
+	return new Promise<{ attachmentId: string }>((resolve, reject) => {
+		const xhr = new XMLHttpRequest();
+		const url = `${REST_ENDPOINT}${UPLOAD_TO_PATH}`;
+		xhr.open('POST', url, true);
+		xhr.setRequestHeader('Content-Type', 'application/json');
+		const body = {
+			nodeId,
+			targetModule
+		};
+
+		xhr.addEventListener('load', () => {
+			if (xhr.readyState === (XMLHttpRequest.DONE || 4)) {
+				uploadToCompleted(xhr, resolve, reject);
+			}
+		});
+		xhr.addEventListener('error', () => uploadToCompleted(xhr, resolve, reject));
+		xhr.addEventListener('abort', () => uploadToCompleted(xhr, resolve, reject));
+		xhr.send(JSON.stringify(body));
+	});
+}
