@@ -28,6 +28,7 @@ import {
 import { renderHook, RenderHookResult } from '@testing-library/react-hooks';
 import userEvent from '@testing-library/user-event';
 import { ModalManager, SnackbarManager } from '@zextras/carbonio-design-system';
+import { PreviewManager } from '@zextras/carbonio-ui-preview';
 import { GraphQLError } from 'graphql';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
@@ -187,7 +188,9 @@ export const render = (
 					<StyledWrapper>
 						<I18nextProvider i18n={i18n}>
 							<SnackbarManager>
-								<ModalManager>{children}</ModalManager>
+								<ModalManager>
+									<PreviewManager>{children}</PreviewManager>
+								</ModalManager>
 							</SnackbarManager>
 						</I18nextProvider>
 					</StyledWrapper>

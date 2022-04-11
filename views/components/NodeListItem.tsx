@@ -4,16 +4,20 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import { Container, Icon, Padding, Row, Text } from '@zextras/carbonio-design-system';
+import { PreviewsManagerContext } from '@zextras/carbonio-ui-preview';
 import debounce from 'lodash/debounce';
+import includes from 'lodash/includes';
 import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
 import styled, { css } from 'styled-components';
 
+import { useActiveNode } from '../../../hooks/useActiveNode';
 import useUserInfo from '../../../hooks/useUserInfo';
 import {
+	DISPLAYER_TABS,
 	LIST_ITEM_AVATAR_HEIGHT,
 	LIST_ITEM_HEIGHT,
 	LIST_ITEM_HEIGHT_COMPACT,
@@ -26,6 +30,7 @@ import {
 	downloadNode,
 	formatDate,
 	getIconByFileType,
+	getPdfPreviewSrc,
 	getPreviewSrc,
 	humanFileSize,
 	openNodeWithDocs
@@ -33,7 +38,6 @@ import {
 import { ContextualMenu } from './ContextualMenu';
 import { NodeAvatarIcon } from './NodeAvatarIcon';
 import { NodeHoverBar } from './NodeHoverBar';
-import Previewer from './previewer/Previewer';
 import { HoverBarContainer, HoverContainer, ListItemContainer } from './StyledComponents';
 
 const CustomText = styled(Text)`
@@ -142,9 +146,15 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 	version
 }) => {
 	const [t] = useTranslation();
-	const [showPreviewer, setShowPreviewer] = useState(false);
-	const showPreviewerCallback = useCallback(() => setShowPreviewer(true), []);
-	const hidePreviewerCallback = useCallback(() => setShowPreviewer(false), []);
+	const { createPreview } = useContext(PreviewsManagerContext);
+	const { setActiveNode } = useActiveNode();
+
+	const usePdfPreviewFallback = useMemo(() => {
+		if (size) {
+			return size > 20971520;
+		}
+		return true;
+	}, [size]);
 	const userInfo = useUserInfo();
 	const [isContextualMenuActive, setIsContextualMenuActive] = useState(false);
 	const selectIdCallback = useCallback(
@@ -282,7 +292,60 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 				) {
 					openNodeWithDocs(id);
 				} else if (type === NodeType.Image) {
-					showPreviewerCallback();
+					createPreview({
+						previewType: 'image',
+						filename: name,
+						extension: extension || undefined,
+						size: (size && humanFileSize(size)) || undefined,
+						actions: [
+							{
+								icon: 'DriveOutline',
+								id: 'DriveOutline',
+								tooltipLabel: t('preview.actions.tooltip.addCollaborator', 'Add collaborator'),
+								onClick: (): void => setActiveNode(id, DISPLAYER_TABS.sharing)
+							},
+							{
+								icon: 'DownloadOutline',
+								tooltipLabel: t('preview.actions.tooltip.download', 'Download'),
+								id: 'DownloadOutline',
+								onClick: (): void => downloadNode(id)
+							}
+						],
+						closeAction: {
+							id: 'close-action',
+							icon: 'ArrowBackOutline',
+							tooltipLabel: t('preview.close.tooltip', 'Close')
+						},
+						src: version ? getPreviewSrc(id, version, 0, 0, 'high') : ''
+					});
+				} else if (includes(mimeType, 'pdf')) {
+					createPreview({
+						previewType: 'pdf',
+						filename: name,
+						extension: extension || undefined,
+						size: (size && humanFileSize(size)) || undefined,
+						useFallback: usePdfPreviewFallback,
+						actions: [
+							{
+								icon: 'DriveOutline',
+								id: 'DriveOutline',
+								tooltipLabel: t('preview.actions.tooltip.addCollaborator', 'Add collaborator'),
+								onClick: (): void => setActiveNode(id, DISPLAYER_TABS.sharing)
+							},
+							{
+								icon: 'DownloadOutline',
+								tooltipLabel: t('preview.actions.tooltip.download', 'Download'),
+								id: 'DownloadOutline',
+								onClick: (): void => downloadNode(id)
+							}
+						],
+						closeAction: {
+							id: 'close-action',
+							icon: 'ArrowBackOutline',
+							tooltipLabel: t('preview.close.tooltip', 'Close')
+						},
+						src: version ? getPdfPreviewSrc(id, version) : ''
+					});
 				}
 			}
 		},
@@ -293,9 +356,17 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 			isNavigable,
 			permittedContextualMenuActions,
 			type,
+			mimeType,
 			navigateTo,
 			id,
-			showPreviewerCallback
+			createPreview,
+			name,
+			extension,
+			size,
+			t,
+			version,
+			setActiveNode,
+			usePdfPreviewFallback
 		]
 	);
 
@@ -487,16 +558,6 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 					)}
 				</ListItemContainer>
 			</ContextualMenu>
-			<Previewer
-				filename={name}
-				extension={extension || undefined}
-				size={(size && humanFileSize(size)) || undefined}
-				actions={[]}
-				src={version ? getPreviewSrc(id, version, 0, 0, 'high') : ''}
-				show={showPreviewer}
-				onClose={hidePreviewerCallback}
-				closeTooltipLabel={t('previewer.close.tooltip', 'Close')}
-			/>
 		</Container>
 	);
 };
