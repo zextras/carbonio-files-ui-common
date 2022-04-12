@@ -336,7 +336,7 @@ describe('Node List Item', () => {
 		expect(screen.getByTestId('icon: Home')).toBeVisible();
 	});
 
-	test('Double click on image open previewer to show image with original dimensions', async () => {
+	test('Double click on image open preview to show image with original dimensions', async () => {
 		const node = populateFile();
 		node.type = NodeType.Image;
 		node.extension = 'jpg';
@@ -366,7 +366,7 @@ describe('Node List Item', () => {
 		);
 	});
 
-	test('Double click on node that is not an image does not open previewer', async () => {
+	test('Double click on node that is not an image does not open preview', async () => {
 		const node = populateFile();
 		node.type = NodeType.Text;
 		node.extension = 'txt';

@@ -14,6 +14,8 @@ export type DeepPick<T, K extends keyof T, KK extends keyof NonNullable<T[K]>> =
 	[P in K]: T[P] extends Record<KK, unknown> ? Pick<T[P], KK> : T[P];
 };
 
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: T[SubKey] };
+
 export type MakeDeepOptional<T, K extends keyof T> = Omit<T, K> & {
 	[SubKey in K]?: Maybe<
 		T[SubKey] extends Array<infer U>

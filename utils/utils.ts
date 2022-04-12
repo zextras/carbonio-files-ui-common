@@ -611,3 +611,5 @@ export function uploadToTargetModule(args: {
 		xhr.send(JSON.stringify(body));
 	});
 }
+export const getPdfPreviewSrc = (id: string, version?: number): string =>
+	`${REST_ENDPOINT}${PREVIEW}/pdf/${id}/${version}`;
