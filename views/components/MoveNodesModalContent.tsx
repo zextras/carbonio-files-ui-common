@@ -105,26 +105,13 @@ export const MoveNodesModalContent: React.VFC<MoveNodesModalContentProps> = ({
 				? currentFolder?.getNode
 				: find(nodes, ['id', destinationFolder]);
 
-		// reset the opened folder so that the evict of the children in the mutation does not run a new network query
-		// TODO: check if with apollo 3.4 this logic can be avoided through the onQueryUpdated utility
-		let currentOpenedFolder = '';
-		setOpenedFolder((prevState) => {
-			currentOpenedFolder = prevState;
-			return '';
-		});
+		// reset the opened folder so that the eviction of the children in the mutation does not run a new network query
 		if (destinationFolderNode) {
-			moveNodes(destinationFolderNode as Folder, ...nodesToMove)
-				.then((result) => {
-					if (result.data?.moveNodes?.length === nodesToMove.length) {
-						closeHandler();
-					} else {
-						setOpenedFolder(currentOpenedFolder);
-					}
-				})
-				.catch((err) => {
-					setOpenedFolder(currentOpenedFolder);
-					return err;
-				});
+			moveNodes(destinationFolderNode as Folder, ...nodesToMove).then((result) => {
+				if (result.data?.moveNodes?.length === nodesToMove.length) {
+					closeHandler();
+				}
+			});
 		}
 	}, [destinationFolder, currentFolder, nodes, moveNodes, nodesToMove, closeHandler]);
 

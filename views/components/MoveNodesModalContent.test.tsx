@@ -263,13 +263,7 @@ describe('Move Nodes Modal', () => {
 			mockMoveNodes(
 				{ node_ids: map(nodesToMove, (node) => node.id), destination_id: folder.id },
 				map(nodesToMove, (node) => ({ ...node, parent: folder }))
-			),
-			// FIXME[8919]: remove after bug is resolved by apollo client
-			mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
-			mockGetChildren(getChildrenVariables(currentFolder.id), {
-				...currentFolder,
-				children: [folder]
-			} as Folder)
+			)
 		];
 
 		const closeAction = jest.fn();
