@@ -455,7 +455,7 @@ describe('Filter list', () => {
 				expect(flagAction.parentElement).toHaveAttribute('disabled', '');
 				// click on unflag action on header bar
 				userEvent.click(screen.getByText(actionRegexp.unflag));
-				await waitForElementToBeRemoved(screen.queryAllByTestId('checkedAvatar'));
+				// await waitForElementToBeRemoved(screen.queryAllByTestId('checkedAvatar'));
 				// wait the snackbar with successful state to appear
 				const snackbar = await screen.findByText(/Item unflagged successfully/i);
 				await waitForElementToBeRemoved(snackbar);
@@ -516,10 +516,9 @@ describe('Filter list', () => {
 
 					userEvent.click(trashIcon);
 
-					await waitForElementToBeRemoved(screen.queryByText(currentFilter[0].name));
 					// wait for the snackbar to appear and disappear
-					await screen.findByText(/item moved to trash/i);
-					await waitForElementToBeRemoved(screen.queryByText(/item moved to trash/i));
+					const snackbar = await screen.findByText(/item moved to trash/i);
+					await waitForElementToBeRemoved(snackbar);
 					expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 
 					expect(screen.queryAllByTestId(`file-icon-preview`).length).toEqual(2);
@@ -615,7 +614,6 @@ describe('Filter list', () => {
 
 					userEvent.click(restoreIcon);
 
-					await waitForElementToBeRemoved(screen.queryByText(currentFilter[0].name));
 					const snackbar = await screen.findByText(/^success$/i);
 					await waitForElementToBeRemoved(snackbar);
 					expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
@@ -790,7 +788,6 @@ describe('Filter list', () => {
 
 					const confirmButton = await screen.findByRole('button', { name: /delete permanently/i });
 					userEvent.click(confirmButton);
-					await waitForElementToBeRemoved(screen.queryByText(currentFilter[0].name));
 					const snackbar = await screen.findByText(/^success$/i);
 					await waitForElementToBeRemoved(snackbar);
 					expect(confirmButton).not.toBeInTheDocument();

@@ -81,7 +81,8 @@ import {
 	renameNode,
 	render,
 	selectNodes,
-	triggerLoadMore
+	triggerLoadMore,
+	waitForNetworkResponse
 } from '../../utils/testUtils';
 import { addNodeInSortedList } from '../../utils/utils';
 import { EmptySpaceFiller } from './EmptySpaceFiller';
@@ -107,7 +108,6 @@ describe('Folder List', () => {
 		return cursor;
 	}
 
-	// TODO: define better this behavior with error handling
 	test('access to a folder with network error response show an error page', async () => {
 		const currentFolder = populateFolder();
 		const mocks = [
@@ -1172,7 +1172,8 @@ describe('Folder List', () => {
 
 				userEvent.click(trashIcon);
 
-				await waitForElementToBeRemoved(screen.queryByText(folderName1));
+				const snackbar = await screen.findByText(/item moved to trash/i);
+				await waitForElementToBeRemoved(snackbar);
 				expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 
 				expect(screen.queryAllByTestId(`file-icon-preview`).length).toEqual(1);
@@ -1189,8 +1190,6 @@ describe('Folder List', () => {
 				expect(trashIcon).toBeInTheDocument();
 				expect(trashIcon).toBeVisible();
 				expect(trashIcon.parentElement).toHaveAttribute('disabled', '');
-				const snackbar = await screen.findByText(/Item moved to trash/i);
-				await waitForElementToBeRemoved(snackbar);
 				expect.assertions(12);
 			});
 
@@ -2577,16 +2576,17 @@ describe('Folder List', () => {
 			const flagAction = await screen.findByText(actionRegexp.flag);
 			expect(flagAction).toBeVisible();
 			userEvent.click(flagAction);
-			expect(flagAction).not.toBeInTheDocument();
+			await waitForNetworkResponse();
 			await within(nodeItem).findByTestId('icon: Flag');
+			expect(flagAction).not.toBeInTheDocument();
 			expect(within(nodeItem).getByTestId('icon: Flag')).toBeVisible();
 			// open context menu and click on unflag action
 			fireEvent.contextMenu(nodeItem);
 			const unflagAction = await screen.findByText(actionRegexp.unflag);
 			expect(unflagAction).toBeVisible();
 			userEvent.click(unflagAction);
+			await waitForNetworkResponse();
 			expect(unflagAction).not.toBeInTheDocument();
-			await waitForElementToBeRemoved(within(nodeItem).queryByTestId('icon: Flag'));
 			expect(within(nodeItem).queryByTestId('icon: Flag')).not.toBeInTheDocument();
 		});
 
@@ -4713,7 +4713,7 @@ describe('Folder List', () => {
 			);
 			await screen.findByText(filename1);
 
-			const items = screen.getAllByTestId('nodeListItem-', { exact: false });
+			const items = screen.getAllByTestId('node-item-', { exact: false });
 			expect(within(items[0]).getByText('a')).toBeVisible();
 			expect(within(items[1]).getByText('b')).toBeVisible();
 
@@ -4726,10 +4726,12 @@ describe('Folder List', () => {
 			});
 			const descendingOrderOption = await screen.findByText('Descending Order');
 			userEvent.click(descendingOrderOption);
-			const descItems = await screen.findAllByTestId('nodeListItem-', { exact: false });
+			await waitFor(() =>
+				expect(screen.getAllByTestId('node-item-', { exact: false })[0]).toHaveTextContent('b')
+			);
+			const descItems = screen.getAllByTestId('node-item-', { exact: false });
 			expect(within(descItems[0]).getByText('b')).toBeVisible();
 			expect(within(descItems[1]).getByText('a')).toBeVisible();
-			expect.assertions(7);
 		});
 	});
 });

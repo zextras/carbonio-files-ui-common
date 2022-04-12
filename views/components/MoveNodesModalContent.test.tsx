@@ -361,11 +361,6 @@ describe('Move Nodes Modal', () => {
 		userEvent.click(folderItem);
 		// confirm button becomes active
 		await waitFor(() => expect(confirmButton).not.toHaveAttribute('disabled', ''));
-		// TODO: uncomment when filter inside modal is restored
-		// // click on filter input text does not reset selected destination
-		// userEvent.click(screen.getByRole('textbox'));
-		// // confirm button remains active
-		// expect(confirmButton).not.toHaveAttribute('disabled', '');
 	});
 
 	test('breadcrumb shows full path of opened folder and allows navigation to parent nodes', async () => {

@@ -142,6 +142,7 @@ export function useFlagNodesMutation(): FlagNodesType {
 				},
 				onQueryUpdated(observableQuery, diff) {
 					if (observableQuery.options.query === FIND_NODES && diff.missing) {
+						console.debug(diff.missing);
 						return observableQuery.refetch();
 					}
 					return false;

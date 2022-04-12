@@ -288,3 +288,15 @@ export const actionRegexp = {
 	deletePermanently: /^delete permanently$/i,
 	restore: /^restore$/i
 } as const;
+
+export function waitForNetworkResponse(): Promise<void> {
+	// wait a tick to let the mutation complete. This is necessary because with the optimistic response
+	// the ui is updated immediately, but a second rerender occurs after the server response
+	// @see https://www.apollographql.com/docs/react/recipes/testing/#testing-final-state
+	return waitFor(
+		() =>
+			new Promise((resolve) => {
+				setTimeout(resolve, 0);
+			})
+	);
+}

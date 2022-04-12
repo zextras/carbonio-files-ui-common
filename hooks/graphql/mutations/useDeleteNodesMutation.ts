@@ -99,6 +99,7 @@ export function useDeleteNodesMutation(): DeleteNodesType {
 				},
 				onQueryUpdated(observableQuery, diff) {
 					if (observableQuery.options.query === FIND_NODES && diff.missing) {
+						console.debug(diff.missing);
 						return observableQuery.refetch();
 					}
 					return false;

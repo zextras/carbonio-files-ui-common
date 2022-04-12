@@ -449,7 +449,6 @@ describe('Search list', () => {
 
 				userEvent.click(trashIcon);
 
-				await waitForElementToBeRemoved(screen.queryByText(currentFilter[0].name));
 				const snackbar = await screen.findByText(/item moved to trash/i);
 				await waitForElementToBeRemoved(snackbar);
 				expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
@@ -563,7 +562,6 @@ describe('Search list', () => {
 
 				userEvent.click(restoreIcon);
 
-				await waitForElementToBeRemoved(screen.queryByText(currentFilter[0].name));
 				const snackbar = await screen.findByText(/^success$/i);
 				await waitForElementToBeRemoved(snackbar);
 				expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
@@ -745,7 +743,6 @@ describe('Search list', () => {
 
 				const confirmButton = await screen.findByRole('button', { name: /delete permanently/i });
 				userEvent.click(confirmButton);
-				await waitForElementToBeRemoved(screen.queryByText(currentFilter[0].name));
 				const snackbar = await screen.findByText(/^success$/i);
 				await waitForElementToBeRemoved(snackbar);
 				expect(confirmButton).not.toBeInTheDocument();
