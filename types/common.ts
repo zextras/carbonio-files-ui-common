@@ -312,3 +312,5 @@ export type URLParams = {
 	filter: 'flagged' | 'myTrash' | 'sharedTrash' | 'sharedByMe' | 'sharedWithMe';
 	rootId: typeof ROOTS[keyof typeof ROOTS];
 };
+
+export type TargetModule = 'MAILS' | 'CONTACTS' | 'CALENDARS' | 'CHATS';
