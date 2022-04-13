@@ -174,7 +174,6 @@ export function useTrashNodesMutation(): TrashNodesType {
 				},
 				onQueryUpdated(observableQuery, diff) {
 					if (observableQuery.options.query === FIND_NODES && diff.missing) {
-						console.debug(diff.missing);
 						return observableQuery.refetch();
 					}
 					if (observableQuery.options.query === GET_CHILDREN) {

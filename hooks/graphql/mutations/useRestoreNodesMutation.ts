@@ -134,7 +134,6 @@ export function useRestoreNodesMutation(): RestoreType {
 				onQueryUpdated(observableQuery, diff) {
 					if (observableQuery.options.query === FIND_NODES) {
 						if (diff.missing) {
-							console.debug(diff.missing);
 							return observableQuery.refetch();
 						}
 					}
