@@ -64,7 +64,7 @@ export const PreviewCriteriaAlternativeContent: React.VFC<
 				{'This item cannot be displayed'}
 			</Text>
 			<Text size="medium" color="gray6" weight="bold">
-				{'This file exceeds the maximum weight we support and thus, it cannot be displayed'}
+				{'The file size exceeds the limit allowed and cannot be displayed'}
 			</Text>
 			<ContainerWithGap orientation="horizontal" height="fit" gap="8px">
 				{downloadSrc && (
