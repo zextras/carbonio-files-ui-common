@@ -565,6 +565,13 @@ export const getPreviewSrc = (
 ): string =>
 	`${REST_ENDPOINT}${PREVIEW}/image/${id}/${version}/${weight}x${height}?quality=${quality}`;
 
+/**
+ * 	Error codes:
+ *	400 if target  does not match
+ *  404 if nodeId does not exists
+ *  413 if payload is Too Large
+ *  500 if the store does not respond
+ */
 const uploadToCompleted = (
 	xhr: XMLHttpRequest,
 	resolve: (value: { attachmentId: string } | PromiseLike<{ attachmentId: string }>) => void,
@@ -578,6 +585,7 @@ const uploadToCompleted = (
 		}
 		case 400:
 		case 404:
+		case 413:
 		case 500:
 		default: {
 			reject({ statusText: xhr.statusText, status: xhr.status });
