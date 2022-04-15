@@ -79,7 +79,8 @@ jest.mock('../../hooks/useCreateOptions', () => ({
 			.fn()
 			.mockImplementation((...options: Parameters<CreateOptionsContent['setCreateOptions']>[0]) => {
 				mockedCreateOptions = options;
-			})
+			}),
+		removeCreateOptions: jest.fn()
 	})
 }));
 

@@ -4,35 +4,63 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
-import { Container, Responsive } from '@zextras/carbonio-design-system';
+import { Container, Responsive, Snackbar } from '@zextras/carbonio-design-system';
 import noop from 'lodash/noop';
 import { useTranslation } from 'react-i18next';
 
-import { ACTION_TYPES } from '../../constants';
+import { ACTION_IDS, ACTION_TYPES } from '../../constants';
 import { useCreateOptions } from '../../hooks/useCreateOptions';
-import { DISPLAYER_WIDTH, FILES_APP_ID, LIST_WIDTH } from '../constants';
+import { useNavigation } from '../../hooks/useNavigation';
+import { DISPLAYER_WIDTH, FILES_APP_ID, LIST_WIDTH, ROOTS } from '../constants';
 import { ListContext } from '../contexts';
 import useQueryParam from '../hooks/useQueryParam';
+import { useUpload } from '../hooks/useUpload';
+import { inputElement } from '../utils/utils';
 import { Displayer } from './components/Displayer';
 import FileList from './components/FileList';
 
 const FileView: React.VFC = () => {
 	const fileId = useQueryParam('file');
 	const [t] = useTranslation();
-	const { setCreateOptions } = useCreateOptions();
+	const { setCreateOptions, removeCreateOptions } = useCreateOptions();
 	const [isEmpty, setIsEmpty] = useState(false);
+	const { add } = useUpload();
+	const { navigateToFolder } = useNavigation();
 
+	const [showUploadSnackbar, setShowUploadSnackbar] = useState(false);
+
+	const closeUploadSnackbar = useCallback(() => {
+		setShowUploadSnackbar(false);
+	}, []);
+
+	const uploadSnackbarAction = useCallback(() => {
+		navigateToFolder(ROOTS.LOCAL_ROOT);
+	}, [navigateToFolder]);
+
+	const inputElementOnchange = useCallback(
+		(ev: Event) => {
+			if (ev.currentTarget instanceof HTMLInputElement && ev.currentTarget.files) {
+				add(ev.currentTarget.files, ROOTS.LOCAL_ROOT);
+				// required to select 2 times the same file/files
+				if (ev.target instanceof HTMLInputElement) {
+					ev.target.value = '';
+				}
+				setShowUploadSnackbar(true);
+			}
+		},
+		[add]
+	);
 	useEffect(() => {
 		setCreateOptions(
 			{
-				id: 'upload-file',
+				id: ACTION_IDS.UPLOAD_FILE,
 				type: ACTION_TYPES.NEW,
 				action: () => ({
 					type: ACTION_TYPES.NEW,
 					group: FILES_APP_ID,
-					id: 'upload-file',
+					id: ACTION_IDS.UPLOAD_FILE,
 					label: t('create.options.new.upload', 'Upload'),
 					icon: 'CloudUploadOutline',
 					click: noop,
@@ -41,10 +69,10 @@ const FileView: React.VFC = () => {
 				})
 			},
 			{
-				id: 'create-folder',
+				id: ACTION_IDS.CREATE_FOLDER,
 				type: ACTION_TYPES.NEW,
 				action: () => ({
-					id: 'create-folder',
+					id: ACTION_IDS.CREATE_FOLDER,
 					group: FILES_APP_ID,
 					type: ACTION_TYPES.NEW,
 					label: t('create.options.new.folder', 'New Folder'),
@@ -54,10 +82,10 @@ const FileView: React.VFC = () => {
 				})
 			},
 			{
-				id: 'create-docs-document',
+				id: ACTION_IDS.CREATE_DOCS_DOCUMENT,
 				type: ACTION_TYPES.NEW,
 				action: () => ({
-					id: 'create-docs-document',
+					id: ACTION_IDS.CREATE_DOCS_DOCUMENT,
 					group: FILES_APP_ID,
 					type: ACTION_TYPES.NEW,
 					label: t('create.options.new.document', 'New Document'),
@@ -67,10 +95,10 @@ const FileView: React.VFC = () => {
 				})
 			},
 			{
-				id: 'create-docs-spreadsheet',
+				id: ACTION_IDS.CREATE_DOCS_SPREADSHEET,
 				type: ACTION_TYPES.NEW,
 				action: () => ({
-					id: 'create-docs-spreadsheet',
+					id: ACTION_IDS.CREATE_DOCS_SPREADSHEET,
 					group: FILES_APP_ID,
 					type: ACTION_TYPES.NEW,
 					label: t('create.options.new.spreadsheet', 'New Spreadsheet'),
@@ -80,10 +108,10 @@ const FileView: React.VFC = () => {
 				})
 			},
 			{
-				id: 'create-docs-presentation',
+				id: ACTION_IDS.CREATE_DOCS_PRESENTATION,
 				type: ACTION_TYPES.NEW,
 				action: () => ({
-					id: 'create-docs-presentation',
+					id: ACTION_IDS.CREATE_DOCS_PRESENTATION,
 					group: FILES_APP_ID,
 					type: ACTION_TYPES.NEW,
 					label: t('create.options.new.presentation', 'New Presentation'),
@@ -95,22 +123,33 @@ const FileView: React.VFC = () => {
 		);
 
 		return (): void => {
+			removeCreateOptions(
+				ACTION_IDS.UPLOAD_FILE,
+				ACTION_IDS.CREATE_FOLDER,
+				ACTION_IDS.CREATE_DOCS_DOCUMENT,
+				ACTION_IDS.CREATE_DOCS_SPREADSHEET,
+				ACTION_IDS.CREATE_DOCS_PRESENTATION
+			);
 			setCreateOptions({
 				type: ACTION_TYPES.NEW,
-				id: 'upload-file',
+				id: ACTION_IDS.UPLOAD_FILE,
 				action: () => ({
-					id: 'upload-file',
+					id: ACTION_IDS.UPLOAD_FILE,
 					primary: true,
 					group: FILES_APP_ID,
 					type: ACTION_TYPES.NEW,
 					label: t('create.options.new.upload', 'Upload'),
 					icon: 'CloudUploadOutline',
-					click: noop,
+					click: (event): void => {
+						event && event.stopPropagation();
+						inputElement.click();
+						inputElement.onchange = inputElementOnchange;
+					},
 					disabled: false
 				})
 			});
 		};
-	}, [setCreateOptions, t]);
+	}, [inputElementOnchange, removeCreateOptions, setCreateOptions, t]);
 
 	return (
 		<ListContext.Provider value={{ isEmpty, setIsEmpty }}>
@@ -148,6 +187,14 @@ const FileView: React.VFC = () => {
 					<FileList fileId={fileId || ''} canUploadFile={false} />
 				</Responsive>
 			</Container>
+			<Snackbar
+				open={showUploadSnackbar}
+				onClose={closeUploadSnackbar}
+				type="info"
+				label={t('uploads.destination.home', "Upload occurred in Files' Home")}
+				actionLabel={t('snackbar.upload.goToFolder', 'Go to folder')}
+				onActionClick={uploadSnackbarAction}
+			/>
 		</ListContext.Provider>
 	);
 };
