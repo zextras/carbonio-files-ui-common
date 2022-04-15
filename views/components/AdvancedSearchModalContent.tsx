@@ -57,15 +57,15 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 	const { activeNodeId, removeActiveNode } = useActiveNode();
 	const [t] = useTranslation();
 	const [currentFilters, setCurrentFilters] = useState<AdvancedFilters>(filters);
-	const [keywordsTextContent, setKeywordsTextContent] = useState<string>();
+	const [keywordsHasTextContent, setKeywordsHasTextContent] = useState<boolean>(false);
 
 	const searchDisabled = useMemo(
 		() =>
 			(isEmpty(currentFilters) ||
 				every(currentFilters, (filter) => isEmpty(filter)) ||
 				isEqual(currentFilters, filters)) &&
-			isEmpty(keywordsTextContent),
-		[currentFilters, filters, keywordsTextContent]
+			!keywordsHasTextContent,
+		[currentFilters, filters, keywordsHasTextContent]
 	);
 
 	const confirmHandler = useCallback(() => {
@@ -103,7 +103,7 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 	const keywordsOnChange = useCallback(
 		(newKeywords: AdvancedFilters['keywords']) => {
 			updateFilter('keywords', newKeywords);
-			setKeywordsTextContent('');
+			setKeywordsHasTextContent(false);
 		},
 		[updateFilter]
 	);
@@ -120,7 +120,7 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 
 	const keywordsOnType = useCallback(
 		({ textContent }: React.KeyboardEvent & { textContent: string }) => {
-			setKeywordsTextContent(textContent);
+			setKeywordsHasTextContent(!isEmpty(textContent));
 		},
 		[]
 	);
@@ -215,7 +215,7 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 							label={t('search.advancedSearch.modal.flagged.label', 'Flagged')}
 							description={t(
 								'search.advancedSearch.modal.flagged.description',
-								'Filter the results by items that have been flagged by you'
+								"filter the results by items that you've flagged"
 							)}
 							onChange={flaggedOnChange}
 							initialValue={!!currentFilters.flagged}
