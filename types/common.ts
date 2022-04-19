@@ -151,9 +151,7 @@ export interface ChipProps {
 	maxWidth?: string;
 }
 
-export interface SearchChip extends ChipProps {
-	label?: string;
-}
+export type SearchChip = ChipProps;
 
 export enum OrderTrend {
 	Ascending = 'Ascending',
@@ -180,11 +178,20 @@ export type SearchParams = {
 };
 
 export type AdvancedFilters = {
-	[P in keyof Omit<SearchParams, 'keywords'>]: SearchChip & { value: SearchParams[P] };
+	[P in keyof Omit<
+		SearchParams,
+		'keywords' | 'cascade' | 'sharedWithMe' | 'directShare'
+	>]: SearchChip & {
+		value: SearchParams[P];
+	};
 } & {
 	[P in keyof Pick<SearchParams, 'keywords'>]: Array<
-		SearchChip & { value: NonNullable<SearchParams[P]> extends Array<infer U> ? U : unknown }
+		SearchChip & {
+			value: NonNullable<SearchParams[P]> extends Array<infer U> ? U : unknown;
+		}
 	>;
+} & {
+	[P in keyof Pick<SearchParams, 'sharedWithMe' | 'cascade'>]: { value: SearchParams[P] };
 };
 
 export type ChipActionsType = {

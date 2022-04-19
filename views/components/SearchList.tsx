@@ -51,7 +51,9 @@ export const SearchList: React.VFC = () => {
 	useEffect(() => {
 		const filterCount = filter(
 			searchParams,
-			(param) => (isArray(param) && !isEmpty(param)) || (!isArray(param) && !!param?.label)
+			(param) =>
+				(isArray(param) && !isEmpty(param)) ||
+				(!isArray(param) && !!param && 'label' in param && !!param.label)
 		).length;
 		setQueryCalled && setQueryCalled(filterCount > 0 && (!!previousData || !!searchResult));
 	}, [previousData, searchParams, searchResult, setQueryCalled]);

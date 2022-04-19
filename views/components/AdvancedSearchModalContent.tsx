@@ -215,7 +215,7 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 							label={t('search.advancedSearch.modal.flagged.label', 'Flagged')}
 							description={t(
 								'search.advancedSearch.modal.flagged.description',
-								"filter the results by items that you've flagged"
+								"Filter the results by items that you've flagged"
 							)}
 							onChange={flaggedOnChange}
 							initialValue={!!currentFilters.flagged}
