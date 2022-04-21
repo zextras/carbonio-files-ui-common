@@ -25,7 +25,8 @@ import {
 	DOCS_ENDPOINT,
 	DOWNLOAD_PATH,
 	OPEN_FILE_PATH,
-	PREVIEW,
+	PREVIEW_PATH,
+	PREVIEW_TYPE,
 	REST_ENDPOINT,
 	ROOTS,
 	UPLOAD_TO_PATH
@@ -554,17 +555,17 @@ export const docsHandledMimeTypes = [
 	'application/vnd.sun.xml.writer.template'
 ];
 
-/**
- * Get preview src
- */
-export const getPreviewSrc = (
-	id: string,
-	version: number,
-	weight: number,
-	height: number,
-	quality: 'lowest' | 'low' | 'medium' | 'high' | 'highest' // medium as default if not set
-): string =>
-	`${REST_ENDPOINT}${PREVIEW}/image/${id}/${version}/${weight}x${height}?quality=${quality}`;
+export const previewHandledMimeTypes = [
+	'application/msword',
+	'application/vnd.ms-excel',
+	'application/vnd.ms-powerpoint',
+	'application/vnd.oasis.opendocument.presentation',
+	'application/vnd.oasis.opendocument.spreadsheet',
+	'application/vnd.oasis.opendocument.text',
+	'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+	'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+	'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+];
 
 /**
  * 	Error codes:
@@ -620,8 +621,28 @@ export function uploadToTargetModule(args: {
 		xhr.send(JSON.stringify(body));
 	});
 }
+
+export function isDocumentSupportedByPreview(mimeType: string | undefined): boolean {
+	return !!mimeType && (mimeType.includes('pdf') || previewHandledMimeTypes.includes(mimeType));
+}
+
+/**
+ * Get preview src
+ */
+export const getImgPreviewSrc = (
+	id: string,
+	version: number,
+	weight: number,
+	height: number,
+	quality: 'lowest' | 'low' | 'medium' | 'high' | 'highest' // medium as default if not set
+): string =>
+	`${REST_ENDPOINT}${PREVIEW_PATH}/${PREVIEW_TYPE.IMAGE}/${id}/${version}/${weight}x${height}?quality=${quality}`;
+
 export const getPdfPreviewSrc = (id: string, version?: number): string =>
-	`${REST_ENDPOINT}${PREVIEW}/pdf/${id}/${version}`;
+	`${REST_ENDPOINT}${PREVIEW_PATH}/${PREVIEW_TYPE.PDF}/${id}/${version}`;
+
+export const getDocumentPreviewSrc = (id: string, version?: number): string =>
+	`${REST_ENDPOINT}${PREVIEW_PATH}/${PREVIEW_TYPE.DOCUMENT}/${id}/${version}`;
 
 /**
  * Get thumbnail src
@@ -635,10 +656,10 @@ export const getListItemAvatarPictureUrl = (
 	type: NodeType
 ): string | undefined => {
 	if (type === NodeType.Image) {
-		return `${REST_ENDPOINT}${PREVIEW}/image/${id}/${version}/${weight}x${height}/thumbnail`;
+		return `${REST_ENDPOINT}${PREVIEW_PATH}/image/${id}/${version}/${weight}x${height}/thumbnail`;
 	}
 	if (includes(mimeType, 'pdf')) {
-		return `${REST_ENDPOINT}${PREVIEW}/pdf/${id}/${version}/${weight}x${height}/thumbnail`;
+		return `${REST_ENDPOINT}${PREVIEW_PATH}/pdf/${id}/${version}/${weight}x${height}/thumbnail`;
 	}
 	return undefined;
 };
