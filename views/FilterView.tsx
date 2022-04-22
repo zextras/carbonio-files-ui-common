@@ -11,7 +11,7 @@ import noop from 'lodash/noop';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useParams } from 'react-router-dom';
 
-import { ACTION_TYPES } from '../../constants';
+import { ACTION_IDS, ACTION_TYPES } from '../../constants';
 import { useCreateOptions } from '../../hooks/useCreateOptions';
 import { useNavigation } from '../../hooks/useNavigation';
 import { DISPLAYER_WIDTH, FILES_APP_ID, LIST_WIDTH, ROOTS } from '../constants';
@@ -30,7 +30,7 @@ const FilterView: React.VFC = () => {
 	const isSharedByMeFilter = filter === 'sharedByMe';
 	const isSharedWithMeFilter = filter === 'sharedWithMe';
 
-	const { setCreateOptions } = useCreateOptions();
+	const { setCreateOptions, removeCreateOptions } = useCreateOptions();
 	const [t] = useTranslation();
 
 	const { pathname, search } = useLocation();
@@ -65,10 +65,10 @@ const FilterView: React.VFC = () => {
 	useEffect(() => {
 		setCreateOptions(
 			{
-				id: 'upload-file',
+				id: ACTION_IDS.UPLOAD_FILE,
 				type: ACTION_TYPES.NEW,
 				action: () => ({
-					id: 'upload-file',
+					id: ACTION_IDS.UPLOAD_FILE,
 					primary: true,
 					group: FILES_APP_ID,
 					type: ACTION_TYPES.NEW,
@@ -82,10 +82,10 @@ const FilterView: React.VFC = () => {
 				})
 			},
 			{
-				id: 'create-folder',
+				id: ACTION_IDS.CREATE_FOLDER,
 				type: ACTION_TYPES.NEW,
 				action: () => ({
-					id: 'create-folder',
+					id: ACTION_IDS.CREATE_FOLDER,
 					group: FILES_APP_ID,
 					type: ACTION_TYPES.NEW,
 					label: t('create.options.new.folder', 'New Folder'),
@@ -95,10 +95,10 @@ const FilterView: React.VFC = () => {
 				})
 			},
 			{
-				id: 'create-docs-document',
+				id: ACTION_IDS.CREATE_DOCS_DOCUMENT,
 				type: ACTION_TYPES.NEW,
 				action: () => ({
-					id: 'create-docs-document',
+					id: ACTION_IDS.CREATE_DOCS_DOCUMENT,
 					group: FILES_APP_ID,
 					type: ACTION_TYPES.NEW,
 					label: t('create.options.new.document', 'New Document'),
@@ -108,10 +108,10 @@ const FilterView: React.VFC = () => {
 				})
 			},
 			{
-				id: 'create-docs-spreadsheet',
+				id: ACTION_IDS.CREATE_DOCS_SPREADSHEET,
 				type: ACTION_TYPES.NEW,
 				action: () => ({
-					id: 'create-docs-spreadsheet',
+					id: ACTION_IDS.CREATE_DOCS_SPREADSHEET,
 					group: FILES_APP_ID,
 					type: ACTION_TYPES.NEW,
 					label: t('create.options.new.spreadsheet', 'New Spreadsheet'),
@@ -121,10 +121,10 @@ const FilterView: React.VFC = () => {
 				})
 			},
 			{
-				id: 'create-docs-presentation',
+				id: ACTION_IDS.CREATE_DOCS_PRESENTATION,
 				type: ACTION_TYPES.NEW,
 				action: () => ({
-					id: 'create-docs-presentation',
+					id: ACTION_IDS.CREATE_DOCS_PRESENTATION,
 					group: FILES_APP_ID,
 					type: ACTION_TYPES.NEW,
 					label: t('create.options.new.presentation', 'New Presentation'),
@@ -135,26 +135,14 @@ const FilterView: React.VFC = () => {
 			}
 		);
 		return (): void => {
-			setCreateOptions({
-				id: 'upload-file',
-				type: ACTION_TYPES.NEW,
-				action: () => ({
-					id: 'upload-file',
-					primary: true,
-					group: FILES_APP_ID,
-					type: ACTION_TYPES.NEW,
-					label: t('create.options.new.upload', 'Upload'),
-					icon: 'CloudUploadOutline',
-					click: (event): void => {
-						event && event.stopPropagation();
-						inputElement.click();
-						inputElement.onchange = inputElementOnchange;
-					},
-					disabled: false
-				})
-			});
+			removeCreateOptions(
+				ACTION_IDS.CREATE_FOLDER,
+				ACTION_IDS.CREATE_DOCS_DOCUMENT,
+				ACTION_IDS.CREATE_DOCS_SPREADSHEET,
+				ACTION_IDS.CREATE_DOCS_PRESENTATION
+			);
 		};
-	}, [filter, inputElementOnchange, pathname, search, setCreateOptions, t]);
+	}, [filter, inputElementOnchange, pathname, removeCreateOptions, search, setCreateOptions, t]);
 
 	const displayerPlaceholdersKey = useMemo(() => {
 		const filterKey = filter && filter.includes('Trash') ? 'trash' : filter;
