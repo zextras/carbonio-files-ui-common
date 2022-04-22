@@ -359,7 +359,7 @@ describe('useUpdateFolderContent', () => {
 			expect(children3[newPos - 1]?.id).toBe(element.id);
 		});
 
-		it('should ', async () => {
+		it('should update the list with some unordered items correctly when an already existing unordered item was updated', async () => {
 			const folder = populateFolder(NODES_LOAD_LIMIT + 2);
 			const sort = NODES_SORT_DEFAULT;
 			// extract the last 2 elements that will be added after
