@@ -12,6 +12,7 @@ import { chain } from 'lodash';
 import debounce from 'lodash/debounce';
 import findIndex from 'lodash/findIndex';
 import first from 'lodash/first';
+import includes from 'lodash/includes';
 import map from 'lodash/map';
 import size from 'lodash/size';
 import toLower from 'lodash/toLower';
@@ -621,3 +622,23 @@ export function uploadToTargetModule(args: {
 }
 export const getPdfPreviewSrc = (id: string, version?: number): string =>
 	`${REST_ENDPOINT}${PREVIEW}/pdf/${id}/${version}`;
+
+/**
+ * Get thumbnail src
+ */
+export const getListItemAvatarPictureUrl = (
+	id: string,
+	version: number,
+	weight: number,
+	height: number,
+	mimeType: string,
+	type: NodeType
+): string | undefined => {
+	if (type === NodeType.Image) {
+		return `${REST_ENDPOINT}${PREVIEW}/image/${id}/${version}/${weight}x${height}/thumbnail`;
+	}
+	if (includes(mimeType, 'pdf')) {
+		return `${REST_ENDPOINT}${PREVIEW}/pdf/${id}/${version}/${weight}x${height}/thumbnail`;
+	}
+	return undefined;
+};
