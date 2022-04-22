@@ -247,7 +247,7 @@ export function useDroppableCrumbs(
 			event: React.DragEvent<HTMLElement>
 		) => {
 			if (node && canUploadFile(node)) {
-				add(event.dataTransfer.files, node.id);
+				add(event.dataTransfer.files, node.id, true);
 				createSnackbar({
 					key: new Date().toLocaleString(),
 					type: 'info',
@@ -259,7 +259,7 @@ export function useDroppableCrumbs(
 					onActionClick: () => {
 						navigateToFolder(node.id);
 					},
-					replace: true,
+					replace: false,
 					hideButton: true
 				});
 			}

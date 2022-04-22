@@ -242,7 +242,7 @@ export const NodeListItemWrapper: React.VFC<NodeListItemWrapperProps> = ({
 
 	const uploadAction = useCallback(
 		(event) => {
-			add(event.dataTransfer.files, node.id);
+			add(event.dataTransfer.files, node.id, true);
 			createSnackbar({
 				key: new Date().toLocaleString(),
 				type: 'info',
@@ -254,7 +254,7 @@ export const NodeListItemWrapper: React.VFC<NodeListItemWrapperProps> = ({
 				onActionClick: () => {
 					navigateTo(ROOTS.LOCAL_ROOT);
 				},
-				replace: true,
+				replace: false,
 				hideButton: true
 			});
 		},
