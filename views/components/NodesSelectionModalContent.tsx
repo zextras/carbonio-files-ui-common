@@ -21,9 +21,8 @@ import GET_BASE_NODE from '../../graphql/queries/getBaseNode.graphql';
 import { useGetChildrenQuery } from '../../hooks/graphql/queries/useGetChildrenQuery';
 import { useGetRootsListQuery } from '../../hooks/graphql/queries/useGetRootsListQuery';
 import { useErrorHandler } from '../../hooks/useErrorHandler';
-import { NodeListItemType, RootListItemType } from '../../types/common';
+import { NodeListItemType, NodeWithMetadata, RootListItemType } from '../../types/common';
 import {
-	BaseNodeFragment,
 	ChildFragment,
 	GetBaseNodeQuery,
 	GetBaseNodeQueryVariables
@@ -35,8 +34,6 @@ import { ModalFooter } from './ModalFooter';
 import { ModalHeader } from './ModalHeader';
 import { ModalList } from './ModalList';
 import { ModalRootsList } from './ModalRootsList';
-
-type NodeWithMetadata = BaseNodeFragment;
 
 interface NodesSelectionModalContentProps {
 	title: string;
