@@ -12,6 +12,7 @@ import noop from 'lodash/noop';
 import reduce from 'lodash/reduce';
 import { useTranslation } from 'react-i18next';
 
+import { ROOTS } from '../../constants';
 import BASE_NODE from '../../graphql/fragments/baseNode.graphql';
 import { useGetChildrenQuery } from '../../hooks/graphql/queries/useGetChildrenQuery';
 import { useGetPathQuery } from '../../hooks/graphql/queries/useGetPathQuery';
@@ -37,7 +38,9 @@ export const FolderSelectionModalContent: React.VFC<FolderSelectionModalContentP
 	closeAction
 }) => {
 	const [t] = useTranslation();
-	const { data: currentFilterPathData } = useGetPathQuery(folderId);
+	const { data: currentFilterPathData } = useGetPathQuery(
+		folderId !== ROOTS.SHARED_WITH_ME ? folderId : undefined
+	);
 
 	const [selectedFolder, setSelectedFolder] = useState<
 		Pick<NodeListItemType, 'id' | 'name'> | undefined | null

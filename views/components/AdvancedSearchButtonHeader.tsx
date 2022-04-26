@@ -23,7 +23,9 @@ export const AdvancedSearchButtonHeader: React.VFC = () => {
 		() =>
 			filter(
 				searchParams,
-				(param) => (isArray(param) && !isEmpty(param)) || (!isArray(param) && !!param?.label)
+				(param) =>
+					(isArray(param) && !isEmpty(param)) ||
+					(!isArray(param) && !!param && 'label' in param && !!param.label)
 			).length,
 		[searchParams]
 	);
