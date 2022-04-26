@@ -6,7 +6,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Text, useModal } from '@zextras/carbonio-design-system';
+import { Padding, Text, useModal } from '@zextras/carbonio-design-system';
 import { useTranslation } from 'react-i18next';
 
 export function useMoreInfoModal(): {
@@ -25,9 +25,11 @@ export function useMoreInfoModal(): {
 				},
 				hideFooter: true,
 				children: (
-					<Text overflow="break-word" size="small">
-						{message}
-					</Text>
+					<Padding bottom="extralarge">
+						<Text overflow="break-word" size="small">
+							{message}
+						</Text>
+					</Padding>
 				)
 			});
 		},

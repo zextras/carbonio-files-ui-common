@@ -246,7 +246,9 @@ describe('Upload list', () => {
 			await waitForElementToBeRemoved(snackbar);
 
 			expect(screen.getByText(/additional info/i)).toBeInTheDocument();
-			expect(screen.getByText(/Folders cannot be uploaded in Files/i)).toBeInTheDocument();
+			expect(
+				screen.getByText(/Folders cannot be uploaded. If you are trying to upload a file/i)
+			).toBeInTheDocument();
 			expect(screen.getByTestId('icon: Close')).toBeInTheDocument();
 			userEvent.click(screen.getByTestId('icon: Close'));
 			expect(screen.queryByText(/additional info/i)).not.toBeInTheDocument();
@@ -276,7 +278,7 @@ describe('Upload list', () => {
 			act(() => {
 				userEvent.click(within(folderItem).getByTestId('icon: PlayCircleOutline'));
 			});
-			const snackbar2 = await screen.findByText(/folders can not be uploaded/i);
+			const snackbar2 = await screen.findByText(/folders cannot be uploaded/i);
 			expect(screen.getByRole('button', { name: /more info/i })).toBeInTheDocument();
 			await waitForElementToBeRemoved(snackbar2);
 			expect(screen.getByText(uploadedFiles[1].name)).toBeVisible();

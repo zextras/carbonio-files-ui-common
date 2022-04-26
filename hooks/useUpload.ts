@@ -321,7 +321,7 @@ export const useUpload: UseUploadHook = () => {
 					openMoreInfoModal(
 						t(
 							'uploads.error.moreInfo.foldersNotAllowed',
-							'Folders cannot be uploaded in Files. If you are trying to upload a file, it may be that the system has not recognized it. Try again by clicking on "UPLOAD" button.'
+							'Folders cannot be uploaded. If you are trying to upload a file, the system may not have recognized it. Try again using the "UPLOAD" button.'
 						)
 					)
 			});
@@ -332,7 +332,7 @@ export const useUpload: UseUploadHook = () => {
 	const uploadFolder = useCallback<(folder: UploadType) => ReturnType<UploadFunctions['retry']>>(
 		(folder) => {
 			createSnackbarForUploadError(
-				t('snackbar.upload.foldersNotAllowed', 'Folders can not be uploaded')
+				t('snackbar.upload.foldersNotAllowed', 'Folders cannot be uploaded')
 			);
 			const newState = map(uploadVar(), (item) => {
 				if (item.id === folder.id) {
@@ -393,7 +393,7 @@ export const useUpload: UseUploadHook = () => {
 				createSnackbarForUploadError(
 					validFilesCount > 0
 						? t('snackbar.upload.nodesNotAllowed', 'Some items have not been uploaded')
-						: t('snackbar.upload.foldersNotAllowed', 'Folders can not be uploaded')
+						: t('snackbar.upload.foldersNotAllowed', 'Folders cannot be uploaded')
 				);
 			}
 
