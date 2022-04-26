@@ -10,7 +10,13 @@ import find from 'lodash/find';
 import server from '../../../mocks/server';
 import { NODES_LOAD_LIMIT, NODES_SORT_DEFAULT } from '../../constants';
 import GET_CHILDREN from '../../graphql/queries/getChildren.graphql';
-import { populateFolder, populateNode, populateNodes, sortNodes } from '../../mocks/mockUtils';
+import {
+	populateFile,
+	populateFolder,
+	populateNode,
+	populateNodes,
+	sortNodes
+} from '../../mocks/mockUtils';
 import {
 	Folder,
 	GetChildrenQuery,
@@ -351,6 +357,59 @@ describe('useUpdateFolderContent', () => {
 			expect(children3).toHaveLength(NODES_LOAD_LIMIT + 1);
 			// created element should be at last position in the list (new pos - 1 because it is removed from the top)
 			expect(children3[newPos - 1]?.id).toBe(element.id);
+		});
+
+		it('should update the list with some unordered items correctly when an already existing unordered item was updated', async () => {
+			const folder = populateFolder(NODES_LOAD_LIMIT + 2);
+			const sort = NODES_SORT_DEFAULT;
+			// extract the last 2 elements that will be added after
+			const last = folder.children.splice(folder.children.length - 1, 1)[0] as Node;
+			const secondLastNode = folder.children.splice(folder.children.length - 1, 1)[0] as Node;
+			// we need to be sure that it is a file
+			const secondLast = populateFile(secondLastNode.id, secondLastNode.name);
+
+			prepareCache(folder);
+
+			let newPos = addNodeInSortedList(folder.children, secondLast, sort);
+			expect(newPos).toBe(-1);
+
+			const {
+				updateFolderContent: { addNodeToFolder }
+			} = setupHook();
+
+			// add the secondLast item to the folder, it is out from ordered items, so it will be put in the unordered items
+			addNodeToFolder(folder, secondLast);
+			const { children } = readGetChildrenQuery(folder.id, sort);
+
+			expect(children).toHaveLength(NODES_LOAD_LIMIT + 1);
+			// created element should be at last position in the list
+			expect(children[children.length - 1]?.id).toBe(secondLast.id);
+
+			newPos = addNodeInSortedList(children, last, sort);
+			expect(newPos).toBe(-1);
+
+			// add the last item to the folder, it is out from ordered items, so it will be put in the unordered items
+			addNodeToFolder({ ...folder, children }, last);
+
+			const { children: children2 } = readGetChildrenQuery(folder.id, sort);
+			expect(children2).toHaveLength(NODES_LOAD_LIMIT + 2);
+			// created element should be at last position in the list
+			expect(children2[children2.length - 1]?.id).toBe(last.id);
+
+			// simulate upload version of already existing file
+			secondLast.size += 10000;
+
+			// addNodeInSortedList function return the idx + 1 of the already inserted item
+			newPos = addNodeInSortedList(children2, secondLast, sort);
+			expect(newPos).toBe(children2.length - 1);
+
+			addNodeToFolder({ ...folder, children: children2 }, secondLast);
+
+			const { children: children3 } = readGetChildrenQuery(folder.id, sort);
+			// updated element should not increment the size
+			expect(children3).toHaveLength(NODES_LOAD_LIMIT + 2);
+			// secondLast element should remain the second last element if current sorting criteria is not afflicted
+			expect(children3[children3.length - 2]?.id).toBe(secondLast.id);
 		});
 	});
 });

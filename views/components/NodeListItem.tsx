@@ -30,6 +30,7 @@ import {
 	formatDate,
 	getIconByFileType,
 	getPdfPreviewSrc,
+	getListItemAvatarPictureUrl,
 	getPreviewSrc,
 	humanFileSize,
 	openNodeWithDocs
@@ -453,6 +454,11 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 							disabled={disabled}
 							selectable={selectable}
 							icon={getIconByFileType(type, mimeType || id)}
+							picture={
+								version && mimeType
+									? getListItemAvatarPictureUrl(id, version, 80, 80, mimeType, type)
+									: undefined
+							}
 						/>
 						<Container
 							orientation="vertical"
