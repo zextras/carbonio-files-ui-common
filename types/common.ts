@@ -8,6 +8,7 @@ import React, { DragEventHandler } from 'react';
 
 import { ROOTS } from '../constants';
 import {
+	BaseNodeFragment,
 	ChildFragment,
 	File as FilesFile,
 	FindNodesQueryVariables,
@@ -314,3 +315,5 @@ export type URLParams = {
 };
 
 export type TargetModule = 'MAILS' | 'CONTACTS' | 'CALENDARS' | 'CHATS';
+
+export type NodeWithMetadata = BaseNodeFragment;
