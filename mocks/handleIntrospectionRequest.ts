@@ -6,10 +6,9 @@
 
 import { GraphQLContext, MockedRequest, ResponseResolver } from 'msw';
 
-const handleIntrospectionRequest: ResponseResolver<MockedRequest, GraphQLContext<unknown>> = (
-	req,
-	res,
-	ctx
-) => res(ctx.data({}));
+const handleIntrospectionRequest: ResponseResolver<
+	MockedRequest,
+	GraphQLContext<Record<string, unknown>>
+> = (req, res, ctx) => res(ctx.data({}));
 
 export default handleIntrospectionRequest;

@@ -8,7 +8,6 @@ import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import { Container, Icon, Padding, Row, Text } from '@zextras/carbonio-design-system';
 import debounce from 'lodash/debounce';
-import includes from 'lodash/includes';
 import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
 import styled, { css } from 'styled-components';
@@ -20,6 +19,7 @@ import {
 	LIST_ITEM_AVATAR_HEIGHT,
 	LIST_ITEM_HEIGHT,
 	LIST_ITEM_HEIGHT_COMPACT,
+	PREVIEW_TYPE,
 	ROOTS
 } from '../../constants';
 import { useCreateSnackbar } from '../../hooks/useCreateSnackbar';
@@ -30,10 +30,12 @@ import {
 	formatDate,
 	getIconByFileType,
 	getPdfPreviewSrc,
+	getImgPreviewSrc,
 	getListItemAvatarPictureUrl,
-	getPreviewSrc,
 	humanFileSize,
-	openNodeWithDocs
+	isDocumentSupportedByPreview,
+	openNodeWithDocs,
+	getDocumentPreviewSrc
 } from '../../utils/utils';
 import { ContextualMenu } from './ContextualMenu';
 import { NodeAvatarIcon } from './NodeAvatarIcon';
@@ -276,6 +278,17 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 		[id, type]
 	);
 
+	const [isSupportedByPreview, documentType] = useMemo<
+		[boolean, typeof PREVIEW_TYPE[keyof typeof PREVIEW_TYPE] | undefined]
+	>(
+		() => [
+			isDocumentSupportedByPreview(mimeType),
+			(mimeType && (mimeType.includes('pdf') ? PREVIEW_TYPE.PDF : PREVIEW_TYPE.DOCUMENT)) ||
+				undefined
+		],
+		[mimeType]
+	);
+
 	const openNode = useCallback(
 		(event: React.SyntheticEvent) => {
 			// remove text selection on double click
@@ -287,11 +300,6 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 			if (!isSelectionModeActive && !disabled && !trashed) {
 				if (isNavigable) {
 					navigateTo(id, event);
-				} else if (
-					permittedContextualMenuActions[Action.OpenWithDocs] &&
-					permittedContextualMenuActions[Action.OpenWithDocs] === true
-				) {
-					openNodeWithDocs(id);
 				} else if (type === NodeType.Image) {
 					createPreview({
 						previewType: 'image',
@@ -317,36 +325,54 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 							icon: 'ArrowBackOutline',
 							tooltipLabel: t('preview.close.tooltip', 'Close')
 						},
-						src: version ? getPreviewSrc(id, version, 0, 0, 'high') : ''
+						src: version ? getImgPreviewSrc(id, version, 0, 0, 'high') : ''
 					});
-				} else if (includes(mimeType, 'pdf')) {
+				} else if (isSupportedByPreview) {
+					// if supported, open document with preview
+					const src =
+						(version &&
+							((documentType === PREVIEW_TYPE.PDF && getPdfPreviewSrc(id, version)) ||
+								(documentType === PREVIEW_TYPE.DOCUMENT && getDocumentPreviewSrc(id, version)))) ||
+						'';
+					const actions = [
+						{
+							icon: 'DriveOutline',
+							id: 'DriveOutline',
+							tooltipLabel: t('preview.actions.tooltip.addCollaborator', 'Add collaborator'),
+							onClick: (): void => setActiveNode(id, DISPLAYER_TABS.sharing)
+						},
+						{
+							icon: 'DownloadOutline',
+							tooltipLabel: t('preview.actions.tooltip.download', 'Download'),
+							id: 'DownloadOutline',
+							onClick: (): void => downloadNode(id)
+						}
+					];
+					if (permittedContextualMenuActions[Action.OpenWithDocs] === true) {
+						actions.unshift({
+							id: 'OpenWithDocs',
+							icon: 'BookOpenOutline',
+							tooltipLabel: t('actions.openWithDocs', 'Open document'),
+							onClick: (): void => openNodeWithDocs(id)
+						});
+					}
 					createPreview({
 						previewType: 'pdf',
 						filename: name,
 						extension: extension || undefined,
 						size: (size && humanFileSize(size)) || undefined,
 						useFallback: usePdfPreviewFallback,
-						actions: [
-							{
-								icon: 'DriveOutline',
-								id: 'DriveOutline',
-								tooltipLabel: t('preview.actions.tooltip.addCollaborator', 'Add collaborator'),
-								onClick: (): void => setActiveNode(id, DISPLAYER_TABS.sharing)
-							},
-							{
-								icon: 'DownloadOutline',
-								tooltipLabel: t('preview.actions.tooltip.download', 'Download'),
-								id: 'DownloadOutline',
-								onClick: (): void => downloadNode(id)
-							}
-						],
+						actions,
 						closeAction: {
 							id: 'close-action',
 							icon: 'ArrowBackOutline',
 							tooltipLabel: t('preview.close.tooltip', 'Close')
 						},
-						src: version ? getPdfPreviewSrc(id, version) : ''
+						src
 					});
+				} else if (permittedContextualMenuActions[Action.OpenWithDocs] === true) {
+					// if preview is not supported and document can be opened with docs, open editor
+					openNodeWithDocs(id);
 				}
 			}
 		},
@@ -355,9 +381,9 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 			disabled,
 			trashed,
 			isNavigable,
-			permittedContextualMenuActions,
 			type,
-			mimeType,
+			isSupportedByPreview,
+			permittedContextualMenuActions,
 			navigateTo,
 			id,
 			createPreview,
@@ -367,6 +393,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 			t,
 			version,
 			setActiveNode,
+			documentType,
 			usePdfPreviewFallback
 		]
 	);
@@ -416,7 +443,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 	}, []);
 
 	return (
-		<Container id={id} data-testid={`nodeListItem-${id}`}>
+		<Container id={id}>
 			<ContextualMenu
 				disabled={
 					(disabled || isSelectionModeActive || compact) &&

@@ -47,8 +47,10 @@ const useBreadcrumb: UseBreadcrumbType = (folderId, labels, crumbAction) => {
 	const [t] = useTranslation();
 
 	useEffect(() => {
-		setCrumbs(labels || []);
-	}, [labels]);
+		if (!folderId) {
+			setCrumbs(labels || []);
+		}
+	}, [folderId, labels]);
 
 	const updateCrumbs = useCallback(
 		(nodes: CrumbNode | Array<Maybe<Pick<Node, 'id' | 'name' | 'type'>> | undefined>) => {
@@ -75,9 +77,9 @@ const useBreadcrumb: UseBreadcrumbType = (folderId, labels, crumbAction) => {
 			node_id: folderId || ''
 		},
 		skip: !folderId,
-		onCompleted({ getNode }) {
-			if (getNode) {
-				updateCrumbs(getNode);
+		onCompleted(data) {
+			if (data?.getNode) {
+				updateCrumbs(data.getNode);
 				setExpanded(false);
 			}
 		}

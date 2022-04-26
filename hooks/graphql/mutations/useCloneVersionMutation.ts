@@ -10,7 +10,13 @@ import { useCallback } from 'react';
 import { FetchResult, useMutation } from '@apollo/client';
 
 import CLONE_VERSION from '../../../graphql/mutations/cloneVersion.graphql';
-import { CloneVersionMutation, CloneVersionMutationVariables } from '../../../types/graphql/types';
+import GET_VERSIONS from '../../../graphql/queries/getVersions.graphql';
+import {
+	CloneVersionMutation,
+	CloneVersionMutationVariables,
+	GetVersionsQuery,
+	GetVersionsQueryVariables
+} from '../../../types/graphql/types';
 import { useErrorHandler } from '../../useErrorHandler';
 
 export type CloneVersionType = (
@@ -36,14 +42,12 @@ export function useCloneVersionMutation(): CloneVersionType {
 				},
 				update(cache, { data }) {
 					if (data?.cloneVersion) {
-						cache.modify({
-							fields: {
-								// TODO: think about another strategy because this way is impossible to detect during refactors
-								[`getVersions({"node_id":"${nodeId}"})`](existingVersions) {
-									return [data.cloneVersion, ...existingVersions];
-								}
-							}
-						});
+						cache.updateQuery<GetVersionsQuery, GetVersionsQueryVariables>(
+							{ query: GET_VERSIONS, variables: { node_id: nodeId }, overwrite: true },
+							(existingVersions) => ({
+								getVersions: [data.cloneVersion, ...(existingVersions?.getVersions || [])]
+							})
+						);
 					}
 				}
 			});

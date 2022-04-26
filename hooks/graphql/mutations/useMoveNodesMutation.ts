@@ -16,8 +16,12 @@ import { useParams } from 'react-router-dom';
 import { useActiveNode } from '../../../../hooks/useActiveNode';
 import { useNavigation } from '../../../../hooks/useNavigation';
 import MOVE_NODES from '../../../graphql/mutations/moveNodes.graphql';
+import GET_CHILDREN from '../../../graphql/queries/getChildren.graphql';
+import GET_PATH from '../../../graphql/queries/getPath.graphql';
 import {
 	Folder,
+	GetChildrenQueryVariables,
+	GetPathQueryVariables,
 	MoveNodesMutation,
 	MoveNodesMutationVariables,
 	Node,
@@ -27,6 +31,7 @@ import { useCreateSnackbar } from '../../useCreateSnackbar';
 import { useErrorHandler } from '../../useErrorHandler';
 import useQueryParam from '../../useQueryParam';
 import { useUpdateFolderContent } from '../useUpdateFolderContent';
+import { isOperationVariables } from '../utils';
 
 export type MoveNodesType = (
 	destinationFolder: Pick<Folder, '__typename' | 'id'>,
@@ -123,35 +128,28 @@ export function useMoveNodesMutation(): MoveNodesType {
 					// clear cached children for destination folder
 					cache.evict({ id: cache.identify(destinationFolder), fieldName: 'children' });
 					cache.gc();
-				} /* ,
-				onQueryUpdated(observableQuery, { complete }) {
+				},
+				onQueryUpdated(observableQuery) {
+					const { query, variables } = observableQuery.options;
 					if (observableQuery.hasObservers()) {
 						if (
-							observableQuery.options.query === GET_PATH &&
-							(observableQuery as ObservableQuery<GetPathQuery>).options.variables?.id ===
-								destinationFolder.id
+							isOperationVariables<GetPathQueryVariables>(query, variables, GET_PATH) &&
+							variables.node_id === destinationFolder.id
 						) {
 							// avoid refetch getPath for the destination (folder content opened in the displayer)
 							return false;
 						}
 						if (
-							observableQuery.options.query === GET_CHILDREN &&
-							observableQuery.options.variables?.id === destinationFolder.id
+							isOperationVariables<GetChildrenQueryVariables>(query, variables, GET_CHILDREN) &&
+							variables.node_id === destinationFolder.id
 						) {
 							// avoid refetch getNode for the destination (folder content opened in the displayer)
 							return false;
 						}
 					}
-					console.log(observableQuery.queryName, observableQuery.options.variables);
-					if (complete) {
-						// eslint-disable-next-line consistent-return
-						// if the query is complete, stick to the fetch policy set for the query
-
-						return observableQuery.reobserve();
-					}
-					// otherwise, refetch the query unconditionally from the network
-					return true;
-				} */
+					// otherwise, stick to the fetch policy set for the query
+					return observableQuery.reobserve();
+				}
 			});
 		},
 		[activeNodeId, folderId, moveNodesMutation, removeActiveNode, removeNodesFromFolder, rootId]

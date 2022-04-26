@@ -53,7 +53,7 @@ describe('Folder Selection Modal Content', () => {
 		expect(confirmAction).not.toHaveBeenCalled();
 	});
 
-	test('if folder in list if parent is set. Choose button is disabled if active folder is same as the set one', async () => {
+	test('show folder in list if parent is set. Choose button is disabled if active folder is same as the set one', async () => {
 		const folder = populateFolder();
 		const folder2 = populateFolder();
 		const file = populateFile();
@@ -194,7 +194,7 @@ describe('Folder Selection Modal Content', () => {
 			findStyled(screen.getByTestId(`node-item-${localRoot.id}`), HoverContainer)
 		).not.toHaveStyle('background-color: #d5e3f6');
 		// click on subtitle to reset active folder
-		userEvent.click(screen.getByText(/searched only inside the selected folder/gi));
+		userEvent.click(screen.getByText(/searched only inside the selected folder/i));
 		// choose button becomes disabled because roots list entry point is not a valid selection
 		await waitFor(() => expect(chooseButton).toHaveAttribute('disabled'));
 		act(() => {

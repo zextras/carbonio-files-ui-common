@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-/* eslint-disable arrow-body-style */
 import { useCallback } from 'react';
 
 import { FetchResult, useMutation } from '@apollo/client';
@@ -12,8 +11,10 @@ import includes from 'lodash/includes';
 import map from 'lodash/map';
 
 import KEEP_VERSIONS from '../../../graphql/mutations/keepVersions.graphql';
+import GET_VERSIONS from '../../../graphql/queries/getVersions.graphql';
 import {
-	File,
+	GetVersionsQuery,
+	GetVersionsQueryVariables,
 	KeepVersionsMutation,
 	KeepVersionsMutationVariables
 } from '../../../types/graphql/types';
@@ -35,8 +36,8 @@ export function useKeepVersionsMutation(): KeepVersionsType {
 	>(KEEP_VERSIONS);
 
 	const keepVersions: KeepVersionsType = useCallback(
-		(nodeId: string, versions: Array<number>, keepForever: boolean) => {
-			return keepVersionsMutation({
+		(nodeId: string, versions: Array<number>, keepForever: boolean) =>
+			keepVersionsMutation({
 				variables: {
 					node_id: nodeId,
 					versions,
@@ -48,22 +49,19 @@ export function useKeepVersionsMutation(): KeepVersionsType {
 				},
 				update(cache, { data }) {
 					if (data?.keepVersions) {
-						cache.modify({
-							fields: {
-								// TODO: think about another strategy because this way is impossible to detect during refactors
-								[`getVersions({"node_id":"${nodeId}"})`](existingVersions) {
-									return map(existingVersions, (fileVersion: File) =>
-										includes(data.keepVersions, fileVersion.version)
-											? { ...fileVersion, keep_forever: keepForever }
-											: fileVersion
-									);
-								}
-							}
-						});
+						cache.updateQuery<GetVersionsQuery, GetVersionsQueryVariables>(
+							{ query: GET_VERSIONS, variables: { node_id: nodeId }, overwrite: true },
+							(existingVersions) => ({
+								getVersions: map(existingVersions?.getVersions, (fileVersion) =>
+									fileVersion && includes(data.keepVersions, fileVersion.version)
+										? { ...fileVersion, keep_forever: keepForever }
+										: fileVersion
+								)
+							})
+						);
 					}
 				}
-			});
-		},
+			}),
 		[keepVersionsMutation]
 	);
 	useErrorHandler(keepVersionsError, 'KEEP_VERSIONS');

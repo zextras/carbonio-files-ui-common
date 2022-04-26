@@ -70,19 +70,12 @@ const addVersionToCache = (
 		})
 		.then((result) => {
 			if (result.data) {
-				const currentData = apolloClient.readQuery<GetVersionsQuery, GetVersionsQueryVariables>({
-					query: GET_VERSIONS,
-					variables: {
-						node_id: nodeId
-					}
-				});
-				if (currentData?.getVersions) {
-					apolloClient.writeQuery<GetVersionsQuery, GetVersionsQueryVariables>({
-						query: GET_VERSIONS,
-						variables: { node_id: nodeId },
-						data: { getVersions: [result.data.getVersions[0], ...currentData.getVersions] }
-					});
-				}
+				apolloClient.cache.updateQuery<GetVersionsQuery, GetVersionsQueryVariables>(
+					{ query: GET_VERSIONS, variables: { node_id: nodeId }, overwrite: true },
+					(existingVersions) => ({
+						getVersions: [result.data.getVersions[0], ...(existingVersions?.getVersions || [])]
+					})
+				);
 			}
 		});
 };

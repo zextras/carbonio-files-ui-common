@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import faker from 'faker';
+import { faker } from '@faker-js/faker';
 import take from 'lodash/take';
 import { GraphQLContext, GraphQLRequest, ResponseResolver } from 'msw';
 

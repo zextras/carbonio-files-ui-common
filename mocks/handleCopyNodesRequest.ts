@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 import forEach from 'lodash/forEach';
 import { GraphQLContext, GraphQLRequest, ResponseResolver } from 'msw';
 
@@ -22,14 +22,13 @@ const handleCopyNodesRequest: ResponseResolver<
 	GraphQLContext<CopyNodesMutation>,
 	CopyNodesMutation
 > = (req, res, ctx) => {
-	// eslint-disable-next-line camelcase
-	const { node_ids, destination_id } = req.variables;
+	const { node_ids: nodeIds, destination_id: destinationId } = req.variables;
 
 	const apolloClient = buildClient();
 
 	const nodes: CopyNodesMutation['copyNodes'] = [];
 
-	forEach(node_ids, (nodeId) => {
+	forEach(nodeIds, (nodeId) => {
 		// try to read the node as a file
 		let node = apolloClient.readFragment<ChildFragment>({
 			fragmentName: 'Child',
@@ -51,7 +50,7 @@ const handleCopyNodesRequest: ResponseResolver<
 				...node,
 				id: faker.datatype.uuid(),
 				name: `${node.name} - Copy`,
-				parent: { __typename: 'Folder', id: destination_id, name: 'parent folder' } as Folder
+				parent: { __typename: 'Folder', id: destinationId, name: 'parent folder' } as Folder
 			};
 
 			nodes.push(newNode);
