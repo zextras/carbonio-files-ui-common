@@ -225,7 +225,7 @@ describe('Move Nodes Modal', () => {
 		userEvent.click(folderItem);
 		expect(confirmButton).not.toHaveAttribute('disabled', '');
 		userEvent.dblClick(folderItem);
-		await screen.findByText(/It looks like there's nothing here./gi);
+		await screen.findByText(/It looks like there's nothing here./i);
 		expect(confirmButton).not.toHaveAttribute('disabled', '');
 		act(() => {
 			userEvent.click(confirmButton);
@@ -263,13 +263,7 @@ describe('Move Nodes Modal', () => {
 			mockMoveNodes(
 				{ node_ids: map(nodesToMove, (node) => node.id), destination_id: folder.id },
 				map(nodesToMove, (node) => ({ ...node, parent: folder }))
-			),
-			// FIXME[8919]: remove after bug is resolved by apollo client
-			mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
-			mockGetChildren(getChildrenVariables(currentFolder.id), {
-				...currentFolder,
-				children: [folder]
-			} as Folder)
+			)
 		];
 
 		const closeAction = jest.fn();
@@ -361,11 +355,6 @@ describe('Move Nodes Modal', () => {
 		userEvent.click(folderItem);
 		// confirm button becomes active
 		await waitFor(() => expect(confirmButton).not.toHaveAttribute('disabled', ''));
-		// TODO: uncomment when filter inside modal is restored
-		// // click on filter input text does not reset selected destination
-		// userEvent.click(screen.getByRole('textbox'));
-		// // confirm button remains active
-		// expect(confirmButton).not.toHaveAttribute('disabled', '');
 	});
 
 	test('breadcrumb shows full path of opened folder and allows navigation to parent nodes', async () => {

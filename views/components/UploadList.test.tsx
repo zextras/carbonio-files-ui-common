@@ -72,18 +72,18 @@ describe('Upload list', () => {
 
 			render(<UploadList />, { mocks });
 
-			await screen.findByText(/nothing here/gi);
+			await screen.findByText(/nothing here/i);
 
-			fireEvent.dragEnter(screen.getByText(/nothing here/gi), {
+			fireEvent.dragEnter(screen.getByText(/nothing here/i), {
 				dataTransfer: dataTransferObj
 			});
 
 			await screen.findByTestId('dropzone-overlay');
 			expect(
-				screen.getByText(/Drop here your attachments to quick-add them to your Home/gm)
+				screen.getByText(/Drop here your attachments to quick-add them to your Home/m)
 			).toBeVisible();
 
-			fireEvent.drop(screen.getByText(/nothing here/gi), {
+			fireEvent.drop(screen.getByText(/nothing here/i), {
 				dataTransfer: dataTransferObj
 			});
 
@@ -94,7 +94,7 @@ describe('Upload list', () => {
 			expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
 				uploadedFiles.length
 			);
-			expect(screen.queryByText(/Drop here your attachments/gm)).not.toBeInTheDocument();
+			expect(screen.queryByText(/Drop here your attachments/m)).not.toBeInTheDocument();
 
 			await waitFor(() => {
 				const localRootCachedData = global.apolloClient.readQuery<

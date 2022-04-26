@@ -23,17 +23,13 @@ import { ROOTS } from '../../../constants';
 import RESTORE_NODES from '../../../graphql/mutations/restoreNodes.graphql';
 import FIND_NODES from '../../../graphql/queries/findNodes.graphql';
 import { FindNodesCachedObject } from '../../../types/apollo';
-import { GetNodeParentType } from '../../../types/common';
-import {
-	Node,
-	RestoreNodesMutation,
-	RestoreNodesMutationVariables
-} from '../../../types/graphql/types';
+import { GetNodeParentType, Node } from '../../../types/common';
+import { RestoreNodesMutation, RestoreNodesMutationVariables } from '../../../types/graphql/types';
 import { isSearchView, isTrashView } from '../../../utils/utils';
 import { useCreateSnackbar } from '../../useCreateSnackbar';
 import { useErrorHandler } from '../../useErrorHandler';
 
-type UseRestoreRequiredNodeType = Pick<Node, 'id'> & GetNodeParentType;
+type UseRestoreRequiredNodeType = Pick<Node, 'id' | '__typename'> & GetNodeParentType;
 
 export type RestoreType = (
 	...nodes: UseRestoreRequiredNodeType[]

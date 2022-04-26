@@ -443,7 +443,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 	}, []);
 
 	return (
-		<Container id={id} data-testid={`nodeListItem-${id}`}>
+		<Container id={id}>
 			<ContextualMenu
 				disabled={
 					(disabled || isSelectionModeActive || compact) &&

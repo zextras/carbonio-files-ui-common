@@ -194,7 +194,7 @@ describe('Folder Selection Modal Content', () => {
 			findStyled(screen.getByTestId(`node-item-${localRoot.id}`), HoverContainer)
 		).not.toHaveStyle('background-color: #d5e3f6');
 		// click on subtitle to reset active folder
-		userEvent.click(screen.getByText(/searched only inside the selected folder/gi));
+		userEvent.click(screen.getByText(/searched only inside the selected folder/i));
 		// choose button becomes disabled because roots list entry point is not a valid selection
 		await waitFor(() => expect(chooseButton).toHaveAttribute('disabled'));
 		act(() => {

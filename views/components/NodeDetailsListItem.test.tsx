@@ -6,8 +6,8 @@
 
 import React from 'react';
 
+import { faker } from '@faker-js/faker';
 import { screen } from '@testing-library/react';
-import * as faker from 'faker';
 
 import { populateNode } from '../../mocks/mockUtils';
 import { User } from '../../types/graphql/types';

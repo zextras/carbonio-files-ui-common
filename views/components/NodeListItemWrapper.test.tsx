@@ -15,7 +15,7 @@ import { NodeListItemWrapper } from './NodeListItemWrapper';
 
 describe('NodeListItemWrapper', () => {
 	describe('hover actions', () => {
-		test('click on flag action changes flag icon visibility', async () => {
+		test('click on flag action changes flag icon visibility', () => {
 			const node = populateNode();
 			node.flagged = false;
 
@@ -32,7 +32,7 @@ describe('NodeListItemWrapper', () => {
 			expect(node.flagged).toBeTruthy();
 		});
 
-		test('click on unflag action changes flag icon visibility', async () => {
+		test('click on unflag action changes flag icon visibility', () => {
 			const node = populateNode();
 			node.flagged = true;
 

@@ -141,7 +141,7 @@ describe('Node List Item', () => {
 		expect(screen.queryByTestId('icon: FlagOutline')).not.toBeInTheDocument();
 	});
 
-	test('flag action on hover is visible if node is not flagged ', async () => {
+	test('flag action on hover is visible if node is not flagged ', () => {
 		const node = populateNode();
 		node.flagged = false;
 		render(
@@ -160,7 +160,7 @@ describe('Node List Item', () => {
 		// expect(screen.queryByTestId('icon: FlagOutline')).toBeVisible();
 	});
 
-	test('click on hover flag action changes flag icon visibility', async () => {
+	test('click on hover flag action changes flag icon visibility', () => {
 		const node = populateNode();
 		node.flagged = false;
 
@@ -181,7 +181,7 @@ describe('Node List Item', () => {
 		expect(toggleFlagTrueFunction).toHaveBeenCalledTimes(1);
 	});
 
-	test('click on hover unflag action changes flag icon visibility', async () => {
+	test('click on hover unflag action changes flag icon visibility', () => {
 		const node = populateNode();
 		node.flagged = true;
 

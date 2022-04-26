@@ -17,6 +17,7 @@ import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import server from '../../mocks/server';
 import { searchParamsVar } from '../apollo/searchVar';
 import { NODES_LOAD_LIMIT, ROOTS } from '../constants';
+import BASE_NODE from '../graphql/fragments/baseNode.graphql';
 import {
 	populateFolder,
 	populateNodePage,
@@ -26,6 +27,7 @@ import {
 } from '../mocks/mockUtils';
 import { AdvancedFilters, Node } from '../types/common';
 import {
+	BaseNodeFragment,
 	File,
 	FindNodesQuery,
 	FindNodesQueryVariables,
@@ -35,7 +37,8 @@ import {
 	GetNodeQuery,
 	GetNodeQueryVariables,
 	GetPathQuery,
-	GetPathQueryVariables
+	GetPathQueryVariables,
+	NodeType
 } from '../types/graphql/types';
 import {
 	actionRegexp,
@@ -43,7 +46,8 @@ import {
 	buildChipsFromKeywords,
 	moveNode,
 	render,
-	selectNodes
+	selectNodes,
+	waitForNetworkResponse
 } from '../utils/testUtils';
 import { SearchView } from './SearchView';
 
@@ -569,6 +573,20 @@ describe('Search view', () => {
 			node.permissions.can_write_file = true;
 			node.rootId = ROOTS.TRASH;
 
+			global.apolloClient.writeFragment<BaseNodeFragment>({
+				fragment: BASE_NODE,
+				fragmentName: 'BaseNode',
+				data: {
+					__typename: 'Folder',
+					id: ROOTS.LOCAL_ROOT,
+					name: ROOTS.LOCAL_ROOT,
+					type: NodeType.Root,
+					rootId: null,
+					flagged: false,
+					permissions: populatePermissions(true)
+				}
+			});
+
 			server.use(
 				graphql.query<FindNodesQuery, FindNodesQueryVariables>('findNodes', (req, res, ctx) =>
 					res(
@@ -622,6 +640,7 @@ describe('Search view', () => {
 			expect(restoreAction).toBeVisible();
 			expect(restoreAction.parentNode).not.toHaveAttribute('disabled', '');
 			userEvent.click(restoreAction);
+			await waitForNetworkResponse();
 			// await snackbar to be shown
 			const snackbar = await screen.findByText(/^success$/i);
 			await waitForElementToBeRemoved(snackbar);
@@ -631,6 +650,7 @@ describe('Search view', () => {
 			const restoredNodeItem = screen.getByTestId(`node-item-${node.id}`);
 			expect(restoredNodeItem).toBeVisible();
 			fireEvent.contextMenu(restoredNodeItem);
+			await waitForNetworkResponse();
 			await screen.findByText(actionRegexp.moveToTrash);
 			expect(screen.getByText(actionRegexp.moveToTrash)).toBeVisible();
 			expect(screen.queryByText(actionRegexp.deletePermanently)).not.toBeInTheDocument();
