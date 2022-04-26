@@ -53,7 +53,7 @@ describe('Folder Selection Modal Content', () => {
 		expect(confirmAction).not.toHaveBeenCalled();
 	});
 
-	test('if folder in list if parent is set. Choose button is disabled if active folder is same as the set one', async () => {
+	test('show folder in list if parent is set. Choose button is disabled if active folder is same as the set one', async () => {
 		const folder = populateFolder();
 		const folder2 = populateFolder();
 		const file = populateFile();

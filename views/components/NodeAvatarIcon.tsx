@@ -18,6 +18,7 @@ interface NodeAvatarIconParams {
 	disabled?: boolean;
 	selectable?: boolean;
 	icon: string;
+	picture?: string;
 }
 
 export const NodeAvatarIcon: React.VFC<NodeAvatarIconParams> = ({
@@ -27,7 +28,8 @@ export const NodeAvatarIcon: React.VFC<NodeAvatarIconParams> = ({
 	compact,
 	disabled,
 	selectable,
-	icon
+	icon,
+	picture
 }) => {
 	const { tooltipLabel, tooltipDisabled } = useContext(NodeAvatarIconContext);
 	return (
@@ -67,6 +69,7 @@ export const NodeAvatarIcon: React.VFC<NodeAvatarIconParams> = ({
 					disabled={disabled}
 					$compact={compact}
 					size={compact ? 'small' : 'medium'}
+					picture={picture}
 				/>
 			</Tooltip>
 		)

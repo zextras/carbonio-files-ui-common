@@ -53,26 +53,12 @@ import { SearchView } from './SearchView';
 
 jest.mock('../../hooks/useCreateOptions', () => ({
 	useCreateOptions: (): CreateOptionsContent => ({
-		setCreateOptions: jest.fn()
+		setCreateOptions: jest.fn(),
+		removeCreateOptions: jest.fn()
 	})
 }));
 
 describe('Search view', () => {
-	test.todo(
-		'in search bar comma, semicolon and tab are the splitter for the keywords. Space has its default behaviour'
-		// TODO: move this test to advanced search and test keywords input there
-	);
-
-	test.todo(
-		'clear action clears all the keywords in the input'
-		// TODO: move this test to advanced search and test keywords input there
-	);
-
-	test.todo(
-		'search action run a search and results are shown in the list, while searched keywords are shown in list header'
-		// TODO: move this test to advanced search and test keywords input there
-	);
-
 	test('all actions are available in the nodes', async () => {
 		const keywords = ['keyword1', 'keyword2'];
 		const searchParams: AdvancedFilters = { keywords: buildChipsFromKeywords(keywords) };
@@ -169,11 +155,6 @@ describe('Search view', () => {
 
 		expect.assertions(32);
 	});
-
-	test.todo(
-		'suggestions are filtered on typing'
-		// contenteditable isn't supported by JSDOM
-	);
 
 	describe('Displayer', () => {
 		test('Single click on a node opens the details tab on displayer. Close displayer action keeps search view visible', async () => {

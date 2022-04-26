@@ -9,12 +9,13 @@ import React from 'react';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import { PREVIEW, REST_ENDPOINT, ROOTS } from '../../constants';
+import { PREVIEW_PATH, PREVIEW_TYPE, REST_ENDPOINT, ROOTS } from '../../constants';
 import { populateFile, populateFolder, populateNode, populateUser } from '../../mocks/mockUtils';
 import { NodeType, User } from '../../types/graphql/types';
-import { getPermittedHoverBarActions } from '../../utils/ActionsFactory';
+import { Action, getPermittedHoverBarActions } from '../../utils/ActionsFactory';
 import { render } from '../../utils/testUtils';
 import { formatDate, humanFileSize } from '../../utils/utils';
+import * as moduleUtils from '../../utils/utils';
 import { NodeListItem } from './NodeListItem';
 
 let mockedUserLogged: User;
@@ -336,7 +337,7 @@ describe('Node List Item', () => {
 		expect(screen.getByTestId('icon: Home')).toBeVisible();
 	});
 
-	test('Double click on image open preview to show image with original dimensions', async () => {
+	test('Double click on node of type image open preview to show image with original dimensions', async () => {
 		const node = populateFile();
 		node.type = NodeType.Image;
 		node.extension = 'jpg';
@@ -362,11 +363,81 @@ describe('Node List Item', () => {
 		expect(screen.getByAltText(node.name)).toBeVisible();
 		expect(screen.getByRole('img')).toHaveAttribute(
 			'src',
-			`${REST_ENDPOINT}${PREVIEW}/image/${node.id}/${node.version}/0x0?quality=high`
+			`${REST_ENDPOINT}${PREVIEW_PATH}/${PREVIEW_TYPE.IMAGE}/${node.id}/${node.version}/0x0?quality=high`
 		);
 	});
 
-	test('Double click on node that is not an image does not open preview', () => {
+	test('Double click on node of type pdf open preview without action to open in docs', async () => {
+		const node = populateFile();
+		node.mime_type = 'application/pdf';
+		node.type = NodeType.Application;
+		node.extension = 'pdf';
+
+		render(
+			<NodeListItem
+				id={node.id}
+				name={node.name}
+				type={node.type}
+				extension={node.extension}
+				size={node.size}
+				version={node.version}
+				mimeType={node.mime_type}
+			/>
+		);
+		expect(screen.getByText(node.name)).toBeInTheDocument();
+		expect(screen.getByText(node.name)).toBeVisible();
+		expect(screen.getByText(humanFileSize(node.size))).toBeVisible();
+		expect(screen.getByText(node.extension)).toBeVisible();
+		userEvent.dblClick(screen.getByTestId(`node-item-${node.id}`));
+		await waitFor(() => expect(screen.getAllByText(node.name)).toHaveLength(2));
+		expect(screen.getAllByText(new RegExp(`^${node.extension}`, 'i'))).toHaveLength(2);
+		expect(screen.getAllByText(new RegExp(humanFileSize(node.size), 'i'))).toHaveLength(2);
+		expect(screen.getByTestId('icon: ArrowBackOutline')).toBeInTheDocument();
+		expect(screen.getByTestId('icon: DriveOutline')).toBeInTheDocument();
+		expect(screen.getByTestId('icon: DownloadOutline')).toBeInTheDocument();
+		expect(screen.queryByTestId('icon: BookOpenOutline')).not.toBeInTheDocument();
+	});
+
+	test('Double click on node that is supported by both preview and docs open preview with action to open in docs', () => {
+		const openWithDocsFn = jest.spyOn(moduleUtils, 'openNodeWithDocs');
+		const node = populateFile();
+		node.mime_type = 'application/vnd.oasis.opendocument.text';
+		node.type = NodeType.Text;
+		node.extension = 'odt';
+
+		render(
+			<NodeListItem
+				id={node.id}
+				name={node.name}
+				type={node.type}
+				extension={node.extension}
+				size={node.size}
+				version={node.version}
+				mimeType={node.mime_type}
+				permittedContextualMenuActions={{ [Action.OpenWithDocs]: true }}
+			/>
+		);
+		expect(screen.getByText(node.name)).toBeInTheDocument();
+		expect(screen.getByText(node.name)).toBeVisible();
+		expect(screen.getByText(humanFileSize(node.size))).toBeVisible();
+		expect(screen.getByText(node.extension)).toBeVisible();
+		userEvent.dblClick(screen.getByTestId(`node-item-${node.id}`));
+		expect(screen.getAllByText(node.name)).toHaveLength(2);
+		expect(screen.getAllByText(new RegExp(node.extension, 'i'))).toHaveLength(2);
+		expect(screen.getAllByText(new RegExp(humanFileSize(node.size), 'i'))).toHaveLength(2);
+		expect(screen.getByText(/loading pdf/i)).toBeInTheDocument();
+		expect(screen.getByTestId('icon: ArrowBackOutline')).toBeInTheDocument();
+		expect(screen.getByTestId('icon: DriveOutline')).toBeInTheDocument();
+		expect(screen.getByTestId('icon: DownloadOutline')).toBeInTheDocument();
+		expect(screen.getByTestId('icon: BookOpenOutline')).toBeInTheDocument();
+		expect(openWithDocsFn).not.toHaveBeenCalled();
+	});
+
+	test('Double click on node that is not supported by preview nor docs does nothing', () => {
+		const openWithDocsFn = jest.spyOn(moduleUtils, 'openNodeWithDocs');
+		const getDocumentPreviewSrcFn = jest.spyOn(moduleUtils, 'getDocumentPreviewSrc');
+		const getPdfPreviewSrcFn = jest.spyOn(moduleUtils, 'getPdfPreviewSrc');
+		const getImgPreviewSrcFn = jest.spyOn(moduleUtils, 'getImgPreviewSrc');
 		const node = populateFile();
 		node.type = NodeType.Text;
 		node.extension = 'txt';
@@ -379,6 +450,8 @@ describe('Node List Item', () => {
 				extension={node.extension}
 				size={node.size}
 				version={node.version}
+				mimeType={node.mime_type}
+				permittedContextualMenuActions={{ [Action.OpenWithDocs]: false }}
 			/>
 		);
 		expect(screen.getByText(node.name)).toBeInTheDocument();
@@ -386,6 +459,9 @@ describe('Node List Item', () => {
 		expect(screen.getByText(humanFileSize(node.size))).toBeVisible();
 		expect(screen.getByText(node.extension)).toBeVisible();
 		userEvent.dblClick(screen.getByTestId(`node-item-${node.id}`));
-		expect(screen.queryByRole('img')).not.toBeInTheDocument();
+		expect(getDocumentPreviewSrcFn).not.toHaveBeenCalled();
+		expect(getPdfPreviewSrcFn).not.toHaveBeenCalled();
+		expect(getImgPreviewSrcFn).not.toHaveBeenCalled();
+		expect(openWithDocsFn).not.toHaveBeenCalled();
 	});
 });
