@@ -734,6 +734,8 @@ describe('Add Sharing', () => {
 		expect(screen.getByText(user.full_name)).toBeVisible();
 		expect(screen.getByText(user.email)).toBeVisible();
 		userEvent.click(screen.getByText(user.email));
+		const snackbar = await screen.findByText(/Account not found/i);
+		await waitForElementToBeRemoved(snackbar);
 		// chip is not created
 		expect(screen.queryByText(user.full_name)).not.toBeInTheDocument();
 		// dropdown is closed

@@ -6,7 +6,6 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useApolloClient } from '@apollo/client';
 import {
 	Avatar,
 	Button,
@@ -35,14 +34,10 @@ import { soapFetch } from '../../../../network/network';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { ShareChipInput } from '../../../design_system_fork/SharesChipInput';
-import GET_ACCOUNT_BY_EMAIL from '../../../graphql/queries/getAccountByEmail.graphql';
 import { useCreateShareMutation } from '../../../hooks/graphql/mutations/useCreateShareMutation';
+import { useGetAccountByEmailQuery } from '../../../hooks/graphql/queries/useGetAccountByEmailQuery';
 import { Contact, Node, Role } from '../../../types/common';
-import {
-	GetAccountByEmailQuery,
-	GetAccountByEmailQueryVariables,
-	Share
-} from '../../../types/graphql/types';
+import { Share } from '../../../types/graphql/types';
 import { AutocompleteRequest, AutocompleteResponse } from '../../../types/network';
 import { getChipLabel, sharePermissionsGetter } from '../../../utils/utils';
 
@@ -134,9 +129,9 @@ interface ShareChip {
 
 export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 	const [t] = useTranslation();
-	const apolloClient = useApolloClient();
 
-	const [createShare, _createShareError] = useCreateShareMutation();
+	const [createShare] = useCreateShareMutation();
+	const getAccountByEmailLazyQuery = useGetAccountByEmailQuery();
 
 	const [mailTextValue, setMailTextValue] = useState('');
 
@@ -174,16 +169,13 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 				return;
 			}
 			if (contact.email) {
-				apolloClient
-					.query<GetAccountByEmailQuery, GetAccountByEmailQueryVariables>({
-						query: GET_ACCOUNT_BY_EMAIL,
-						fetchPolicy: 'no-cache',
-						variables: {
-							email: contact.email
-						}
-					})
+				getAccountByEmailLazyQuery({
+					variables: {
+						email: contact.email
+					}
+				})
 					.then((result) => {
-						if (result?.data.getAccountByEmail) {
+						if (result?.data?.getAccountByEmail) {
 							const contactWithId = {
 								...contact,
 								id: result.data.getAccountByEmail.id,
@@ -191,16 +183,12 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 								sharingAllowed: false
 							};
 							setChips((c) => [...c, contactWithId]);
-						} else {
-							throw Error('getAccountByEmail: empty result');
 						}
 					})
-					.catch((err) => {
-						console.error(err);
-					});
+					.catch(() => undefined); // FIXME: this catch shouldn't be necessary but for some reason
 			}
 		},
-		[apolloClient, chips]
+		[chips, getAccountByEmailLazyQuery]
 	);
 
 	const search = useMemo(

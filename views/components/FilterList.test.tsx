@@ -332,14 +332,14 @@ describe('Filter list', () => {
 					await renameNode(newName);
 					// following text is in the modal and in snackbar
 					await waitFor(() =>
-						expect(screen.getAllByText(/Error! Name already assigned/g)).toHaveLength(2)
+						expect(screen.getAllByText(/Error! Name already assigned/)).toHaveLength(2)
 					);
 					await waitFor(() =>
 						// eslint-disable-next-line jest-dom/prefer-in-document
 						expect(screen.getAllByText(/Error! Name already assigned/)).toHaveLength(1)
 					);
 					// when find only 1 occurrence means that snackbar is hidden
-					const error = screen.getByText(/Error! Name already assigned/g);
+					const error = screen.getByText(/Error! Name already assigned/);
 					expect(error).toBeVisible();
 					const inputFieldDiv = screen.getByTestId('input-name');
 					const inputField = within(inputFieldDiv).getByRole('textbox');
@@ -455,9 +455,9 @@ describe('Filter list', () => {
 				expect(flagAction.parentElement).toHaveAttribute('disabled', '');
 				// click on unflag action on header bar
 				userEvent.click(screen.getByText(actionRegexp.unflag));
-				await waitForElementToBeRemoved(screen.queryAllByTestId('checkedAvatar'));
+				// await waitForElementToBeRemoved(screen.queryAllByTestId('checkedAvatar'));
 				// wait the snackbar with successful state to appear
-				const snackbar = await screen.findByText(/Item unflagged successfully/gi);
+				const snackbar = await screen.findByText(/Item unflagged successfully/i);
 				await waitForElementToBeRemoved(snackbar);
 				expect(screen.getAllByTestId('icon: Flag')).toHaveLength(
 					currentFilter.length - nodesIdsToUnflag.length
@@ -516,10 +516,9 @@ describe('Filter list', () => {
 
 					userEvent.click(trashIcon);
 
-					await waitForElementToBeRemoved(screen.queryByText(currentFilter[0].name));
 					// wait for the snackbar to appear and disappear
-					await screen.findByText(/item moved to trash/i);
-					await waitForElementToBeRemoved(screen.queryByText(/item moved to trash/i));
+					const snackbar = await screen.findByText(/item moved to trash/i);
+					await waitForElementToBeRemoved(snackbar);
 					expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 
 					expect(screen.queryAllByTestId(`file-icon-preview`).length).toEqual(2);
@@ -615,7 +614,6 @@ describe('Filter list', () => {
 
 					userEvent.click(restoreIcon);
 
-					await waitForElementToBeRemoved(screen.queryByText(currentFilter[0].name));
 					const snackbar = await screen.findByText(/^success$/i);
 					await waitForElementToBeRemoved(snackbar);
 					expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
@@ -788,9 +786,8 @@ describe('Filter list', () => {
 
 					userEvent.click(deletePermanentlyIcon);
 
-					const confirmButton = await screen.findByRole('button', { name: /delete permanently/gi });
+					const confirmButton = await screen.findByRole('button', { name: /delete permanently/i });
 					userEvent.click(confirmButton);
-					await waitForElementToBeRemoved(screen.queryByText(currentFilter[0].name));
 					const snackbar = await screen.findByText(/^success$/i);
 					await waitForElementToBeRemoved(snackbar);
 					expect(confirmButton).not.toBeInTheDocument();
@@ -1911,12 +1908,12 @@ describe('Filter list', () => {
 				userEvent.click(unflagAction);
 				// wait the snackbar with successful state to appear
 				expect(unflagAction).not.toBeInTheDocument();
-				await screen.findByText(/Item unflagged successfully/gi);
+				await screen.findByText(/Item unflagged successfully/i);
 				expect(screen.getAllByTestId('icon: Flag')).toHaveLength(nodes.length - 1);
 				// unflagged element is not in the list anymore
 				expect(screen.queryByTestId(`node-item-${nodes[0].id}`)).not.toBeInTheDocument();
 				// wait for the snackbar to be removed
-				await waitForElementToBeRemoved(screen.queryByText(/Item unflagged successfully/gi));
+				await waitForElementToBeRemoved(screen.queryByText(/Item unflagged successfully/i));
 			});
 
 			describe('Move', () => {
@@ -2426,7 +2423,7 @@ describe('Filter list', () => {
 
 			await screen.findByTestId('dropzone-overlay');
 			expect(
-				screen.getByText(/Drop here your attachments to quick-add them to your Home/gm)
+				screen.getByText(/Drop here your attachments to quick-add them to your Home/m)
 			).toBeVisible();
 
 			fireEvent.drop(screen.getByText(currentFilter[0].name), {
@@ -2439,7 +2436,7 @@ describe('Filter list', () => {
 			expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
 				currentFilter.length
 			);
-			expect(screen.queryByText(/Drop here your attachments/gm)).not.toBeInTheDocument();
+			expect(screen.queryByText(/Drop here your attachments/m)).not.toBeInTheDocument();
 
 			await waitFor(() => {
 				const localRootCachedData = global.apolloClient.readQuery<
@@ -2513,7 +2510,7 @@ describe('Filter list', () => {
 			});
 
 			await screen.findByTestId('dropzone-overlay');
-			expect(screen.getByText(/You cannot drop an attachment in this area/gim)).toBeVisible();
+			expect(screen.getByText(/You cannot drop an attachment in this area/im)).toBeVisible();
 
 			fireEvent.drop(screen.getByText(currentFilter[0].name), {
 				dataTransfer: dataTransferObj
@@ -2523,7 +2520,7 @@ describe('Filter list', () => {
 				currentFilter.length
 			);
 			expect(
-				screen.queryByText(/You cannot drop an attachment in this area/gm)
+				screen.queryByText(/You cannot drop an attachment in this area/m)
 			).not.toBeInTheDocument();
 
 			expect(reqIndex).toBe(0);
@@ -2586,7 +2583,7 @@ describe('Filter list', () => {
 
 			await screen.findByTestId('dropzone-overlay');
 			expect(
-				screen.queryByText(/Drop here your attachments to quick-add them to this folder/gm)
+				screen.queryByText(/Drop here your attachments to quick-add them to this folder/m)
 			).not.toBeInTheDocument();
 
 			fireEvent.drop(screen.getByText(destinationFolder.name), {
@@ -2644,7 +2641,7 @@ describe('Filter list', () => {
 
 			await screen.findByTestId('dropzone-overlay');
 			expect(
-				screen.queryByText(/Drop here your attachments to quick-add them to this folder/gm)
+				screen.queryByText(/Drop here your attachments to quick-add them to this folder/m)
 			).not.toBeInTheDocument();
 
 			fireEvent.drop(screen.getByText(destinationFolder.name), {
@@ -2707,14 +2704,14 @@ describe('Filter list', () => {
 			});
 
 			await screen.findByTestId('dropzone-overlay');
-			expect(screen.getByText(/You cannot drop an attachment in this area/gim)).toBeVisible();
+			expect(screen.getByText(/You cannot drop an attachment in this area/im)).toBeVisible();
 
 			fireEvent.drop(screen.getByText(destinationFolder.name), {
 				dataTransfer: dataTransferObj
 			});
 
 			expect(
-				screen.queryByText(/You cannot drop an attachment in this area/gm)
+				screen.queryByText(/You cannot drop an attachment in this area/m)
 			).not.toBeInTheDocument();
 			expect(reqIndex).toBe(0);
 		});

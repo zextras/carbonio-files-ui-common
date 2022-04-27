@@ -8,7 +8,31 @@ import map from 'lodash/map';
 import { GraphQLContext, GraphQLRequest, ResponseResolver } from 'msw';
 
 import { ROOTS } from '../constants';
-import { RestoreNodesMutation, RestoreNodesMutationVariables } from '../types/graphql/types';
+import CHILD from '../graphql/fragments/child.graphql';
+import {
+	ChildFragment,
+	RestoreNodesMutation,
+	RestoreNodesMutationVariables
+} from '../types/graphql/types';
+
+function readDataFromCache(nodeId: string): ChildFragment | null {
+	// try to read the node as a file
+	let node = apolloClient.readFragment<ChildFragment>({
+		fragmentName: 'Child',
+		fragment: CHILD,
+		id: `File:${nodeId}`
+	});
+
+	if (!node) {
+		// if result is null, try to read the node as a folder
+		node = apolloClient.readFragment<ChildFragment>({
+			fragmentName: 'Child',
+			fragment: CHILD,
+			id: `Folder:${nodeId}`
+		});
+	}
+	return node;
+}
 
 const handleRestoreNodesRequest: ResponseResolver<
 	GraphQLRequest<RestoreNodesMutationVariables>,
@@ -17,21 +41,29 @@ const handleRestoreNodesRequest: ResponseResolver<
 > = (req, res, ctx) => {
 	const { node_ids: nodes } = req.variables;
 
-	let result = null;
+	let result: RestoreNodesMutation['restoreNodes'] = null;
 	if (nodes) {
 		if (nodes instanceof Array) {
-			result = map(nodes, (node) => ({
-				id: node,
-				parent: {
-					id: ROOTS.LOCAL_ROOT
-				},
-				rootId: ROOTS.LOCAL_ROOT
-			}));
+			result = map(nodes, (nodeId) => {
+				const cachedNode = readDataFromCache(nodeId);
+				return {
+					...cachedNode,
+					id: nodeId,
+					parent: {
+						__typename: 'Folder',
+						id: ROOTS.LOCAL_ROOT
+					},
+					rootId: ROOTS.LOCAL_ROOT
+				};
+			});
 		} else {
+			const cachedNode = readDataFromCache(nodes);
 			result = [
 				{
+					...cachedNode,
 					id: nodes,
 					parent: {
+						__typename: 'Folder',
 						id: ROOTS.LOCAL_ROOT
 					},
 					rootId: ROOTS.LOCAL_ROOT

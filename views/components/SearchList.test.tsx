@@ -99,7 +99,7 @@ describe('Search list', () => {
 
 			await screen.findByTestId('dropzone-overlay');
 			expect(
-				screen.getByText(/Drop here your attachments to quick-add them to your Home/gm)
+				screen.getByText(/Drop here your attachments to quick-add them to your Home/m)
 			).toBeVisible();
 
 			fireEvent.drop(screen.getByText(currentSearch[0].name), {
@@ -112,7 +112,7 @@ describe('Search list', () => {
 			expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
 				currentSearch.length
 			);
-			expect(screen.queryByText(/Drop here your attachments/gm)).not.toBeInTheDocument();
+			expect(screen.queryByText(/Drop here your attachments/m)).not.toBeInTheDocument();
 
 			await waitFor(() => {
 				const localRootCachedData = global.apolloClient.readQuery<
@@ -449,7 +449,6 @@ describe('Search list', () => {
 
 				userEvent.click(trashIcon);
 
-				await waitForElementToBeRemoved(screen.queryByText(currentFilter[0].name));
 				const snackbar = await screen.findByText(/item moved to trash/i);
 				await waitForElementToBeRemoved(snackbar);
 				expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
@@ -563,7 +562,6 @@ describe('Search list', () => {
 
 				userEvent.click(restoreIcon);
 
-				await waitForElementToBeRemoved(screen.queryByText(currentFilter[0].name));
 				const snackbar = await screen.findByText(/^success$/i);
 				await waitForElementToBeRemoved(snackbar);
 				expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
@@ -743,9 +741,8 @@ describe('Search list', () => {
 
 				userEvent.click(deletePermanentlyIcon);
 
-				const confirmButton = await screen.findByRole('button', { name: /delete permanently/gi });
+				const confirmButton = await screen.findByRole('button', { name: /delete permanently/i });
 				userEvent.click(confirmButton);
-				await waitForElementToBeRemoved(screen.queryByText(currentFilter[0].name));
 				const snackbar = await screen.findByText(/^success$/i);
 				await waitForElementToBeRemoved(snackbar);
 				expect(confirmButton).not.toBeInTheDocument();

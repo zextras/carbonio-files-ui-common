@@ -121,7 +121,7 @@ export const SecondaryBarItem: React.VFC<SecondaryBarItemProps> = ({ item, expan
 				});
 			} else if (getBaseNodeData?.getNode) {
 				if (isUploadingFiles) {
-					add(event.dataTransfer.files, item.id);
+					add(event.dataTransfer.files, item.id, true);
 				} else if (movingNodes) {
 					const nodesToMove: Array<Partial<Node> & PickIdNodeType> = JSON.parse(movingNodes);
 					moveNodesMutation(getBaseNodeData.getNode as Folder, ...nodesToMove).then(() => {

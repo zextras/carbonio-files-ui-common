@@ -39,6 +39,7 @@ import I18nFactory from '../../i18n/i18n-test-factory';
 import StyledWrapper from '../../StyledWrapper';
 import { AdvancedFilters } from '../types/common';
 import { Folder } from '../types/graphql/types';
+import { PreviewManager } from '../views/components/preview/PreviewManager';
 import { Mock } from './mockUtils';
 
 /**
@@ -288,3 +289,15 @@ export const actionRegexp = {
 	deletePermanently: /^delete permanently$/i,
 	restore: /^restore$/i
 } as const;
+
+export function waitForNetworkResponse(): Promise<void> {
+	// wait a tick to let the mutation complete. This is necessary because with the optimistic response
+	// the ui is updated immediately, but a second rerender occurs after the server response
+	// @see https://www.apollographql.com/docs/react/recipes/testing/#testing-final-state
+	return waitFor(
+		() =>
+			new Promise((resolve) => {
+				setTimeout(resolve, 0);
+			})
+	);
+}

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 
 import { Container, Switch, Text } from '@zextras/carbonio-design-system';
 import styled from 'styled-components';
@@ -24,24 +24,24 @@ export const AdvancedSwitch: React.VFC<AdvancedSwitchProps> = ({
 	label,
 	description,
 	onChange,
-	initialValue = false
+	initialValue: value = false
 }) => {
-	const [value, setValue] = useState(initialValue);
+	const valueRef = useRef(value);
 
 	useEffect(() => {
-		setValue(initialValue);
-	}, [initialValue]);
+		valueRef.current = value;
+	}, [value]);
 
-	const toggleValue = useCallback(() => {
-		setValue((prevState) => !prevState);
-	}, []);
+	const onClick = useCallback((): void => {
+		onChange(!valueRef.current);
+	}, [onChange]);
 
 	return (
 		<Container padding={{ all: 'extrasmall' }} height="fit" crossAlignment="flex-start">
 			<Switch
-				onClick={toggleValue}
+				onClick={onClick}
 				value={value}
-				onChange={onChange}
+				// onChange={onChange}
 				label={label}
 				padding={{ bottom: 'small' }}
 			/>

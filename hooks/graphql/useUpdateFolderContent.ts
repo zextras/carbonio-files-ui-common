@@ -122,7 +122,7 @@ export const useUpdateFolderContent = (
 							} else {
 								// otherwise, add the node in the unordered list
 								// calculate the index in the unordered by subtracting the ordered length to the given index
-								newIndex = index - newOrdered.length;
+								newIndex -= newOrdered.length;
 								newUnOrdered.splice(newIndex, 0, newNodeRef);
 							}
 						}

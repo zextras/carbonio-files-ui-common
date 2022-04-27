@@ -50,7 +50,8 @@ jest.mock('../../hooks/useCreateOptions', () => ({
 			.fn()
 			.mockImplementation((...options: Parameters<CreateOptionsContent['setCreateOptions']>[0]) => {
 				mockedCreateOptions = options;
-			})
+			}),
+		removeCreateOptions: jest.fn()
 	})
 }));
 
@@ -85,7 +86,7 @@ describe('Folder View', () => {
 				}
 			});
 			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`] });
-			await screen.findByText(/nothing here/gi);
+			await screen.findByText(/nothing here/i);
 			expect(map(mockedCreateOptions, (createOption) => createOption.action({}))).toEqual(
 				expect.arrayContaining([expect.objectContaining({ id: 'create-folder', disabled: true })])
 			);
@@ -121,7 +122,7 @@ describe('Folder View', () => {
 				}
 			});
 			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`] });
-			await screen.findByText(/nothing here/gi);
+			await screen.findByText(/nothing here/i);
 			expect(map(mockedCreateOptions, (createOption) => createOption.action({}))).toEqual(
 				expect.arrayContaining([expect.objectContaining({ id: 'create-folder', disabled: false })])
 			);

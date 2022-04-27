@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-/* eslint-disable arrow-body-style */
 import { useCallback } from 'react';
 
 import { FetchResult, useMutation } from '@apollo/client';
@@ -12,10 +11,12 @@ import filter from 'lodash/filter';
 import includes from 'lodash/includes';
 
 import DELETE_VERSIONS from '../../../graphql/mutations/deleteVersions.graphql';
+import GET_VERSIONS from '../../../graphql/queries/getVersions.graphql';
 import {
 	DeleteVersionsMutation,
 	DeleteVersionsMutationVariables,
-	File
+	GetVersionsQuery,
+	GetVersionsQueryVariables
 } from '../../../types/graphql/types';
 import { useErrorHandler } from '../../useErrorHandler';
 
@@ -34,8 +35,8 @@ export function useDeleteVersionsMutation(): DeleteVersionsType {
 	>(DELETE_VERSIONS);
 
 	const deleteVersions: DeleteVersionsType = useCallback(
-		(nodeId: string, versions?: Array<number>) => {
-			return deleteVersionsMutation({
+		(nodeId: string, versions?: Array<number>) =>
+			deleteVersionsMutation({
 				variables: {
 					node_id: nodeId,
 					versions
@@ -46,20 +47,19 @@ export function useDeleteVersionsMutation(): DeleteVersionsType {
 				},
 				update(cache, { data }) {
 					if (data?.deleteVersions) {
-						cache.modify({
-							fields: {
-								// TODO: think about another strategy because this way is impossible to detect during refactors
-								[`getVersions({"node_id":"${nodeId}"})`](existingVersions) {
-									return filter(existingVersions, (fileVersion: File) => {
-										return !includes(data.deleteVersions, fileVersion.version);
-									});
-								}
-							}
-						});
+						cache.updateQuery<GetVersionsQuery, GetVersionsQueryVariables>(
+							{ query: GET_VERSIONS, variables: { node_id: nodeId }, overwrite: true },
+							(existingVersions) => ({
+								getVersions: filter(
+									existingVersions?.getVersions,
+									(fileVersion) =>
+										!!fileVersion && !includes(data.deleteVersions, fileVersion.version)
+								)
+							})
+						);
 					}
 				}
-			});
-		},
+			}),
 		[deleteVersionsMutation]
 	);
 	useErrorHandler(deleteVersionsError, 'DELETE_VERSIONS');

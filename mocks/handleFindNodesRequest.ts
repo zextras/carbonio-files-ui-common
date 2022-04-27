@@ -4,8 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import faker from 'faker';
-import { GraphQLError } from 'graphql';
+import { faker } from '@faker-js/faker';
 import take from 'lodash/take';
 import { GraphQLContext, GraphQLRequest, ResponseResolver, ResponseTransformer } from 'msw';
 
@@ -34,7 +33,7 @@ const handleFindNodesRequest: ResponseResolver<
 	if (!flagged && !sharedWithMe && !sharedByMe && !folderId && !keywords) {
 		return res(
 			ctx.errors([
-				new GraphQLError('MSW handleFindNodesRequest: Invalid parameters in findNodes request')
+				{ message: 'MSW handleFindNodesRequest: Invalid parameters in findNodes request' }
 			]) as ResponseTransformer
 		);
 	}

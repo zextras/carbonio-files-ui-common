@@ -4,17 +4,17 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import faker from 'faker';
-import { ResponseResolver, RestContext, RestRequest } from 'msw';
+import { faker } from '@faker-js/faker';
+import { PathParams, ResponseResolver, RestContext, RestRequest } from 'msw';
 
 interface UploadResponse {
 	nodeId: string;
 }
 
-interface UploadRequestParams {
+interface UploadRequestParams extends PathParams {
 	Filename: string;
-	Description?: string;
-	ParentId?: string;
+	Description: string | '';
+	ParentId: string | '';
 }
 
 interface UploadRequestBody {

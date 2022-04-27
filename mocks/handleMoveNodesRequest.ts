@@ -21,14 +21,13 @@ const handleMoveNodesRequest: ResponseResolver<
 	GraphQLContext<MoveNodesMutation>,
 	MoveNodesMutation
 > = (req, res, ctx) => {
-	// eslint-disable-next-line camelcase
-	const { node_ids, destination_id } = req.variables;
+	const { node_ids: nodeIds, destination_id: destinationId } = req.variables;
 
 	const apolloClient = buildClient();
 
 	const nodes: MoveNodesMutation['moveNodes'] = [];
 
-	forEach(node_ids, (nodeId) => {
+	forEach(nodeIds, (nodeId) => {
 		// try to read the node as a file
 		let node = apolloClient.readFragment<ChildFragment>({
 			fragmentName: 'Child',
@@ -46,7 +45,7 @@ const handleMoveNodesRequest: ResponseResolver<
 		}
 
 		if (node) {
-			const newNode = { ...node, parent: { __typename: 'Folder', id: destination_id } as Folder };
+			const newNode = { ...node, parent: { __typename: 'Folder', id: destinationId } as Folder };
 
 			nodes.push(newNode);
 		}

@@ -40,6 +40,7 @@ describe('Draggable', () => {
 		fireEvent.dragOver(window, { dataTransfer: { types: [DRAG_TYPES.move] } });
 		expect(dragEndFn).not.toHaveBeenCalled();
 
+		// eslint-disable-next-line testing-library/prefer-user-event
 		fireEvent.mouseMove(window);
 		await waitFor(() => expect(dragEndFn).toHaveBeenCalled());
 	});

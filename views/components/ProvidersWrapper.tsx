@@ -12,6 +12,7 @@ import { PreviewManager } from '@zextras/carbonio-ui-preview';
 
 import StyledWrapper from '../../../StyledWrapper';
 import buildClient from '../../apollo';
+import { PreviewManager } from './preview/PreviewManager';
 
 export const ProvidersWrapper: React.FC = ({ children }) => {
 	const apolloClient = useMemo(() => buildClient(), []);

@@ -11,7 +11,7 @@ import { Container, Responsive } from '@zextras/carbonio-design-system';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
-import { ACTION_TYPES } from '../../constants';
+import { ACTION_IDS, ACTION_TYPES } from '../../constants';
 import { useCreateOptions } from '../../hooks/useCreateOptions';
 import { DISPLAYER_WIDTH, FILES_APP_ID, LIST_WIDTH, ROOTS } from '../constants';
 import { ListContext } from '../contexts';
@@ -32,7 +32,7 @@ const FolderView: React.VFC = () => {
 	const [newFolder, setNewFolder] = useState(false);
 	const [newFile, setNewFile] = useState<DocsType | undefined>();
 	const [t] = useTranslation();
-	const { setCreateOptions } = useCreateOptions();
+	const { setCreateOptions, removeCreateOptions } = useCreateOptions();
 	const [isEmpty, setIsEmpty] = useState(false);
 
 	const { add } = useUpload();
@@ -141,10 +141,10 @@ const FolderView: React.VFC = () => {
 		setCreateOptions(
 			{
 				type: ACTION_TYPES.NEW,
-				id: 'upload-file',
+				id: ACTION_IDS.UPLOAD_FILE,
 				action: () => ({
 					type: ACTION_TYPES.NEW,
-					id: 'upload-file',
+					id: ACTION_IDS.UPLOAD_FILE,
 					primary: true,
 					group: FILES_APP_ID,
 					label: t('create.options.new.upload', 'Upload'),
@@ -159,10 +159,10 @@ const FolderView: React.VFC = () => {
 			},
 			{
 				type: ACTION_TYPES.NEW,
-				id: 'create-folder',
+				id: ACTION_IDS.CREATE_FOLDER,
 				action: () => ({
 					type: ACTION_TYPES.NEW,
-					id: 'create-folder',
+					id: ACTION_IDS.CREATE_FOLDER,
 					group: FILES_APP_ID,
 					label: t('create.options.new.folder', 'New Folder'),
 					icon: 'FolderOutline',
@@ -172,10 +172,10 @@ const FolderView: React.VFC = () => {
 			},
 			{
 				type: ACTION_TYPES.NEW,
-				id: 'create-docs-document',
+				id: ACTION_IDS.CREATE_DOCS_DOCUMENT,
 				action: () => ({
 					type: ACTION_TYPES.NEW,
-					id: 'create-docs-document',
+					id: ACTION_IDS.CREATE_DOCS_DOCUMENT,
 					group: FILES_APP_ID,
 					label: t('create.options.new.document', 'New Document'),
 					icon: 'FileTextOutline',
@@ -185,10 +185,10 @@ const FolderView: React.VFC = () => {
 			},
 			{
 				type: ACTION_TYPES.NEW,
-				id: 'create-docs-spreadsheet',
+				id: ACTION_IDS.CREATE_DOCS_SPREADSHEET,
 				action: () => ({
 					type: ACTION_TYPES.NEW,
-					id: 'create-docs-spreadsheet',
+					id: ACTION_IDS.CREATE_DOCS_SPREADSHEET,
 					group: FILES_APP_ID,
 					label: t('create.options.new.spreadsheet', 'New Spreadsheet'),
 					icon: 'FileCalcOutline',
@@ -198,10 +198,10 @@ const FolderView: React.VFC = () => {
 			},
 			{
 				type: ACTION_TYPES.NEW,
-				id: 'create-docs-presentation',
+				id: ACTION_IDS.CREATE_DOCS_PRESENTATION,
 				action: () => ({
 					type: ACTION_TYPES.NEW,
-					id: 'create-docs-presentation',
+					id: ACTION_IDS.CREATE_DOCS_PRESENTATION,
 					group: FILES_APP_ID,
 					label: t('create.options.new.presentation', 'New Presentation'),
 					icon: 'FilePresentationOutline',
@@ -212,24 +212,12 @@ const FolderView: React.VFC = () => {
 		);
 
 		return (): void => {
-			setCreateOptions({
-				type: ACTION_TYPES.NEW,
-				id: 'upload-file',
-				action: () => ({
-					type: ACTION_TYPES.NEW,
-					id: 'upload-file',
-					primary: true,
-					group: FILES_APP_ID,
-					label: t('create.options.new.upload', 'Upload'),
-					icon: 'CloudUploadOutline',
-					click: (event): void => {
-						event && event.stopPropagation();
-						inputElement.click();
-						inputElement.onchange = inputElementOnchange;
-					},
-					disabled: !isCanUploadFile
-				})
-			});
+			removeCreateOptions(
+				ACTION_IDS.CREATE_FOLDER,
+				ACTION_IDS.CREATE_DOCS_DOCUMENT,
+				ACTION_IDS.CREATE_DOCS_SPREADSHEET,
+				ACTION_IDS.CREATE_DOCS_PRESENTATION
+			);
 		};
 	}, [
 		createDocumentAction,
@@ -240,6 +228,7 @@ const FolderView: React.VFC = () => {
 		isCanCreateFile,
 		isCanCreateFolder,
 		isCanUploadFile,
+		removeCreateOptions,
 		setCreateOptions,
 		t
 	]);

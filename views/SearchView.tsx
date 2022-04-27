@@ -10,7 +10,7 @@ import { Container, Responsive, Snackbar } from '@zextras/carbonio-design-system
 import noop from 'lodash/noop';
 import { useTranslation } from 'react-i18next';
 
-import { ACTION_TYPES } from '../../constants';
+import { ACTION_IDS, ACTION_TYPES } from '../../constants';
 import { useCreateOptions } from '../../hooks/useCreateOptions';
 import { useNavigation } from '../../hooks/useNavigation';
 import { DISPLAYER_WIDTH, FILES_APP_ID, LIST_WIDTH, ROOTS } from '../constants';
@@ -32,7 +32,7 @@ export const SearchView: React.VFC<SearchViewProps> = ({
 	displayerWidth = DISPLAYER_WIDTH
 }) => {
 	const [t] = useTranslation();
-	const { setCreateOptions } = useCreateOptions();
+	const { setCreateOptions, removeCreateOptions } = useCreateOptions();
 	const { navigateToFolder } = useNavigation();
 
 	const { add } = useUpload();
@@ -67,10 +67,10 @@ export const SearchView: React.VFC<SearchViewProps> = ({
 		setCreateOptions(
 			{
 				type: ACTION_TYPES.NEW,
-				id: 'upload-file',
+				id: ACTION_IDS.UPLOAD_FILE,
 				action: () => ({
 					type: ACTION_TYPES.NEW,
-					id: 'upload-file',
+					id: ACTION_IDS.UPLOAD_FILE,
 					primary: true,
 					group: FILES_APP_ID,
 					label: t('create.options.new.upload', 'Upload'),
@@ -85,10 +85,10 @@ export const SearchView: React.VFC<SearchViewProps> = ({
 			},
 			{
 				type: ACTION_TYPES.NEW,
-				id: 'create-folder',
+				id: ACTION_IDS.CREATE_FOLDER,
 				action: () => ({
 					type: ACTION_TYPES.NEW,
-					id: 'create-folder',
+					id: ACTION_IDS.CREATE_FOLDER,
 					group: FILES_APP_ID,
 					label: t('create.options.new.folder', 'New Folder'),
 					icon: 'FolderOutline',
@@ -98,11 +98,11 @@ export const SearchView: React.VFC<SearchViewProps> = ({
 			},
 			{
 				type: ACTION_TYPES.NEW,
-				id: 'create-docs-document',
+				id: ACTION_IDS.CREATE_DOCS_DOCUMENT,
 				action: () => ({
 					type: ACTION_TYPES.NEW,
 					group: FILES_APP_ID,
-					id: 'create-docs-document',
+					id: ACTION_IDS.CREATE_DOCS_DOCUMENT,
 					label: t('create.options.new.document', 'New Document'),
 					icon: 'FileTextOutline',
 					disabled: true,
@@ -111,11 +111,11 @@ export const SearchView: React.VFC<SearchViewProps> = ({
 			},
 			{
 				type: ACTION_TYPES.NEW,
-				id: 'create-docs-spreadsheet',
+				id: ACTION_IDS.CREATE_DOCS_SPREADSHEET,
 				action: () => ({
 					type: ACTION_TYPES.NEW,
 					group: FILES_APP_ID,
-					id: 'create-docs-spreadsheet',
+					id: ACTION_IDS.CREATE_DOCS_SPREADSHEET,
 					label: t('create.options.new.spreadsheet', 'New Spreadsheet'),
 					icon: 'FileCalcOutline',
 					disabled: true,
@@ -124,11 +124,11 @@ export const SearchView: React.VFC<SearchViewProps> = ({
 			},
 			{
 				type: ACTION_TYPES.NEW,
-				id: 'create-docs-presentation',
+				id: ACTION_IDS.CREATE_DOCS_PRESENTATION,
 				action: () => ({
 					type: ACTION_TYPES.NEW,
 					group: FILES_APP_ID,
-					id: 'create-docs-presentation',
+					id: ACTION_IDS.CREATE_DOCS_PRESENTATION,
 					label: t('create.options.new.presentation', 'New Presentation'),
 					icon: 'FilePresentationOutline',
 					disabled: true,
@@ -137,26 +137,14 @@ export const SearchView: React.VFC<SearchViewProps> = ({
 			}
 		);
 		return (): void => {
-			setCreateOptions({
-				type: ACTION_TYPES.NEW,
-				id: 'upload-file',
-				action: () => ({
-					type: ACTION_TYPES.NEW,
-					group: FILES_APP_ID,
-					id: 'upload-file',
-					primary: true,
-					label: t('create.options.new.upload', 'Upload'),
-					icon: 'CloudUploadOutline',
-					click: (event): void => {
-						event && event.stopPropagation();
-						inputElement.click();
-						inputElement.onchange = inputElementOnchange;
-					},
-					disabled: false
-				})
-			});
+			removeCreateOptions(
+				ACTION_IDS.CREATE_FOLDER,
+				ACTION_IDS.CREATE_DOCS_DOCUMENT,
+				ACTION_IDS.CREATE_DOCS_SPREADSHEET,
+				ACTION_IDS.CREATE_DOCS_PRESENTATION
+			);
 		};
-	}, [inputElementOnchange, navigateToFolder, setCreateOptions, t]);
+	}, [inputElementOnchange, navigateToFolder, removeCreateOptions, setCreateOptions, t]);
 
 	return (
 		<ListContext.Provider
@@ -211,6 +199,7 @@ export const SearchView: React.VFC<SearchViewProps> = ({
 					label={t('uploads.destination.home', "Upload occurred in Files' Home")}
 					actionLabel={t('snackbar.upload.goToFolder', 'Go to folder')}
 					onActionClick={uploadSnackbarAction}
+					replace={false}
 				/>
 			</Container>
 		</ListContext.Provider>

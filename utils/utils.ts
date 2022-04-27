@@ -12,6 +12,7 @@ import { chain } from 'lodash';
 import debounce from 'lodash/debounce';
 import findIndex from 'lodash/findIndex';
 import first from 'lodash/first';
+import includes from 'lodash/includes';
 import map from 'lodash/map';
 import size from 'lodash/size';
 import toLower from 'lodash/toLower';
@@ -24,11 +25,21 @@ import {
 	DOCS_ENDPOINT,
 	DOWNLOAD_PATH,
 	OPEN_FILE_PATH,
-	PREVIEW,
+	PREVIEW_PATH,
+	PREVIEW_TYPE,
 	REST_ENDPOINT,
-	ROOTS
+	ROOTS,
+	UPLOAD_TO_PATH
 } from '../constants';
-import { Crumb, CrumbNode, OrderTrend, OrderType, Role, SortableNode } from '../types/common';
+import {
+	Crumb,
+	CrumbNode,
+	OrderTrend,
+	OrderType,
+	Role,
+	SortableNode,
+	TargetModule
+} from '../types/common';
 import { Maybe, Node, NodeSort, NodeType, SharePermission } from '../types/graphql/types';
 
 /**
@@ -544,17 +555,111 @@ export const docsHandledMimeTypes = [
 	'application/vnd.sun.xml.writer.template'
 ];
 
+export const previewHandledMimeTypes = [
+	'application/msword',
+	'application/vnd.ms-excel',
+	'application/vnd.ms-powerpoint',
+	'application/vnd.oasis.opendocument.presentation',
+	'application/vnd.oasis.opendocument.spreadsheet',
+	'application/vnd.oasis.opendocument.text',
+	'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+	'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+	'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+];
+
+/**
+ * 	Error codes:
+ *	400 if target  does not match
+ *  404 if nodeId does not exists
+ *  413 if payload is Too Large
+ *  500 if the store does not respond
+ */
+const uploadToCompleted = (
+	xhr: XMLHttpRequest,
+	resolve: (value: { attachmentId: string } | PromiseLike<{ attachmentId: string }>) => void,
+	reject: (reason?: { statusText: string; status: number }) => void
+): void => {
+	switch (xhr.status) {
+		case 200: {
+			const response = JSON.parse(xhr.response);
+			resolve({ attachmentId: response.attachmentId });
+			break;
+		}
+		case 400:
+		case 404:
+		case 413:
+		case 500:
+		default: {
+			reject({ statusText: xhr.statusText, status: xhr.status });
+		}
+	}
+};
+
+export function uploadToTargetModule(args: {
+	nodeId: string;
+	targetModule: TargetModule;
+}): Promise<{ attachmentId: string }> {
+	const { nodeId, targetModule } = args;
+
+	return new Promise<{ attachmentId: string }>((resolve, reject) => {
+		const xhr = new XMLHttpRequest();
+		const url = `${REST_ENDPOINT}${UPLOAD_TO_PATH}`;
+		xhr.open('POST', url, true);
+		xhr.setRequestHeader('Content-Type', 'application/json');
+		const body = {
+			nodeId,
+			targetModule
+		};
+
+		xhr.addEventListener('load', () => {
+			if (xhr.readyState === (XMLHttpRequest.DONE || 4)) {
+				uploadToCompleted(xhr, resolve, reject);
+			}
+		});
+		xhr.addEventListener('error', () => uploadToCompleted(xhr, resolve, reject));
+		xhr.addEventListener('abort', () => uploadToCompleted(xhr, resolve, reject));
+		xhr.send(JSON.stringify(body));
+	});
+}
+
+export function isDocumentSupportedByPreview(mimeType: string | undefined): boolean {
+	return !!mimeType && (mimeType.includes('pdf') || previewHandledMimeTypes.includes(mimeType));
+}
+
 /**
  * Get preview src
  */
-export const getPreviewSrc = (
+export const getImgPreviewSrc = (
 	id: string,
 	version: number,
 	weight: number,
 	height: number,
 	quality: 'lowest' | 'low' | 'medium' | 'high' | 'highest' // medium as default if not set
 ): string =>
-	`${REST_ENDPOINT}${PREVIEW}/image/${id}/${version}/${weight}x${height}?quality=${quality}`;
+	`${REST_ENDPOINT}${PREVIEW_PATH}/${PREVIEW_TYPE.IMAGE}/${id}/${version}/${weight}x${height}?quality=${quality}`;
 
 export const getPdfPreviewSrc = (id: string, version?: number): string =>
-	`${REST_ENDPOINT}${PREVIEW}/pdf/${id}/${version}`;
+	`${REST_ENDPOINT}${PREVIEW_PATH}/${PREVIEW_TYPE.PDF}/${id}/${version}`;
+
+export const getDocumentPreviewSrc = (id: string, version?: number): string =>
+	`${REST_ENDPOINT}${PREVIEW_PATH}/${PREVIEW_TYPE.DOCUMENT}/${id}/${version}`;
+
+/**
+ * Get thumbnail src
+ */
+export const getListItemAvatarPictureUrl = (
+	id: string,
+	version: number,
+	weight: number,
+	height: number,
+	mimeType: string,
+	type: NodeType
+): string | undefined => {
+	if (type === NodeType.Image) {
+		return `${REST_ENDPOINT}${PREVIEW_PATH}/image/${id}/${version}/${weight}x${height}/thumbnail`;
+	}
+	if (includes(mimeType, 'pdf')) {
+		return `${REST_ENDPOINT}${PREVIEW_PATH}/pdf/${id}/${version}/${weight}x${height}/thumbnail`;
+	}
+	return undefined;
+};

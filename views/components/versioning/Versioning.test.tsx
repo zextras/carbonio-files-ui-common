@@ -28,7 +28,7 @@ import {
 	mockGetVersions,
 	mockKeepVersions
 } from '../../../utils/mockUtils';
-import { render } from '../../../utils/testUtils';
+import { render, waitForNetworkResponse } from '../../../utils/testUtils';
 import { getChipLabel } from '../../../utils/utils';
 import * as moduleUtils from '../../../utils/utils';
 import { Versioning } from './Versioning';
@@ -134,7 +134,7 @@ describe('Versioning', () => {
 
 			const deleteVersionItem = await screen.findByText(/delete version/i);
 			userEvent.click(deleteVersionItem);
-
+			await waitForNetworkResponse();
 			await waitFor(() => expect(screen.getAllByText(/Version [0-9]+/)).toHaveLength(4));
 			expect(version2LastEditor).not.toBeInTheDocument();
 		});
@@ -407,7 +407,7 @@ describe('Versioning', () => {
 		];
 
 		server.use(
-			rest.post<UploadRequestBody, UploadVersionResponse, UploadVersionRequestParams>(
+			rest.post<UploadRequestBody, UploadVersionRequestParams, UploadVersionResponse>(
 				`${REST_ENDPOINT}${UPLOAD_VERSION_PATH}`,
 				(req, res, ctx) =>
 					res(

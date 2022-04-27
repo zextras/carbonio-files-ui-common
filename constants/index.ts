@@ -51,9 +51,15 @@ export const DOCS_ENDPOINT = '/services/docs';
 export const OPEN_FILE_PATH = '/files/open';
 export const DOWNLOAD_PATH = '/download';
 export const UPLOAD_PATH = '/upload';
+export const UPLOAD_TO_PATH = '/upload-to';
 export const UPLOAD_VERSION_PATH = '/upload-version';
 export const CREATE_FILE_PATH = '/files/create';
-export const PREVIEW = '/preview';
+export const PREVIEW_PATH = '/preview';
+export const PREVIEW_TYPE = {
+	IMAGE: 'image',
+	PDF: 'pdf',
+	DOCUMENT: 'document'
+} as const;
 
 export const FILES_ROUTE = 'files';
 export const FILES_APP_ID = 'carbonio-files-ui';
