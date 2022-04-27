@@ -140,7 +140,7 @@ export const UploadList: React.VFC = () => {
 
 	const uploadWithDragAndDrop = useCallback(
 		(event) => {
-			add(event.dataTransfer.files, ROOTS.LOCAL_ROOT);
+			add(event.dataTransfer.files, ROOTS.LOCAL_ROOT, true);
 			createSnackbar({
 				key: new Date().toLocaleString(),
 				type: 'info',
@@ -149,7 +149,7 @@ export const UploadList: React.VFC = () => {
 				onActionClick: () => {
 					navigateToFolder(ROOTS.LOCAL_ROOT);
 				},
-				replace: true,
+				replace: false,
 				hideButton: true
 			});
 		},

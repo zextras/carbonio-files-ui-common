@@ -182,6 +182,7 @@ const UploadView: React.VFC = () => {
 				label={t('uploads.destination.home', "Upload occurred in Files' Home")}
 				actionLabel={t('snackbar.upload.goToFolder', 'Go to folder')}
 				onActionClick={uploadSnackbarAction}
+				replace={false}
 			/>
 		</ListContext.Provider>
 	);

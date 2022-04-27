@@ -11,8 +11,11 @@ import find from 'lodash/find';
 import forEach from 'lodash/forEach';
 import includes from 'lodash/includes';
 import map from 'lodash/map';
+import noop from 'lodash/noop';
 import partition from 'lodash/partition';
+import reduce from 'lodash/reduce';
 import remove from 'lodash/remove';
+import { useTranslation } from 'react-i18next';
 
 import buildClient from '../apollo';
 import { nodeSortVar } from '../apollo/nodeSortVar';
@@ -42,6 +45,14 @@ import { DeepPick } from '../types/utils';
 import { isFolder } from '../utils/ActionsFactory';
 import { encodeBase64 } from '../utils/utils';
 import { UpdateFolderContentType, useUpdateFolderContent } from './graphql/useUpdateFolderContent';
+import { useMoreInfoModal } from './modals/useMoreInfoModal';
+import { useCreateSnackbar } from './useCreateSnackbar';
+
+// KNOWN ISSUE: Since that folders are actually files, this is the only way to distinguish them from another kind of file.
+// Although this method doesn't give you absolute certainty that a file is a folder:
+// it might be a file without extension and with a size of 0 or exactly N x 4096B.
+// https://stackoverflow.com/a/25095250/17280436
+const isMaybeFolder = (file: File): boolean => !file.type && file.size % 4096 === 0;
 
 const addVersionToCache = (
 	apolloClient: ApolloClient<NormalizedCacheObject>,
@@ -269,7 +280,7 @@ const uploadVersion = (
 };
 
 export type UseUploadHook = () => {
-	add: (files: FileList, parentId: string) => void;
+	add: (files: FileList, parentId: string, checkForFolders?: boolean) => void;
 	update: (
 		node: Pick<FilesFile, '__typename' | 'id'> & DeepPick<FilesFile, 'parent', 'id'>,
 		file: File,
@@ -288,34 +299,102 @@ export const useUpload: UseUploadHook = () => {
 
 	const { addNodeToFolder } = useUpdateFolderContent(apolloClient);
 
-	const add = useCallback<ReturnType<UseUploadHook>['add']>(
-		(files, parentId) => {
-			const filesEnriched = map<File, UploadType>(files, (file: File, index) => ({
-				file,
-				parentId,
-				percentage: 0,
-				status: UploadStatus.LOADING,
-				id: (uploadCounterVar() + index).toString()
-			}));
-			uploadVar([...uploadVar(), ...filesEnriched]);
-			uploadCounterVar(uploadCounterVar() + files.length);
+	const [t] = useTranslation();
+	const createSnackbar = useCreateSnackbar();
+	const { openMoreInfoModal } = useMoreInfoModal();
 
-			forEach(filesEnriched, (fileEnriched: UploadType) => {
-				const abortFunction: UploadFunctions['abort'] = upload(
-					fileEnriched,
-					apolloClient,
-					nodeSortVar(),
-					addNodeToFolder
-				);
-				const retryFunction: UploadFunctions['retry'] = (newFile: UploadType) =>
-					upload(newFile, apolloClient, nodeSortVar(), addNodeToFolder);
-				uploadFunctionsVar({
-					...uploadFunctionsVar(),
-					[fileEnriched.id]: { abort: abortFunction, retry: retryFunction }
-				});
+	const createSnackbarForUploadError = useCallback(
+		(label: string) => {
+			createSnackbar({
+				key: new Date().toLocaleString(),
+				type: 'warning',
+				label,
+				actionLabel: t('snackbar.upload.moreInfo', 'More info'),
+				onActionClick: () =>
+					openMoreInfoModal(
+						t(
+							'uploads.error.moreInfo.foldersNotAllowed',
+							'Folders cannot be uploaded. Instead, if you are trying to upload a file, the system may not have recognized it. Try again using the "UPLOAD" button.'
+						)
+					)
 			});
 		},
-		[apolloClient, addNodeToFolder]
+		[createSnackbar, openMoreInfoModal, t]
+	);
+
+	const uploadFolder = useCallback<(folder: UploadType) => ReturnType<UploadFunctions['retry']>>(
+		(folder) => {
+			createSnackbarForUploadError(
+				t('snackbar.upload.foldersNotAllowed', 'Folders cannot be uploaded')
+			);
+			const newState = map(uploadVar(), (item) => {
+				if (item.id === folder.id) {
+					return {
+						...item,
+						status: UploadStatus.FAILED,
+						percentage: 0
+					};
+				}
+				return item;
+			});
+			uploadVar(newState);
+			return noop;
+		},
+		[createSnackbarForUploadError, t]
+	);
+
+	const add = useCallback<ReturnType<UseUploadHook>['add']>(
+		(files, parentId, checkForFolders) => {
+			// Upload only valid files
+
+			const { filesEnriched, uploadFunctions, validFilesCount } = reduce<
+				File,
+				{
+					filesEnriched: UploadType[];
+					uploadFunctions: { [id: string]: UploadFunctions };
+					validFilesCount: number;
+				}
+			>(
+				files,
+				(acc, file: File, index) => {
+					const isItemMaybeFolder = checkForFolders && isMaybeFolder(file);
+					const fileEnriched = {
+						file,
+						parentId,
+						percentage: 0,
+						status: isItemMaybeFolder ? UploadStatus.FAILED : UploadStatus.LOADING,
+						id: (uploadCounterVar() + index).toString()
+					};
+					const abortFunction: UploadFunctions['abort'] = isItemMaybeFolder
+						? noop
+						: upload(fileEnriched, apolloClient, nodeSortVar(), addNodeToFolder);
+					const retryFunction: UploadFunctions['retry'] = (newFile: UploadType) =>
+						isItemMaybeFolder
+							? uploadFolder(newFile)
+							: upload(newFile, apolloClient, nodeSortVar(), addNodeToFolder);
+					acc.filesEnriched.push(fileEnriched);
+					acc.uploadFunctions[fileEnriched.id] = { abort: abortFunction, retry: retryFunction };
+					if (!isItemMaybeFolder) {
+						acc.validFilesCount += 1;
+					}
+					return acc;
+				},
+				{ filesEnriched: [], uploadFunctions: {}, validFilesCount: 0 }
+			);
+
+			if (validFilesCount < files.length) {
+				createSnackbarForUploadError(
+					validFilesCount > 0
+						? t('snackbar.upload.nodesNotAllowed', 'Some items have not been uploaded')
+						: t('snackbar.upload.foldersNotAllowed', 'Folders cannot be uploaded')
+				);
+			}
+
+			uploadVar([...uploadVar(), ...filesEnriched]);
+			uploadCounterVar(uploadCounterVar() + files.length);
+			uploadFunctionsVar({ ...uploadFunctionsVar(), ...uploadFunctions });
+		},
+		[apolloClient, addNodeToFolder, uploadFolder, createSnackbarForUploadError, t]
 	);
 
 	const update = useCallback<ReturnType<UseUploadHook>['update']>(

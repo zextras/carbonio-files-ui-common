@@ -424,10 +424,10 @@ export const List: React.VFC<ListProps> = ({
 
 	const { add } = useUpload();
 
-	const uploadWithDragAndDrop = useCallback(
+	const uploadWithDragAndDrop = useCallback<React.DragEventHandler>(
 		(event) => {
 			if (canUpload) {
-				add(event.dataTransfer.files, folderId || ROOTS.LOCAL_ROOT);
+				add(event.dataTransfer.files, folderId || ROOTS.LOCAL_ROOT, true);
 				if (!folderId) {
 					createSnackbar({
 						key: new Date().toLocaleString(),
