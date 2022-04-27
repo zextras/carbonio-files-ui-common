@@ -247,7 +247,7 @@ describe('Upload list', () => {
 
 			expect(screen.getByText(/additional info/i)).toBeInTheDocument();
 			expect(
-				screen.getByText(/Folders cannot be uploaded. If you are trying to upload a file/i)
+				screen.getByText(/Folders cannot be uploaded. Instead, if you are trying to upload a file/i)
 			).toBeInTheDocument();
 			expect(screen.getByTestId('icon: Close')).toBeInTheDocument();
 			userEvent.click(screen.getByTestId('icon: Close'));

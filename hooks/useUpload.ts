@@ -314,7 +314,7 @@ export const useUpload: UseUploadHook = () => {
 					openMoreInfoModal(
 						t(
 							'uploads.error.moreInfo.foldersNotAllowed',
-							'Folders cannot be uploaded. If you are trying to upload a file, the system may not have recognized it. Try again using the "UPLOAD" button.'
+							'Folders cannot be uploaded. Instead, if you are trying to upload a file, the system may not have recognized it. Try again using the "UPLOAD" button.'
 						)
 					)
 			});
