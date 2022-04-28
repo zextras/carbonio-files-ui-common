@@ -49,7 +49,7 @@ export const CopyNodesModalContent: React.VFC<CopyNodesModalContentProps> = ({
 	} = useGetChildrenQuery(openedFolder);
 
 	/** Mutation to copy nodes */
-	const copyNodes = useCopyNodesMutation();
+	const { copyNodes, loading: copyNodesMutationLoading } = useCopyNodesMutation();
 
 	const title = useMemo(
 		() =>
@@ -262,7 +262,7 @@ export const CopyNodesModalContent: React.VFC<CopyNodesModalContentProps> = ({
 			<ModalFooter
 				confirmLabel={t('node.copy.modal.button.confirm', 'Copy')}
 				confirmHandler={confirmHandler}
-				confirmDisabled={!destinationFolder}
+				confirmDisabled={!destinationFolder || copyNodesMutationLoading}
 				confirmDisabledTooltip={t(
 					'node.copy.modal.button.tooltip.confirm',
 					"You can't perform this action here"

@@ -104,7 +104,7 @@ export const SecondaryBarItem: React.VFC<SecondaryBarItemProps> = ({ item, expan
 		}
 	}, [isRoot, item]);
 
-	const moveNodesMutation = useMoveNodesMutation();
+	const { moveNodes: moveNodesMutation } = useMoveNodesMutation();
 	const markNodesForDeletionMutation = useTrashNodesMutation();
 
 	const dropHandler = useCallback<React.DragEventHandler>(

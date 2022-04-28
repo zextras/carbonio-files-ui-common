@@ -62,7 +62,7 @@ export function useDroppableCrumbs(
 	const dropdownListRef = useRef<HTMLElement>();
 	const apolloClient = useApolloClient();
 	const { me } = useUserInfo();
-	const moveNodesMutation = useMoveNodesMutation();
+	const { moveNodes: moveNodesMutation } = useMoveNodesMutation();
 	const { add } = useUpload();
 	const createSnackbar = useCreateSnackbar();
 	const { navigateToFolder } = useNavigation();

@@ -62,15 +62,22 @@ export const UpdateNodeNameModalContent = <T extends UpdateNameMutation>({
 		[]
 	);
 
+	const [pendingRequest, setPendingRequest] = useState(false);
+
 	const confirmHandler = useCallback(() => {
-		confirmAction(nodeId, trim(newName))
-			.then(() => {
-				closeAction && closeAction();
-			})
-			.catch((err) => {
-				setErrorMsg(decodeError(err, t) || 'something went wrong');
-			});
-	}, [closeAction, confirmAction, newName, nodeId, t]);
+		if (!pendingRequest) {
+			setPendingRequest(true);
+			confirmAction(nodeId, trim(newName))
+				.then(() => {
+					setPendingRequest(false);
+					closeAction && closeAction();
+				})
+				.catch((err) => {
+					setPendingRequest(false);
+					setErrorMsg(decodeError(err, t) || 'something went wrong');
+				});
+		}
+	}, [closeAction, confirmAction, newName, nodeId, pendingRequest, t]);
 
 	const keyUpHandler = useCallback<React.KeyboardEventHandler<HTMLInputElement>>(
 		(event) => {
@@ -102,7 +109,7 @@ export const UpdateNodeNameModalContent = <T extends UpdateNameMutation>({
 			<ModalFooter
 				confirmLabel={confirmLabel}
 				confirmHandler={confirmHandler}
-				confirmDisabled={!newName || newName === nodeName}
+				confirmDisabled={!newName || newName === nodeName || pendingRequest}
 			/>
 		</>
 	);

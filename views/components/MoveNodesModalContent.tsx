@@ -45,7 +45,7 @@ export const MoveNodesModalContent: React.VFC<MoveNodesModalContentProps> = ({
 	const mainContainerRef = useRef<HTMLDivElement>();
 
 	/** Mutation to move nodes * */
-	const moveNodes = useMoveNodesMutation();
+	const { moveNodes, loading: moveNodesMutationLoading } = useMoveNodesMutation();
 
 	const title = useMemo(
 		() =>
@@ -198,7 +198,9 @@ export const MoveNodesModalContent: React.VFC<MoveNodesModalContentProps> = ({
 			<ModalFooter
 				confirmLabel={t('node.move.modal.button.confirm', 'Move')}
 				confirmHandler={confirmHandler}
-				confirmDisabled={!destinationFolder || destinationFolder === folderId}
+				confirmDisabled={
+					!destinationFolder || destinationFolder === folderId || moveNodesMutationLoading
+				}
 				confirmDisabledTooltip={t(
 					'node.move.modal.button.tooltip.confirm',
 					"You can't perform this action here"

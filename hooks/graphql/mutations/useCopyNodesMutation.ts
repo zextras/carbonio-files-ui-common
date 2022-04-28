@@ -37,40 +37,40 @@ export type CopyNodesType = (
 /**
  * Can return error: ErrorCode.NODE_WRITE_ERROR
  */
-export function useCopyNodesMutation(): CopyNodesType {
+export function useCopyNodesMutation(): { copyNodes: CopyNodesType; loading: boolean } {
 	const [t] = useTranslation();
 	const createSnackbar = useCreateSnackbar();
 	const { rootId } = useParams<{ rootId: string }>();
 	const folderId = useQueryParam('folder');
 	const { navigateToFolder } = useNavigation();
-	const [copyNodesMutation, { error }] = useMutation<CopyNodesMutation, CopyNodesMutationVariables>(
-		COPY_NODES,
-		{
-			errorPolicy: 'all',
-			onCompleted({ copyNodes: copyNodesResult }) {
-				if (copyNodesResult) {
-					createSnackbar({
-						key: new Date().toLocaleString(),
-						type: 'info',
-						label: t('snackbar.copyNodes.success', 'Item copied'),
-						replace: true,
-						actionLabel: t('snackbar.copyNodes.action', 'Go to folder'),
-						onActionClick: () => {
-							copyNodesResult[0].parent && navigateToFolder(copyNodesResult[0].parent.id);
-						}
-					});
-				} else {
-					createSnackbar({
-						key: new Date().toLocaleString(),
-						type: 'error',
-						label: t('snackbar.copyNodes.error', 'Something went wrong, try again'),
-						replace: true,
-						hideButton: true
-					});
-				}
+	const [copyNodesMutation, { error, loading }] = useMutation<
+		CopyNodesMutation,
+		CopyNodesMutationVariables
+	>(COPY_NODES, {
+		errorPolicy: 'all',
+		onCompleted({ copyNodes: copyNodesResult }) {
+			if (copyNodesResult) {
+				createSnackbar({
+					key: new Date().toLocaleString(),
+					type: 'info',
+					label: t('snackbar.copyNodes.success', 'Item copied'),
+					replace: true,
+					actionLabel: t('snackbar.copyNodes.action', 'Go to folder'),
+					onActionClick: () => {
+						copyNodesResult[0].parent && navigateToFolder(copyNodesResult[0].parent.id);
+					}
+				});
+			} else {
+				createSnackbar({
+					key: new Date().toLocaleString(),
+					type: 'error',
+					label: t('snackbar.copyNodes.error', 'Something went wrong, try again'),
+					replace: true,
+					hideButton: true
+				});
 			}
 		}
-	);
+	});
 	useErrorHandler(error, 'COPY_NODES');
 
 	const { addNodeToFolder } = useUpdateFolderContent();
@@ -115,5 +115,5 @@ export function useCopyNodesMutation(): CopyNodesType {
 		},
 		[copyNodesMutation, folderId, nodeSort, rootId, addNodeToFolder]
 	);
-	return copyNodes;
+	return { copyNodes, loading };
 }

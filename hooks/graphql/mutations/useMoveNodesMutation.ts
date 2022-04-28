@@ -41,7 +41,7 @@ export type MoveNodesType = (
 /**
  * Can return error: ErrorCode.NODE_WRITE_ERROR
  */
-export function useMoveNodesMutation(): MoveNodesType {
+export function useMoveNodesMutation(): { moveNodes: MoveNodesType; loading: boolean } {
 	const [t] = useTranslation();
 	const createSnackbar = useCreateSnackbar();
 	const { rootId } = useParams<{ rootId: string }>();
@@ -50,34 +50,34 @@ export function useMoveNodesMutation(): MoveNodesType {
 	const { removeNodesFromFolder } = useUpdateFolderContent();
 	const { navigateToFolder } = useNavigation();
 
-	const [moveNodesMutation, { error }] = useMutation<MoveNodesMutation, MoveNodesMutationVariables>(
-		MOVE_NODES,
-		{
-			errorPolicy: 'all',
-			onCompleted({ moveNodes: moveNodesResult }) {
-				if (moveNodesResult) {
-					createSnackbar({
-						key: new Date().toLocaleString(),
-						type: 'info',
-						label: t('snackbar.moveNodes.success', 'Item moved'),
-						replace: true,
-						actionLabel: t('snackbar.moveNodes.action', 'Go to folder'),
-						onActionClick: () => {
-							moveNodesResult[0].parent && navigateToFolder(moveNodesResult[0].parent.id);
-						}
-					});
-				} else {
-					createSnackbar({
-						key: new Date().toLocaleString(),
-						type: 'error',
-						label: t('snackbar.moveNodes.error', 'Something went wrong, try again'),
-						replace: true,
-						hideButton: true
-					});
-				}
+	const [moveNodesMutation, { error, loading }] = useMutation<
+		MoveNodesMutation,
+		MoveNodesMutationVariables
+	>(MOVE_NODES, {
+		errorPolicy: 'all',
+		onCompleted({ moveNodes: moveNodesResult }) {
+			if (moveNodesResult) {
+				createSnackbar({
+					key: new Date().toLocaleString(),
+					type: 'info',
+					label: t('snackbar.moveNodes.success', 'Item moved'),
+					replace: true,
+					actionLabel: t('snackbar.moveNodes.action', 'Go to folder'),
+					onActionClick: () => {
+						moveNodesResult[0].parent && navigateToFolder(moveNodesResult[0].parent.id);
+					}
+				});
+			} else {
+				createSnackbar({
+					key: new Date().toLocaleString(),
+					type: 'error',
+					label: t('snackbar.moveNodes.error', 'Something went wrong, try again'),
+					replace: true,
+					hideButton: true
+				});
 			}
 		}
-	);
+	});
 	useErrorHandler(error, 'MOVE_NODES');
 
 	const moveNodes: MoveNodesType = useCallback(
@@ -155,5 +155,5 @@ export function useMoveNodesMutation(): MoveNodesType {
 		[activeNodeId, folderId, moveNodesMutation, removeActiveNode, removeNodesFromFolder, rootId]
 	);
 
-	return moveNodes;
+	return { moveNodes, loading };
 }
