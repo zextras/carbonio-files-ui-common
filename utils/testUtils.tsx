@@ -39,7 +39,6 @@ import I18nFactory from '../../i18n/i18n-test-factory';
 import StyledWrapper from '../../StyledWrapper';
 import { AdvancedFilters } from '../types/common';
 import { Folder } from '../types/graphql/types';
-import { PreviewManager } from '../views/components/preview/PreviewManager';
 import { Mock } from './mockUtils';
 
 /**
