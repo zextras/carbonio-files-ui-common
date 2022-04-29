@@ -622,8 +622,20 @@ export function uploadToTargetModule(args: {
 	});
 }
 
-export function isDocumentSupportedByPreview(mimeType: string | undefined): boolean {
-	return !!mimeType && (mimeType.includes('pdf') || previewHandledMimeTypes.includes(mimeType));
+export function isSupportedByPreview(
+	mimeType: string | undefined
+): [boolean, typeof PREVIEW_TYPE[keyof typeof PREVIEW_TYPE] | undefined] {
+	return [
+		!!mimeType &&
+			((mimeType.startsWith('image') && mimeType !== 'image/svg+xml') ||
+				mimeType.includes('pdf') ||
+				previewHandledMimeTypes.includes(mimeType)),
+		(mimeType &&
+			((mimeType.startsWith('image') && PREVIEW_TYPE.IMAGE) ||
+				(mimeType.includes('pdf') && PREVIEW_TYPE.PDF) ||
+				PREVIEW_TYPE.DOCUMENT)) ||
+			undefined
+	];
 }
 
 /**
@@ -647,19 +659,39 @@ export const getDocumentPreviewSrc = (id: string, version?: number): string =>
 /**
  * Get thumbnail src
  */
-export const getListItemAvatarPictureUrl = (
+export const getPreviewThumbnailSrc = (
 	id: string,
-	version: number,
-	weight: number,
+	version: number | undefined,
+	type: NodeType,
+	mimeType: string | undefined,
+	width: number,
 	height: number,
-	mimeType: string,
-	type: NodeType
+	shape?: 'rectangular' | 'rounded',
+	quality?: 'lowest' | 'low' | 'medium' | 'high' | 'highest',
+	outputFormat?: 'jpeg' | 'png'
 ): string | undefined => {
-	if (type === NodeType.Image) {
-		return `${REST_ENDPOINT}${PREVIEW_PATH}/image/${id}/${version}/${weight}x${height}/thumbnail`;
-	}
-	if (includes(mimeType, 'pdf')) {
-		return `${REST_ENDPOINT}${PREVIEW_PATH}/pdf/${id}/${version}/${weight}x${height}/thumbnail`;
+	if (version && mimeType) {
+		const optionalParams = [];
+		shape && optionalParams.push(`shape=${shape}`);
+		quality && optionalParams.push(`quality=${quality}`);
+		outputFormat && optionalParams.push(`output_format=${outputFormat}`);
+		const optionalParamsStr = (optionalParams.length > 0 && `?${optionalParams.join('&')}`) || '';
+		if (mimeType.startsWith('image') && mimeType !== 'image/svg+xml') {
+			return `${REST_ENDPOINT}${PREVIEW_PATH}/${PREVIEW_TYPE.IMAGE}/${id}/${version}/${width}x${height}/thumbnail/${optionalParamsStr}`;
+		}
+		if (includes(mimeType, 'pdf')) {
+			return `${REST_ENDPOINT}${PREVIEW_PATH}/${PREVIEW_TYPE.PDF}/${id}/${version}/${width}x${height}/thumbnail/${optionalParamsStr}`;
+		}
+		if (includes(previewHandledMimeTypes, mimeType)) {
+			return `${REST_ENDPOINT}${PREVIEW_PATH}/${PREVIEW_TYPE.DOCUMENT}/${id}/${version}/${width}x${height}/thumbnail/${optionalParamsStr}`;
+		}
 	}
 	return undefined;
 };
+
+export const getListItemAvatarPictureUrl = (
+	id: string,
+	version: number | undefined,
+	type: NodeType,
+	mimeType: string | undefined
+): string | undefined => getPreviewThumbnailSrc(id, version, type, mimeType, 80, 80);
