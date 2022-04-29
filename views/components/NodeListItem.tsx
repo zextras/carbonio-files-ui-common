@@ -7,6 +7,7 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import { Container, Icon, Padding, Row, Text } from '@zextras/carbonio-design-system';
+import { PreviewsManagerContext } from '@zextras/carbonio-ui-preview';
 import debounce from 'lodash/debounce';
 import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
@@ -40,7 +41,6 @@ import {
 import { ContextualMenu } from './ContextualMenu';
 import { NodeAvatarIcon } from './NodeAvatarIcon';
 import { NodeHoverBar } from './NodeHoverBar';
-import { PreviewsManagerContext } from './preview/PreviewManager';
 import { HoverBarContainer, HoverContainer, ListItemContainer } from './StyledComponents';
 
 const CustomText = styled(Text)`
