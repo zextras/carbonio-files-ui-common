@@ -325,9 +325,9 @@ export const List: React.VFC<ListProps> = ({
 
 	const sendViaMailCallback = useCallback(() => {
 		exitSelectionMode();
-		const nodeToDownload = find(nodes, (node) => node.id === selectedIDs[0]);
-		if (nodeToDownload) {
-			sendViaMail(nodeToDownload.id);
+		const nodeToSend = find(nodes, (node) => node.id === selectedIDs[0]);
+		if (nodeToSend) {
+			sendViaMail(nodeToSend.id);
 		}
 	}, [exitSelectionMode, nodes, selectedIDs, sendViaMail]);
 
