@@ -28,6 +28,7 @@ import {
 import { renderHook, RenderHookResult } from '@testing-library/react-hooks';
 import userEvent from '@testing-library/user-event';
 import { ModalManager, SnackbarManager } from '@zextras/carbonio-design-system';
+import { PreviewManager } from '@zextras/carbonio-ui-preview';
 import { GraphQLError } from 'graphql';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
@@ -38,7 +39,6 @@ import I18nFactory from '../../i18n/i18n-test-factory';
 import StyledWrapper from '../../StyledWrapper';
 import { AdvancedFilters } from '../types/common';
 import { Folder } from '../types/graphql/types';
-import { PreviewManager } from '../views/components/preview/PreviewManager';
 import { Mock } from './mockUtils';
 
 /**
