@@ -341,6 +341,7 @@ describe('Node List Item', () => {
 		const node = populateFile();
 		node.type = NodeType.Image;
 		node.extension = 'jpg';
+		node.mime_type = 'image/jpeg';
 
 		render(
 			<NodeListItem
@@ -350,6 +351,7 @@ describe('Node List Item', () => {
 				extension={node.extension}
 				size={node.size}
 				version={node.version}
+				mimeType={node.mime_type}
 			/>
 		);
 		expect(screen.getByText(node.name)).toBeInTheDocument();
