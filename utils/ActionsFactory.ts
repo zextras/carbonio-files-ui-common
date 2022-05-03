@@ -38,7 +38,8 @@ export enum Action {
 	removeUpload = 'REMOVE_UPLOAD',
 	RetryUpload = 'RETRY_UPLOAD',
 	GoToFolder = 'GO_TO_FOLDER',
-	OpenWithDocs = 'OPEN_WITH_DOCS'
+	OpenWithDocs = 'OPEN_WITH_DOCS',
+	SendViaMail = 'SEND_VIA_MAIL'
 }
 
 export interface ActionItem {
@@ -88,7 +89,8 @@ const selectionModeSecondaryActions: Action[] = [
 	Action.UnFlag,
 	Action.Copy,
 	Action.Move,
-	Action.Download
+	Action.Download,
+	Action.SendViaMail
 ];
 
 const previewPanelSecondaryActions: Action[] = [
@@ -98,7 +100,8 @@ const previewPanelSecondaryActions: Action[] = [
 	Action.UnFlag,
 	Action.Copy,
 	Action.Move,
-	Action.Download
+	Action.Download,
+	Action.SendViaMail
 ];
 
 const hoverBarActions: Action[] = [
@@ -119,7 +122,8 @@ const contextualMenuActions: Action[] = [
 	Action.Copy,
 	Action.Restore,
 	Action.DeletePermanently,
-	Action.Download
+	Action.Download,
+	Action.SendViaMail
 ];
 
 const uploadActions: Action[] = [Action.removeUpload, Action.RetryUpload, Action.GoToFolder];
@@ -472,6 +476,19 @@ export function canGoToFolder(nodes: OneOrMany<ActionsFactoryGlobalType>): boole
 	);
 }
 
+export function canSendViaMail(nodes: OneOrMany<ActionsFactoryGlobalType>): boolean {
+	if (!(nodes instanceof Array)) {
+		throw Error('cannot evaluate canSendViaMail on Node type');
+	}
+	if (size(nodes) === 0) {
+		throw Error('cannot evaluate canSendViaMail on empty nodes array');
+	}
+	const $nodes = nodes as ActionsFactoryNodeType[];
+	// TODO: evaluate when batch will be enabled
+	// TODO: remove file check when canSendViaMail will be implemented also for folders
+	return size($nodes) === 1 && isFile($nodes[0]);
+}
+
 const actionsCheckMap: {
 	[key in Action]: (nodes: OneOrMany<ActionsFactoryGlobalType>, loggedUserId?: string) => boolean;
 } = {
@@ -489,7 +506,8 @@ const actionsCheckMap: {
 	[Action.removeUpload]: canRemoveUpload,
 	[Action.RetryUpload]: canRetryUpload,
 	[Action.GoToFolder]: canGoToFolder,
-	[Action.OpenWithDocs]: canOpenWithDocs
+	[Action.OpenWithDocs]: canOpenWithDocs,
+	[Action.SendViaMail]: canSendViaMail
 };
 
 export function getPermittedActions(

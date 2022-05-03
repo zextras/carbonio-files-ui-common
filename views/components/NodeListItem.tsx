@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import styled, { css } from 'styled-components';
 
 import { useActiveNode } from '../../../hooks/useActiveNode';
+import { useSendViaMail } from '../../../hooks/useSendViaMail';
 import useUserInfo from '../../../hooks/useUserInfo';
 import {
 	DISPLAYER_TABS,
@@ -172,6 +173,12 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 
 	const createSnackbar = useCreateSnackbar();
 
+	const { sendViaMail } = useSendViaMail();
+
+	const sendViaMailCallback = useCallback(() => {
+		sendViaMail(id);
+	}, [id, sendViaMail]);
+
 	const itemsMap = useMemo<Partial<Record<Action, ActionItem>>>(
 		() => ({
 			[Action.OpenWithDocs]: {
@@ -234,6 +241,12 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 					});
 				}
 			},
+			[Action.SendViaMail]: {
+				id: 'SendViaMail',
+				icon: 'EmailOutline',
+				label: t('actions.sendViaMail', 'Send via mail'),
+				click: sendViaMailCallback
+			},
 			[Action.Restore]: {
 				id: 'Restore',
 				icon: 'RestoreOutline',
@@ -255,6 +268,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 			moveNodesCallback,
 			toggleFlagTrue,
 			toggleFlagFalse,
+			sendViaMailCallback,
 			restoreNodeCallback,
 			deletePermanentlyCallback,
 			id,

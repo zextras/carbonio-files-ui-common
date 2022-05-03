@@ -14,6 +14,7 @@ import union from 'lodash/union';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
+import { ACTIONS_TO_REMOVE_DUE_TO_PRODUCT_CONTEXT } from '../../../constants';
 import useUserInfo from '../../../hooks/useUserInfo';
 import { draggedItemsVar } from '../../apollo/dragAndDropVar';
 import { DRAG_TYPES, ROOTS } from '../../constants';
@@ -175,7 +176,12 @@ export const NodeListItemWrapper: React.VFC<NodeListItemWrapperProps> = ({
 			node.permissions &&
 			getPermittedContextualMenuActions(
 				[node],
-				union(actionsToRemove, actionsToRemoveIfInsideTrash, actionsToRemoveIfIsAFolder),
+				union(
+					actionsToRemove,
+					actionsToRemoveIfInsideTrash,
+					actionsToRemoveIfIsAFolder,
+					ACTIONS_TO_REMOVE_DUE_TO_PRODUCT_CONTEXT
+				),
 				// TODO: REMOVE CHECK ON ROOT WHEN BE WILL NOT RETURN LOCAL_ROOT AS PARENT FOR SHARED NODES
 				me
 			),

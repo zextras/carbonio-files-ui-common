@@ -15,6 +15,8 @@ import union from 'lodash/union';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
+import { ACTIONS_TO_REMOVE_DUE_TO_PRODUCT_CONTEXT } from '../../../constants';
+import { useSendViaMail } from '../../../hooks/useSendViaMail';
 import useUserInfo from '../../../hooks/useUserInfo';
 import { ROOTS } from '../../constants';
 import { useDeleteNodesMutation } from '../../hooks/graphql/mutations/useDeleteNodesMutation';
@@ -116,7 +118,12 @@ export const PreviewPanelActions: React.VFC<PreviewPanelActionsParams> = ({ node
 		() =>
 			getPermittedPreviewPanelSecondaryActions(
 				[node],
-				union(actionsToRemove, actionsToRemoveIfInsideTrash, actionsToRemoveIfIsAFolder),
+				union(
+					actionsToRemove,
+					actionsToRemoveIfInsideTrash,
+					actionsToRemoveIfIsAFolder,
+					ACTIONS_TO_REMOVE_DUE_TO_PRODUCT_CONTEXT
+				),
 				// TODO: REMOVE CHECK ON ROOT WHEN BE WILL NOT RETURN LOCAL_ROOT AS PARENT FOR SHARED NODES
 				me
 			),
@@ -132,6 +139,12 @@ export const PreviewPanelActions: React.VFC<PreviewPanelActionsParams> = ({ node
 	const updateNodeAction = useCallback((id, name) => updateNode(id, name), [updateNode]);
 
 	const { openRenameModal } = useRenameModal(updateNodeAction);
+
+	const { sendViaMail } = useSendViaMail();
+
+	const sendViaMailCallback = useCallback(() => {
+		sendViaMail(node.id);
+	}, [node, sendViaMail]);
 
 	const itemsMap = useMemo<Partial<Record<Action, ActionItem>>>(
 		() => ({
@@ -209,6 +222,12 @@ export const PreviewPanelActions: React.VFC<PreviewPanelActionsParams> = ({ node
 				click: (): void => {
 					openMoveNodesModal([node], node.parent?.id);
 				}
+			},
+			[Action.SendViaMail]: {
+				id: 'SendViaMail',
+				icon: 'EmailOutline',
+				label: t('actions.sendViaMail', 'Send via mail'),
+				click: sendViaMailCallback
 			}
 			// [Action.UpsertDescription]: {
 			// 	id: 'Upsert',
@@ -227,6 +246,7 @@ export const PreviewPanelActions: React.VFC<PreviewPanelActionsParams> = ({ node
 			openMoveNodesModal,
 			openRenameModal,
 			restoreNodeCallback,
+			sendViaMailCallback,
 			t,
 			toggleFlag
 		]

@@ -19,8 +19,10 @@ import { useLocation, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import ListHeader from '../../../components/ListHeader';
+import { ACTIONS_TO_REMOVE_DUE_TO_PRODUCT_CONTEXT } from '../../../constants';
 import { useActiveNode } from '../../../hooks/useActiveNode';
 import { useNavigation } from '../../../hooks/useNavigation';
+import { useSendViaMail } from '../../../hooks/useSendViaMail';
 import useUserInfo from '../../../hooks/useUserInfo';
 import { DRAG_TYPES, ROOTS } from '../../constants';
 import { ListContext, NodeAvatarIconContext } from '../../contexts';
@@ -182,7 +184,11 @@ export const List: React.VFC<ListProps> = ({
 			// TODO: REMOVE CHECK ON ROOT WHEN BE WILL NOT RETURN LOCAL_ROOT AS PARENT FOR SHARED NODES
 			getPermittedSelectionModeSecondaryActions(
 				selectedNodes,
-				union(actionsToRemove, actionsToRemoveIfInsideTrash),
+				union(
+					actionsToRemove,
+					actionsToRemoveIfInsideTrash,
+					ACTIONS_TO_REMOVE_DUE_TO_PRODUCT_CONTEXT
+				),
 				me,
 				actionCheckers
 			)
@@ -315,6 +321,16 @@ export const List: React.VFC<ListProps> = ({
 		}
 	}, [createSnackbar, nodes, selectedIDs, t, exitSelectionMode]);
 
+	const { sendViaMail } = useSendViaMail();
+
+	const sendViaMailCallback = useCallback(() => {
+		exitSelectionMode();
+		const nodeToSend = find(nodes, (node) => node.id === selectedIDs[0]);
+		if (nodeToSend) {
+			sendViaMail(nodeToSend.id);
+		}
+	}, [exitSelectionMode, nodes, selectedIDs, sendViaMail]);
+
 	const openWithDocsSelection = useCallback(() => {
 		const nodeToOpen = find(nodes, (node) => node.id === selectedIDs[0]);
 		if (nodeToOpen) {
@@ -377,6 +393,12 @@ export const List: React.VFC<ListProps> = ({
 				label: t('actions.download', 'Download'),
 				click: downloadSelection
 			},
+			[Action.SendViaMail]: {
+				id: 'SendViaMail',
+				icon: 'EmailOutline',
+				label: t('actions.sendViaMail', 'Send via mail'),
+				click: sendViaMailCallback
+			},
 			[Action.Restore]: {
 				id: 'Restore',
 				icon: 'RestoreOutline',
@@ -399,6 +421,7 @@ export const List: React.VFC<ListProps> = ({
 			openRenameModalSelection,
 			openWithDocsSelection,
 			restoreSelection,
+			sendViaMailCallback,
 			t,
 			toggleFlagSelection
 		]
