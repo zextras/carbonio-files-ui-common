@@ -82,7 +82,7 @@ export const NodeListItemWrapper: React.VFC<NodeListItemWrapperProps> = ({
 	const [t] = useTranslation();
 	const draggedItems = useReactiveVar(draggedItemsVar);
 	const [dropzoneEnabled, setDropzoneEnabled] = useState(isFolder(node));
-	const moveNodesMutation = useMoveNodesMutation();
+	const { moveNodes: moveNodesMutation } = useMoveNodesMutation();
 	const { add } = useUpload();
 	const createSnackbar = useCreateSnackbar();
 
