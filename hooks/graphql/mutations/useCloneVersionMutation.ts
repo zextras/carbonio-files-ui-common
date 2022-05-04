@@ -25,7 +25,9 @@ export type CloneVersionType = (
 ) => Promise<FetchResult<CloneVersionMutation>>;
 
 /**
- * Can return error: TODO
+ * Can return error:
+ * VERSIONS_LIMIT_REACHED: limit of creatable versions reached
+ * FILE_VERSION_NOT_FOUND: version not found
  */
 export function useCloneVersionMutation(): CloneVersionType {
 	const [cloneVersionMutation, { error: cloneVersionError }] = useMutation<

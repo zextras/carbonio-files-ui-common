@@ -6,7 +6,8 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Container, Padding, Text, Button } from '@zextras/carbonio-design-system';
+import { FetchResult } from '@apollo/client';
+import { Button, Container, Padding, Text } from '@zextras/carbonio-design-system';
 import drop from 'lodash/drop';
 import filter from 'lodash/filter';
 import keyBy from 'lodash/keyBy';
@@ -18,16 +19,22 @@ import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 
 import useUserInfo from '../../../../hooks/useUserInfo';
+import { CONFIGS } from '../../../constants';
 import { useCloneVersionMutation } from '../../../hooks/graphql/mutations/useCloneVersionMutation';
 import { useDeleteVersionsMutation } from '../../../hooks/graphql/mutations/useDeleteVersionsMutation';
 import { useKeepVersionsMutation } from '../../../hooks/graphql/mutations/useKeepVersionsMutation';
+import { useGetConfigsQuery } from '../../../hooks/graphql/queries/useGetConfigsQuery';
 import { useGetVersionsQuery } from '../../../hooks/graphql/queries/useGetVersionsQuery';
-import { NonNullableList } from '../../../types/utils';
+import { useConfirmationModal } from '../../../hooks/useConfirmationModal';
+import { DeleteVersionsMutation, GetVersionsQuery } from '../../../types/graphql/types';
+import { NonNullableList, NonNullableListItem } from '../../../types/utils';
 import { ActionsFactoryNodeType, canOpenWithDocs } from '../../../utils/ActionsFactory';
 import { getChipLabel } from '../../../utils/utils';
 import { GridContainer } from './GridElements';
 import UploadVersionButton, { UploadVersionButtonProps } from './UploadVersionButton';
 import { SectionRow, VersionRow } from './VersionRow';
+
+type Version = NonNullableListItem<GetVersionsQuery['getVersions']>;
 
 const MainContainer = styled(Container)`
 	gap: ${({ theme }): string => theme.sizes.padding.small};
@@ -45,10 +52,21 @@ export const Versioning: React.VFC<VersioningProps> = ({ node }) => {
 	const deleteVersions = useDeleteVersionsMutation();
 	const keepVersions = useKeepVersionsMutation();
 	const cloneVersion = useCloneVersionMutation();
+	const configs = useGetConfigsQuery();
 
-	const purgeAllVersions = useCallback(() => {
-		deleteVersions(node.id);
-	}, [deleteVersions, node.id]);
+	const purgeAllVersions = useCallback(() => deleteVersions(node.id), [deleteVersions, node.id]);
+
+	const { openModal: openPurgeAllVersionsModal } = useConfirmationModal<
+		FetchResult<DeleteVersionsMutation>
+	>({
+		action: purgeAllVersions,
+		confirmLabel: t('modal.purgeAllVersions.button.confirm', 'Purge all versions'),
+		title: t('modal.purgeAllVersions.header', 'Purge all versions'),
+		message: t(
+			'modal.purgeAllVersions.body',
+			'All versions that are not marked to be kept forever, except the current one, will be deleted. You will not be able to recover these versions.'
+		)
+	});
 
 	const { data: getVersionsQueryData } = useGetVersionsQuery(node.id);
 
@@ -79,13 +97,41 @@ export const Versioning: React.VFC<VersioningProps> = ({ node }) => {
 	const lastWeekVersions = partitions[0];
 	const olderVersions = partitions[1];
 
+	const canCloneVersion = useMemo(
+		() =>
+			node.permissions.can_write_file &&
+			// disabled clone if limit of version is reached
+			versions.length < Number(configs[CONFIGS.MAX_VERSIONS]),
+		[configs, node.permissions.can_write_file, versions.length]
+	);
+
+	const numberOfVersionsWithKeep = useMemo(
+		() => filter(versions, (version) => version && version.keep_forever).length,
+		[versions]
+	);
+
+	const canKeepVersion = useCallback<(version: Version) => boolean>(
+		(version) =>
+			node.permissions.can_write_file &&
+			// if version is marked as keep, enable keepVersion to be able to remove keep flag
+			// if version is not marked as keep, disable keepVersion if number of versions to keep is >= maxKeep
+			(version.keep_forever ||
+				numberOfVersionsWithKeep < Number(configs[CONFIGS.MAX_KEEP_VERSIONS])),
+		[configs, node.permissions.can_write_file, numberOfVersionsWithKeep]
+	);
+
+	const canDeleteVersion = useCallback<(version: Version) => boolean>(
+		(version) => !version.keep_forever && node.permissions.can_write_file,
+		[node]
+	);
+
 	const lastVersionComponent = map(lastVersion, (version) => (
 		<VersionRow
 			key={`version${version.version}`}
 			background={'gray6'}
-			canCloneVersion={node.permissions.can_write_file}
+			canCloneVersion={canCloneVersion}
 			canDelete={false}
-			canKeepVersion={node.permissions.can_write_file}
+			canKeepVersion={canKeepVersion(version)}
 			canOpenWithDocs={canOpenWithDocs([node])}
 			clonedFromVersion={version.cloned_from_version || undefined}
 			cloneUpdatedAt={
@@ -111,9 +157,9 @@ export const Versioning: React.VFC<VersioningProps> = ({ node }) => {
 		<VersionRow
 			key={`version${version.version}`}
 			background={'gray6'}
-			canCloneVersion={node.permissions.can_write_file}
-			canDelete={!version.keep_forever && node.permissions.can_write_file}
-			canKeepVersion={node.permissions.can_write_file}
+			canCloneVersion={canCloneVersion}
+			canDelete={canDeleteVersion(version)}
+			canKeepVersion={canKeepVersion(version)}
 			canOpenWithDocs={canOpenWithDocs([node])}
 			clonedFromVersion={version.cloned_from_version || undefined}
 			cloneUpdatedAt={
@@ -149,9 +195,9 @@ export const Versioning: React.VFC<VersioningProps> = ({ node }) => {
 		<VersionRow
 			key={`version${version.version}`}
 			background={'gray6'}
-			canCloneVersion={node.permissions.can_write_file}
-			canDelete={!version.keep_forever && node.permissions.can_write_file}
-			canKeepVersion={node.permissions.can_write_file}
+			canCloneVersion={canCloneVersion}
+			canDelete={canDeleteVersion(version)}
+			canKeepVersion={canKeepVersion(version)}
 			canOpenWithDocs={canOpenWithDocs([node])}
 			clonedFromVersion={version.cloned_from_version || undefined}
 			cloneUpdatedAt={
@@ -211,7 +257,7 @@ export const Versioning: React.VFC<VersioningProps> = ({ node }) => {
 						color="error"
 						label={t('displayer.version.button.purgeAllVersions', 'Purge all Versions')}
 						style={{ overflowX: 'hidden' }}
-						onClick={purgeAllVersions}
+						onClick={openPurgeAllVersionsModal}
 						disabled={!node.permissions.can_write_file}
 					/>
 				</Container>

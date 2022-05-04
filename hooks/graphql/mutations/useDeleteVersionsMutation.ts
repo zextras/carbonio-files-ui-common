@@ -26,7 +26,7 @@ export type DeleteVersionsType = (
 ) => Promise<FetchResult<DeleteVersionsMutation>>;
 
 /**
- * Can return error: TODO
+ * Can return error: none
  */
 export function useDeleteVersionsMutation(): DeleteVersionsType {
 	const [deleteVersionsMutation, { error: deleteVersionsError }] = useMutation<
