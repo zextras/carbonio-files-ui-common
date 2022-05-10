@@ -22,26 +22,33 @@ import GET_PATH from '../../graphql/queries/getPath.graphql';
 import { useCreateSnackbar } from '../../hooks/useCreateSnackbar';
 import useQueryParam from '../../hooks/useQueryParam';
 import { HoverSwitchComponent } from '../../HoverSwitchComponent';
-import { Crumb, URLParams } from '../../types/common';
+import { Crumb, Node, URLParams } from '../../types/common';
 import {
 	ChildFragment,
 	DistributionList,
 	GetPathQuery,
 	GetPathQueryVariables,
 	Maybe,
-	Node,
 	NodeType,
 	Share,
 	User
 } from '../../types/graphql/types';
-import { buildCrumbs, copyToClipboard, getChipLabel, humanFileSize } from '../../utils/utils';
+import {
+	buildCrumbs,
+	copyToClipboard,
+	getChipLabel,
+	humanFileSize,
+	isSupportedByPreview
+} from '../../utils/utils';
 import { InteractiveBreadcrumbs } from '../InteractiveBreadcrumbs';
+import { DisplayerPreview } from './DisplayerPreview';
 import { EmptyFolder } from './EmptyFolder';
 import { NodeDetailsDescription } from './NodeDetailsDescription';
 import { NodeDetailsList } from './NodeDetailsList';
 import { DisplayerContentContainer, RoundedButton } from './StyledComponents';
 
 interface NodeDetailsProps {
+	typeName: Node['__typename'];
 	id: string;
 	name: string;
 	owner: Partial<User>;
@@ -69,6 +76,8 @@ interface NodeDetailsProps {
 	>;
 	type: NodeType;
 	rootId?: string;
+	version?: number;
+	mimeType?: string;
 }
 
 const MainContainer = styled(Container)`
@@ -89,6 +98,7 @@ const CustomAvatar = styled(Avatar)`
 `;
 
 export const NodeDetails: React.VFC<NodeDetailsProps> = ({
+	typeName,
 	id,
 	name,
 	owner,
@@ -106,7 +116,9 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 	loading,
 	shares,
 	type,
-	rootId
+	rootId,
+	version,
+	mimeType
 }) => {
 	const [t] = useTranslation();
 	const loadMoreRef = useRef<Element>();
@@ -285,111 +297,129 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 		[createSnackbar, internalLink, t]
 	);
 
+	const [$isSupportedByPreview, previewType] = useMemo(
+		() => isSupportedByPreview(mimeType),
+		[mimeType]
+	);
+
 	return (
 		<MainContainer mainAlignment="flex-start" background="gray5" height="auto">
-			<DisplayerContentContainer
-				mainAlignment="flex-start"
-				crossAlignment="flex-start"
-				height="fit"
-				padding={{ all: 'large' }}
-				background="gray6"
-			>
-				<Container
-					orientation="horizontal"
-					mainAlignment="space-between"
-					width="fill"
-					padding={{ vertical: 'small' }}
-				>
-					<Row mainAlignment="flex-start">
-						{shares && shares.length > 0 && (
-							<>
-								<Text weight="bold" size="small">
-									{t('displayer.details.collaborators', 'Collaborators')}
-								</Text>
-								<Row padding={{ horizontal: 'small' }}>{collaborators}</Row>
-							</>
-						)}
-					</Row>
-					<HoverSwitchComponent
-						visibleToHiddenComponent={
-							<RoundedButton
-								label={t('displayer.details.copyShortcut', "copy item's shortcut")}
-								type="outlined"
-								icon="CopyOutline"
-								onClick={copyShortcut}
-							/>
-						}
-						hiddenToVisibleComponent={
-							<RoundedButton
-								label={t('displayer.details.copyShortcut', "copy item's shortcut")}
-								type="outlined"
-								icon="Copy"
-								onClick={copyShortcut}
-							/>
-						}
-					/>
-				</Container>
-				{size != null && (
-					<Row orientation="vertical" crossAlignment="flex-start" padding={{ vertical: 'small' }}>
-						<Label>{t('displayer.details.size', 'Size')}</Label>
-						<Text size="large">{humanFileSize(size)}</Text>
-					</Row>
+			<Container background="gray6" height="auto">
+				{$isSupportedByPreview && previewType && (
+					<Container padding={{ all: 'small' }} height="auto">
+						<DisplayerPreview
+							typeName={typeName}
+							id={id}
+							version={version}
+							type={type}
+							mimeType={mimeType}
+							previewType={previewType}
+						/>
+					</Container>
 				)}
-				<Row
-					orientation="vertical"
+				<DisplayerContentContainer
+					mainAlignment="flex-start"
 					crossAlignment="flex-start"
-					width="fill"
-					padding={{ vertical: 'small' }}
+					height="fit"
+					padding={{ all: 'large' }}
 				>
-					<Label>{t('displayer.details.position', 'Position')}</Label>
-					<Row width="fill" mainAlignment="flex-start">
-						<Row minWidth="0">
-							<InteractiveBreadcrumbs crumbs={crumbs} />
+					<Container
+						orientation="horizontal"
+						mainAlignment="space-between"
+						width="fill"
+						padding={{ vertical: 'small' }}
+					>
+						<Row mainAlignment="flex-start">
+							{shares && shares.length > 0 && (
+								<>
+									<Text weight="bold" size="small">
+										{t('displayer.details.collaborators', 'Collaborators')}
+									</Text>
+									<Row padding={{ horizontal: 'small' }}>{collaborators}</Row>
+								</>
+							)}
 						</Row>
-						{!crumbsRequested && (
-							<RoundedButton
-								label={t('displayer.details.showPath', 'Show path')}
-								type="outlined"
-								color="secondary"
-								onClick={loadPath}
-							/>
-						)}
+						<HoverSwitchComponent
+							visibleToHiddenComponent={
+								<RoundedButton
+									label={t('displayer.details.copyShortcut', "copy item's shortcut")}
+									type="outlined"
+									icon="CopyOutline"
+									onClick={copyShortcut}
+								/>
+							}
+							hiddenToVisibleComponent={
+								<RoundedButton
+									label={t('displayer.details.copyShortcut', "copy item's shortcut")}
+									type="outlined"
+									icon="Copy"
+									onClick={copyShortcut}
+								/>
+							}
+						/>
+					</Container>
+					{size != null && (
+						<Row orientation="vertical" crossAlignment="flex-start" padding={{ vertical: 'small' }}>
+							<Label>{t('displayer.details.size', 'Size')}</Label>
+							<Text size="large">{humanFileSize(size)}</Text>
+						</Row>
+					)}
+					<Row
+						orientation="vertical"
+						crossAlignment="flex-start"
+						width="fill"
+						padding={{ vertical: 'small' }}
+					>
+						<Label>{t('displayer.details.position', 'Position')}</Label>
+						<Row width="fill" mainAlignment="flex-start">
+							<Row minWidth="0">
+								<InteractiveBreadcrumbs crumbs={crumbs} />
+							</Row>
+							{!crumbsRequested && (
+								<RoundedButton
+									label={t('displayer.details.showPath', 'Show path')}
+									type="outlined"
+									color="secondary"
+									onClick={loadPath}
+								/>
+							)}
+						</Row>
 					</Row>
-				</Row>
-				<NodeDetailsUserRow
-					key={'NodeDetailsUserRow-Owner'}
-					label={t('displayer.details.owner', 'Owner')}
-					user={owner}
-				/>
-				{creator && (
 					<NodeDetailsUserRow
-						key={'NodeDetailsUserRow-Creator'}
-						label={t('displayer.details.createdBy', 'Created by')}
-						user={creator}
-						dateTime={createdAt}
+						key={'NodeDetailsUserRow-Owner'}
+						label={t('displayer.details.owner', 'Owner')}
+						user={owner}
 					/>
-				)}
-				{lastEditor && (
-					<NodeDetailsUserRow
-						key={'NodeDetailsUserRow-LastEditor'}
-						label={t('displayer.details.lastEdit', 'Last edit')}
-						user={lastEditor}
-						dateTime={updatedAt}
+					{creator && (
+						<NodeDetailsUserRow
+							key={'NodeDetailsUserRow-Creator'}
+							label={t('displayer.details.createdBy', 'Created by')}
+							user={creator}
+							dateTime={createdAt}
+						/>
+					)}
+					{lastEditor && (
+						<NodeDetailsUserRow
+							key={'NodeDetailsUserRow-LastEditor'}
+							label={t('displayer.details.lastEdit', 'Last edit')}
+							user={lastEditor}
+							dateTime={updatedAt}
+						/>
+					)}
+					<NodeDetailsDescription
+						canUpsertDescription={canUpsertDescription}
+						description={description}
+						id={id}
+						key={`NodeDetailsDescription${id}`}
 					/>
-				)}
-				<NodeDetailsDescription
-					canUpsertDescription={canUpsertDescription}
-					description={description}
-					id={id}
-					key={`NodeDetailsDescription${id}`}
-				/>
-				{downloads && (
-					<Row orientation="vertical" crossAlignment="flex-start" padding={{ vertical: 'small' }}>
-						<Label>{t('displayer.details.downloads', 'Downloads by public link')}</Label>
-						<Text>{downloads}</Text>
-					</Row>
-				)}
-			</DisplayerContentContainer>
+					{downloads && (
+						<Row orientation="vertical" crossAlignment="flex-start" padding={{ vertical: 'small' }}>
+							<Label>{t('displayer.details.downloads', 'Downloads by public link')}</Label>
+							<Text>{downloads}</Text>
+						</Row>
+					)}
+				</DisplayerContentContainer>
+			</Container>
 			{nodes && (
 				<DisplayerContentContainer
 					mainAlignment="flex-start"

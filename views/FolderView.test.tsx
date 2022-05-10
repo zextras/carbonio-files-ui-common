@@ -6,7 +6,7 @@
 
 import React from 'react';
 
-import { fireEvent, screen, waitForElementToBeRemoved, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitForElementToBeRemoved, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import map from 'lodash/map';
 
@@ -163,6 +163,10 @@ describe('Folder View', () => {
 			expect(
 				getByTextWithMarkup(buildBreadCrumbRegExp((currentFolder.children[0] as Node).name))
 			).toBeVisible();
+			act(() => {
+				// run timers of displayer preview
+				jest.runOnlyPendingTimers();
+			});
 			expect.assertions(4);
 		});
 

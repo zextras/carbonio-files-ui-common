@@ -128,6 +128,7 @@ export const DisplayerNode: React.VFC<DisplayerNodeProps> = ({
 					<Divider color="gray3" />
 					{(isDetailsTab || !tab) && (
 						<NodeDetails
+							typeName={node.__typename}
 							id={node.id}
 							name={node.name}
 							description={node.description}
@@ -145,6 +146,8 @@ export const DisplayerNode: React.VFC<DisplayerNodeProps> = ({
 							shares={node.shares}
 							type={node.type}
 							rootId={node.rootId || undefined}
+							version={isFile(node) ? node.version : undefined}
+							mimeType={isFile(node) ? node.mime_type : undefined}
 						/>
 					)}
 					{isSharingTab && <NodeSharing node={node} />}

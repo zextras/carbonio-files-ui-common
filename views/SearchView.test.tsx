@@ -153,6 +153,11 @@ describe('Search view', () => {
 		expect(screen.getByText(actionRegexp.download)).toBeVisible();
 		expect(screen.getByText(actionRegexp.copy)).toBeVisible();
 
+		act(() => {
+			// run timers of displayer preview
+			jest.runOnlyPendingTimers();
+		});
+
 		expect.assertions(32);
 	});
 
