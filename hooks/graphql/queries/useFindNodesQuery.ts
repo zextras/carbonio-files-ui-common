@@ -64,7 +64,7 @@ export function useFindNodesQuery({
 
 	const error = useMemoCompare(queryResult.error, (prev, next) => isEqual(prev, next));
 
-	useErrorHandler(error, 'GET_CHILDREN');
+	useErrorHandler(error, 'FIND_NODES');
 
 	const loadMore = useCallback(
 		() =>
