@@ -7,12 +7,14 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { QueryResult, useQuery, useReactiveVar } from '@apollo/client';
+import isEqual from 'lodash/isEqual';
 
 import { nodeSortVar } from '../../../apollo/nodeSortVar';
 import { NODES_LOAD_LIMIT } from '../../../constants';
 import GET_CHILDREN from '../../../graphql/queries/getChildren.graphql';
 import { GetChildrenQuery, GetChildrenQueryVariables } from '../../../types/graphql/types';
 import { useErrorHandler } from '../../useErrorHandler';
+import { useMemoCompare } from '../../useMemoCompare';
 
 interface GetChildrenQueryHookReturnType extends QueryResult<GetChildrenQuery> {
 	hasMore: boolean;
@@ -40,10 +42,14 @@ export function useGetChildrenQuery(
 				sort: nodeSort
 			},
 			skip: !parentNode,
-			displayName
+			displayName,
+			errorPolicy: 'all'
 		}
 	);
-	useErrorHandler(queryResult.error, 'GET_CHILDREN');
+
+	const error = useMemoCompare(queryResult.error, (prev, next) => isEqual(prev, next));
+
+	useErrorHandler(error, 'GET_CHILDREN');
 
 	useEffect(() => {
 		// every time data change check if cursor is set.
