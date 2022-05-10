@@ -12,6 +12,9 @@ import { PREVIEW_TYPE } from '../constants';
 type GetPreviewParams = {
 	type: typeof PREVIEW_TYPE[keyof typeof PREVIEW_TYPE];
 	id: string;
+	version: string;
+	area: string;
+	thumbnail?: 'thumbnail';
 };
 
 const handleGetPreviewRequest: ResponseResolver<
@@ -19,8 +22,8 @@ const handleGetPreviewRequest: ResponseResolver<
 	RestContext,
 	ArrayBuffer
 > = async (req, res, ctx) => {
-	const { type, id } = req.params;
-	if (type === PREVIEW_TYPE.IMAGE) {
+	const { type, id, thumbnail } = req.params;
+	if (thumbnail || type === PREVIEW_TYPE.IMAGE) {
 		const image = await fetch(faker.image.business()).then((response) => response.arrayBuffer());
 		return res(
 			ctx.set('Content-Length', image.byteLength.toString()),

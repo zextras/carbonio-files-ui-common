@@ -6,8 +6,9 @@
 
 import React from 'react';
 
-import { screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { sample } from 'lodash';
 import map from 'lodash/map';
 
 import {
@@ -20,11 +21,11 @@ import {
 	populateShares,
 	populateUser
 } from '../../mocks/mockUtils';
-import { QueryGetPathArgs } from '../../types/graphql/types';
+import { NodeType, QueryGetPathArgs } from '../../types/graphql/types';
 import { canUpsertDescription } from '../../utils/ActionsFactory';
 import { mockGetPath } from '../../utils/mockUtils';
 import { buildBreadCrumbRegExp, render } from '../../utils/testUtils';
-import { formatDate, formatTime, humanFileSize } from '../../utils/utils';
+import { formatDate, formatTime, humanFileSize, previewHandledMimeTypes } from '../../utils/utils';
 import { NodeDetails } from './NodeDetails';
 
 describe('Node Details', () => {
@@ -36,6 +37,7 @@ describe('Node Details', () => {
 		const downloads = 123;
 		render(
 			<NodeDetails
+				typeName={node.__typename}
 				id={node.id}
 				name={node.name}
 				owner={node.owner}
@@ -72,6 +74,10 @@ describe('Node Details', () => {
 		expect(screen.getByText(node.description)).toBeVisible();
 		expect(screen.getByText(humanFileSize(node.size))).toBeVisible();
 		expect(screen.getByText(downloads)).toBeVisible();
+		act(() => {
+			// run timers of displayer preview
+			jest.runOnlyPendingTimers();
+		});
 	});
 
 	test('Show folder info', () => {
@@ -83,6 +89,7 @@ describe('Node Details', () => {
 		const loadMore = jest.fn();
 		render(
 			<NodeDetails
+				typeName={node.__typename}
 				id={node.id}
 				name={node.name}
 				owner={node.owner}
@@ -121,6 +128,10 @@ describe('Node Details', () => {
 		expect(screen.getByText('Content')).toBeVisible();
 		expect(screen.getByText(children[0].name)).toBeVisible();
 		expect(screen.getByText(children[1].name)).toBeVisible();
+		act(() => {
+			// run timers of displayer preview
+			jest.runOnlyPendingTimers();
+		});
 	});
 
 	test('Labels of empty info are hidden', () => {
@@ -129,6 +140,7 @@ describe('Node Details', () => {
 		const loadMore = jest.fn();
 		render(
 			<NodeDetails
+				typeName={node.__typename}
 				id={node.id}
 				name={node.name}
 				owner={node.owner}
@@ -176,6 +188,7 @@ describe('Node Details', () => {
 		const loadMore = jest.fn();
 		const { getByTextWithMarkup, queryByTextWithMarkup, findByTextWithMarkup } = render(
 			<NodeDetails
+				typeName={undefined}
 				id={node.id}
 				name={node.name}
 				owner={node.owner}
@@ -232,6 +245,7 @@ describe('Node Details', () => {
 		const loadMore = jest.fn();
 		render(
 			<NodeDetails
+				typeName={node.__typename}
 				id={node.id}
 				name={node.name}
 				owner={node.owner}
@@ -270,6 +284,7 @@ describe('Node Details', () => {
 		const loadMore = jest.fn();
 		render(
 			<NodeDetails
+				typeName={node.__typename}
 				id={node.id}
 				name={node.name}
 				owner={node.owner}
@@ -297,5 +312,141 @@ describe('Node Details', () => {
 		expect(screen.getByText(/created by/i)).toBeVisible();
 		expect(screen.getByText(node.creator.email)).toBeVisible();
 		expect(screen.queryByText('|')).not.toBeInTheDocument();
+		act(() => {
+			// run timers of preview
+			jest.runOnlyPendingTimers();
+		});
+	});
+
+	test('Show file preview for image', async () => {
+		const node = populateFile();
+		const loadMore = jest.fn();
+		node.type = NodeType.Image;
+		node.mime_type = 'image/png';
+		render(
+			<NodeDetails
+				typeName={node.__typename}
+				id={node.id}
+				name={node.name}
+				owner={node.owner}
+				creator={node.creator}
+				lastEditor={node.last_editor}
+				createdAt={node.created_at}
+				updatedAt={node.updated_at}
+				description={node.description}
+				canUpsertDescription={canUpsertDescription(node)}
+				loadMore={loadMore}
+				loading={false}
+				shares={node.shares}
+				hasMore={false}
+				size={node.size}
+				type={node.type}
+				version={node.version}
+				mimeType={node.mime_type}
+			/>,
+			{ mocks: [] }
+		);
+		await screen.findByRole('img');
+		expect(screen.getByRole('img')).toBeVisible();
+	});
+
+	test('Show file preview for pdf', async () => {
+		const node = populateFile();
+		const loadMore = jest.fn();
+		node.type = NodeType.Text;
+		node.mime_type = 'application/pdf';
+		render(
+			<NodeDetails
+				typeName={node.__typename}
+				id={node.id}
+				name={node.name}
+				owner={node.owner}
+				creator={node.creator}
+				lastEditor={node.last_editor}
+				createdAt={node.created_at}
+				updatedAt={node.updated_at}
+				description={node.description}
+				canUpsertDescription={canUpsertDescription(node)}
+				loadMore={loadMore}
+				loading={false}
+				shares={node.shares}
+				hasMore={false}
+				size={node.size}
+				type={node.type}
+				version={node.version}
+				mimeType={node.mime_type}
+			/>,
+			{ mocks: [] }
+		);
+		await screen.findByRole('img');
+		expect(screen.getByRole('img')).toBeVisible();
+	});
+
+	test('Show file preview for document', async () => {
+		const node = populateFile();
+		const loadMore = jest.fn();
+		node.type = NodeType.Application;
+		node.mime_type = sample(previewHandledMimeTypes) || 'application/vnd.oasis.opendocument.text';
+		render(
+			<NodeDetails
+				typeName={node.__typename}
+				id={node.id}
+				name={node.name}
+				owner={node.owner}
+				creator={node.creator}
+				lastEditor={node.last_editor}
+				createdAt={node.created_at}
+				updatedAt={node.updated_at}
+				description={node.description}
+				canUpsertDescription={canUpsertDescription(node)}
+				loadMore={loadMore}
+				loading={false}
+				shares={node.shares}
+				hasMore={false}
+				size={node.size}
+				type={node.type}
+				version={node.version}
+				mimeType={node.mime_type}
+			/>,
+			{ mocks: [] }
+		);
+		await screen.findByRole('img');
+		expect(screen.getByRole('img')).toBeVisible();
+	});
+
+	test('Do not show file preview for node with unsupported type/mime type', async () => {
+		const node = populateFile();
+		const loadMore = jest.fn();
+		node.type = NodeType.Text;
+		node.mime_type = 'text/plain';
+		render(
+			<NodeDetails
+				typeName={node.__typename}
+				id={node.id}
+				name={node.name}
+				owner={node.owner}
+				creator={node.creator}
+				lastEditor={node.last_editor}
+				createdAt={node.created_at}
+				updatedAt={node.updated_at}
+				description={node.description}
+				canUpsertDescription={canUpsertDescription(node)}
+				loadMore={loadMore}
+				loading={false}
+				shares={node.shares}
+				hasMore={false}
+				size={node.size}
+				type={node.type}
+				version={node.version}
+				mimeType={node.mime_type}
+			/>,
+			{ mocks: [] }
+		);
+		act(() => {
+			// run timers of displayer preview
+			jest.runOnlyPendingTimers();
+		});
+		expect(screen.getByText(node.name)).toBeVisible();
+		expect(screen.queryByRole('img')).not.toBeInTheDocument();
 	});
 });

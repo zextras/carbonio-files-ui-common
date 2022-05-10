@@ -35,9 +35,9 @@ import {
 	getImgPreviewSrc,
 	getListItemAvatarPictureUrl,
 	humanFileSize,
-	isDocumentSupportedByPreview,
 	openNodeWithDocs,
-	getDocumentPreviewSrc
+	getDocumentPreviewSrc,
+	isSupportedByPreview
 } from '../../utils/utils';
 import { ContextualMenu } from './ContextualMenu';
 import { NodeAvatarIcon } from './NodeAvatarIcon';
@@ -292,16 +292,9 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 		[id, type]
 	);
 
-	const [isSupportedByPreview, documentType] = useMemo<
+	const [$isSupportedByPreview, documentType] = useMemo<
 		[boolean, typeof PREVIEW_TYPE[keyof typeof PREVIEW_TYPE] | undefined]
-	>(
-		() => [
-			isDocumentSupportedByPreview(mimeType),
-			(mimeType && (mimeType.includes('pdf') ? PREVIEW_TYPE.PDF : PREVIEW_TYPE.DOCUMENT)) ||
-				undefined
-		],
-		[mimeType]
-	);
+	>(() => isSupportedByPreview(mimeType), [mimeType]);
 
 	const openNode = useCallback(
 		(event: React.SyntheticEvent) => {
@@ -314,40 +307,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 			if (!isSelectionModeActive && !disabled && !trashed) {
 				if (isNavigable) {
 					navigateTo(id, event);
-				} else if (type === NodeType.Image) {
-					createPreview({
-						previewType: 'image',
-						filename: name,
-						extension: extension || undefined,
-						size: (size && humanFileSize(size)) || undefined,
-						actions: [
-							{
-								icon: 'DriveOutline',
-								id: 'DriveOutline',
-								tooltipLabel: t('preview.actions.tooltip.addCollaborator', 'Add collaborator'),
-								onClick: (): void => setActiveNode(id, DISPLAYER_TABS.sharing)
-							},
-							{
-								icon: 'DownloadOutline',
-								tooltipLabel: t('preview.actions.tooltip.download', 'Download'),
-								id: 'DownloadOutline',
-								onClick: (): void => downloadNode(id)
-							}
-						],
-						closeAction: {
-							id: 'close-action',
-							icon: 'ArrowBackOutline',
-							tooltipLabel: t('preview.close.tooltip', 'Close')
-						},
-						src: version ? getImgPreviewSrc(id, version, 0, 0, 'high') : ''
-					});
-				} else if (isSupportedByPreview) {
-					// if supported, open document with preview
-					const src =
-						(version &&
-							((documentType === PREVIEW_TYPE.PDF && getPdfPreviewSrc(id, version)) ||
-								(documentType === PREVIEW_TYPE.DOCUMENT && getDocumentPreviewSrc(id, version)))) ||
-						'';
+				} else if ($isSupportedByPreview) {
 					const actions = [
 						{
 							icon: 'DriveOutline',
@@ -362,28 +322,48 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 							onClick: (): void => downloadNode(id)
 						}
 					];
-					if (permittedContextualMenuActions[Action.OpenWithDocs] === true) {
-						actions.unshift({
-							id: 'OpenWithDocs',
-							icon: 'BookOpenOutline',
-							tooltipLabel: t('actions.openWithDocs', 'Open document'),
-							onClick: (): void => openNodeWithDocs(id)
+					const closeAction = {
+						id: 'close-action',
+						icon: 'ArrowBackOutline',
+						tooltipLabel: t('preview.close.tooltip', 'Close')
+					};
+					if (documentType === PREVIEW_TYPE.IMAGE) {
+						createPreview({
+							previewType: 'image',
+							filename: name,
+							extension: extension || undefined,
+							size: (size && humanFileSize(size)) || undefined,
+							actions,
+							closeAction,
+							src: version ? getImgPreviewSrc(id, version, 0, 0, 'high') : ''
+						});
+					} else {
+						// if supported, open document with preview
+						const src =
+							(version &&
+								((documentType === PREVIEW_TYPE.PDF && getPdfPreviewSrc(id, version)) ||
+									(documentType === PREVIEW_TYPE.DOCUMENT &&
+										getDocumentPreviewSrc(id, version)))) ||
+							'';
+						if (permittedContextualMenuActions[Action.OpenWithDocs] === true) {
+							actions.unshift({
+								id: 'OpenWithDocs',
+								icon: 'BookOpenOutline',
+								tooltipLabel: t('actions.openWithDocs', 'Open document'),
+								onClick: (): void => openNodeWithDocs(id)
+							});
+						}
+						createPreview({
+							previewType: 'pdf',
+							filename: name,
+							extension: extension || undefined,
+							size: (size && humanFileSize(size)) || undefined,
+							useFallback: usePdfPreviewFallback,
+							actions,
+							closeAction,
+							src
 						});
 					}
-					createPreview({
-						previewType: 'pdf',
-						filename: name,
-						extension: extension || undefined,
-						size: (size && humanFileSize(size)) || undefined,
-						useFallback: usePdfPreviewFallback,
-						actions,
-						closeAction: {
-							id: 'close-action',
-							icon: 'ArrowBackOutline',
-							tooltipLabel: t('preview.close.tooltip', 'Close')
-						},
-						src
-					});
 				} else if (permittedContextualMenuActions[Action.OpenWithDocs] === true) {
 					// if preview is not supported and document can be opened with docs, open editor
 					openNodeWithDocs(id);
@@ -395,8 +375,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 			disabled,
 			trashed,
 			isNavigable,
-			type,
-			isSupportedByPreview,
+			$isSupportedByPreview,
 			permittedContextualMenuActions,
 			navigateTo,
 			id,
@@ -495,11 +474,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 							disabled={disabled}
 							selectable={selectable}
 							icon={getIconByFileType(type, mimeType || id)}
-							picture={
-								version && mimeType
-									? getListItemAvatarPictureUrl(id, version, 80, 80, mimeType, type)
-									: undefined
-							}
+							picture={getListItemAvatarPictureUrl(id, version, type, mimeType)}
 						/>
 						<Container
 							orientation="vertical"

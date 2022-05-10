@@ -265,6 +265,10 @@ describe('Filter view', () => {
 			await within(displayer).findAllByText(node.name);
 			expect(within(displayer).getAllByText(node.name)).toHaveLength(2);
 			expect(getByTextWithMarkup(buildBreadCrumbRegExp(node.name))).toBeVisible();
+			act(() => {
+				// run timers of displayer preview
+				jest.runOnlyPendingTimers();
+			});
 			expect.assertions(6);
 		});
 
@@ -610,6 +614,10 @@ describe('Filter view', () => {
 			expect(screen.queryByText(actionRegexp.moveToTrash)).not.toBeInTheDocument();
 			expect(screen.queryByText(actionRegexp.download)).not.toBeInTheDocument();
 			expect(screen.queryByText(actionRegexp.copy)).not.toBeInTheDocument();
+			act(() => {
+				// run preview of displayer
+				jest.runOnlyPendingTimers();
+			});
 		});
 	});
 
