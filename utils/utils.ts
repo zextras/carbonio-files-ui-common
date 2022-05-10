@@ -622,6 +622,15 @@ export function uploadToTargetModule(args: {
 	});
 }
 
+/**
+ * Check if a file is supported by preview by its mime type
+ * @param mimeType
+ * @return {[boolean, typeof PREVIEW_TYPE[keyof typeof PREVIEW_TYPE] | undefined]}
+ *
+ * [0]: tells whether the given mime type is supported or not
+ *
+ * [1]: if mime type is supported, tells which type of preview this mime type is associated to
+ */
 export function isSupportedByPreview(
 	mimeType: string | undefined
 ): [boolean, typeof PREVIEW_TYPE[keyof typeof PREVIEW_TYPE] | undefined] {
