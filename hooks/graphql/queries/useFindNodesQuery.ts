@@ -7,12 +7,15 @@
 import { useCallback } from 'react';
 
 import { ApolloQueryResult, QueryResult, useQuery, useReactiveVar } from '@apollo/client';
+import isEqual from 'lodash/isEqual';
 
 import { nodeSortVar } from '../../../apollo/nodeSortVar';
 import { NODES_LOAD_LIMIT } from '../../../constants';
 import FIND_NODES from '../../../graphql/queries/findNodes.graphql';
 import { SearchParams } from '../../../types/common';
 import { FindNodesQuery, FindNodesQueryVariables } from '../../../types/graphql/types';
+import { useErrorHandler } from '../../useErrorHandler';
+import { useMemoCompare } from '../../useMemoCompare';
 
 export interface FindNodesQueryHookReturnType extends QueryResult<FindNodesQuery> {
 	hasMore: boolean;
@@ -55,11 +58,13 @@ export function useFindNodesQuery({
 				!folderId &&
 				(!keywords || keywords.length === 0),
 			notifyOnNetworkStatusChange: true,
-			onError(err) {
-				console.error(err);
-			}
+			errorPolicy: 'all'
 		}
 	);
+
+	const error = useMemoCompare(queryResult.error, (prev, next) => isEqual(prev, next));
+
+	useErrorHandler(error, 'GET_CHILDREN');
 
 	const loadMore = useCallback(
 		() =>
