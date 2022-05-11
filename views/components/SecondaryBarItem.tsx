@@ -46,7 +46,6 @@ const CustomAccordionItem = styled(AccordionItem)`
 	background-color: ${({ theme, dragging }): string =>
 		dragging ? getColor('gray5', theme) : 'inherit'};
 	height: 40px;
-	padding: 8px 8px 8px 16px;
 `;
 
 export type BadgeType = 'read' | 'unread' | undefined;
