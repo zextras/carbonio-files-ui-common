@@ -6,7 +6,7 @@
 
 import { useCallback, useMemo } from 'react';
 
-import { FetchResult, gql, useMutation } from '@apollo/client';
+import { FetchResult, useMutation } from '@apollo/client';
 import filter from 'lodash/filter';
 import find from 'lodash/find';
 import forEach from 'lodash/forEach';
@@ -20,6 +20,7 @@ import { useActiveNode } from '../../../../hooks/useActiveNode';
 import { useNavigation } from '../../../../hooks/useNavigation';
 import useUserInfo from '../../../../hooks/useUserInfo';
 import { ROOTS } from '../../../constants';
+import PARENT_ID from '../../../graphql/fragments/parentId.graphql';
 import TRASH_NODES from '../../../graphql/mutations/trashNodes.graphql';
 import FIND_NODES from '../../../graphql/queries/findNodes.graphql';
 import GET_CHILDREN from '../../../graphql/queries/getChildren.graphql';
@@ -28,6 +29,7 @@ import { PickIdNodeType } from '../../../types/common';
 import {
 	Folder,
 	Node,
+	ParentIdFragment,
 	TrashNodesMutation,
 	TrashNodesMutationVariables
 } from '../../../types/graphql/types';
@@ -135,16 +137,9 @@ export function useTrashNodesMutation(): TrashNodesType {
 								if (activeNodeId && node.id === activeNodeId && !includeTrashed) {
 									removeActiveNode();
 								}
-								// TODO: move fragment to graphql file and add type
-								const parentFolder: Node | null = cache.readFragment({
+								const parentFolder = cache.readFragment<ParentIdFragment>({
 									id: cache.identify(node),
-									fragment: gql`
-										fragment ParentId on Node {
-											parent {
-												id
-											}
-										}
-									`
+									fragment: PARENT_ID
 								});
 
 								if (parentFolder?.parent) {
@@ -152,7 +147,7 @@ export function useTrashNodesMutation(): TrashNodesType {
 									if (parent.id in parents) {
 										nodesByParent[parent.id].push(id);
 									} else {
-										parents[parent.id] = parent;
+										parents[parent.id] = parent as Pick<Folder, '__typename' | 'id'>;
 										nodesByParent[parent.id] = [id];
 									}
 								}
