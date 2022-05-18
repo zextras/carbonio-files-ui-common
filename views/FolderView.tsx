@@ -8,34 +8,49 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useQuery } from '@apollo/client';
 import { Container, Responsive } from '@zextras/carbonio-design-system';
+import filter from 'lodash/filter';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
 import { ACTION_IDS, ACTION_TYPES } from '../../constants';
+import { useActiveNode } from '../../hooks/useActiveNode';
 import { useCreateOptions } from '../../hooks/useCreateOptions';
 import { DISPLAYER_WIDTH, FILES_APP_ID, LIST_WIDTH, ROOTS } from '../constants';
 import { ListContext } from '../contexts';
 import GET_PERMISSIONS from '../graphql/queries/getPermissions.graphql';
+import { useCreateFolderMutation } from '../hooks/graphql/mutations/useCreateFolderMutation';
+import { useGetChildrenQuery } from '../hooks/graphql/queries/useGetChildrenQuery';
+import { useCreateModal } from '../hooks/modals/useCreateModal';
+import { useCreateDocsFile } from '../hooks/useCreateDocsFile';
 import useQueryParam from '../hooks/useQueryParam';
 import { useUpload } from '../hooks/useUpload';
-import { DocsType, URLParams } from '../types/common';
+import { DocsType, NodeListItemType, URLParams } from '../types/common';
 import { GetPermissionsQuery, GetPermissionsQueryVariables } from '../types/graphql/types';
-import { ActionItem, canCreateFile, canCreateFolder, canUploadFile } from '../utils/ActionsFactory';
+import { NonNullableListItem, Unwrap } from '../types/utils';
+import {
+	ActionItem,
+	canCreateFile,
+	canCreateFolder,
+	canUploadFile,
+	isFolder
+} from '../utils/ActionsFactory';
 import { inputElement } from '../utils/utils';
 import { Displayer } from './components/Displayer';
 import { EmptySpaceFiller } from './components/EmptySpaceFiller';
-import FolderList from './components/FolderList';
+import { List } from './components/List';
 
 const FolderView: React.VFC = () => {
 	const { rootId } = useParams<URLParams>();
+	const { setActiveNode } = useActiveNode();
 	const folderId = useQueryParam('folder');
-	const [newFolder, setNewFolder] = useState(false);
 	const [newFile, setNewFile] = useState<DocsType | undefined>();
 	const [t] = useTranslation();
 	const { setCreateOptions, removeCreateOptions } = useCreateOptions();
 	const [isEmpty, setIsEmpty] = useState(false);
 
 	const { add } = useUpload();
+
+	const currentFolderId = useMemo(() => folderId || rootId || ROOTS.LOCAL_ROOT, [folderId, rootId]);
 
 	const inputElementOnchange = useCallback(
 		(ev: Event) => {
@@ -50,11 +65,13 @@ const FolderView: React.VFC = () => {
 		[add, folderId, rootId]
 	);
 
+	const { data: currentFolder, loading, hasMore, loadMore } = useGetChildrenQuery(currentFolderId);
+
 	const { data: permissionsData } = useQuery<GetPermissionsQuery, GetPermissionsQueryVariables>(
 		GET_PERMISSIONS,
 		{
 			variables: {
-				node_id: folderId || rootId || ROOTS.LOCAL_ROOT
+				node_id: currentFolderId
 			}
 		}
 	);
@@ -74,10 +91,87 @@ const FolderView: React.VFC = () => {
 		[permissionsData]
 	);
 
+	// folder creation
+	const [newFolder, setNewFolder] = useState(false);
+
+	const [createFolder] = useCreateFolderMutation();
+
+	const createFolderCallback = useCallback(
+		(_parentId, newName) => {
+			if (currentFolder?.getNode && isFolder(currentFolder.getNode)) {
+				return createFolder(currentFolder.getNode, newName).then((result) => {
+					result.data && setActiveNode(result.data.createFolder.id);
+					return result;
+				});
+			}
+			return Promise.reject(new Error('cannot create folder on invalid node'));
+		},
+		[createFolder, currentFolder?.getNode, setActiveNode]
+	);
+
+	const resetNewFolder = useCallback(() => {
+		setNewFolder(false);
+	}, [setNewFolder]);
+
+	const { openCreateModal: openCreateFolderModal } = useCreateModal(
+		t('folder.create.modal.title', 'Create New folder'),
+		t('folder.create.modal.input.label.name', 'Folder Name'),
+		createFolderCallback,
+		resetNewFolder
+	);
+
+	useEffect(() => {
+		if (newFolder) {
+			openCreateFolderModal(currentFolderId);
+		}
+	}, [currentFolderId, newFolder, openCreateFolderModal]);
+
 	const createFolderAction = useCallback((event) => {
 		event && event.stopPropagation();
 		setNewFolder(true);
 	}, []);
+
+	const createDocsFile = useCreateDocsFile();
+
+	const createDocsFileAction = useCallback(
+		(_parentId, newName) => {
+			if (currentFolder?.getNode && isFolder(currentFolder.getNode) && newFile) {
+				return createDocsFile(currentFolder?.getNode, newName, newFile).then((result) => {
+					result?.data?.getNode && setActiveNode(result.data.getNode.id);
+					return result;
+				});
+			}
+			return Promise.reject(new Error('cannot create folder: invalid node or file type'));
+		},
+		[createDocsFile, currentFolder?.getNode, newFile, setActiveNode]
+	);
+
+	const resetNewFile = useCallback(() => {
+		setNewFile(undefined);
+	}, [setNewFile]);
+
+	const { openCreateModal: openCreateFileModal } = useCreateModal(
+		// be careful: the following key is not parsed by i18next-extract, it must be added manually to the en.json file
+		/* i18next-extract-disable-next-line */
+		t(
+			`docs.create.modal.title.${(newFile || 'document').toLowerCase()}`,
+			`Create New ${(newFile || 'document').toLowerCase()}`
+		),
+		// be careful: the following key is not parsed by i18next-extract, it must be added manually to the en.json file
+		/* i18next-extract-disable-next-line */
+		t(
+			`docs.create.modal.input.label.name.${(newFile || 'document').toLowerCase()}`,
+			`${(newFile || 'document').toLowerCase()} Name`
+		),
+		createDocsFileAction,
+		resetNewFile
+	);
+
+	useEffect(() => {
+		if (newFile) {
+			openCreateFileModal(currentFolderId);
+		}
+	}, [openCreateFileModal, currentFolderId, newFile]);
 
 	const createDocumentAction = useCallback((event) => {
 		event && event.stopPropagation();
@@ -233,6 +327,21 @@ const FolderView: React.VFC = () => {
 		t
 	]);
 
+	const nodes = useMemo<NodeListItemType[]>(() => {
+		if (
+			currentFolder?.getNode &&
+			isFolder(currentFolder.getNode) &&
+			currentFolder.getNode.children.length > 0
+		) {
+			const { children } = currentFolder.getNode;
+			return filter<Unwrap<typeof children>, NonNullableListItem<typeof children>>(
+				children,
+				(child): child is NonNullableListItem<typeof children> => child != null
+			);
+		}
+		return [];
+	}, [currentFolder]);
+
 	return (
 		<ListContext.Provider value={{ isEmpty, setIsEmpty }}>
 			<Container
@@ -253,14 +362,16 @@ const FolderView: React.VFC = () => {
 						borderRadius="none"
 						background="gray6"
 					>
-						<FolderList
-							folderId={folderId || rootId || ROOTS.LOCAL_ROOT}
-							newFolder={newFolder}
-							setNewFolder={setNewFolder}
-							newFile={newFile}
-							setNewFile={setNewFile}
-							canUploadFile={isCanUploadFile}
+						<List
+							nodes={nodes}
+							folderId={currentFolderId}
+							hasMore={hasMore}
+							loadMore={loadMore}
+							loading={loading}
+							canUpload={isCanUploadFile}
 							fillerWithActions={<EmptySpaceFiller actions={actions} />}
+							emptyListMessage={t('empty.folder.hint', "It looks like there's nothing here.")}
+							mainList={isCanUploadFile}
 						/>
 					</Container>
 					<Container
@@ -274,14 +385,16 @@ const FolderView: React.VFC = () => {
 					</Container>
 				</Responsive>
 				<Responsive mode="mobile" target={window.top}>
-					<FolderList
-						folderId={folderId || rootId || ROOTS.LOCAL_ROOT}
-						newFolder={newFolder}
-						setNewFolder={setNewFolder}
-						newFile={newFile}
-						setNewFile={setNewFile}
-						canUploadFile={isCanUploadFile}
+					<List
+						nodes={nodes}
+						folderId={currentFolderId}
+						hasMore={hasMore}
+						loadMore={loadMore}
+						loading={loading}
+						canUpload={isCanUploadFile}
 						fillerWithActions={<EmptySpaceFiller actions={actions} />}
+						emptyListMessage={t('empty.folder.hint', "It looks like there's nothing here.")}
+						mainList={isCanUploadFile}
 					/>
 				</Responsive>
 			</Container>
