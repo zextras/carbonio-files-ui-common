@@ -317,7 +317,10 @@ export function populateNodePage(nodes: Node[], pageSize: number = NODES_LOAD_LI
 export function populateContact(fullName?: string, email?: string): ContactMatch {
 	return {
 		id: faker.datatype.uuid(),
-		email: email || faker.internet.exampleEmail(fullName),
+		email:
+			email ||
+			(fullName && `${fullName.replace(/\s+/i, '.')}@example.com`) ||
+			faker.internet.exampleEmail(fullName),
 		full: fullName || faker.name.findName()
 	};
 }

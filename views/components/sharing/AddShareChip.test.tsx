@@ -10,7 +10,7 @@ import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { populateNode } from '../../../mocks/mockUtils';
-import { Role } from '../../../types/common';
+import { Role, ShareChip } from '../../../types/common';
 import { GetNodeQuery, GetNodeQueryVariables } from '../../../types/graphql/types';
 import { getNodeVariables, mockGetNode } from '../../../utils/mockUtils';
 import { render } from '../../../utils/testUtils';
@@ -22,8 +22,7 @@ describe('Add Share Chip', () => {
 		const onCloseFn = jest.fn();
 		render(
 			<AddShareChip
-				value={{ id: 'chip', type: 'whats dis', role: Role.Viewer, sharingAllowed: false }}
-				onUpdate={onUpdateFn}
+				value={{ id: 'chip', role: Role.Viewer, sharingAllowed: false, onUpdate: onUpdateFn }}
 				label="Someone Name"
 				onClose={onCloseFn}
 			/>
@@ -47,8 +46,7 @@ describe('Add Share Chip', () => {
 		const onCloseFn = jest.fn();
 		render(
 			<AddShareChip
-				value={{ id: 'chip', type: 'whats dis', role: Role.Editor, sharingAllowed: false }}
-				onUpdate={onUpdateFn}
+				value={{ id: 'chip', role: Role.Editor, sharingAllowed: false, onUpdate: onUpdateFn }}
 				label="Someone Name"
 				onClose={onCloseFn}
 			/>
@@ -72,8 +70,7 @@ describe('Add Share Chip', () => {
 		const onCloseFn = jest.fn();
 		render(
 			<AddShareChip
-				value={{ id: 'chip', type: 'whats dis', role: Role.Viewer, sharingAllowed: true }}
-				onUpdate={onUpdateFn}
+				value={{ id: 'chip', role: Role.Viewer, sharingAllowed: true, onUpdate: onUpdateFn }}
 				label="Someone Name"
 				onClose={onCloseFn}
 			/>
@@ -97,8 +94,7 @@ describe('Add Share Chip', () => {
 		const onCloseFn = jest.fn();
 		render(
 			<AddShareChip
-				value={{ id: 'chip', type: 'whats dis', role: Role.Editor, sharingAllowed: true }}
-				onUpdate={onUpdateFn}
+				value={{ id: 'chip', role: Role.Editor, sharingAllowed: true, onUpdate: onUpdateFn }}
 				label="Someone Name"
 				onClose={onCloseFn}
 			/>
@@ -122,8 +118,7 @@ describe('Add Share Chip', () => {
 		const onCloseFn = jest.fn();
 		render(
 			<AddShareChip
-				value={{ id: 'chip', type: 'whats dis', role: Role.Viewer, sharingAllowed: false }}
-				onUpdate={onUpdateFn}
+				value={{ id: 'chip', role: Role.Viewer, sharingAllowed: false, onUpdate: onUpdateFn }}
 				label="Someone Name"
 				onClose={onCloseFn}
 			/>
@@ -160,17 +155,16 @@ describe('Add Share Chip', () => {
 				}
 			});
 
-			const chip = { id: 'chip-id', type: 'whats dis', role: Role.Viewer, sharingAllowed: false };
+			const chip: ShareChip['value'] = {
+				id: 'chip-id',
+				role: Role.Viewer,
+				sharingAllowed: false,
+				onUpdate: onUpdateFn
+			};
 
-			render(
-				<AddShareChip
-					value={chip}
-					onUpdate={onUpdateFn}
-					label="Someone Name"
-					onClose={onCloseFn}
-				/>,
-				{ initialRouterEntries: [`/?node=${node.id}`] }
-			);
+			render(<AddShareChip value={chip} label="Someone Name" onClose={onCloseFn} />, {
+				initialRouterEntries: [`/?node=${node.id}`]
+			});
 
 			expect(screen.getByText('Someone Name')).toBeVisible();
 
@@ -205,8 +199,7 @@ describe('Add Share Chip', () => {
 
 			render(
 				<AddShareChip
-					value={{ id: 'chip', type: 'whats dis', role: Role.Viewer, sharingAllowed: false }}
-					onUpdate={onUpdateFn}
+					value={{ id: 'chip', role: Role.Viewer, sharingAllowed: false, onUpdate: onUpdateFn }}
 					label="Someone Name"
 					onClose={onCloseFn}
 				/>,
@@ -245,17 +238,16 @@ describe('Add Share Chip', () => {
 				}
 			});
 
-			const chip = { id: 'chip-id', type: 'whats dis', role: Role.Viewer, sharingAllowed: false };
+			const chip: ShareChip['value'] = {
+				id: 'chip-id',
+				role: Role.Viewer,
+				sharingAllowed: false,
+				onUpdate: onUpdateFn
+			};
 
-			render(
-				<AddShareChip
-					value={chip}
-					onUpdate={onUpdateFn}
-					label="Someone Name"
-					onClose={onCloseFn}
-				/>,
-				{ initialRouterEntries: [`/?node=${node.id}`] }
-			);
+			render(<AddShareChip value={chip} label="Someone Name" onClose={onCloseFn} />, {
+				initialRouterEntries: [`/?node=${node.id}`]
+			});
 
 			expect(screen.getByText('Someone Name')).toBeVisible();
 
@@ -293,17 +285,16 @@ describe('Add Share Chip', () => {
 				}
 			});
 
-			const chip = { id: 'chip-id', type: 'whats dis', role: Role.Viewer, sharingAllowed: true };
+			const chip: ShareChip['value'] = {
+				id: 'chip-id',
+				role: Role.Viewer,
+				sharingAllowed: true,
+				onUpdate: onUpdateFn
+			};
 
-			render(
-				<AddShareChip
-					value={chip}
-					onUpdate={onUpdateFn}
-					label="Someone Name"
-					onClose={onCloseFn}
-				/>,
-				{ initialRouterEntries: [`/?node=${node.id}`] }
-			);
+			render(<AddShareChip value={chip} label="Someone Name" onClose={onCloseFn} />, {
+				initialRouterEntries: [`/?node=${node.id}`]
+			});
 
 			expect(screen.getByText('Someone Name')).toBeVisible();
 

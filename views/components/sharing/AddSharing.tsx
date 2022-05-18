@@ -4,13 +4,15 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import {
 	Avatar,
 	Button,
+	ChipInput,
+	ChipInputProps,
+	ChipItem,
 	Container,
-	Dropdown,
 	Input,
 	Padding,
 	Row,
@@ -31,15 +33,13 @@ import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 
 import { soapFetch } from '../../../../network/network';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import { ShareChipInput } from '../../../design_system_fork/SharesChipInput';
 import { useCreateShareMutation } from '../../../hooks/graphql/mutations/useCreateShareMutation';
 import { useGetAccountByEmailQuery } from '../../../hooks/graphql/queries/useGetAccountByEmailQuery';
-import { Contact, Node, Role } from '../../../types/common';
+import { Contact, Node, Role, ShareChip } from '../../../types/common';
 import { Share } from '../../../types/graphql/types';
 import { AutocompleteRequest, AutocompleteResponse } from '../../../types/network';
 import { getChipLabel, sharePermissionsGetter } from '../../../utils/utils';
+import { AddShareChip } from './AddShareChip';
 
 const emailRegex =
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars, max-len, no-control-regex
@@ -117,12 +117,6 @@ interface AddSharingProps {
 	};
 }
 
-interface ShareChip {
-	id: string;
-	sharingAllowed: boolean;
-	role: Role;
-}
-
 export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 	const [t] = useTranslation();
 
@@ -133,7 +127,6 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 
 	const [searchResult, setSearchResult] = useState<Contact[]>([]);
 	const [chips, setChips] = useState<ShareChip[]>([]);
-	const [forceOpen, setForceOpen] = useState(false);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const [loading, setLoading] = useState(false);
 	const [searchText, setSearchText] = useState('');
@@ -142,8 +135,8 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 		forEach(chips, (chip) => {
 			createShare(
 				node,
-				chip.id,
-				sharePermissionsGetter(chip.role, chip.sharingAllowed),
+				chip.value.id,
+				sharePermissionsGetter(chip.value.role, chip.value.sharingAllowed),
 				trim(mailTextValue).length > 0 ? trim(mailTextValue) : undefined
 			).catch(console.error);
 		});
@@ -151,20 +144,21 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 		setMailTextValue('');
 	}, [chips, createShare, mailTextValue, node]);
 
+	const updateChip = useCallback<ShareChip['value']['onUpdate']>((id, updatedValue) => {
+		setChips((prevState) => {
+			const newState = [...prevState];
+			const idx = findIndex(newState, (item) => item.id === id);
+			newState[idx] = { ...newState[idx], value: { ...newState[idx].value, ...updatedValue } };
+			return newState;
+		});
+	}, []);
+
 	const addChip = useCallback(
-		(contact: Contact) => (): void => {
-			if (inputRef.current) {
-				inputRef.current.textContent = '';
-				inputRef.current.focus();
-			}
+		(contact: Contact): void => {
 			setSearchText('');
 			setSearchResult([]);
-			setForceOpen(false);
-			const alreadyInChips = findIndex(chips, ['email', contact.email]) >= 0;
-			if (alreadyInChips) {
-				return;
-			}
-			if (contact.email) {
+			const alreadyInChips = some(chips, ['email', contact.email]);
+			if (!alreadyInChips && contact.email) {
 				getAccountByEmailLazyQuery({
 					variables: {
 						email: contact.email
@@ -172,19 +166,24 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 				})
 					.then((result) => {
 						if (result?.data?.getAccountByEmail) {
-							const contactWithId = {
+							const contactWithId: ShareChip = {
 								...contact,
 								id: result.data.getAccountByEmail.id,
-								role: Role.Viewer,
-								sharingAllowed: false
+								label: getChipLabel(contact),
+								value: {
+									id: result.data.getAccountByEmail.id,
+									role: Role.Viewer,
+									sharingAllowed: false,
+									onUpdate: updateChip
+								}
 							};
 							setChips((c) => [...c, contactWithId]);
 						}
 					})
-					.catch(() => undefined); // FIXME: this catch shouldn't be necessary but for some reason
+					.catch(() => null); // FIXME: this catch shouldn't be necessary but for some reason
 			}
 		},
-		[chips, getAccountByEmailLazyQuery]
+		[chips, getAccountByEmailLazyQuery, updateChip]
 	);
 
 	const search = useMemo(
@@ -268,8 +267,17 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 		[chips, node]
 	);
 
-	const onChipsChange = useCallback((c) => {
-		setChips(c);
+	const onChipsChange = useCallback((newChips: ChipItem[]) => {
+		const filterValidShares = filter<ChipItem, ShareChip>(
+			newChips,
+			(chip): chip is ShareChip =>
+				chip !== undefined &&
+				chip !== null &&
+				typeof chip.value === 'object' &&
+				chip.value !== null &&
+				'role' in chip.value
+		);
+		setChips(filterValidShares);
 	}, []);
 
 	const onType = useCallback(
@@ -292,60 +300,71 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 		[searchResult, searchText]
 	);
 
-	const dropdownItems = useMemo(() => {
-		const items = map(filteredResult, (contact) => ({
-			label: `${contact.id} ${contact.email}`,
-			id: `${contact.id} ${contact.email}`,
-			customComponent: <Hint contact={contact} />,
-			click: addChip(contact)
-		}));
+	const dropdownItems = useMemo<ChipInputProps['options']>(() => {
+		const items = map<Contact, NonNullable<ChipInputProps['options']>[number]>(
+			filteredResult,
+			(contact) => ({
+				label: `${contact.id} ${contact.email}`,
+				id: `${contact.id} ${contact.email}`,
+				customComponent: <Hint contact={contact} />,
+				value: contact
+			})
+		);
 		if (loading) {
 			items.push({
 				id: 'loading',
 				label: 'loading',
 				customComponent: <Loader />,
-				click: () => undefined
+				value: undefined
 			});
 		}
 		return items;
-	}, [addChip, loading, filteredResult]);
+	}, [loading, filteredResult]);
 
-	useEffect(() => {
-		if (dropdownItems?.length > 0) {
-			setForceOpen(true);
-		} else {
-			setForceOpen(false);
-		}
-	}, [dropdownItems]);
+	const onAdd = useCallback<NonNullable<ChipInputProps['onAdd']>>(
+		(value) => {
+			function isContact(val: unknown): val is Contact {
+				return typeof val === 'object' && val !== null && 'email' in val;
+			}
+
+			if (isContact(value)) {
+				addChip(value);
+			}
+			return {};
+		},
+		[addChip]
+	);
 
 	return (
 		<Container padding={{ top: 'large' }}>
 			<Container>
-				<ShareChipInput
+				<ChipInput
 					inputRef={inputRef}
 					placeholder={t('displayer.share.addShare.input.placeholder', 'Add new people or groups')}
 					confirmChipOnBlur={false}
 					onInputType={onType}
 					onChange={onChipsChange}
 					value={chips}
-					valueKey="email"
-					getChipLabel={getChipLabel}
-					dividerColor="gray2"
+					ChipComponent={AddShareChip as React.ComponentType<ChipItem>}
+					options={dropdownItems}
+					onAdd={onAdd}
+					background="gray5"
+					bottomBorderColor="gray3"
 				/>
-				<Dropdown
-					disablePortal={false}
-					maxHeight="234px"
-					disableAutoFocus
-					disableRestoreFocus
-					display="block"
-					width="100%"
-					maxWidth="100%"
-					items={dropdownItems}
-					forceOpen={forceOpen}
-					onClose={(): void => setForceOpen(false)}
-				>
-					<div style={{ width: '100%' }} />
-				</Dropdown>
+				{/* <Dropdown */}
+				{/*	disablePortal={false} */}
+				{/*	maxHeight="234px" */}
+				{/*	disableAutoFocus */}
+				{/*	disableRestoreFocus */}
+				{/*	display="block" */}
+				{/*	width="100%" */}
+				{/*	maxWidth="100%" */}
+				{/*	items={dropdownItems} */}
+				{/*	forceOpen={forceOpen} */}
+				{/*	onClose={(): void => setForceOpen(false)} */}
+				{/* > */}
+				{/*	<div style={{ width: '100%' }} /> */}
+				{/* </Dropdown> */}
 			</Container>
 
 			<Container

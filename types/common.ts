@@ -303,3 +303,15 @@ export type URLParams = {
 export type TargetModule = 'MAILS' | 'CONTACTS' | 'CALENDARS' | 'CHATS';
 
 export type NodeWithMetadata = BaseNodeFragment;
+
+export interface ShareChip extends ChipItem {
+	value: {
+		id: string;
+		sharingAllowed: boolean;
+		role: Role;
+		onUpdate: (
+			id: string,
+			updatedPartialObject: Partial<Omit<ShareChip['value'], 'onUpdate'>>
+		) => void;
+	};
+}

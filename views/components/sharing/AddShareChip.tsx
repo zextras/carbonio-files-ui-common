@@ -7,13 +7,13 @@
 /* eslint-disable arrow-body-style */
 import React, { useMemo } from 'react';
 
-import { ChipAction, ChipProps } from '@zextras/carbonio-design-system';
+import { ChipAction } from '@zextras/carbonio-design-system';
 import filter from 'lodash/filter';
 import toLower from 'lodash/toLower';
 
 import { useActiveNode } from '../../../../hooks/useActiveNode';
 import { useGetNodeQuery } from '../../../hooks/graphql/queries/useGetNodeQuery';
-import { Role } from '../../../types/common';
+import { Role, ShareChip } from '../../../types/common';
 import { Node } from '../../../types/graphql/types';
 import { isFile, isFolder } from '../../../utils/ActionsFactory';
 import { ChipWithPopover } from './ChipWithPopover';
@@ -38,28 +38,17 @@ const rowIdxToRoleMap: { [key: number]: Role } = {
 	1: Role.Editor
 };
 
-interface AddShareChip {
-	id: string;
-	type: string;
-	role: Role;
-	sharingAllowed: boolean;
-}
-
-interface AddShareChipProps extends ChipProps {
-	value: AddShareChip;
-	onUpdate: (id: string, updatedPartialObject: Partial<AddShareChip>) => void;
-}
-
-export const AddShareChip: React.FC<AddShareChipProps> = ({
-	/** Chip value */
-	value,
-	/** Chip update function */
-	onUpdate,
-	/** Accept all Chip props */
-	...rest
-}) => {
+export const AddShareChip = React.forwardRef<HTMLDivElement, ShareChip>(function AddShareChipFn(
+	{
+		/** Chip value */
+		value,
+		/** Accept all Chip props */
+		...rest
+	},
+	ref
+) {
 	const switchSharingAllowed = (): void => {
-		onUpdate(value.id, { sharingAllowed: !value.sharingAllowed });
+		value.onUpdate(value.id, { sharingAllowed: !value.sharingAllowed });
 	};
 
 	const { activeNodeId } = useActiveNode();
@@ -75,7 +64,7 @@ export const AddShareChip: React.FC<AddShareChipProps> = ({
 				((isFolder(node) && node.permissions.can_write_folder) ||
 					(isFile(node) && node.permissions.can_write_file)))
 		) {
-			onUpdate(value.id, { role: rowIdxToRoleMap[containerIdx] });
+			value.onUpdate(value.id, { role: rowIdxToRoleMap[containerIdx] });
 		}
 	};
 
@@ -99,18 +88,16 @@ export const AddShareChip: React.FC<AddShareChipProps> = ({
 	}, [value]);
 
 	return (
-		<>
-			<ChipWithPopover maxWidth="210px" background="gray2" actions={actions} {...rest}>
-				{(_closePopover: () => void): JSX.Element => (
-					<NewShareChipPopoverContainer
-						activeRow={rowRoleToIdxMap[value.role]}
-						disabledRows={disabledRows}
-						checkboxValue={value.sharingAllowed}
-						checkboxOnClick={switchSharingAllowed}
-						containerOnClick={changeRole}
-					/>
-				)}
-			</ChipWithPopover>
-		</>
+		<ChipWithPopover maxWidth="210px" background="gray2" actions={actions} {...rest} ref={ref}>
+			{(_closePopover: () => void): JSX.Element => (
+				<NewShareChipPopoverContainer
+					activeRow={rowRoleToIdxMap[value.role]}
+					disabledRows={disabledRows}
+					checkboxValue={value.sharingAllowed}
+					checkboxOnClick={switchSharingAllowed}
+					containerOnClick={changeRole}
+				/>
+			)}
+		</ChipWithPopover>
 	);
-};
+});
