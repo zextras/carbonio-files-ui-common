@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ApolloError, useQuery } from '@apollo/client';
 import {
 	Avatar,
+	Button,
 	Container,
 	Padding,
 	Row,
@@ -52,7 +53,7 @@ import { DisplayerPreview } from './DisplayerPreview';
 import { EmptyFolder } from './EmptyFolder';
 import { NodeDetailsDescription } from './NodeDetailsDescription';
 import { NodeDetailsList } from './NodeDetailsList';
-import { DisplayerContentContainer, RoundedButton } from './StyledComponents';
+import { DisplayerContentContainer } from './StyledComponents';
 
 interface NodeDetailsProps {
 	typeName: Node['__typename'];
@@ -348,19 +349,21 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 						</Row>
 						<HoverSwitchComponent
 							visibleToHiddenComponent={
-								<RoundedButton
+								<Button
 									label={t('displayer.details.copyShortcut', "copy item's shortcut")}
 									type="outlined"
 									icon="CopyOutline"
 									onClick={copyShortcut}
+									shape="round"
 								/>
 							}
 							hiddenToVisibleComponent={
-								<RoundedButton
+								<Button
 									label={t('displayer.details.copyShortcut', "copy item's shortcut")}
 									type="outlined"
 									icon="Copy"
 									onClick={copyShortcut}
+									shape="round"
 								/>
 							}
 						/>
@@ -383,11 +386,12 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 								<InteractiveBreadcrumbs crumbs={crumbs} />
 							</Row>
 							{!crumbsRequested && (
-								<RoundedButton
+								<Button
 									label={t('displayer.details.showPath', 'Show path')}
 									type="outlined"
 									color="secondary"
 									onClick={loadPath}
+									shape="round"
 								/>
 							)}
 						</Row>

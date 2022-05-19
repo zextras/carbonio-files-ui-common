@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { Avatar, Button, Container, Row, Text, getColor } from '@zextras/carbonio-design-system';
+import { Avatar, Container, Row, Text, getColor } from '@zextras/carbonio-design-system';
 import styled, { css, SimpleInterpolation } from 'styled-components';
 
 import {
@@ -123,14 +123,6 @@ export const FileIconPreview = styled(Avatar)<{ $compact?: boolean }>`
 			$compact ? LIST_ITEM_AVATAR_ICON_HEIGHT_COMPACT : LIST_ITEM_AVATAR_ICON_HEIGHT}px;
 		min-height: ${({ $compact }): number =>
 			$compact ? LIST_ITEM_AVATAR_ICON_HEIGHT_COMPACT : LIST_ITEM_AVATAR_ICON_HEIGHT}px;
-	}
-`;
-
-export const RoundedButton = styled(Button)`
-	border-radius: 50px;
-	padding: 4px;
-	& > div {
-		font-size: ${({ theme }): string => theme.sizes.font.small};
 	}
 `;
 

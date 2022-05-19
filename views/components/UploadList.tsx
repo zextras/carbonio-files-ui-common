@@ -7,7 +7,7 @@
 import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 
 import { useReactiveVar } from '@apollo/client';
-import { Container, useSnackbar } from '@zextras/carbonio-design-system';
+import { Button, Container, useSnackbar } from '@zextras/carbonio-design-system';
 import filter from 'lodash/filter';
 import includes from 'lodash/includes';
 import map from 'lodash/map';
@@ -31,7 +31,6 @@ import {
 import { Dropzone } from './Dropzone';
 import { EmptyFolder } from './EmptyFolder';
 import { ScrollContainer } from './ScrollContainer';
-import { RoundedButton } from './StyledComponents';
 import { UploadListItemWrapper } from './UploadListItemWrapper';
 
 export const UploadList: React.VFC = () => {
@@ -170,11 +169,13 @@ export const UploadList: React.VFC = () => {
 	const headerAction = useMemo(
 		() =>
 			items.length > 0 && (
-				<RoundedButton
+				<Button
 					type="outlined"
 					label={t('uploads.clean.completed', 'Clean completed uploads')}
 					icon="CloseOutline"
 					onClick={removeAllCompleted}
+					shape="round"
+					backgroundColor="transparent"
 				/>
 			),
 		[items.length, removeAllCompleted, t]
