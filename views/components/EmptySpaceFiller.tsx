@@ -14,12 +14,13 @@ import { ContextualMenu } from './ContextualMenu';
 
 interface EmptySpaceFillerProps {
 	actions: Array<ActionItem>;
+	children?: React.ReactElement;
 }
 
-export const EmptySpaceFiller: React.VFC<EmptySpaceFillerProps> = ({ actions }) => (
+export const EmptySpaceFiller: React.VFC<EmptySpaceFillerProps> = ({ actions, children }) => (
 	<Container height="unset" flexGrow={1}>
 		<ContextualMenu actions={actions} onClose={noop} onOpen={noop} disableRestoreFocus>
-			<></>
+			{children || <></>}
 		</ContextualMenu>
 	</Container>
 );
