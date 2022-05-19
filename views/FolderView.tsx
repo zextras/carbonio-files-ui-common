@@ -111,7 +111,7 @@ const FolderView: React.VFC = () => {
 
 	const resetNewFolder = useCallback(() => {
 		setNewFolder(false);
-	}, [setNewFolder]);
+	}, []);
 
 	const { openCreateModal: openCreateFolderModal } = useCreateModal(
 		t('folder.create.modal.title', 'Create New folder'),
