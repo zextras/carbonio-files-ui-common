@@ -66,7 +66,7 @@ describe('Copy', () => {
 			userEvent.click(screen.getByTestId('icon: MoreVertical'));
 			const copyAction = await screen.findByText(actionRegexp.copy);
 			expect(copyAction).toBeVisible();
-			expect(copyAction.parentElement).not.toHaveAttribute('disabled', '');
+			expect(copyAction).not.toHaveAttribute('disabled', '');
 		});
 
 		test('Copy confirm action close the modal and clear cached data for destination folder if destination folder is not current folder', async () => {

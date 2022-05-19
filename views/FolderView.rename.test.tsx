@@ -294,7 +294,7 @@ describe('Rename', () => {
 			nodes = screen.getAllByTestId('node-item', { exact: false });
 			expect(nodes).toHaveLength(NODES_LOAD_LIMIT);
 			expect(nodes[nodes.length - 1]).toBe(updatedNodeItem);
-			// cursor is not changed but it's now the second last element, before the renamed node
+			// cursor is not changed, but it's now the second last element, before the renamed node
 			expect(getCachedCursor(currentFolder)).toBe(firstCursor.id);
 			expect(screen.getByTestId(`node-item-${firstCursor.id}`)).toBe(nodes[nodes.length - 2]);
 			// trigger the load of a new page

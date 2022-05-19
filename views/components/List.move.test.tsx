@@ -44,7 +44,7 @@ describe('Move', () => {
 			userEvent.click(screen.getByTestId('icon: MoreVertical'));
 			let moveAction = await screen.findByText(actionRegexp.move);
 			expect(moveAction).toBeVisible();
-			expect(moveAction.parentElement).toHaveAttribute('disabled', '');
+			expect(moveAction).toHaveAttribute('disabled', '');
 			// deselect file and select folder without can_write_folder permission
 			selectNodes([file.id, folder.id]);
 			// check that all wanted items are selected
@@ -53,7 +53,7 @@ describe('Move', () => {
 			userEvent.click(screen.getByTestId('icon: MoreVertical'));
 			moveAction = await screen.findByText(actionRegexp.move);
 			expect(moveAction).toBeVisible();
-			expect(moveAction.parentElement).toHaveAttribute('disabled', '');
+			expect(moveAction).toHaveAttribute('disabled', '');
 			// deselect folder and select node with right permission
 			selectNodes([folder.id, node.id]);
 			// check that all wanted items are selected
@@ -62,7 +62,7 @@ describe('Move', () => {
 			userEvent.click(screen.getByTestId('icon: MoreVertical'));
 			moveAction = await screen.findByText(actionRegexp.move);
 			expect(moveAction).toBeVisible();
-			expect(moveAction.parentElement).not.toHaveAttribute('disabled', '');
+			expect(moveAction).not.toHaveAttribute('disabled', '');
 		});
 
 		test('Move is enabled when multiple files are selected', async () => {
@@ -97,7 +97,7 @@ describe('Move', () => {
 
 			const moveAction = await screen.findByText(actionRegexp.move);
 			expect(moveAction).toBeVisible();
-			expect(moveAction.parentElement).not.toHaveAttribute('disabled', '');
+			expect(moveAction).not.toHaveAttribute('disabled', '');
 		});
 	});
 
@@ -127,19 +127,19 @@ describe('Move', () => {
 			fireEvent.contextMenu(fileItem);
 			let moveAction = await screen.findByText(actionRegexp.move);
 			expect(moveAction).toBeVisible();
-			expect(moveAction.parentElement).toHaveAttribute('disabled', '');
+			expect(moveAction).toHaveAttribute('disabled', '');
 			// right click to open contextual menu on folder without permission
 			const folderItem = await screen.findByText(folder.name);
 			fireEvent.contextMenu(folderItem);
 			moveAction = await screen.findByText(actionRegexp.move);
 			expect(moveAction).toBeVisible();
-			expect(moveAction.parentElement).toHaveAttribute('disabled', '');
+			expect(moveAction).toHaveAttribute('disabled', '');
 			// right click to open contextual menu on node with permission
 			const nodeItem = await screen.findByText(node.name);
 			fireEvent.contextMenu(nodeItem);
 			moveAction = await screen.findByText(actionRegexp.move);
 			expect(moveAction).toBeVisible();
-			expect(moveAction.parentElement).not.toHaveAttribute('disabled', '');
+			expect(moveAction).not.toHaveAttribute('disabled', '');
 		});
 	});
 });

@@ -252,12 +252,14 @@ describe('Advanced search modal content', () => {
 			const searchButton = screen.getByRole('button', { name: /search/i });
 			expect(searchButton).toBeVisible();
 			expect(searchButton).toHaveAttribute('disabled', '');
-			const inputElement = screen.getByText(/keywords/i);
+			const inputElement = screen.getByRole('textbox', { name: /keywords/i });
 			expect(screen.getByText(/keywords/i)).toBeVisible();
 			// create chip with comma
 			userEvent.type(inputElement, 'keyword1');
-			expect(screen.getByText('keyword1')).toBeVisible();
-			userEvent.type(inputElement, ',');
+			expect(inputElement).toHaveValue('keyword1');
+			act(() => {
+				userEvent.type(inputElement, ',');
+			});
 			// 2 close icons: 1 chip and modal
 			await waitFor(() => expect(screen.getAllByTestId('icon: Close')).toHaveLength(2));
 			// search button becomes enabled
@@ -265,10 +267,12 @@ describe('Advanced search modal content', () => {
 			expect(screen.getByText('keyword1')).toBeVisible();
 			// space does not create a chip
 			userEvent.type(inputElement, 'keyword{space}2');
-			expect(screen.getByText('keyword 2')).toBeVisible();
+			expect(inputElement).toHaveValue('keyword 2');
 			expect(screen.getAllByTestId('icon: Close')).toHaveLength(2);
 			// create chip with semicolon
-			userEvent.type(inputElement, ';');
+			act(() => {
+				userEvent.type(inputElement, ';');
+			});
 			// 3 close icons: 2 chips and modal
 			await waitFor(() => expect(screen.getAllByTestId('icon: Close')).toHaveLength(3));
 			expect(screen.getByText('keyword1')).toBeVisible();
@@ -451,7 +455,7 @@ describe('Advanced search modal content', () => {
 			);
 			expect(screen.getByText(/select a folder/i)).toBeVisible();
 			expect(screen.getByTestId('icon: FolderOutline')).toBeVisible();
-			userEvent.type(screen.getByText(/select a folder/i), 'something');
+			userEvent.type(screen.getByRole('textbox', { name: /select a folder/i }), 'something');
 			await screen.findByRole('button', { name: /go back/i });
 			act(() => {
 				// run timers of modal

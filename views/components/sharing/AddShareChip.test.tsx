@@ -214,7 +214,6 @@ describe('Add Share Chip', () => {
 
 			expect(screen.getByTestId('exclusive-selection-editor')).toBeInTheDocument();
 			expect(screen.getByText('Editor')).toBeVisible();
-			expect(screen.getByTestId('exclusive-selection-editor')).toHaveAttribute('disabled', '');
 			userEvent.click(screen.getByText('Editor'));
 			expect(onUpdateFn).not.toHaveBeenCalled();
 			expect(screen.getByText('Viewer')).toBeVisible();

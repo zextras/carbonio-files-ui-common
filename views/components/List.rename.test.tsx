@@ -47,7 +47,7 @@ describe('Rename', () => {
 			// check that the rename action becomes visible but disabled
 			const renameAction = await screen.findByText(actionRegexp.rename);
 			expect(renameAction).toBeVisible();
-			expect(renameAction.parentElement).toHaveAttribute('disabled', '');
+			expect(renameAction).toHaveAttribute('disabled', '');
 		});
 
 		test('Rename is disabled if node does not have permissions', async () => {
@@ -68,7 +68,7 @@ describe('Rename', () => {
 			userEvent.click(screen.getByTestId('icon: MoreVertical'));
 			const renameAction = await screen.findByText(actionRegexp.rename);
 			expect(renameAction).toBeVisible();
-			expect(renameAction.parentElement).toHaveAttribute('disabled', '');
+			expect(renameAction).toHaveAttribute('disabled', '');
 		});
 
 		test('Rename operation fail shows an error in the modal and does not close it', async () => {
@@ -134,7 +134,7 @@ describe('Rename', () => {
 			fireEvent.contextMenu(nodeItem);
 			const renameAction = await screen.findByText(actionRegexp.rename);
 			expect(renameAction).toBeVisible();
-			expect(renameAction.parentElement).toHaveAttribute('disabled', '');
+			expect(renameAction).toHaveAttribute('disabled', '');
 		});
 
 		test('Rename is disabled if select more than 1 node in selection mode', async () => {
@@ -159,12 +159,12 @@ describe('Rename', () => {
 			fireEvent.contextMenu(nodeItem);
 			let renameAction = await screen.findByText(actionRegexp.rename);
 			expect(renameAction).toBeVisible();
-			expect(renameAction.parentElement).toHaveAttribute('disabled', '');
+			expect(renameAction).toHaveAttribute('disabled', '');
 			selectNodes([element1.id]);
 			fireEvent.contextMenu(nodeItem);
 			renameAction = await screen.findByText(actionRegexp.rename);
 			expect(renameAction).toBeVisible();
-			expect(renameAction.parentElement).not.toHaveAttribute('disabled', '');
+			expect(renameAction).not.toHaveAttribute('disabled', '');
 		});
 	});
 });

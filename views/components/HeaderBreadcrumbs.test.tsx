@@ -84,10 +84,10 @@ describe('Header Breadcrumbs', () => {
 			fireEvent.dragStart(mockDraggedItem, { dataTransfer: dataTransfer() });
 			fireEvent.dragEnter(destinationCrumbItem, { dataTransfer: dataTransfer() });
 			fireEvent.dragOver(destinationCrumbItem, { dataTransfer: dataTransfer() });
-			expect(destinationCrumbItem.parentElement).not.toHaveStyle({
+			expect(destinationCrumbItem).not.toHaveStyle({
 				'background-color': 'rgba(43, 115, 210, 0.4)'
 			});
-			expect(destinationCrumbItem.parentElement).not.toHaveStyle({
+			expect(destinationCrumbItem).not.toHaveStyle({
 				'background-color': 'rgba(130, 130, 130, 0.4)'
 			});
 		});
@@ -794,7 +794,10 @@ describe('Header Breadcrumbs', () => {
 				'background-color': 'rgba(43, 115, 210, 0.4)'
 			});
 			fireEvent.drop(screen.getByText(path[0].name), { dataTransfer: dataTransfer() });
-			expect(destinationItem.parentElement).toHaveStyle({ 'background-color': '' });
+			expect(destinationItem.parentElement).not.toHaveStyle({
+				'background-color': 'rgba(43, 115, 210, 0.4)'
+			});
+			// expect(destinationItem.parentElement).toHaveStyle({ 'background-color': '' });
 			const snackbar = await screen.findByText(/Item moved/i);
 			expect(snackbar).toBeVisible();
 			await waitForElementToBeRemoved(snackbar);
@@ -907,7 +910,9 @@ describe('Header Breadcrumbs', () => {
 				'background-color': 'rgba(130, 130, 130, 0.4)'
 			});
 			fireEvent.drop(destinationItem, { dataTransfer: dataTransfer() });
-			expect(destinationItem.parentElement).toHaveStyle({ 'background-color': '' });
+			expect(destinationItem.parentElement).not.toHaveStyle({
+				'background-color': 'rgba(130, 130, 130, 0.4)'
+			});
 			// wait a tick to allow mutation to eventually be executed
 			await waitFor(
 				() =>

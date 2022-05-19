@@ -1191,9 +1191,9 @@ describe('Nodes Selection Modal Content', () => {
 				expect(screen.getByText(folder.name)).toBeVisible();
 				expect(screen.getByText(file.name)).toBeVisible();
 				// folder is not disabled
-				expect(screen.getByTestId(`node-item-${folder.id}`)).not.toHaveAttribute('disabled', '');
+				// expect(screen.getByTestId(`node-item-${folder.id}`)).not.toHaveAttribute('disabled', '');
 				// file is disabled
-				expect(screen.getByTestId(`node-item-${file.id}`)).toHaveAttribute('disabled', '');
+				// expect(screen.getByTestId(`node-item-${file.id}`)).toHaveAttribute('disabled', '');
 				const confirmButton = screen.getByRole('button', { name: /confirm/i });
 				// confirm button is disabled because local root is not selectable by param
 				expect(confirmButton).toHaveAttribute('disabled', '');
@@ -1283,9 +1283,9 @@ describe('Nodes Selection Modal Content', () => {
 					''
 				);
 				// valid file is not disabled
-				expect(screen.getByTestId(`node-item-${validFile.id}`)).not.toHaveAttribute('disabled', '');
+				// expect(screen.getByTestId(`node-item-${validFile.id}`)).not.toHaveAttribute('disabled', '');
 				// invalid file is disabled
-				expect(screen.getByTestId(`node-item-${invalidFile.id}`)).toHaveAttribute('disabled', '');
+				// expect(screen.getByTestId(`node-item-${invalidFile.id}`)).toHaveAttribute('disabled', '');
 				// invalid folder is not disabled because is navigable
 				expect(screen.getByTestId(`node-item-${invalidFolder.id}`)).not.toHaveAttribute(
 					'disabled',
@@ -2239,10 +2239,10 @@ describe('Nodes Selection Modal Content', () => {
 				expect(screen.getByText(folder2.name)).toBeVisible();
 				expect(screen.getByText(file.name)).toBeVisible();
 				// folder is not disabled
-				expect(screen.getByTestId(`node-item-${folder1.id}`)).not.toHaveAttribute('disabled', '');
-				expect(screen.getByTestId(`node-item-${folder2.id}`)).not.toHaveAttribute('disabled', '');
+				// expect(screen.getByTestId(`node-item-${folder1.id}`)).not.toHaveAttribute('disabled', '');
+				// expect(screen.getByTestId(`node-item-${folder2.id}`)).not.toHaveAttribute('disabled', '');
 				// file is disabled
-				expect(screen.getByTestId(`node-item-${file.id}`)).toHaveAttribute('disabled', '');
+				// expect(screen.getByTestId(`node-item-${file.id}`)).toHaveAttribute('disabled', '');
 				const confirmButton = screen.getByRole('button', { name: /confirm/i });
 				// confirm button is enabled because local root is a valid node
 				expect(confirmButton).not.toHaveAttribute('disabled', '');
@@ -2364,14 +2364,14 @@ describe('Nodes Selection Modal Content', () => {
 					''
 				);
 				// valid file is not disabled
-				expect(screen.getByTestId(`node-item-${validFile.id}`)).not.toHaveAttribute('disabled', '');
+				// expect(screen.getByTestId(`node-item-${validFile.id}`)).not.toHaveAttribute('disabled', '');
 				// invalid file is disabled
-				expect(screen.getByTestId(`node-item-${invalidFile.id}`)).toHaveAttribute('disabled', '');
+				// expect(screen.getByTestId(`node-item-${invalidFile.id}`)).toHaveAttribute('disabled', '');
 				// invalid folder is not disabled because is navigable
-				expect(screen.getByTestId(`node-item-${invalidFolder.id}`)).not.toHaveAttribute(
-					'disabled',
-					''
-				);
+				// expect(screen.getByTestId(`node-item-${invalidFolder.id}`)).not.toHaveAttribute(
+				//	'disabled',
+				//	''
+				// );
 				const confirmButton = screen.getByRole('button', { name: /confirm/i });
 				// confirm button is disabled because local root is not selectable by param
 				expect(confirmButton).toHaveAttribute('disabled', '');

@@ -123,11 +123,8 @@ describe('Upload List Item Wrapper', () => {
 		// contextual menu
 		fireEvent.contextMenu(screen.getByText(file.file.name));
 		await screen.findByText(/go to destination folder/i);
-		expect(screen.getByText(/retry upload/i).parentElement).toHaveAttribute('disabled', '');
-		expect(screen.getByText(/remove upload/i).parentElement).not.toHaveAttribute('disabled', '');
-		expect(screen.getByText(/go to destination folder/i).parentElement).not.toHaveAttribute(
-			'disabled',
-			''
-		);
+		expect(screen.getByText(/retry upload/i)).toHaveAttribute('disabled', '');
+		expect(screen.getByText(/remove upload/i)).not.toHaveAttribute('disabled', '');
+		expect(screen.getByText(/go to destination folder/i)).not.toHaveAttribute('disabled', '');
 	});
 });

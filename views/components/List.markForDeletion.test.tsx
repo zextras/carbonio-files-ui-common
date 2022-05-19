@@ -106,7 +106,7 @@ describe('Mark for deletion - trash', () => {
 			fireEvent.contextMenu(nodeItem);
 			const moveToTrashAction = await screen.findByText(actionRegexp.moveToTrash);
 			expect(moveToTrashAction).toBeVisible();
-			expect(moveToTrashAction.parentElement).toHaveAttribute('disabled', '');
+			expect(moveToTrashAction).toHaveAttribute('disabled', '');
 			expect.assertions(2);
 		});
 	});

@@ -746,7 +746,7 @@ describe('Drag and drop', () => {
 		fireEvent.dragEnd(itemToDrag, { dataTransfer: dataTransfer() });
 		expect(itemToDrag).toBeVisible();
 		expect(itemToDrag).not.toHaveAttribute('disabled', '');
-		expect(folderWithoutPermissionsItem).toHaveStyle({
+		expect(folderWithoutPermissionsItem.parentElement).toHaveStyle({
 			'background-color': ''
 		});
 
@@ -760,7 +760,7 @@ describe('Drag and drop', () => {
 		});
 		fireEvent.drop(destinationItem, { dataTransfer: dataTransfer() });
 		fireEvent.dragEnd(itemToDrag, { dataTransfer: dataTransfer() });
-		expect(destinationItem).toHaveStyle({
+		expect(destinationItem.parentElement).toHaveStyle({
 			'background-color': ''
 		});
 		await waitForElementToBeRemoved(itemToDrag);

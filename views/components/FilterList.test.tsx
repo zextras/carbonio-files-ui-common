@@ -284,7 +284,7 @@ describe('Filter list', () => {
 					userEvent.click(screen.getByTestId('icon: MoreVertical'));
 					const renameAction = await screen.findByText(actionRegexp.rename);
 					expect(renameAction).toBeVisible();
-					expect(renameAction.parentElement).toHaveAttribute('disabled', '');
+					expect(renameAction).toHaveAttribute('disabled', '');
 				});
 
 				test('Rename is disabled if node does not have permissions', async () => {
@@ -307,7 +307,7 @@ describe('Filter list', () => {
 					userEvent.click(screen.getByTestId('icon: MoreVertical'));
 					const renameAction = await screen.findByText(actionRegexp.rename);
 					expect(renameAction).toBeVisible();
-					expect(renameAction.parentElement).toHaveAttribute('disabled', '');
+					expect(renameAction).toHaveAttribute('disabled', '');
 				});
 
 				test('Rename operation fail shows an error in the modal and does not close it', async () => {
@@ -468,7 +468,7 @@ describe('Filter list', () => {
 				// flag action should be disabled
 				const flagAction = screen.getByText(actionRegexp.flag);
 				expect(flagAction).toBeVisible();
-				expect(flagAction.parentElement).toHaveAttribute('disabled', '');
+				expect(flagAction).toHaveAttribute('disabled', '');
 				// click on unflag action on header bar
 				userEvent.click(screen.getByText(actionRegexp.unflag));
 				// await waitForElementToBeRemoved(screen.queryAllByTestId('checkedAvatar'));
@@ -901,7 +901,7 @@ describe('Filter list', () => {
 					userEvent.click(screen.getByTestId('icon: MoreVertical'));
 					let moveAction = await screen.findByText(actionRegexp.move);
 					expect(moveAction).toBeVisible();
-					expect(moveAction.parentElement).toHaveAttribute('disabled', '');
+					expect(moveAction).toHaveAttribute('disabled', '');
 					// activate selection mode by selecting items
 					selectNodes([file.id, folder.id]);
 					// check that all wanted items are selected
@@ -910,7 +910,7 @@ describe('Filter list', () => {
 					userEvent.click(screen.getByTestId('icon: MoreVertical'));
 					moveAction = await screen.findByText(actionRegexp.move);
 					expect(moveAction).toBeVisible();
-					expect(moveAction.parentElement).toHaveAttribute('disabled', '');
+					expect(moveAction).toHaveAttribute('disabled', '');
 					// activate selection mode by selecting items
 					selectNodes([folder.id, node.id]);
 					// check that all wanted items are selected
@@ -919,7 +919,7 @@ describe('Filter list', () => {
 					userEvent.click(screen.getByTestId('icon: MoreVertical'));
 					moveAction = await screen.findByText(actionRegexp.move);
 					expect(moveAction).toBeVisible();
-					expect(moveAction.parentElement).not.toHaveAttribute('disabled', '');
+					expect(moveAction).not.toHaveAttribute('disabled', '');
 				});
 
 				test('Move is disabled when multiple files are selected', async () => {
@@ -946,7 +946,7 @@ describe('Filter list', () => {
 					userEvent.click(screen.getByTestId('icon: MoreVertical'));
 					const moveAction = await screen.findByText(actionRegexp.move);
 					expect(moveAction).toBeVisible();
-					expect(moveAction.parentElement).toHaveAttribute('disabled', '');
+					expect(moveAction).toHaveAttribute('disabled', '');
 				});
 
 				test('Move is disabled if node has no parent or parent has not right permissions', async () => {
@@ -978,7 +978,7 @@ describe('Filter list', () => {
 					userEvent.click(screen.getByTestId('icon: MoreVertical'));
 					let moveAction = await screen.findByText(actionRegexp.move);
 					expect(moveAction).toBeVisible();
-					expect(moveAction.parentElement).toHaveAttribute('disabled', '');
+					expect(moveAction).toHaveAttribute('disabled', '');
 					// activate selection mode by selecting items
 					selectNodes([file.id, folder.id]);
 					// check that all wanted items are selected
@@ -987,7 +987,7 @@ describe('Filter list', () => {
 					userEvent.click(screen.getByTestId('icon: MoreVertical'));
 					moveAction = await screen.findByText(actionRegexp.move);
 					expect(moveAction).toBeVisible();
-					expect(moveAction.parentElement).toHaveAttribute('disabled', '');
+					expect(moveAction).toHaveAttribute('disabled', '');
 					// activate selection mode by selecting items
 					selectNodes([folder.id, node.id]);
 					// check that all wanted items are selected
@@ -996,7 +996,7 @@ describe('Filter list', () => {
 					userEvent.click(screen.getByTestId('icon: MoreVertical'));
 					moveAction = await screen.findByText(actionRegexp.move);
 					expect(moveAction).toBeVisible();
-					expect(moveAction.parentElement).toHaveAttribute('disabled', '');
+					expect(moveAction).toHaveAttribute('disabled', '');
 				});
 
 				test('Move open modal showing parent folder content. Confirm action close the modal, leave moved items in filter list and clear cached data for destination folder', async () => {
@@ -1127,7 +1127,7 @@ describe('Filter list', () => {
 					userEvent.click(screen.getByTestId('icon: MoreVertical'));
 					const copyAction = await screen.findByText(actionRegexp.copy);
 					expect(copyAction).toBeVisible();
-					expect(copyAction.parentElement).not.toHaveAttribute('disabled', '');
+					expect(copyAction).not.toHaveAttribute('disabled', '');
 				});
 
 				test('Copy open modal showing parent folder content. Confirm action close the modal and clear cached data for destination folder', async () => {
@@ -1468,22 +1468,19 @@ describe('Filter list', () => {
 				userEvent.click(screen.getByTestId('icon: MoreVertical'));
 				await screen.findByText(actionRegexp.rename);
 				expect(screen.getByText(actionRegexp.rename)).toBeVisible();
-				expect(screen.getByText(actionRegexp.rename).parentNode).toHaveAttribute('disabled', '');
+				expect(screen.getByText(actionRegexp.rename)).toHaveAttribute('disabled', '');
 				expect(screen.getByText(actionRegexp.copy)).toBeVisible();
-				expect(screen.getByText(actionRegexp.copy).parentNode).toHaveAttribute('disabled', '');
+				expect(screen.getByText(actionRegexp.copy)).toHaveAttribute('disabled', '');
 				expect(screen.getByText(actionRegexp.move)).toBeVisible();
-				expect(screen.getByText(actionRegexp.move).parentNode).toHaveAttribute('disabled', '');
+				expect(screen.getByText(actionRegexp.move)).toHaveAttribute('disabled', '');
 				expect(screen.getByText(actionRegexp.flag)).toBeVisible();
-				expect(screen.getByText(actionRegexp.flag).parentNode).toHaveAttribute('disabled', '');
+				expect(screen.getByText(actionRegexp.flag)).toHaveAttribute('disabled', '');
 				expect(screen.getByText(actionRegexp.unflag)).toBeVisible();
-				expect(screen.getByText(actionRegexp.unflag).parentNode).toHaveAttribute('disabled', '');
+				expect(screen.getByText(actionRegexp.unflag)).toHaveAttribute('disabled', '');
 				expect(screen.getByText(actionRegexp.download)).toBeVisible();
-				expect(screen.getByText(actionRegexp.download).parentNode).toHaveAttribute('disabled', '');
+				expect(screen.getByText(actionRegexp.download)).toHaveAttribute('disabled', '');
 				expect(screen.getByText(actionRegexp.openDocument)).toBeVisible();
-				expect(screen.getByText(actionRegexp.openDocument).parentNode).toHaveAttribute(
-					'disabled',
-					''
-				);
+				expect(screen.getByText(actionRegexp.openDocument)).toHaveAttribute('disabled', '');
 				expect(screen.queryByTestId('icon: RestoreOutline')).not.toBeInTheDocument();
 				expect(screen.queryByTestId('icon: DeletePermanentlyOutline')).not.toBeInTheDocument();
 				expect(screen.getByTestId('icon: ArrowBackOutline')).toBeVisible();
@@ -1624,7 +1621,7 @@ describe('Filter list', () => {
 					fireEvent.contextMenu(nodeItem);
 					const renameAction = await screen.findByText(actionRegexp.rename);
 					expect(renameAction).toBeVisible();
-					expect(renameAction.parentElement).toHaveAttribute('disabled', '');
+					expect(renameAction).toHaveAttribute('disabled', '');
 				});
 
 				test('Rename change node name and leave node at same position in the list', async () => {
@@ -1960,19 +1957,19 @@ describe('Filter list', () => {
 					fireEvent.contextMenu(fileItem);
 					let moveAction = await screen.findByText(actionRegexp.move);
 					expect(moveAction).toBeVisible();
-					expect(moveAction.parentElement).toHaveAttribute('disabled', '');
+					expect(moveAction).toHaveAttribute('disabled', '');
 					// right click to open contextual menu on folder without permission
 					const folderItem = await screen.findByText(folder.name);
 					fireEvent.contextMenu(folderItem);
 					moveAction = await screen.findByText(actionRegexp.move);
 					expect(moveAction).toBeVisible();
-					expect(moveAction.parentElement).toHaveAttribute('disabled', '');
+					expect(moveAction).toHaveAttribute('disabled', '');
 					// right click to open contextual menu on node with permission
 					const nodeItem = await screen.findByText(node.name);
 					fireEvent.contextMenu(nodeItem);
 					moveAction = await screen.findByText(actionRegexp.move);
 					expect(moveAction).toBeVisible();
-					expect(moveAction.parentElement).not.toHaveAttribute('disabled', '');
+					expect(moveAction).not.toHaveAttribute('disabled', '');
 				});
 
 				test('Move open modal showing parent folder content. Confirm action close the modal, leave moved items in filter list and clear cached data for destination folder', async () => {
@@ -2217,7 +2214,7 @@ describe('Filter list', () => {
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 			const trashAction = await screen.findByTestId('icon: Trash2Outline');
 			expect(trashAction).toBeVisible();
-			expect(trashAction.parentNode).not.toHaveAttribute('disabled', '');
+			expect(trashAction).not.toHaveAttribute('disabled', '');
 			userEvent.click(trashAction);
 			await waitForElementToBeRemoved(screen.queryByText(firstPage[0].name));
 			const snackbar = await screen.findByText(/item moved to trash/i);
@@ -2268,7 +2265,7 @@ describe('Filter list', () => {
 			userEvent.click(screen.getByTestId('icon: MoreVertical'));
 			const unflagAction = await screen.findByText(actionRegexp.unflag);
 			expect(unflagAction).toBeVisible();
-			expect(unflagAction.parentNode).not.toHaveAttribute('disabled', '');
+			expect(unflagAction).not.toHaveAttribute('disabled', '');
 			userEvent.click(unflagAction);
 			await waitForElementToBeRemoved(screen.queryByText(firstPage[0].name));
 			await screen.findByText(secondPage[0].name);
@@ -2319,7 +2316,7 @@ describe('Filter list', () => {
 			userEvent.click(screen.getByTestId('icon: MoreVertical'));
 			const restoreAction = await screen.findByTestId('icon: RestoreOutline');
 			expect(restoreAction).toBeVisible();
-			expect(restoreAction.parentNode).not.toHaveAttribute('disabled', '');
+			expect(restoreAction).not.toHaveAttribute('disabled', '');
 			userEvent.click(restoreAction);
 			await waitForElementToBeRemoved(screen.queryByText(firstPage[0].name));
 			const snackbar = await screen.findByText(/^success$/i);
@@ -2364,7 +2361,7 @@ describe('Filter list', () => {
 			userEvent.click(screen.getByTestId('icon: MoreVertical'));
 			const deletePermanentlyAction = await screen.findByTestId('icon: DeletePermanentlyOutline');
 			expect(deletePermanentlyAction).toBeVisible();
-			expect(deletePermanentlyAction.parentNode).not.toHaveAttribute('disabled', '');
+			expect(deletePermanentlyAction).not.toHaveAttribute('disabled', '');
 			userEvent.click(deletePermanentlyAction);
 			const confirmDeleteButton = await screen.findByRole('button', {
 				name: actionRegexp.deletePermanently

@@ -840,22 +840,19 @@ describe('Search list', () => {
 			userEvent.click(screen.getByTestId('icon: MoreVertical'));
 			await screen.findByText(actionRegexp.rename);
 			expect(screen.getByText(actionRegexp.rename)).toBeVisible();
-			expect(screen.getByText(actionRegexp.rename).parentNode).toHaveAttribute('disabled', '');
+			expect(screen.getByText(actionRegexp.rename)).toHaveAttribute('disabled', '');
 			expect(screen.getByText(actionRegexp.copy)).toBeVisible();
-			expect(screen.getByText(actionRegexp.copy).parentNode).toHaveAttribute('disabled', '');
+			expect(screen.getByText(actionRegexp.copy)).toHaveAttribute('disabled', '');
 			expect(screen.getByText(actionRegexp.move)).toBeVisible();
-			expect(screen.getByText(actionRegexp.move).parentNode).toHaveAttribute('disabled', '');
+			expect(screen.getByText(actionRegexp.move)).toHaveAttribute('disabled', '');
 			expect(screen.getByText(actionRegexp.flag)).toBeVisible();
-			expect(screen.getByText(actionRegexp.flag).parentNode).toHaveAttribute('disabled', '');
+			expect(screen.getByText(actionRegexp.flag)).toHaveAttribute('disabled', '');
 			expect(screen.getByText(actionRegexp.unflag)).toBeVisible();
-			expect(screen.getByText(actionRegexp.unflag).parentNode).toHaveAttribute('disabled', '');
+			expect(screen.getByText(actionRegexp.unflag)).toHaveAttribute('disabled', '');
 			expect(screen.getByText(actionRegexp.download)).toBeVisible();
-			expect(screen.getByText(actionRegexp.download).parentNode).toHaveAttribute('disabled', '');
+			expect(screen.getByText(actionRegexp.download)).toHaveAttribute('disabled', '');
 			expect(screen.getByText(actionRegexp.openDocument)).toBeVisible();
-			expect(screen.getByText(actionRegexp.openDocument).parentNode).toHaveAttribute(
-				'disabled',
-				''
-			);
+			expect(screen.getByText(actionRegexp.openDocument)).toHaveAttribute('disabled', '');
 			const exitSelectionModeItem = screen.getByTestId('icon: ArrowBackOutline');
 			expect(exitSelectionModeItem).toBeVisible();
 			userEvent.click(exitSelectionModeItem);

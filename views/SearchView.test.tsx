@@ -204,7 +204,10 @@ describe('Search view', () => {
 			userEvent.click(closeDisplayerAction);
 			expect(within(displayer).queryByText(/details/i)).not.toBeInTheDocument();
 			expect(screen.getByText(currentSearch[0].name)).toBeVisible();
-			expect.assertions(8);
+			act(() => {
+				// advance timers of displayer
+				jest.runOnlyPendingTimers();
+			});
 		});
 
 		test('Move action does not close the displayer if node is not removed from the main list', async () => {
