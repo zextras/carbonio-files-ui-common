@@ -330,7 +330,7 @@ export const useUpload: UseUploadHook = () => {
 						parentId,
 						percentage: 0,
 						status: isItemMaybeFolder ? UploadStatus.FAILED : UploadStatus.LOADING,
-						id: (uploadCounterVar() + index).toString()
+						id: `${(uploadCounterVar() + index).toString()}-${new Date().getTime()}`
 					};
 					const abortFunction: UploadFunctions['abort'] = isItemMaybeFolder
 						? noop
@@ -370,7 +370,7 @@ export const useUpload: UseUploadHook = () => {
 				file,
 				percentage: 0,
 				status: UploadStatus.LOADING,
-				id: node.id,
+				id: `${node.id}-${new Date().getTime()}`,
 				nodeId: node.id,
 				parentId: (node.parent as Folder).id
 			};
