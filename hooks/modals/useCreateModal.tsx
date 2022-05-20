@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef } from 'react';
 
 import { FetchResult } from '@apollo/client';
 import { useModal } from '@zextras/carbonio-design-system';
@@ -27,30 +27,27 @@ export function useCreateModal(
 } {
 	const createModal = useModal();
 	const [t] = useTranslation();
-	const [modalOpen, setModalOpen] = useState(false);
+	const modalOpenRef = useRef(false);
 
 	const confirmAction = useCallback(
 		(parentId, newName) => {
 			if (newName) {
-				return createAction(parentId, newName).then((result) => {
-					createActionCallback && createActionCallback();
-					return result;
-				});
+				return createAction(parentId, newName);
 			}
 			return Promise.reject(new Error('name cannot be empty'));
 		},
-		[createAction, createActionCallback]
+		[createAction]
 	);
 
 	const openCreateModal = useCallback(
 		(parentFolderId: string) => {
-			if (!modalOpen && parentFolderId) {
+			if (!modalOpenRef.current && parentFolderId) {
 				const closeModal = createModal({
 					title,
 					onClose: () => {
 						createActionCallback && createActionCallback();
 						closeModal();
-						setModalOpen(false);
+						modalOpenRef.current = false;
 					},
 					children: (
 						<UpdateNodeNameModalContent
@@ -62,17 +59,17 @@ export function useCreateModal(
 							closeAction={(): void => {
 								createActionCallback && createActionCallback();
 								closeModal();
-								setModalOpen(false);
+								modalOpenRef.current = false;
 							}}
 						/>
 					),
 					hideFooter: true,
 					showCloseIcon: true
 				});
-				setModalOpen(true);
+				modalOpenRef.current = true;
 			}
 		},
-		[confirmAction, createActionCallback, createModal, inputLabel, modalOpen, t, title]
+		[confirmAction, createActionCallback, createModal, inputLabel, t, title]
 	);
 
 	return { openCreateModal };
