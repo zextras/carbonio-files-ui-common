@@ -332,7 +332,7 @@ describe('Edit Share Chip', () => {
 					true
 				)
 			];
-			const deleteShare = jest.fn();
+			const deleteShare = jest.fn(() => Promise.resolve({ data: { deleteShare: true } }));
 			render(
 				<EditShareChip
 					deleteShare={deleteShare}
@@ -353,8 +353,7 @@ describe('Edit Share Chip', () => {
 			await screen.findByRole('button', { name: /remove/i });
 			userEvent.click(screen.getByRole('button', { name: /remove/i }));
 			await waitForElementToBeRemoved(screen.queryByRole('button', { name: /remove/i }));
-			const snackbar = await screen.findByText(/success/i);
-			await waitForElementToBeRemoved(snackbar);
+			expect(deleteShare).toBeCalled();
 		});
 
 		test('click on chip open popover with Editor item disabled', () => {
@@ -509,7 +508,7 @@ describe('Edit Share Chip', () => {
 				true
 			)
 		];
-		const deleteShare = jest.fn();
+		const deleteShare = jest.fn(() => Promise.resolve({ data: { deleteShare: true } }));
 		render(
 			<EditShareChip
 				deleteShare={deleteShare}
@@ -542,8 +541,7 @@ describe('Edit Share Chip', () => {
 		expect(screen.queryByText(regexp)).not.toBeInTheDocument();
 		userEvent.click(screen.getByRole('button', { name: /remove/i }));
 		await waitForElementToBeRemoved(screen.queryByRole('button', { name: /remove/i }));
-		const snackbar = await screen.findByText(/success/i);
-		await waitForElementToBeRemoved(snackbar);
+		expect(deleteShare).toBeCalled();
 	});
 
 	test('click on close action open confirmation dialog and then delete share', async () => {
@@ -558,7 +556,7 @@ describe('Edit Share Chip', () => {
 				true
 			)
 		];
-		const deleteShare = jest.fn();
+		const deleteShare = jest.fn(() => Promise.resolve({ data: { deleteShare: true } }));
 		const { getByTextWithMarkup } = render(
 			<EditShareChip
 				deleteShare={deleteShare}
@@ -590,8 +588,7 @@ describe('Edit Share Chip', () => {
 		expect(getByTextWithMarkup(regexp)).toBeInTheDocument();
 		userEvent.click(screen.getByRole('button', { name: /remove/i }));
 		await waitForElementToBeRemoved(screen.queryByRole('button', { name: /remove/i }));
-		const snackbar = await screen.findByText(/success/i);
-		await waitForElementToBeRemoved(snackbar);
+		expect(deleteShare).toBeCalled();
 	});
 
 	describe('within popover', () => {
