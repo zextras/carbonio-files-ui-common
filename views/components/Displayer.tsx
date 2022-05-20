@@ -14,7 +14,7 @@ import { useGetNodeQuery } from '../../hooks/graphql/queries/useGetNodeQuery';
 import { DisplayerNode } from './DisplayerNode';
 import { EmptyDisplayer } from './EmptyDisplayer';
 
-interface DisplayerProps {
+export interface DisplayerProps {
 	translationKey: string;
 	icons?: string[];
 }
