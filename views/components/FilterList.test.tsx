@@ -23,6 +23,7 @@ import map from 'lodash/map';
 import { graphql } from 'msw';
 import { Link, Route, Switch } from 'react-router-dom';
 
+import { CreateOptionsContent } from '../../../hooks/useCreateOptions';
 import server from '../../../mocks/server';
 import { NODES_LOAD_LIMIT, NODES_SORT_DEFAULT, ROOTS } from '../../constants';
 import FIND_NODES from '../../graphql/queries/findNodes.graphql';
@@ -73,8 +74,24 @@ import {
 	triggerLoadMore
 } from '../../utils/testUtils';
 import { addNodeInSortedList } from '../../utils/utils';
+import FolderView from '../FolderView';
+import { DisplayerProps } from './Displayer';
 import FilterList from './FilterList';
-import FolderList from './FolderList';
+
+jest.mock('../../../hooks/useCreateOptions', () => ({
+	useCreateOptions: (): CreateOptionsContent => ({
+		setCreateOptions: jest.fn(),
+		removeCreateOptions: jest.fn()
+	})
+}));
+
+jest.mock('../components/Displayer', () => ({
+	Displayer: (props: DisplayerProps): JSX.Element => (
+		<div data-testid="displayer">
+			{props.translationKey}:{props.icons}
+		</div>
+	)
+}));
 
 describe('Filter list', () => {
 	describe('Generic filter', () => {
@@ -194,24 +211,23 @@ describe('Filter list', () => {
 				mockFindNodes(getFindNodesVariables({ flagged: true }), [...nodes, node])
 			];
 
-			const setNewFolderMock = jest.fn();
-			const setNewFileMock = jest.fn();
-
 			render(
 				<div>
-					<Link to="/folder">Go to folder</Link>
+					<Link
+						to={{
+							pathname: '/folder',
+							search: `?folder=${currentFolder.id}`
+						}}
+					>
+						Go to folder
+					</Link>
 					<Link to="/filter">Go to filter</Link>
 					<Switch>
 						<Route path="/filter" exact>
 							<FilterList flagged />
 						</Route>
 						<Route path="/folder">
-							<FolderList
-								folderId={currentFolder.id}
-								canUploadFile={false}
-								setNewFolder={setNewFolderMock}
-								setNewFile={setNewFileMock}
-							/>
+							<FolderView />
 						</Route>
 					</Switch>
 				</div>,
