@@ -22,6 +22,7 @@ import styled from 'styled-components';
 
 import useUserInfo from '../../../../hooks/useUserInfo';
 import { SHARE_CHIP_SIZE } from '../../../constants';
+import { useDeleteShareMutation } from '../../../hooks/graphql/mutations/useDeleteShareMutation';
 import { useGetSharesQuery } from '../../../hooks/graphql/queries/useGetSharesQuery';
 import { Node } from '../../../types/common';
 import { Share, SharedTarget } from '../../../types/graphql/types';
@@ -66,6 +67,8 @@ export const NodeSharing: React.VFC<NodeSharingProps> = ({ node }) => {
 
 	const { data, error } = useGetSharesQuery(node.id);
 
+	const deleteShare = useDeleteShareMutation();
+
 	const collaborators = useMemo(
 		() =>
 			reduce(
@@ -78,6 +81,7 @@ export const NodeSharing: React.VFC<NodeSharingProps> = ({ node }) => {
 								share={share as Share}
 								permissions={node.permissions}
 								yourselfChip={share.share_target.id === me}
+								deleteShare={deleteShare}
 							/>
 						);
 						if (share.share_target.id === me) {
@@ -90,7 +94,7 @@ export const NodeSharing: React.VFC<NodeSharingProps> = ({ node }) => {
 				},
 				[] as JSX.Element[]
 			),
-		[me, data?.getNode?.shares, node]
+		[data?.getNode?.shares, node.permissions, me, deleteShare]
 	);
 
 	const ownerChip = useMemo(() => {
