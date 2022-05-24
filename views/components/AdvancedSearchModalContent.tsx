@@ -11,6 +11,7 @@ import every from 'lodash/every';
 import isArray from 'lodash/isArray';
 import isEmpty from 'lodash/isEmpty';
 import isEqual from 'lodash/isEqual';
+import map from 'lodash/map';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 
@@ -58,6 +59,23 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 	const [t] = useTranslation();
 	const [currentFilters, setCurrentFilters] = useState<AdvancedFilters>(filters);
 	const [keywordsHasTextContent, setKeywordsHasTextContent] = useState<boolean>(false);
+
+	const keywords = useMemo(() => {
+		if (currentFilters.keywords) {
+			return map(currentFilters.keywords, (k) => ({
+				...k,
+				background: 'gray2'
+			}));
+		}
+		return [];
+	}, [currentFilters.keywords]);
+
+	const folderId = useMemo(() => {
+		if (currentFilters.folderId) {
+			return [{ ...currentFilters.folderId, background: 'gray2' }];
+		}
+		return [];
+	}, [currentFilters.folderId]);
 
 	const searchDisabled = useMemo(
 		() =>
@@ -112,8 +130,7 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 		(keyword: string) => ({
 			label: keyword,
 			hasAvatar: false,
-			value: keyword,
-			background: 'gray2'
+			value: keyword
 		}),
 		[]
 	);
@@ -134,7 +151,6 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 							label: t('search.advancedSearch.modal.flagged.label', 'Flagged'),
 							avatarIcon: 'Flag',
 							avatarBackground: 'error',
-							background: 'gray2',
 							value: true
 					  }
 					: undefined
@@ -152,7 +168,6 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 							label: t('search.advancedSearch.modal.shared.label', 'Shared'),
 							avatarIcon: 'Share',
 							avatarBackground: 'secondary',
-							background: 'gray2',
 							value: true
 					  }
 					: undefined
@@ -166,10 +181,11 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 			if (!isArray(folder) && !isEmpty(folder)) {
 				updateFilter('folderId', {
 					/* i18next-extract-disable-next-line */
-					label: t('node.alias.name', folder.name, { context: folder.id }),
+					label: `${cascade ? 'under' : 'in'}:${t('node.alias.name', folder.name, {
+						context: folder.id
+					})}`,
 					avatarIcon: 'Folder',
 					avatarBackground: 'secondary',
-					background: 'gray2',
 					onClick: (event: React.SyntheticEvent): void => {
 						event.stopPropagation();
 					},
@@ -235,7 +251,7 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 							<CustomChipInput
 								placeholder={t('search.advancedSearch.modal.keywords.label', 'Keywords')}
 								background="gray5"
-								value={currentFilters.keywords || []}
+								value={keywords}
 								onChange={keywordsOnChange}
 								onAdd={keywordsOnAdd}
 								separators={[',', ';', 'Enter']}
@@ -250,7 +266,7 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 								<FolderChipInput
 									placeholder={t('search.advancedSearch.modal.folder.label', 'Select a folder')}
 									background="gray5"
-									value={(currentFilters.folderId && [currentFilters.folderId]) || []}
+									value={folderId}
 									icon="FolderOutline"
 									onClick={openFolderSelectionModal}
 									iconAction={openFolderSelectionModal}
