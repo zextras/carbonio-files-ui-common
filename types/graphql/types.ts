@@ -776,6 +776,18 @@ export type LinkFragment = {
 	node: { __typename?: 'File'; id: string } | { __typename?: 'Folder'; id: string };
 };
 
+type ParentId_File_Fragment = {
+	__typename?: 'File';
+	parent?: { __typename?: 'File'; id: string } | { __typename?: 'Folder'; id: string } | null;
+};
+
+type ParentId_Folder_Fragment = {
+	__typename?: 'Folder';
+	parent?: { __typename?: 'File'; id: string } | { __typename?: 'Folder'; id: string } | null;
+};
+
+export type ParentIdFragment = ParentId_File_Fragment | ParentId_Folder_Fragment;
+
 type Permissions_File_Fragment = {
 	__typename?: 'File';
 	permissions: {
