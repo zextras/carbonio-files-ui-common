@@ -101,7 +101,7 @@ export function useDeleteNodesMutation(): DeleteNodesType {
 					if (observableQuery.options.query === FIND_NODES && diff.missing) {
 						return observableQuery.refetch();
 					}
-					return false;
+					return observableQuery.reobserve();
 				}
 			}).then((value) => {
 				createSnackbar({
