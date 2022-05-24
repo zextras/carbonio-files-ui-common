@@ -211,7 +211,7 @@ const upload = (
 };
 
 const uploadVersion = (
-	fileEnriched: UploadType,
+	fileEnriched: Required<UploadType>,
 	apolloClient: ApolloClient<NormalizedCacheObject>,
 	nodeSort: NodeSort,
 	addNodeToFolder: UpdateFolderContentType['addNodeToFolder'],
@@ -221,7 +221,7 @@ const uploadVersion = (
 	const url = `${REST_ENDPOINT}${UPLOAD_VERSION_PATH}`;
 	xhr.open('POST', url, true);
 
-	xhr.setRequestHeader('NodeId', fileEnriched.id);
+	xhr.setRequestHeader('NodeId', fileEnriched.nodeId);
 	xhr.setRequestHeader('Filename', encodeBase64(fileEnriched.file.name));
 	xhr.setRequestHeader('OverwriteVersion', `${overwriteVersion}`);
 
@@ -366,7 +366,7 @@ export const useUpload: UseUploadHook = () => {
 
 	const update = useCallback<ReturnType<UseUploadHook>['update']>(
 		(node, file, overwriteVersion) => {
-			const fileEnriched: UploadType = {
+			const fileEnriched: Required<UploadType> = {
 				file,
 				percentage: 0,
 				status: UploadStatus.LOADING,
@@ -384,7 +384,14 @@ export const useUpload: UseUploadHook = () => {
 				overwriteVersion
 			);
 			const retryFunction: UploadFunctions['retry'] = (newFile) =>
-				uploadVersion(newFile, apolloClient, nodeSortVar(), addNodeToFolder, overwriteVersion);
+				uploadVersion(
+					// add default node id, but there should be already included in newFile obj
+					{ nodeId: node.id, ...newFile },
+					apolloClient,
+					nodeSortVar(),
+					addNodeToFolder,
+					overwriteVersion
+				);
 			uploadFunctionsVar({
 				...uploadFunctionsVar(),
 				[fileEnriched.id]: { abort: abortFunction, retry: retryFunction }
