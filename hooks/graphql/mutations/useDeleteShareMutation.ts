@@ -4,16 +4,16 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-/* eslint-disable arrow-body-style */
 import { useCallback } from 'react';
 
-import { FetchResult, gql, useMutation } from '@apollo/client';
+import { FetchResult, useMutation } from '@apollo/client';
 import filter from 'lodash/filter';
 import size from 'lodash/size';
 import { useTranslation } from 'react-i18next';
 
 import useUserInfo from '../../../../hooks/useUserInfo';
 import PARENT_ID from '../../../graphql/fragments/parentId.graphql';
+import SHARE_TARGET from '../../../graphql/fragments/shareTarget.graphql';
 import DELETE_SHARE from '../../../graphql/mutations/deleteShare.graphql';
 import { FindNodesCachedObject } from '../../../types/apollo';
 import { PickIdNodeType } from '../../../types/common';
@@ -24,6 +24,7 @@ import {
 	Folder,
 	ParentIdFragment,
 	Share,
+	SharedTarget,
 	User
 } from '../../../types/graphql/types';
 import { useCreateSnackbar } from '../../useCreateSnackbar';
@@ -54,8 +55,8 @@ export function useDeleteShareMutation(): (
 		node: PickIdNodeType,
 		shareTargetId: string
 	) => Promise<FetchResult<DeleteShareMutation>> = useCallback(
-		(node: PickIdNodeType, shareTargetId: string) => {
-			return deleteShareMutation({
+		(node: PickIdNodeType, shareTargetId: string) =>
+			deleteShareMutation({
 				variables: {
 					node_id: node.id,
 					share_target_id: shareTargetId
@@ -74,19 +75,9 @@ export function useDeleteShareMutation(): (
 									const updatedShares = filter(existingShareRefs, (existingShareRef) => {
 										const sharedTarget: User | DistributionList | null | undefined =
 											existingShareRef.share_target &&
-											// TODO: move fragment to graphql file and add type
-											cache.readFragment({
+											cache.readFragment<SharedTarget>({
 												id: cache.identify(existingShareRef.share_target),
-												fragment: gql`
-													fragment SharedTargetId on SharedTarget {
-														... on DistributionList {
-															id
-														}
-														... on User {
-															id
-														}
-													}
-												`
+												fragment: SHARE_TARGET
 											});
 										return !(sharedTarget && sharedTarget.id === shareTargetId);
 									});
@@ -158,8 +149,7 @@ export function useDeleteShareMutation(): (
 					});
 				}
 				return result;
-			});
-		},
+			}),
 		[createSnackbar, deleteShareMutation, me, removeNodesFromFolder, t]
 	);
 

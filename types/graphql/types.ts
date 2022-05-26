@@ -817,6 +817,12 @@ type Permissions_Folder_Fragment = {
 
 export type PermissionsFragment = Permissions_File_Fragment | Permissions_Folder_Fragment;
 
+type ShareTarget_DistributionList_Fragment = { __typename?: 'DistributionList'; id: string };
+
+type ShareTarget_User_Fragment = { __typename?: 'User'; id: string };
+
+export type ShareTargetFragment = ShareTarget_DistributionList_Fragment | ShareTarget_User_Fragment;
+
 export type CloneVersionMutationVariables = Exact<{
 	node_id: Scalars['ID'];
 	version: Scalars['Int'];
