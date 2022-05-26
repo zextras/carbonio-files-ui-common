@@ -91,7 +91,7 @@ export function populateShare(node: Node, key: number | string, shareTarget?: Sh
 		node,
 		share_target:
 			shareTarget ||
-			faker.random.arrayElement([
+			faker.helpers.arrayElement([
 				populateUser(undefined, `share_target_user_${key}`),
 				populateDistributionList(undefined, undefined, `share_target_dl_${key}`)
 			]),
@@ -115,7 +115,7 @@ export function populateShares(node: FilesFile | Folder, limit = 1): Share[] {
 
 function populateNodeFields(type?: NodeType, id?: string, name?: string): Node {
 	const types = filter(Object.values(NodeType), (t) => t !== NodeType.Root);
-	const nodeType = type || faker.random.arrayElement(types);
+	const nodeType = type || faker.helpers.arrayElement(types);
 	return {
 		id: id || faker.datatype.uuid(),
 		creator: populateUser(),
@@ -292,7 +292,7 @@ export function populateFile(id?: string, name?: string): FilesFile {
 		(t) => t !== NodeType.Root && t !== NodeType.Folder
 	);
 	const file: FilesFile = {
-		...populateNodeFields(faker.random.arrayElement(types), id, name),
+		...populateNodeFields(faker.helpers.arrayElement(types), id, name),
 		mime_type: mimeType,
 		size: faker.datatype.number(),
 		extension: faker.system.commonFileExt(),
@@ -327,12 +327,12 @@ export function populateLink(node: Node): Link {
 		__typename: 'Link',
 		id: faker.datatype.uuid(),
 		created_at: faker.date.recent().getTime(),
-		expires_at: faker.random.arrayElement([
+		expires_at: faker.helpers.arrayElement([
 			null,
 			faker.date.soon().getTime(),
 			faker.date.future().getTime()
 		]),
-		description: faker.random.arrayElement([null, faker.lorem.sentence()]),
+		description: faker.helpers.arrayElement([null, faker.lorem.sentence()]),
 		url: faker.internet.url(),
 		node
 	};
