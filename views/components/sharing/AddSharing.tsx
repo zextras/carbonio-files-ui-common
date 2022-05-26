@@ -26,7 +26,6 @@ import map from 'lodash/map';
 import reduce from 'lodash/reduce';
 import size from 'lodash/size';
 import some from 'lodash/some';
-import startsWith from 'lodash/startsWith';
 import throttle from 'lodash/throttle';
 import trim from 'lodash/trim';
 import { useTranslation } from 'react-i18next';
@@ -290,19 +289,9 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 		[search]
 	);
 
-	const filteredResult = useMemo(
-		() =>
-			filter(searchResult, (c) =>
-				some([c.firstName, c.lastName, c.company, c.email, c.fullName], (field) =>
-					startsWith(field?.toLowerCase(), searchText.toLowerCase())
-				)
-			),
-		[searchResult, searchText]
-	);
-
 	const dropdownItems = useMemo<ChipInputProps['options']>(() => {
 		const items = map<Contact, NonNullable<ChipInputProps['options']>[number]>(
-			filteredResult,
+			searchResult,
 			(contact) => ({
 				label: `${contact.id} ${contact.email}`,
 				id: `${contact.id} ${contact.email}`,
@@ -319,7 +308,7 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 			});
 		}
 		return items;
-	}, [loading, filteredResult]);
+	}, [loading, searchResult]);
 
 	const onAdd = useCallback<NonNullable<ChipInputProps['onAdd']>>(
 		(value) => {
@@ -342,6 +331,8 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 					inputRef={inputRef}
 					placeholder={t('displayer.share.addShare.input.placeholder', 'Add new people or groups')}
 					confirmChipOnBlur={false}
+					confirmChipOnSpace={false}
+					separators={['']}
 					onInputType={onType}
 					onChange={onChipsChange}
 					value={chips}
@@ -351,20 +342,6 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 					background="gray5"
 					bottomBorderColor="gray3"
 				/>
-				{/* <Dropdown */}
-				{/*	disablePortal={false} */}
-				{/*	maxHeight="234px" */}
-				{/*	disableAutoFocus */}
-				{/*	disableRestoreFocus */}
-				{/*	display="block" */}
-				{/*	width="100%" */}
-				{/*	maxWidth="100%" */}
-				{/*	items={dropdownItems} */}
-				{/*	forceOpen={forceOpen} */}
-				{/*	onClose={(): void => setForceOpen(false)} */}
-				{/* > */}
-				{/*	<div style={{ width: '100%' }} /> */}
-				{/* </Dropdown> */}
 			</Container>
 
 			<Container
