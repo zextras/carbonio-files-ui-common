@@ -11,7 +11,6 @@ import userEvent from '@testing-library/user-event';
 import find from 'lodash/find';
 import map from 'lodash/map';
 import { graphql } from 'msw';
-import { Route } from 'react-router-dom';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import server from '../../mocks/server';
@@ -20,10 +19,12 @@ import { NODES_LOAD_LIMIT, ROOTS } from '../constants';
 import BASE_NODE from '../graphql/fragments/baseNode.graphql';
 import {
 	populateFolder,
+	populateNode,
 	populateNodePage,
 	populateNodes,
 	populateParents,
-	populatePermissions
+	populatePermissions,
+	populateShares
 } from '../mocks/mockUtils';
 import { AdvancedFilters, Node } from '../types/common';
 import {
@@ -32,14 +33,25 @@ import {
 	FindNodesQuery,
 	FindNodesQueryVariables,
 	Folder,
-	GetChildrenQuery,
-	GetChildrenQueryVariables,
 	GetNodeQuery,
 	GetNodeQueryVariables,
-	GetPathQuery,
-	GetPathQueryVariables,
-	NodeType
+	NodeType,
+	SharedTarget
 } from '../types/graphql/types';
+import {
+	getChildrenVariables,
+	getFindNodesVariables,
+	getNodeVariables,
+	getSharesVariables,
+	mockDeleteShare,
+	mockFindNodes,
+	mockGetChildren,
+	mockGetNode,
+	mockGetNodeLinks,
+	mockGetPath,
+	mockGetShares,
+	mockMoveNodes
+} from '../utils/mockUtils';
 import {
 	actionRegexp,
 	buildBreadCrumbRegExp,
@@ -49,6 +61,7 @@ import {
 	selectNodes,
 	waitForNetworkResponse
 } from '../utils/testUtils';
+import { getChipLabel } from '../utils/utils';
 import { SearchView } from './SearchView';
 
 jest.mock('../../hooks/useCreateOptions', () => ({
@@ -78,14 +91,9 @@ describe('Search view', () => {
 				);
 			})
 		);
-		render(
-			<Route path="/search">
-				<SearchView />
-			</Route>,
-			{
-				initialRouterEntries: ['/search']
-			}
-		);
+		render(<SearchView />, {
+			initialRouterEntries: ['/search']
+		});
 
 		// right click to open contextual menu
 		const nodeItems = await screen.findAllByTestId('node-item', { exact: false });
@@ -161,6 +169,100 @@ describe('Search view', () => {
 		expect.assertions(32);
 	});
 
+	describe('Shared by me param', () => {
+		test('Deletion of all collaborators does not remove node from list. Displayer is kept open', async () => {
+			const searchParams: AdvancedFilters = { sharedByMe: { label: 'shared', value: true } };
+			searchParamsVar(searchParams);
+			const nodes = populateNodes(2);
+			const nodeWithShares = populateNode();
+			const shares = populateShares(nodeWithShares, 2);
+			nodeWithShares.shares = shares;
+			nodeWithShares.permissions.can_share = true;
+			nodes.push(nodeWithShares);
+			const mocks = [
+				mockFindNodes(getFindNodesVariables({ shared_by_me: true, keywords: [] }), nodes),
+				mockGetNode(getNodeVariables(nodeWithShares.id), nodeWithShares),
+				mockGetShares(getSharesVariables(nodeWithShares.id), nodeWithShares),
+				mockGetNodeLinks({ node_id: nodeWithShares.id }, nodeWithShares),
+				mockDeleteShare(
+					{
+						node_id: nodeWithShares.id,
+						share_target_id: (shares[0].share_target as SharedTarget).id
+					},
+					true
+				),
+				mockDeleteShare(
+					{
+						node_id: nodeWithShares.id,
+						share_target_id: (shares[1].share_target as SharedTarget).id
+					},
+					true
+				),
+				// FIXME: findNodes is called 2 times?
+				mockFindNodes(getFindNodesVariables({ shared_by_me: true, keywords: [] }), nodes)
+			];
+
+			render(<SearchView />, {
+				initialRouterEntries: [`/search/?node=${nodeWithShares.id}&tab=sharing`],
+				mocks
+			});
+			// render of the list
+			await screen.findByText(nodes[0].name);
+			// render of the displayer
+			await screen.findByText(/sharing/i);
+			// render of the sharing tab
+			await screen.findByText(/collaborators/i);
+			// render of the collaborators
+			await screen.findByText(getChipLabel(shares[0].share_target));
+			// there should be 2 chips for collaborators
+			const chipItems = screen.getAllByTestId('chip-with-popover');
+			expect(chipItems).toHaveLength(2);
+			const share1Item = find(
+				chipItems,
+				(chipItem) => within(chipItem).queryByText(getChipLabel(shares[0].share_target)) !== null
+			);
+			const share2Item = find(
+				chipItems,
+				(chipItem) => within(chipItem).queryByText(getChipLabel(shares[1].share_target)) !== null
+			);
+			const nodeItem = screen.getByTestId(`node-item-${nodeWithShares.id}`);
+			expect(nodeItem).toBeVisible();
+			expect(within(nodeItem).getByTestId('icon: ArrowCircleRight')).toBeVisible();
+			expect(share1Item).toBeDefined();
+			expect(share2Item).toBeDefined();
+			expect(share1Item).toBeVisible();
+			expect(share2Item).toBeVisible();
+			const list = screen.getByTestId('list-');
+			// delete first share
+			act(() => {
+				userEvent.click(within(share1Item as HTMLElement).getByTestId('icon: Close'));
+			});
+			await screen.findByRole('button', { name: /remove/i });
+			userEvent.click(screen.getByRole('button', { name: /remove/i }));
+			await waitForElementToBeRemoved(screen.queryByText(getChipLabel(shares[0].share_target)));
+			const snackbar = await screen.findByText(/success/i);
+			await waitForElementToBeRemoved(snackbar);
+			expect(share2Item).toBeVisible();
+			expect(within(list).getByText(nodeWithShares.name)).toBeVisible();
+			// delete second share
+			act(() => {
+				userEvent.click(within(share2Item as HTMLElement).getByTestId('icon: Close'));
+			});
+			await screen.findByRole('button', { name: /remove/i });
+			userEvent.click(screen.getByRole('button', { name: /remove/i }));
+			await waitForElementToBeRemoved(screen.queryByText(getChipLabel(shares[1].share_target)));
+			const snackbar2 = await screen.findByText(/success/i);
+			await waitForElementToBeRemoved(snackbar2);
+			// node is kept in main list but share icon is removed
+			expect(nodeItem).toBeVisible();
+			expect(within(nodeItem).queryByTestId('icon: ArrowCircleRight')).not.toBeInTheDocument();
+			// displayer remains open
+			expect(within(screen.getByTestId('displayer')).getByText(nodeWithShares.name)).toBeVisible();
+			expect(screen.getByText(/sharing/i)).toBeVisible();
+			expect(screen.getByText(/collaborators/i)).toBeVisible();
+		});
+	});
+
 	describe('Displayer', () => {
 		test('Single click on a node opens the details tab on displayer. Close displayer action keeps search view visible', async () => {
 			const keywords = ['keyword1', 'keyword2'];
@@ -169,25 +271,15 @@ describe('Search view', () => {
 			const currentSearch = populateNodes(2);
 			// prepare cache so that apollo client read data from the cache
 
-			server.use(
-				graphql.query<FindNodesQuery, FindNodesQueryVariables>('findNodes', (req, res, ctx) =>
-					res(
-						ctx.data({
-							findNodes: populateNodePage(currentSearch)
-						})
-					)
-				),
-				graphql.query<GetNodeQuery, GetNodeQueryVariables>('getNode', (req, res, ctx) =>
-					res(ctx.data({ getNode: currentSearch[0] as Node }))
-				)
-			);
+			const mocks = [
+				mockFindNodes(getFindNodesVariables({ keywords }), currentSearch),
+				mockGetNode(getNodeVariables(currentSearch[0].id), currentSearch[0] as Node)
+			];
 
-			const { getByTextWithMarkup } = render(
-				<Route path="/search">
-					<SearchView />
-				</Route>,
-				{ initialRouterEntries: ['/search'] }
-			);
+			const { getByTextWithMarkup } = render(<SearchView />, {
+				initialRouterEntries: ['/search'],
+				mocks
+			});
 			expect(screen.queryByText('Previous view')).not.toBeInTheDocument();
 			const nodeItem = await screen.findByText(currentSearch[0].name);
 			expect(nodeItem).toBeVisible();
@@ -228,61 +320,25 @@ describe('Search view', () => {
 			const path = [...parentPath, node];
 			const pathUpdated = [...parentPath, destinationFolder, node];
 			const pathResponse = [path, pathUpdated];
-			server.use(
-				graphql.query<FindNodesQuery, FindNodesQueryVariables>('findNodes', (req, res, ctx) =>
-					res(
-						ctx.data({
-							findNodes: populateNodePage(nodes)
-						})
-					)
-				),
-				graphql.query<GetNodeQuery, GetNodeQueryVariables>('getNode', (req, res, ctx) => {
-					let result = null;
-					const { node_id: id } = req.variables;
-					switch (id) {
-						case node.id:
-							result = node;
-							break;
-						case (node.parent as Folder).id:
-							result = node.parent;
-							break;
-						case destinationFolder.id:
-							result = destinationFolder;
-							break;
-						default:
-							break;
-					}
-					return res(ctx.data({ getNode: result as Node }));
-				}),
-				graphql.query<GetPathQuery, GetPathQueryVariables>('getPath', (req, res, ctx) => {
-					let result = null;
-					const { node_id: id } = req.variables;
-					switch (id) {
-						case node.id:
-							result = pathResponse.shift() || [];
-							break;
-						case (node.parent as Folder).id:
-							result = parentPath;
-							break;
-						case destinationFolder.id:
-							result = [...parentPath, destinationFolder];
-							break;
-						default:
-							break;
-					}
-					return res(ctx.data({ getPath: result || [] }));
-				}),
-				graphql.query<GetChildrenQuery, GetChildrenQueryVariables>('getChildren', (req, res, ctx) =>
-					res(ctx.data({ getNode: node.parent }))
-				)
-			);
+
+			const mocks = [
+				mockFindNodes(getFindNodesVariables({ keywords }), nodes),
+				mockGetNode(getNodeVariables(node.id), node as Node),
+				mockGetNode(getNodeVariables(node.parent.id), node.parent as Folder),
+				mockGetNode(getNodeVariables(destinationFolder.id), destinationFolder),
+				mockGetPath({ node_id: node.id }, pathResponse[0]),
+				mockGetPath({ node_id: node.id }, pathResponse[1]),
+				mockGetPath({ node_id: node.parent.id }, parentPath),
+				mockGetPath({ node_id: destinationFolder.id }, [...parentPath, destinationFolder]),
+				mockGetChildren(getChildrenVariables(node.parent.id), node.parent),
+				mockMoveNodes({ node_ids: [node.id], destination_id: destinationFolder.id }, [node])
+			];
 
 			const { getByTextWithMarkup, queryByTextWithMarkup, findByTextWithMarkup } = render(
-				<Route path="/search">
-					<SearchView />
-				</Route>,
+				<SearchView />,
 				{
-					initialRouterEntries: ['/search']
+					initialRouterEntries: ['/search'],
+					mocks
 				}
 			);
 
@@ -368,14 +424,9 @@ describe('Search view', () => {
 				})
 			);
 
-			render(
-				<Route path="/search">
-					<SearchView />
-				</Route>,
-				{
-					initialRouterEntries: ['/search']
-				}
-			);
+			render(<SearchView />, {
+				initialRouterEntries: ['/search']
+			});
 
 			// wait the content to be rendered
 			await screen.findAllByTestId('node-item', { exact: false });
@@ -442,14 +493,9 @@ describe('Search view', () => {
 				})
 			);
 
-			render(
-				<Route path="/search">
-					<SearchView />
-				</Route>,
-				{
-					initialRouterEntries: ['/search']
-				}
-			);
+			render(<SearchView />, {
+				initialRouterEntries: ['/search']
+			});
 
 			// wait the content to be rendered
 			await screen.findAllByTestId('node-item', { exact: false });
@@ -526,14 +572,9 @@ describe('Search view', () => {
 				})
 			);
 
-			render(
-				<Route path="/search">
-					<SearchView />
-				</Route>,
-				{
-					initialRouterEntries: ['/search']
-				}
-			);
+			render(<SearchView />, {
+				initialRouterEntries: ['/search']
+			});
 
 			// wait the content to be rendered
 			await screen.findAllByTestId('node-item', { exact: false });
@@ -617,14 +658,9 @@ describe('Search view', () => {
 				})
 			);
 
-			render(
-				<Route path="/search">
-					<SearchView />
-				</Route>,
-				{
-					initialRouterEntries: ['/search']
-				}
-			);
+			render(<SearchView />, {
+				initialRouterEntries: ['/search']
+			});
 
 			// wait the content to be rendered
 			await screen.findAllByTestId('node-item', { exact: false });

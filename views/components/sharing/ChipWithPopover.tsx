@@ -74,7 +74,7 @@ export const ChipWithPopover: React.VFC<ChipWithPopoverProps> = ({
 
 	return (
 		<>
-			<div ref={ref}>
+			<div ref={ref} data-testid="chip-with-popover">
 				<ActiveChip
 					active={open}
 					background={background}

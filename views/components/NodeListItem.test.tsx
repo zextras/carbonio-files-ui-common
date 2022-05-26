@@ -221,6 +221,7 @@ describe('Node List Item', () => {
 
 	test('owner is visible if different from logged user', () => {
 		const node = populateNode();
+		node.owner = populateUser();
 		render(<NodeListItem id={node.id} name={node.name} type={node.type} owner={node.owner} />);
 		expect(screen.getByText(node.owner.full_name)).toBeVisible();
 	});

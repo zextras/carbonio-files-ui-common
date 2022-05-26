@@ -6,10 +6,11 @@
 
 import { useCallback } from 'react';
 
-import { FetchResult, useMutation } from '@apollo/client';
+import { ApolloCache, FetchResult, NormalizedCacheObject, useMutation } from '@apollo/client';
 import filter from 'lodash/filter';
 import size from 'lodash/size';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
 
 import useUserInfo from '../../../../hooks/useUserInfo';
 import PARENT_ID from '../../../graphql/fragments/parentId.graphql';
@@ -27,9 +28,51 @@ import {
 	SharedTarget,
 	User
 } from '../../../types/graphql/types';
+import { isSearchView } from '../../../utils/utils';
 import { useCreateSnackbar } from '../../useCreateSnackbar';
 import { useErrorHandler } from '../../useErrorHandler';
 import { useUpdateFolderContent } from '../useUpdateFolderContent';
+
+function removeNodeFromFilter(
+	cache: ApolloCache<NormalizedCacheObject>,
+	nodeId: string,
+	checkFilter: (existingNodesRefs: FindNodesCachedObject) => boolean = (): boolean => true
+): void {
+	cache.modify({
+		fields: {
+			findNodes(
+				existingNodesRefs: FindNodesCachedObject | undefined,
+				{ readField, DELETE }
+			): FindNodesCachedObject | undefined {
+				if (existingNodesRefs && checkFilter(existingNodesRefs)) {
+					const ordered = filter(
+						existingNodesRefs.nodes?.ordered,
+						(orderedNode) => nodeId !== readField('id', orderedNode)
+					);
+					const unOrdered = filter(
+						existingNodesRefs.nodes?.unOrdered,
+						(unOrderedNode) => nodeId !== readField('id', unOrderedNode)
+					);
+
+					if (existingNodesRefs.page_token && size(ordered) === 0 && size(unOrdered) === 0) {
+						return DELETE;
+					}
+
+					return {
+						args: existingNodesRefs.args,
+						page_token: existingNodesRefs.page_token,
+						nodes: {
+							ordered,
+							unOrdered
+						}
+					};
+				}
+				// if no update is needed, return existing data (new requests are handled with navigation)
+				return existingNodesRefs;
+			}
+		}
+	});
+}
 
 /**
  * Mutation to delete share.
@@ -43,6 +86,7 @@ export function useDeleteShareMutation(): (
 	const { removeNodesFromFolder } = useUpdateFolderContent();
 	const [t] = useTranslation();
 	const { me } = useUserInfo();
+	const location = useLocation();
 
 	const [deleteShareMutation, { error }] = useMutation<
 		DeleteShareMutation,
@@ -81,50 +125,26 @@ export function useDeleteShareMutation(): (
 											});
 										return !(sharedTarget && sharedTarget.id === shareTargetId);
 									});
+									if (updatedShares.length === 0) {
+										// remove node from shared by me when user remove all collaborators
+										removeNodeFromFilter(
+											cache,
+											node.id,
+											(existingNodesRefs) =>
+												existingNodesRefs.args?.shared_by_me === true && !isSearchView(location)
+										);
+									}
 									return updatedShares;
 								}
 							}
 						});
-						// remove node from shared with me
+						// remove node from shared with me when user remove self share
 						if (shareTargetId === me) {
-							cache.modify({
-								fields: {
-									findNodes(
-										existingNodesRefs: FindNodesCachedObject | undefined,
-										{ readField, DELETE }
-									): FindNodesCachedObject | undefined {
-										if (existingNodesRefs?.args?.shared_with_me) {
-											const ordered = filter(
-												existingNodesRefs.nodes?.ordered,
-												(orderedNode) => node.id !== readField('id', orderedNode)
-											);
-											const unOrdered = filter(
-												existingNodesRefs.nodes?.unOrdered,
-												(unOrderedNode) => node.id !== readField('id', unOrderedNode)
-											);
-
-											if (
-												existingNodesRefs.page_token &&
-												size(ordered) === 0 &&
-												size(unOrdered) === 0
-											) {
-												return DELETE;
-											}
-
-											return {
-												args: existingNodesRefs.args,
-												page_token: existingNodesRefs.page_token,
-												nodes: {
-													ordered,
-													unOrdered
-												}
-											};
-										}
-										// if no update is needed, return existing data (new requests are handled with navigation)
-										return existingNodesRefs;
-									}
-								}
-							});
+							removeNodeFromFilter(
+								cache,
+								node.id,
+								(existingNodesRefs) => existingNodesRefs.args?.shared_with_me === true
+							);
 
 							const parentFolder = cache.readFragment<ParentIdFragment>({
 								id: cache.identify(node),
@@ -150,7 +170,7 @@ export function useDeleteShareMutation(): (
 				}
 				return result;
 			}),
-		[createSnackbar, deleteShareMutation, me, removeNodesFromFolder, t]
+		[createSnackbar, deleteShareMutation, location, me, removeNodesFromFolder, t]
 	);
 
 	return deleteShare;
