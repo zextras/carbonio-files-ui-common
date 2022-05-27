@@ -10,6 +10,7 @@ import { FetchResult, useMutation } from '@apollo/client';
 import find from 'lodash/find';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
+import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
@@ -20,6 +21,7 @@ import GET_CHILDREN from '../../../graphql/queries/getChildren.graphql';
 import GET_PATH from '../../../graphql/queries/getPath.graphql';
 import {
 	Folder,
+	GetChildrenQuery,
 	GetChildrenQueryVariables,
 	GetPathQueryVariables,
 	MoveNodesMutation,
@@ -27,11 +29,12 @@ import {
 	Node,
 	QueryGetPathArgs
 } from '../../../types/graphql/types';
+import { isFolder } from '../../../utils/ActionsFactory';
 import { useCreateSnackbar } from '../../useCreateSnackbar';
 import { useErrorHandler } from '../../useErrorHandler';
 import useQueryParam from '../../useQueryParam';
 import { useUpdateFolderContent } from '../useUpdateFolderContent';
-import { isOperationVariables } from '../utils';
+import { isOperationVariables, isQueryResult } from '../utils';
 
 export type MoveNodesType = (
 	destinationFolder: Pick<Folder, '__typename' | 'id'>,
@@ -91,22 +94,11 @@ export function useMoveNodesMutation(): { moveNodes: MoveNodesType; loading: boo
 				},
 				update(cache, { data: result }) {
 					// remove nodes from previous parents
-					const currentFolderId = folderId || rootId;
 					const parents: Record<string, Pick<Folder, 'id' | '__typename'>> = {};
 					const nodesByParent: Record<string, string[]> = {};
 					forEach(result?.moveNodes, (movedNode) => {
 						const fromParent = find(nodes, ['id', movedNode.id])?.parent;
 						if (fromParent && movedNode.parent?.id !== fromParent.id) {
-							// close displayer of the node if it is moved from shown folder to another destination
-							if (
-								activeNodeId &&
-								currentFolderId &&
-								movedNode.id === activeNodeId &&
-								fromParent.id === currentFolderId
-							) {
-								removeActiveNode();
-							}
-
 							if (fromParent.id in parents) {
 								nodesByParent[fromParent.id].push(movedNode.id);
 							} else {
@@ -129,22 +121,41 @@ export function useMoveNodesMutation(): { moveNodes: MoveNodesType; loading: boo
 					cache.evict({ id: cache.identify(destinationFolder), fieldName: 'children' });
 					cache.gc();
 				},
-				onQueryUpdated(observableQuery) {
+				onQueryUpdated(observableQuery, { result }, lastDiff) {
 					const { query, variables } = observableQuery.options;
-					if (observableQuery.hasObservers()) {
+					if (
+						isOperationVariables<GetPathQueryVariables>(query, variables, GET_PATH) &&
+						variables.node_id === destinationFolder.id
+					) {
+						// avoid refetch getPath for the destination (folder content opened inside move modal)
+						return false;
+					}
+					if (
+						isOperationVariables<GetChildrenQueryVariables>(query, variables, GET_CHILDREN) &&
+						variables.node_id === destinationFolder.id
+					) {
+						// avoid refetch getNode for the destination (folder content opened inside move modal)
+						return false;
+					}
+
+					const lastResult = lastDiff?.result;
+					if (
+						isQueryResult<GetChildrenQuery>(query, result, GET_CHILDREN) &&
+						isQueryResult<GetChildrenQuery>(query, lastResult, GET_CHILDREN) &&
+						result?.getNode &&
+						lastResult?.getNode &&
+						isFolder(result.getNode) &&
+						isFolder(lastResult.getNode)
+					) {
+						const listNodes = result.getNode.children;
+						const lastListNodes = lastResult.getNode.children;
 						if (
-							isOperationVariables<GetPathQueryVariables>(query, variables, GET_PATH) &&
-							variables.node_id === destinationFolder.id
+							activeNodeId &&
+							some(lastListNodes, (lastResultNode) => lastResultNode?.id === activeNodeId) &&
+							!some(listNodes, (resultNode) => resultNode?.id === activeNodeId)
 						) {
-							// avoid refetch getPath for the destination (folder content opened in the displayer)
-							return false;
-						}
-						if (
-							isOperationVariables<GetChildrenQueryVariables>(query, variables, GET_CHILDREN) &&
-							variables.node_id === destinationFolder.id
-						) {
-							// avoid refetch getNode for the destination (folder content opened in the displayer)
-							return false;
+							// close displayer of the node if it is removed from list
+							removeActiveNode();
 						}
 					}
 					// otherwise, stick to the fetch policy set for the query
@@ -152,7 +163,7 @@ export function useMoveNodesMutation(): { moveNodes: MoveNodesType; loading: boo
 				}
 			});
 		},
-		[activeNodeId, folderId, moveNodesMutation, removeActiveNode, removeNodesFromFolder, rootId]
+		[activeNodeId, moveNodesMutation, removeActiveNode, removeNodesFromFolder]
 	);
 
 	return { moveNodes, loading };
