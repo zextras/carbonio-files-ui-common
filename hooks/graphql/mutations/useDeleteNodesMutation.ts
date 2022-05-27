@@ -39,7 +39,7 @@ export function useDeleteNodesMutation(): DeleteNodesType {
 		errorPolicy: 'all'
 	});
 
-	useErrorHandler(error, 'DELETE_NODES');
+	useErrorHandler(error, 'DELETE_NODES', 'error');
 
 	const deleteNodes = useCallback<DeleteNodesType>(
 		(...nodes: PickIdNodeType[]) => {
@@ -106,7 +106,7 @@ export function useDeleteNodesMutation(): DeleteNodesType {
 			}).then((value) => {
 				createSnackbar({
 					key: new Date().toLocaleString(),
-					type: 'info',
+					type: 'success',
 					label: t('snackbar.deletePermanently.success', 'Success'),
 					replace: true,
 					hideButton: true
