@@ -11,9 +11,13 @@ import { useTranslation } from 'react-i18next';
 
 import { captureException } from '../../utils/utils';
 import { decodeError } from '../utils/utils';
-import { useCreateSnackbar } from './useCreateSnackbar';
+import { SnackbarProps, useCreateSnackbar } from './useCreateSnackbar';
 
-export function useErrorHandler(error: ApolloError | undefined, consoleErrorName: string): void {
+export function useErrorHandler(
+	error: ApolloError | undefined,
+	consoleErrorName: string,
+	type: SnackbarProps['type'] = 'warning'
+): void {
 	const [t] = useTranslation();
 	const createSnackbar = useCreateSnackbar();
 
@@ -23,7 +27,7 @@ export function useErrorHandler(error: ApolloError | undefined, consoleErrorName
 			console.error(`${consoleErrorName}: `, { ...error });
 			createSnackbar({
 				key: new Date().toLocaleString(),
-				type: 'warning',
+				type,
 				label:
 					decodeError(error, t) ||
 					t('errorCode.code', 'Something went wrong', { context: 'Generic' }),
@@ -31,5 +35,5 @@ export function useErrorHandler(error: ApolloError | undefined, consoleErrorName
 				hideButton: true
 			});
 		}
-	}, [consoleErrorName, createSnackbar, error, t]);
+	}, [consoleErrorName, createSnackbar, error, t, type]);
 }

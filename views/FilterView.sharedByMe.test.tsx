@@ -37,7 +37,7 @@ jest.mock('../../hooks/useCreateOptions', () => ({
 
 describe('Filter view', () => {
 	describe('Shared By Me filter', () => {
-		test('Deletion of all collaborators remove node from list. Displayer is kept open', async () => {
+		test('Deletion of all collaborators remove node from list. Displayer is closed', async () => {
 			const nodes = populateNodes(2);
 			const nodeWithShares = populateNode();
 			const shares = populateShares(nodeWithShares, 2);
@@ -71,7 +71,7 @@ describe('Filter view', () => {
 					},
 					true
 				),
-				// FIXME: findNodes is called 2 times?
+				// findNodes is called 2 times?
 				mockFindNodes(
 					getFindNodesVariables({
 						shared_by_me: true,
@@ -138,10 +138,9 @@ describe('Filter view', () => {
 			await waitForElementToBeRemoved(snackbar2);
 			// node is removed from main list
 			expect(nodeItem).not.toBeInTheDocument();
-			// displayer remains open
-			expect(screen.getByText(nodeWithShares.name)).toBeVisible();
-			expect(screen.getByText(/sharing/i)).toBeVisible();
-			expect(screen.getByText(/collaborators/i)).toBeVisible();
+			// displayer is closed
+			expect(screen.queryByText(nodeWithShares.name)).not.toBeInTheDocument();
+			expect(screen.queryByText(/sharing/i)).not.toBeInTheDocument();
 		});
 	});
 });

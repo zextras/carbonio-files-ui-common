@@ -9,20 +9,26 @@ import { useCallback } from 'react';
 import { ApolloCache, FetchResult, NormalizedCacheObject, useMutation } from '@apollo/client';
 import filter from 'lodash/filter';
 import size from 'lodash/size';
+import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 
+import { useActiveNode } from '../../../../hooks/useActiveNode';
 import useUserInfo from '../../../../hooks/useUserInfo';
 import PARENT_ID from '../../../graphql/fragments/parentId.graphql';
 import SHARE_TARGET from '../../../graphql/fragments/shareTarget.graphql';
 import DELETE_SHARE from '../../../graphql/mutations/deleteShare.graphql';
+import FIND_NODES from '../../../graphql/queries/findNodes.graphql';
+import GET_CHILDREN from '../../../graphql/queries/getChildren.graphql';
 import { FindNodesCachedObject } from '../../../types/apollo';
-import { PickIdNodeType } from '../../../types/common';
+import { Node, PickIdNodeType } from '../../../types/common';
 import {
 	DeleteShareMutation,
 	DeleteShareMutationVariables,
 	DistributionList,
+	FindNodesQuery,
 	Folder,
+	GetChildrenQuery,
 	ParentIdFragment,
 	Share,
 	SharedTarget,
@@ -87,6 +93,7 @@ export function useDeleteShareMutation(): (
 	const [t] = useTranslation();
 	const { me } = useUserInfo();
 	const location = useLocation();
+	const { activeNodeId, removeActiveNode } = useActiveNode();
 
 	const [deleteShareMutation, { error }] = useMutation<
 		DeleteShareMutation,
@@ -125,13 +132,12 @@ export function useDeleteShareMutation(): (
 											});
 										return !(sharedTarget && sharedTarget.id === shareTargetId);
 									});
-									if (updatedShares.length === 0) {
+									if (updatedShares.length === 0 && !isSearchView(location)) {
 										// remove node from shared by me when user remove all collaborators
 										removeNodeFromFilter(
 											cache,
 											node.id,
-											(existingNodesRefs) =>
-												existingNodesRefs.args?.shared_by_me === true && !isSearchView(location)
+											(existingNodesRefs) => existingNodesRefs.args?.shared_by_me === true
 										);
 									}
 									return updatedShares;
@@ -157,12 +163,31 @@ export function useDeleteShareMutation(): (
 							}
 						}
 					}
+				},
+				onQueryUpdated(observableQuery, { result }) {
+					if (activeNodeId === node.id) {
+						const { query } = observableQuery.options;
+						let listNodes = null;
+						if (query === FIND_NODES) {
+							listNodes = (result as FindNodesQuery).findNodes?.nodes;
+						} else if (query === GET_CHILDREN) {
+							listNodes = ((result as GetChildrenQuery).getNode as Folder).children;
+						}
+						// close displayer when deleted share cause node to be removed from the list
+						if (
+							listNodes !== null &&
+							(shareTargetId === me ||
+								!some<Pick<Node, 'id'> | null>(listNodes, (listNode) => node.id === listNode?.id))
+						) {
+							removeActiveNode();
+						}
+					}
 				}
 			}).then((result) => {
 				if (result.data?.deleteShare) {
 					createSnackbar({
 						key: new Date().toLocaleString(),
-						type: 'info',
+						type: 'success',
 						label: t('snackbar.deleteShare.success', 'Success'),
 						replace: true,
 						hideButton: true
@@ -170,7 +195,16 @@ export function useDeleteShareMutation(): (
 				}
 				return result;
 			}),
-		[createSnackbar, deleteShareMutation, location, me, removeNodesFromFolder, t]
+		[
+			activeNodeId,
+			createSnackbar,
+			deleteShareMutation,
+			location,
+			me,
+			removeActiveNode,
+			removeNodesFromFolder,
+			t
+		]
 	);
 
 	return deleteShare;

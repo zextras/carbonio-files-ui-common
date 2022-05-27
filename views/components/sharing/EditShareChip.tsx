@@ -13,7 +13,6 @@ import filter from 'lodash/filter';
 import map from 'lodash/map';
 import { useTranslation } from 'react-i18next';
 
-import { useActiveNode } from '../../../../hooks/useActiveNode';
 import { SHARE_CHIP_SIZE } from '../../../constants';
 import GET_PERMISSIONS from '../../../graphql/queries/getPermissions.graphql';
 import { useDeleteShareMutation } from '../../../hooks/graphql/mutations/useDeleteShareMutation';
@@ -107,8 +106,6 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 		});
 	}, [createSnackbar, getPermissionsLazy, t]);
 
-	const { activeNodeId, removeActiveNode } = useActiveNode();
-
 	const initialActiveRow = useMemo(() => rowSharePermissionToIdxMap[share.permission], [share]);
 	const initialCheckboxValue = useMemo(
 		() =>
@@ -163,18 +160,10 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 		[deleteShare, share]
 	);
 
-	// remove active when deleted share to avoid having an un-accessible node as active
-	const navigateToSharedWithMe = useCallback(() => {
-		if (yourselfChip && share.node?.id === activeNodeId) {
-			removeActiveNode();
-		}
-	}, [activeNodeId, removeActiveNode, share.node?.id, yourselfChip]);
-
 	const { openDeleteShareModal } = useDeleteShareModal(
 		deleteShareCallback,
 		share.share_target as SharedTarget,
-		yourselfChip,
-		navigateToSharedWithMe
+		yourselfChip
 	);
 
 	const openDeleteShareModalCallback = useCallback(
