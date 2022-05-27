@@ -185,7 +185,7 @@ export function useTrashNodesMutation(): TrashNodesType {
 					);
 					createSnackbar({
 						key: new Date().toLocaleString(),
-						type: 'success',
+						type: 'info',
 						label: t('snackbar.markForDeletion.success', 'Item moved to trash'),
 						replace: true,
 						hideButton: ownedNodes.length > 0 && sharedNodes.length > 0,

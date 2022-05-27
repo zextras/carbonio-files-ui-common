@@ -132,7 +132,7 @@ export function useFlagNodesMutation(): FlagNodesType {
 						if (isFlaggedFilter || (isSearchView(location) && searchParamsVar().flagged?.value)) {
 							createSnackbar({
 								key: 'filterList.toggleFlag.success',
-								type: 'success',
+								type: 'info',
 								label: t('snackbar.unflag.success', 'Item unflagged successfully'),
 								replace: true,
 								hideButton: true

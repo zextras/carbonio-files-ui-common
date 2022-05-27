@@ -153,7 +153,7 @@ export function useRestoreNodesMutation(): RestoreType {
 					);
 					createSnackbar({
 						key: new Date().toLocaleString(),
-						type: 'success',
+						type: 'info',
 						label: t('snackbar.restore.success', 'Success'),
 						replace: true,
 						onActionClick: () => {
