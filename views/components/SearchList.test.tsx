@@ -40,7 +40,13 @@ import {
 	mockRestoreNodes,
 	mockTrashNodes
 } from '../../utils/mockUtils';
-import { actionRegexp, buildChipsFromKeywords, render, selectNodes } from '../../utils/testUtils';
+import {
+	actionRegexp,
+	buildChipsFromKeywords,
+	render,
+	selectNodes,
+	waitForNetworkResponse
+} from '../../utils/testUtils';
 import { SearchList } from './SearchList';
 
 describe('Search list', () => {
@@ -1059,23 +1065,11 @@ describe('Search list', () => {
 			expect(screen.getByText(secondPage[0].name)).toBeVisible();
 		});
 
-		test('Unflag of all loaded nodes refetch search if only flagged nodes are included', async () => {
+		test('Unflag does not remove nodes from list even if only flagged nodes are included', async () => {
 			const firstPage = populateNodes(NODES_LOAD_LIMIT);
 			forEach(firstPage, (node) => {
-				// eslint-disable-next-line no-param-reassign
 				node.permissions.can_write_file = true;
-				// eslint-disable-next-line no-param-reassign
 				node.permissions.can_write_folder = true;
-				// eslint-disable-next-line no-param-reassign
-				node.flagged = true;
-			});
-			const secondPage = populateNodes(NODES_LOAD_LIMIT);
-			forEach(secondPage, (node) => {
-				// eslint-disable-next-line no-param-reassign
-				node.permissions.can_write_file = true;
-				// eslint-disable-next-line no-param-reassign
-				node.permissions.can_write_folder = true;
-				// eslint-disable-next-line no-param-reassign
 				node.flagged = true;
 			});
 			const keywords = ['keyword1', 'keyword2'];
@@ -1084,33 +1078,36 @@ describe('Search list', () => {
 				flagged: { value: true }
 			};
 			searchParamsVar(searchParams);
-			const nodesToUnflag = map(firstPage, (node) => node.id);
+			const nodesToUnflag = [firstPage[0].id, firstPage[1].id];
 
 			const mocks = [
 				mockFindNodes(getFindNodesVariables({ keywords, flagged: true }), firstPage),
-				mockFlagNodes({ node_ids: nodesToUnflag, flag: false }, nodesToUnflag),
-				mockFindNodes(getFindNodesVariables({ keywords, flagged: true }), secondPage)
+				mockFlagNodes({ node_ids: nodesToUnflag, flag: false }, nodesToUnflag)
 			];
 
-			render(<SearchList />, { mocks });
+			render(<SearchList />, { mocks, initialRouterEntries: ['/search'] });
 
 			await screen.findByText(firstPage[0].name);
 			expect(screen.getByText(firstPage[0].name)).toBeVisible();
-			expect(screen.getByText(firstPage[NODES_LOAD_LIMIT - 1].name)).toBeVisible();
-			expect(screen.queryByText(secondPage[0].name)).not.toBeInTheDocument();
+			const nodeToUnflagItem1 = screen.getByTestId(`node-item-${nodesToUnflag[0]}`);
+			expect(nodeToUnflagItem1).toBeVisible();
+			expect(within(nodeToUnflagItem1).getByTestId('icon: Flag')).toBeVisible();
 			selectNodes(nodesToUnflag);
 			// check that all wanted items are selected
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length);
+			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToUnflag.length);
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 			userEvent.click(screen.getByTestId('icon: MoreVertical'));
 			const unflagAction = await screen.findByText(actionRegexp.unflag);
 			expect(unflagAction).toBeVisible();
 			expect(unflagAction).not.toHaveAttribute('disabled', '');
 			userEvent.click(unflagAction);
-			await waitForElementToBeRemoved(screen.queryByText(firstPage[0].name));
-			await screen.findByText(secondPage[0].name);
-			expect(screen.queryByText(firstPage[NODES_LOAD_LIMIT - 1].name)).not.toBeInTheDocument();
-			expect(screen.getByText(secondPage[0].name)).toBeVisible();
+			await waitForNetworkResponse();
+			expect(within(nodeToUnflagItem1).queryByTestId('icon: Flag')).not.toBeInTheDocument();
+			expect(screen.getByText(firstPage[0].name)).toBeVisible();
+			expect(screen.getByText(firstPage[1].name)).toBeVisible();
+			expect(screen.getAllByTestId('icon: Flag')).toHaveLength(
+				firstPage.length - nodesToUnflag.length
+			);
 		});
 	});
 });

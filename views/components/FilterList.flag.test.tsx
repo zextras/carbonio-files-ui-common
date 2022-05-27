@@ -145,12 +145,10 @@ describe('Filter List', () => {
 		test('refetch filter if not all pages are loaded and all nodes are unflagged', async () => {
 			const firstPage = populateNodes(NODES_LOAD_LIMIT);
 			forEach(firstPage, (node) => {
-				// eslint-disable-next-line no-param-reassign
 				node.flagged = true;
 			});
 			const secondPage = populateNodes(NODES_LOAD_LIMIT);
 			forEach(secondPage, (node) => {
-				// eslint-disable-next-line no-param-reassign
 				node.flagged = true;
 			});
 			const nodesToUnflag = map(firstPage, (node) => node.id);
@@ -185,10 +183,12 @@ describe('Filter List', () => {
 			expect(unflagAction.parentNode).not.toHaveAttribute('disabled', '');
 			userEvent.click(unflagAction);
 			await waitForElementToBeRemoved(screen.queryByText(firstPage[0].name));
+			const snackbar = await screen.findByText(/success/i);
 			await screen.findByText(secondPage[0].name);
+			await waitForElementToBeRemoved(snackbar);
 			expect(screen.getByText(secondPage[0].name)).toBeVisible();
 			expect(screen.queryByText(firstPage[0].name)).not.toBeInTheDocument();
 			expect(screen.queryByText((last(firstPage) as Node).name)).not.toBeInTheDocument();
-		}, 60000);
+		});
 	});
 });

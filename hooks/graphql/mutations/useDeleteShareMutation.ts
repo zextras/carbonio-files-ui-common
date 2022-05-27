@@ -6,9 +6,8 @@
 
 import { useCallback } from 'react';
 
-import { ApolloCache, FetchResult, NormalizedCacheObject, useMutation } from '@apollo/client';
+import { FetchResult, useMutation } from '@apollo/client';
 import filter from 'lodash/filter';
-import size from 'lodash/size';
 import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
@@ -20,7 +19,6 @@ import SHARE_TARGET from '../../../graphql/fragments/shareTarget.graphql';
 import DELETE_SHARE from '../../../graphql/mutations/deleteShare.graphql';
 import FIND_NODES from '../../../graphql/queries/findNodes.graphql';
 import GET_CHILDREN from '../../../graphql/queries/getChildren.graphql';
-import { FindNodesCachedObject } from '../../../types/apollo';
 import { Node, PickIdNodeType } from '../../../types/common';
 import {
 	DeleteShareMutation,
@@ -37,48 +35,8 @@ import {
 import { isSearchView } from '../../../utils/utils';
 import { useCreateSnackbar } from '../../useCreateSnackbar';
 import { useErrorHandler } from '../../useErrorHandler';
+import { useUpdateFilterContent } from '../useUpdateFilterContent';
 import { useUpdateFolderContent } from '../useUpdateFolderContent';
-
-function removeNodeFromFilter(
-	cache: ApolloCache<NormalizedCacheObject>,
-	nodeId: string,
-	checkFilter: (existingNodesRefs: FindNodesCachedObject) => boolean = (): boolean => true
-): void {
-	cache.modify({
-		fields: {
-			findNodes(
-				existingNodesRefs: FindNodesCachedObject | undefined,
-				{ readField, DELETE }
-			): FindNodesCachedObject | undefined {
-				if (existingNodesRefs && checkFilter(existingNodesRefs)) {
-					const ordered = filter(
-						existingNodesRefs.nodes?.ordered,
-						(orderedNode) => nodeId !== readField('id', orderedNode)
-					);
-					const unOrdered = filter(
-						existingNodesRefs.nodes?.unOrdered,
-						(unOrderedNode) => nodeId !== readField('id', unOrderedNode)
-					);
-
-					if (existingNodesRefs.page_token && size(ordered) === 0 && size(unOrdered) === 0) {
-						return DELETE;
-					}
-
-					return {
-						args: existingNodesRefs.args,
-						page_token: existingNodesRefs.page_token,
-						nodes: {
-							ordered,
-							unOrdered
-						}
-					};
-				}
-				// if no update is needed, return existing data (new requests are handled with navigation)
-				return existingNodesRefs;
-			}
-		}
-	});
-}
 
 /**
  * Mutation to delete share.
@@ -90,6 +48,7 @@ export function useDeleteShareMutation(): (
 ) => Promise<FetchResult<DeleteShareMutation>> {
 	const createSnackbar = useCreateSnackbar();
 	const { removeNodesFromFolder } = useUpdateFolderContent();
+	const { removeNodesFromFilter } = useUpdateFilterContent();
 	const [t] = useTranslation();
 	const { me } = useUserInfo();
 	const location = useLocation();
@@ -134,9 +93,8 @@ export function useDeleteShareMutation(): (
 									});
 									if (updatedShares.length === 0 && !isSearchView(location)) {
 										// remove node from shared by me when user remove all collaborators
-										removeNodeFromFilter(
-											cache,
-											node.id,
+										removeNodesFromFilter(
+											[node.id],
 											(existingNodesRefs) => existingNodesRefs.args?.shared_by_me === true
 										);
 									}
@@ -146,9 +104,8 @@ export function useDeleteShareMutation(): (
 						});
 						// remove node from shared with me when user remove self share
 						if (shareTargetId === me) {
-							removeNodeFromFilter(
-								cache,
-								node.id,
+							removeNodesFromFilter(
+								[node.id],
 								(existingNodesRefs) => existingNodesRefs.args?.shared_with_me === true
 							);
 
@@ -202,6 +159,7 @@ export function useDeleteShareMutation(): (
 			location,
 			me,
 			removeActiveNode,
+			removeNodesFromFilter,
 			removeNodesFromFolder,
 			t
 		]
