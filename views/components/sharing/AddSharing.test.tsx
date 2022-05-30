@@ -174,39 +174,6 @@ describe('Add Sharing', () => {
 		expect(screen.queryByText('contact-3')).not.toBeInTheDocument();
 	});
 
-	test('when user types inside chip input only contacts matching the typed text are shown', async () => {
-		const node = populateNode();
-		node.permissions.can_share = true;
-		// mock soap fetch implementation
-		mockedSoapFetch.mockReturnValue({
-			match: [
-				populateContact('matching-contact-1', 'matching.contact.1@example.com'),
-				populateContact('matching-contact-2', 'matching.contact.2.alternative@example.com'),
-				populateContact('excluded-contact-1', 'excluded.contact.1@example.com'),
-				populateContact('matching-contact-2', 'matching.contact.2@example.com'),
-				populateContact(
-					'excluded-contact-2-with-m-middle',
-					'excluded.contact.2.with.m.middle@example.com'
-				),
-				populateContact(
-					'excluded-contact-3-ends-with-m',
-					'excluded.contact.3.ends.with.m@example.com'
-				)
-			]
-		});
-
-		render(<AddSharing node={node} />, { mocks: [] });
-		const chipInput = screen.getByRole('textbox', { name: /add new people or groups/i });
-		expect(chipInput).toBeVisible();
-		userEvent.type(chipInput, 'm');
-		expect(chipInput).toHaveValue('m');
-		// wait for the dropdown to be shown
-		await screen.findAllByText(/contact/i);
-		// only contacts that start with "m" are visible
-		expect(screen.getAllByText(/matching-contact-\d$/i)).toHaveLength(3);
-		expect(screen.queryByText(/excluded-contact/i)).not.toBeInTheDocument();
-	});
-
 	test('when user delete text inside chip input dropdown is cleared', async () => {
 		const node = populateNode();
 		node.permissions.can_share = true;

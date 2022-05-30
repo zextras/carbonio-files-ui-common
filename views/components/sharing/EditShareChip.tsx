@@ -70,12 +70,14 @@ interface EditShareChipProps {
 	share: Share;
 	permissions: Permissions;
 	yourselfChip: boolean;
+	deleteShare: ReturnType<typeof useDeleteShareMutation>;
 }
 
 export const EditShareChip: React.FC<EditShareChipProps> = ({
 	/** Chip value */
 	share,
 	permissions,
+	deleteShare,
 	yourselfChip = false
 }) => {
 	const [updateShare] = useUpdateShareMutation();
@@ -154,8 +156,6 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 		updateShareCallback,
 		updateShareActionCallback
 	);
-
-	const deleteShare = useDeleteShareMutation();
 
 	const deleteShareCallback = useCallback<() => Promise<FetchResult<DeleteNodesMutation>>>(
 		(): Promise<FetchResult<DeleteNodesMutation>> =>

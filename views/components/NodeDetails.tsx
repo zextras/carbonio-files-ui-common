@@ -292,15 +292,17 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 
 	const copyShortcut = useCallback(
 		(_event) => {
-			copyToClipboard(internalLink).then(() => {
-				createSnackbar({
-					key: new Date().toLocaleString(),
-					type: 'info',
-					label: t('snackbar.clipboard.itemShortcutCopied', 'Item shortcut copied'),
-					replace: true,
-					hideButton: true
+			if (internalLink) {
+				copyToClipboard(internalLink).then(() => {
+					createSnackbar({
+						key: new Date().toLocaleString(),
+						type: 'info',
+						label: t('snackbar.clipboard.itemShortcutCopied', 'Item shortcut copied'),
+						replace: true,
+						hideButton: true
+					});
 				});
-			});
+			}
 		},
 		[createSnackbar, internalLink, t]
 	);
@@ -347,26 +349,28 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 								</>
 							)}
 						</Row>
-						<HoverSwitchComponent
-							visibleToHiddenComponent={
-								<Button
-									label={t('displayer.details.copyShortcut', "copy item's shortcut")}
-									type="outlined"
-									icon="CopyOutline"
-									onClick={copyShortcut}
-									shape="round"
-								/>
-							}
-							hiddenToVisibleComponent={
-								<Button
-									label={t('displayer.details.copyShortcut', "copy item's shortcut")}
-									type="outlined"
-									icon="Copy"
-									onClick={copyShortcut}
-									shape="round"
-								/>
-							}
-						/>
+						{internalLink && (
+							<HoverSwitchComponent
+								visibleToHiddenComponent={
+									<Button
+										label={t('displayer.details.copyShortcut', "copy item's shortcut")}
+										type="outlined"
+										icon="CopyOutline"
+										onClick={copyShortcut}
+										shape="round"
+									/>
+								}
+								hiddenToVisibleComponent={
+									<Button
+										label={t('displayer.details.copyShortcut', "copy item's shortcut")}
+										type="outlined"
+										icon="Copy"
+										onClick={copyShortcut}
+										shape="round"
+									/>
+								}
+							/>
+						)}
 					</Container>
 					{size != null && (
 						<Row orientation="vertical" crossAlignment="flex-start" padding={{ vertical: 'small' }}>
