@@ -6,7 +6,7 @@
 
 import React from 'react';
 
-import { screen, waitForElementToBeRemoved } from '@testing-library/react';
+import { screen, waitForElementToBeRemoved, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { act } from 'react-dom/test-utils';
 
@@ -32,7 +32,13 @@ import {
 	mockTrashNodes,
 	mockUpdateNode
 } from '../../utils/mockUtils';
-import { actionRegexp, buildBreadCrumbRegExp, renameNode, render } from '../../utils/testUtils';
+import {
+	actionRegexp,
+	buildBreadCrumbRegExp,
+	iconRegexp,
+	renameNode,
+	render
+} from '../../utils/testUtils';
 import { getChipLabel } from '../../utils/utils';
 import { Displayer } from './Displayer';
 
@@ -51,7 +57,11 @@ describe('Displayer', () => {
 			mocks
 		});
 		await screen.findAllByText(node.name);
-		const markForDeletionAction = screen.getByTestId('icon: Trash2Outline');
+
+		const moreActions = screen.getByTestId(iconRegexp.moreVertical);
+		userEvent.click(moreActions);
+
+		const markForDeletionAction = await screen.findByText(actionRegexp.moveToTrash);
 		expect(markForDeletionAction).toBeVisible();
 		act(() => {
 			// wrap in act cause it trigger tooltip
@@ -94,12 +104,26 @@ describe('Displayer', () => {
 			mocks
 		});
 		await screen.findAllByText(node.name);
-		const moreVertical = screen.getByTestId('icon: MoreVertical');
-		expect(moreVertical).toBeVisible();
-		userEvent.click(moreVertical);
-		const copyAction = await screen.findByText(actionRegexp.copy);
-		expect(copyAction.parentNode).not.toHaveAttribute('disabled');
-		userEvent.click(copyAction);
+
+		const copyIcon = within(screen.getByTestId('displayer-actions-header')).queryByTestId(
+			iconRegexp.copy
+		);
+		if (copyIcon) {
+			expect(copyIcon.parentNode).not.toHaveAttribute('disabled');
+			userEvent.click(copyIcon);
+		} else {
+			const moreVertical = await screen.findByTestId('icon: MoreVertical');
+			if (moreVertical) {
+				act(() => {
+					userEvent.click(moreVertical);
+				});
+				const copyAction = await screen.findByText(actionRegexp.copy);
+				expect(copyAction.parentNode).not.toHaveAttribute('disabled');
+				userEvent.click(copyAction);
+			} else {
+				fail();
+			}
+		}
 		// modal opening
 		const copyButton = await screen.findByRole('button', { name: actionRegexp.copy });
 		// breadcrumb loading

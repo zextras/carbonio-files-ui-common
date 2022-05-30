@@ -193,7 +193,7 @@ export const UploadList: React.VFC = () => {
 				isSelectionModeActive={isSelectionModeActive}
 				unSelectAll={unSelectAll}
 				selectAll={selectAll}
-				permittedSelectionModePrimaryActionsItems={permittedSelectionModePrimaryActionsItems}
+				permittedSelectionModeActionsItems={permittedSelectionModePrimaryActionsItems}
 				actionComponent={headerAction}
 				exitSelectionMode={exitSelectionMode}
 				isAllSelected={size(selectedIDs) === size(items)}

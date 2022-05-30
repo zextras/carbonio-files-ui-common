@@ -27,7 +27,13 @@ import {
 	mockGetPath,
 	mockMoveNodes
 } from '../../utils/mockUtils';
-import { actionRegexp, buildBreadCrumbRegExp, render, selectNodes } from '../../utils/testUtils';
+import {
+	actionRegexp,
+	buildBreadCrumbRegExp,
+	iconRegexp,
+	render,
+	selectNodes
+} from '../../utils/testUtils';
 import FilterList from './FilterList';
 
 describe('Filter List', () => {
@@ -62,27 +68,21 @@ describe('Filter List', () => {
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 				userEvent.click(screen.getByTestId('icon: MoreVertical'));
-				let moveAction = await screen.findByText(actionRegexp.move);
-				expect(moveAction).toBeVisible();
-				expect(moveAction.parentElement).toHaveAttribute('disabled', '');
+				await screen.findByText(actionRegexp.copy);
+				expect(screen.queryByText(actionRegexp.move)).not.toBeInTheDocument();
 				// activate selection mode by selecting items
 				selectNodes([file.id, folder.id]);
 				// check that all wanted items are selected
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
-				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-				userEvent.click(screen.getByTestId('icon: MoreVertical'));
-				moveAction = await screen.findByText(actionRegexp.move);
-				expect(moveAction).toBeVisible();
-				expect(moveAction.parentElement).toHaveAttribute('disabled', '');
+				expect(screen.queryByTestId('icon: MoreVertical')).not.toBeInTheDocument();
+				expect(screen.queryByTestId(iconRegexp.move)).not.toBeInTheDocument();
 				// activate selection mode by selecting items
 				selectNodes([folder.id, node.id]);
 				// check that all wanted items are selected
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 				userEvent.click(screen.getByTestId('icon: MoreVertical'));
-				moveAction = await screen.findByText(actionRegexp.move);
-				expect(moveAction).toBeVisible();
-				expect(moveAction.parentElement).not.toHaveAttribute('disabled', '');
+				expect(await screen.findByText(actionRegexp.move)).toBeInTheDocument();
 			});
 
 			test('Move is disabled when multiple files are selected', async () => {
@@ -105,11 +105,8 @@ describe('Filter List', () => {
 
 				// check that all wanted items are selected
 				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
-				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-				userEvent.click(screen.getByTestId('icon: MoreVertical'));
-				const moveAction = await screen.findByText(actionRegexp.move);
-				expect(moveAction).toBeVisible();
-				expect(moveAction.parentElement).toHaveAttribute('disabled', '');
+				expect(screen.queryByTestId(iconRegexp.moreVertical)).not.toBeInTheDocument();
+				expect(screen.queryByText(iconRegexp.move)).not.toBeInTheDocument();
 			});
 
 			test('Move is disabled if node has no parent or parent has not right permissions', async () => {
@@ -139,27 +136,31 @@ describe('Filter List', () => {
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 				userEvent.click(screen.getByTestId('icon: MoreVertical'));
-				let moveAction = await screen.findByText(actionRegexp.move);
-				expect(moveAction).toBeVisible();
-				expect(moveAction.parentElement).toHaveAttribute('disabled', '');
+
+				await screen.findByText(actionRegexp.copy);
+
+				expect(screen.queryByText(actionRegexp.move)).not.toBeInTheDocument();
+				expect(screen.queryByTestId(iconRegexp.move)).not.toBeInTheDocument();
 				// activate selection mode by selecting items
 				selectNodes([file.id, folder.id]);
 				// check that all wanted items are selected
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 				userEvent.click(screen.getByTestId('icon: MoreVertical'));
-				moveAction = await screen.findByText(actionRegexp.move);
-				expect(moveAction).toBeVisible();
-				expect(moveAction.parentElement).toHaveAttribute('disabled', '');
+
+				await screen.findByText(actionRegexp.moveToTrash);
+				expect(screen.queryByText(actionRegexp.move)).not.toBeInTheDocument();
+				expect(screen.queryByTestId(iconRegexp.move)).not.toBeInTheDocument();
+
 				// activate selection mode by selecting items
 				selectNodes([folder.id, node.id]);
 				// check that all wanted items are selected
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 				userEvent.click(screen.getByTestId('icon: MoreVertical'));
-				moveAction = await screen.findByText(actionRegexp.move);
-				expect(moveAction).toBeVisible();
-				expect(moveAction.parentElement).toHaveAttribute('disabled', '');
+				await screen.findByText(actionRegexp.moveToTrash);
+				expect(screen.queryByText(actionRegexp.move)).not.toBeInTheDocument();
+				expect(screen.queryByTestId(iconRegexp.move)).not.toBeInTheDocument();
 			});
 
 			test('Move open modal showing parent folder content. Confirm action close the modal, leave moved items in filter list and clear cached data for destination folder', async () => {
@@ -292,19 +293,22 @@ describe('Filter List', () => {
 				// right click to open contextual menu on file without permission
 				const fileItem = await screen.findByText(file.name);
 				fireEvent.contextMenu(fileItem);
-				let moveAction = await screen.findByText(actionRegexp.move);
-				expect(moveAction).toBeVisible();
-				expect(moveAction.parentElement).toHaveAttribute('disabled', '');
+				await screen.findByText(actionRegexp.manageShares);
+
+				expect(screen.queryByText(actionRegexp.move)).not.toBeInTheDocument();
+
 				// right click to open contextual menu on folder without permission
 				const folderItem = await screen.findByText(folder.name);
 				fireEvent.contextMenu(folderItem);
-				moveAction = await screen.findByText(actionRegexp.move);
-				expect(moveAction).toBeVisible();
-				expect(moveAction.parentElement).toHaveAttribute('disabled', '');
+
+				await screen.findByText(actionRegexp.manageShares);
+
+				expect(screen.queryByText(actionRegexp.move)).not.toBeInTheDocument();
+
 				// right click to open contextual menu on node with permission
 				const nodeItem = await screen.findByText(node.name);
 				fireEvent.contextMenu(nodeItem);
-				moveAction = await screen.findByText(actionRegexp.move);
+				const moveAction = await screen.findByText(actionRegexp.move);
 				expect(moveAction).toBeVisible();
 				expect(moveAction.parentElement).not.toHaveAttribute('disabled', '');
 			});

@@ -416,7 +416,7 @@ describe('Node List Item', () => {
 				size={node.size}
 				version={node.version}
 				mimeType={node.mime_type}
-				permittedContextualMenuActions={{ [Action.OpenWithDocs]: true }}
+				permittedContextualMenuActions={[Action.OpenWithDocs]}
 			/>
 		);
 		expect(screen.getByText(node.name)).toBeInTheDocument();
@@ -453,7 +453,7 @@ describe('Node List Item', () => {
 				size={node.size}
 				version={node.version}
 				mimeType={node.mime_type}
-				permittedContextualMenuActions={{ [Action.OpenWithDocs]: false }}
+				permittedContextualMenuActions={[]}
 			/>
 		);
 		expect(screen.getByText(node.name)).toBeInTheDocument();

@@ -20,7 +20,7 @@ import {
 } from '../../mocks/mockUtils';
 import { Node } from '../../types/common';
 import { getFindNodesVariables, mockFindNodes, mockRestoreNodes } from '../../utils/mockUtils';
-import { actionRegexp, render, selectNodes } from '../../utils/testUtils';
+import { actionRegexp, iconRegexp, render, selectNodes } from '../../utils/testUtils';
 import FilterList from './FilterList';
 
 describe('Filter List', () => {
@@ -59,7 +59,6 @@ describe('Filter List', () => {
 				selectNodes(nodesIdsToRestore);
 				// check that all wanted items are selected
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
-				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 
 				const selectionModeActiveListHeader = screen.getByTestId('list-header-selectionModeActive');
 
@@ -78,7 +77,7 @@ describe('Filter List', () => {
 
 				expect(screen.queryAllByTestId(`file-icon-preview`).length).toEqual(2);
 
-				expect.assertions(7);
+				expect.assertions(6);
 			});
 
 			test('Restore do not remove selected items from the filter list if is a filter without trashed param', async () => {
@@ -111,7 +110,6 @@ describe('Filter List', () => {
 				selectNodes(nodesIdsToRestore);
 				// check that all wanted items are selected
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
-				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 
 				const selectionModeActiveListHeader = screen.getByTestId('list-header-selectionModeActive');
 
@@ -139,7 +137,7 @@ describe('Filter List', () => {
 
 				expect(screen.queryAllByTestId('node-item', { exact: false })).toHaveLength(3);
 				expect(elementsWithSelectionModeOff).toHaveLength(3);
-				expect.assertions(11);
+				expect.assertions(10);
 			});
 
 			test('Restore is hidden if not all nodes are trashed', async () => {
@@ -168,7 +166,7 @@ describe('Filter List', () => {
 				selectNodes(nodesIdsToRestore);
 				// check that all wanted items are selected
 				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
-				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
+				expect(screen.queryByTestId(iconRegexp.moreVertical)).not.toBeInTheDocument();
 
 				const selectionModeActiveListHeader = screen.getByTestId('list-header-selectionModeActive');
 
@@ -182,8 +180,8 @@ describe('Filter List', () => {
 				);
 				expect(trashIcon).not.toBeInTheDocument();
 
-				const moreIcon = within(selectionModeActiveListHeader).getByTestId('icon: MoreVertical');
-				expect(moreIcon).toBeInTheDocument();
+				const moreIcon = within(selectionModeActiveListHeader).queryByTestId('icon: MoreVertical');
+				expect(moreIcon).not.toBeInTheDocument();
 
 				expect.assertions(5);
 			});
@@ -252,9 +250,8 @@ describe('Filter List', () => {
 			selectNodes(nodesToRestore);
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length);
-			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-			userEvent.click(screen.getByTestId('icon: MoreVertical'));
-			const restoreAction = await screen.findByTestId('icon: RestoreOutline');
+
+			const restoreAction = await screen.findByTestId(iconRegexp.restore);
 			expect(restoreAction).toBeVisible();
 			expect(restoreAction.parentNode).not.toHaveAttribute('disabled', '');
 			userEvent.click(restoreAction);

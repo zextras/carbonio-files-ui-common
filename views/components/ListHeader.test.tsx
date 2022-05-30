@@ -33,7 +33,7 @@ describe('ListHeader', () => {
 					exitSelectionMode={exitSelectionMode}
 					isAllSelected={false}
 					isSelectionModeActive={false}
-					permittedSelectionModePrimaryActionsItems={[]}
+					permittedSelectionModeActionsItems={[]}
 					selectAll={selectAll}
 					unSelectAll={unSelectAll}
 				/>,
@@ -59,7 +59,7 @@ describe('ListHeader', () => {
 					exitSelectionMode={exitSelectionMode}
 					isAllSelected={false}
 					isSelectionModeActive={false}
-					permittedSelectionModePrimaryActionsItems={[]}
+					permittedSelectionModeActionsItems={[]}
 					selectAll={selectAll}
 					unSelectAll={unSelectAll}
 				/>,
@@ -91,7 +91,7 @@ describe('ListHeader', () => {
 					exitSelectionMode={exitSelectionMode}
 					isAllSelected={false}
 					isSelectionModeActive={false}
-					permittedSelectionModePrimaryActionsItems={[]}
+					permittedSelectionModeActionsItems={[]}
 					selectAll={selectAll}
 					unSelectAll={unSelectAll}
 				/>,
@@ -151,7 +151,7 @@ describe('ListHeader', () => {
 				<ListHeader
 					folderId={currentFolder.id}
 					isSelectionModeActive={false}
-					permittedSelectionModePrimaryActionsItems={[]}
+					permittedSelectionModeActionsItems={[]}
 					selectAll={selectAll}
 					unSelectAll={unselectAll}
 					exitSelectionMode={exitSelectionMode}

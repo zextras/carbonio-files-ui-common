@@ -36,7 +36,7 @@ jest.mock('./components/Displayer', () => ({
 }));
 
 describe('Folder View Selection mode', () => {
-	test('if there is no element selected, all actions are visible and disabled', async () => {
+	test.skip('if there is no element selected, all actions are visible and disabled', async () => {
 		const currentFolder = populateFolder(10);
 		const mocks = [
 			mockGetParent({ node_id: currentFolder.id }, currentFolder),

@@ -7,14 +7,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useReactiveVar } from '@apollo/client';
-import difference from 'lodash/difference';
 import isEmpty from 'lodash/isEmpty';
 import some from 'lodash/some';
-import union from 'lodash/union';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
-import { ACTIONS_TO_REMOVE_DUE_TO_PRODUCT_CONTEXT } from '../../../constants';
 import useUserInfo from '../../../hooks/useUserInfo';
 import { draggedItemsVar } from '../../apollo/dragAndDropVar';
 import { DRAG_TYPES, ROOTS } from '../../constants';
@@ -27,14 +24,12 @@ import { NodeListItemType, URLParams } from '../../types/common';
 import {
 	Action,
 	ActionItem,
-	ActionMap,
 	canBeMoveDestination,
 	canUploadFile,
-	getPermittedContextualMenuActions,
+	getAllPermittedActions,
 	getPermittedHoverBarActions,
 	isFile,
-	isFolder,
-	trashedNodeActions
+	isFolder
 } from '../../utils/ActionsFactory';
 import { isTrashView } from '../../utils/utils';
 import { Dropzone } from './Dropzone';
@@ -48,6 +43,7 @@ interface NodeListItemWrapperProps {
 	deletePermanently?: DeleteNodesType;
 	moveNodes?: (node: NodeListItemType) => void;
 	copyNodes?: (node: NodeListItemType) => void;
+	manageShares?: (nodeId: string) => void;
 	isSelected?: boolean;
 	isSelectionModeActive?: boolean;
 	selectId?: (id: string) => void;
@@ -69,6 +65,7 @@ export const NodeListItemWrapper: React.VFC<NodeListItemWrapperProps> = ({
 		Promise.reject(new Error('deletePermanently not implemented')),
 	moveNodes = (): void => undefined,
 	copyNodes = (): void => undefined,
+	manageShares = (): void => undefined,
 	isSelected = false,
 	isSelectionModeActive = false,
 	selectId = (): void => undefined,
@@ -138,35 +135,16 @@ export const NodeListItemWrapper: React.VFC<NodeListItemWrapperProps> = ({
 		renameNode(node);
 	}, [node, renameNode]);
 
+	const manageSharesCallback = useCallback(() => {
+		manageShares(node.id);
+	}, [manageShares, node.id]);
+
 	const params = useParams<URLParams>();
 	const isATrashFilter = useMemo(() => isTrashView(params), [params]);
 
-	const actionsToRemoveIfInsideTrash = useMemo(() => {
-		if (isATrashFilter) {
-			return difference(Object.values(Action), trashedNodeActions);
-		}
-		return [];
-	}, [isATrashFilter]);
-
-	const actionsToRemoveIfIsAFolder = useMemo(() => {
-		if (isFolder(node)) {
-			return [Action.OpenWithDocs];
-		}
-		return [];
-	}, [node]);
-
-	const actionsToRemove = useMemo(() => {
-		if (node.rootId === ROOTS.TRASH) {
-			return [Action.MarkForDeletion];
-		}
-		return trashedNodeActions;
-	}, [node]);
-
-	const permittedHoverBarActions = useMemo<ActionMap>(
-		() =>
-			node.permissions &&
-			getPermittedHoverBarActions(node, union(actionsToRemove, actionsToRemoveIfInsideTrash)),
-		[actionsToRemove, actionsToRemoveIfInsideTrash, node]
+	const permittedHoverBarActions = useMemo<Action[]>(
+		() => node.permissions && getPermittedHoverBarActions(node),
+		[node]
 	);
 
 	const { me } = useUserInfo();
@@ -174,18 +152,12 @@ export const NodeListItemWrapper: React.VFC<NodeListItemWrapperProps> = ({
 	const permittedContextualMenuActions = useMemo(
 		() =>
 			node.permissions &&
-			getPermittedContextualMenuActions(
+			getAllPermittedActions(
 				[node],
-				union(
-					actionsToRemove,
-					actionsToRemoveIfInsideTrash,
-					actionsToRemoveIfIsAFolder,
-					ACTIONS_TO_REMOVE_DUE_TO_PRODUCT_CONTEXT
-				),
 				// TODO: REMOVE CHECK ON ROOT WHEN BE WILL NOT RETURN LOCAL_ROOT AS PARENT FOR SHARED NODES
 				me
 			),
-		[actionsToRemove, actionsToRemoveIfInsideTrash, actionsToRemoveIfIsAFolder, me, node]
+		[me, node]
 	);
 
 	const setActiveNode = useCallback(
@@ -331,6 +303,7 @@ export const NodeListItemWrapper: React.VFC<NodeListItemWrapperProps> = ({
 					deletePermanentlyCallback={openDeletePermanentlyModal}
 					moveNodesCallback={moveNodesCallback}
 					copyNodesCallback={copyNodesCallback}
+					manageSharesCallback={manageSharesCallback}
 					isSelected={isSelected}
 					isSelectionModeActive={isSelectionModeActive}
 					selectId={selectId}

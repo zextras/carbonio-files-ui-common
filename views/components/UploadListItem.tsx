@@ -33,8 +33,8 @@ interface UploadListItemProps {
 	mimeType: string;
 	status: UploadStatus;
 	percentage: number;
-	permittedContextualMenuActions: Partial<Record<Action, boolean>>;
-	permittedHoverBarActions: Partial<Record<Action, boolean>>;
+	permittedContextualMenuActions: Action[];
+	permittedHoverBarActions: Action[];
 	isSelected: boolean;
 	isSelectionModeActive: boolean;
 	selectId: (id: string) => void;

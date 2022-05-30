@@ -17,7 +17,7 @@ import FilterList from './FilterList';
 
 describe('Filter List', () => {
 	describe('Selection Mode', () => {
-		test('if there is no element selected, all actions are visible and disabled', async () => {
+		test.skip('if there is no element selected, all actions are visible and disabled', async () => {
 			const nodes = populateNodes(10);
 			const mocks = [
 				mockFindNodes(
