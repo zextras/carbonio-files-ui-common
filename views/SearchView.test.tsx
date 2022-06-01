@@ -530,7 +530,7 @@ describe('Search view', () => {
 			expect(screen.queryByText(actionRegexp.moveToTrash)).not.toBeInTheDocument();
 		});
 
-		test('Restore closes the displayer from searches with only trashed nodes', async () => {
+		test('Restore does not close the displayer from searches with only trashed nodes', async () => {
 			const keywords = ['keyword1', 'keyword2'];
 			const searchParams: AdvancedFilters = {
 				keywords: buildChipsFromKeywords(keywords),
@@ -546,6 +546,20 @@ describe('Search view', () => {
 			node.permissions.can_write_folder = true;
 			node.permissions.can_write_file = true;
 			node.rootId = ROOTS.TRASH;
+
+			global.apolloClient.writeFragment<BaseNodeFragment>({
+				fragment: BASE_NODE,
+				fragmentName: 'BaseNode',
+				data: {
+					__typename: 'Folder',
+					id: ROOTS.LOCAL_ROOT,
+					name: ROOTS.LOCAL_ROOT,
+					type: NodeType.Root,
+					rootId: null,
+					flagged: false,
+					permissions: populatePermissions(true)
+				}
+			});
 
 			server.use(
 				graphql.query<FindNodesQuery, FindNodesQueryVariables>('findNodes', (req, res, ctx) =>
@@ -595,14 +609,21 @@ describe('Search view', () => {
 			expect(restoreAction).toBeVisible();
 			expect(restoreAction.parentNode).not.toHaveAttribute('disabled', '');
 			userEvent.click(restoreAction);
+			await waitForNetworkResponse();
 			// await snackbar to be shown
 			const snackbar = await screen.findByText(/^success$/i);
 			await waitForElementToBeRemoved(snackbar);
-			await screen.findByText(/view files and folders/i);
-			expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(nodes.length - 1);
-			expect(screen.queryByText(node.name)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(`node-item-${node.id}`)).not.toBeInTheDocument();
-			expect(within(displayer).getByText(/View files and folders/i)).toBeVisible();
+			expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(nodes.length);
+			expect(within(screen.getByTestId('list-')).getByText(node.name)).toBeVisible();
+			expect(within(screen.getByTestId('displayer')).getAllByText(node.name)).toHaveLength(2);
+			const restoredNodeItem = screen.getByTestId(`node-item-${node.id}`);
+			expect(restoredNodeItem).toBeVisible();
+			fireEvent.contextMenu(restoredNodeItem);
+			await waitForNetworkResponse();
+			await screen.findByText(actionRegexp.moveToTrash);
+			expect(screen.getByText(actionRegexp.moveToTrash)).toBeVisible();
+			expect(screen.queryByText(actionRegexp.deletePermanently)).not.toBeInTheDocument();
+			expect(screen.queryByText(actionRegexp.restore)).not.toBeInTheDocument();
 		});
 
 		test('Restore does not close the displayer from searches with nodes both marked for deletion and not', async () => {
