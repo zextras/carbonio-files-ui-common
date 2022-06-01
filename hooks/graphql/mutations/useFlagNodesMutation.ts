@@ -27,6 +27,7 @@ import {
 import { isSearchView } from '../../../utils/utils';
 import { useErrorHandler } from '../../useErrorHandler';
 import { useUpdateFilterContent } from '../useUpdateFilterContent';
+import { isQueryResult } from '../utils';
 
 export type FlagNodesType = (
 	flagValue: boolean,
@@ -103,10 +104,8 @@ export function useFlagNodesMutation(): FlagNodesType {
 				onQueryUpdated(observableQuery, { missing, result }) {
 					const { query } = observableQuery.options;
 					let listNodes: Array<PickIdNodeType | null> | undefined;
-					if (query === FIND_NODES) {
-						listNodes = (result as FindNodesQuery).findNodes?.nodes;
-					}
-					if (query === FIND_NODES) {
+					if (isQueryResult<FindNodesQuery>(query, result, FIND_NODES)) {
+						listNodes = result.findNodes?.nodes;
 						if (
 							some(
 								nodesIds,
