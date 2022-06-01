@@ -444,6 +444,7 @@ describe('Node List Item', () => {
 		const node = populateFile();
 		node.type = NodeType.Text;
 		node.extension = 'txt';
+		node.mime_type = 'text/plain';
 
 		render(
 			<NodeListItem
