@@ -4,30 +4,34 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 
 import { FetchResult, useMutation } from '@apollo/client';
 import filter from 'lodash/filter';
-import find from 'lodash/find';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 import reduce from 'lodash/reduce';
 import size from 'lodash/size';
+import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 import { useActiveNode } from '../../../../hooks/useActiveNode';
 import { useNavigation } from '../../../../hooks/useNavigation';
-import { searchParamsVar } from '../../../apollo/searchVar';
 import { ROOTS } from '../../../constants';
 import RESTORE_NODES from '../../../graphql/mutations/restoreNodes.graphql';
 import FIND_NODES from '../../../graphql/queries/findNodes.graphql';
-import { FindNodesCachedObject } from '../../../types/apollo';
 import { GetNodeParentType, Node } from '../../../types/common';
-import { RestoreNodesMutation, RestoreNodesMutationVariables } from '../../../types/graphql/types';
-import { isSearchView, isTrashView } from '../../../utils/utils';
+import {
+	FindNodesQuery,
+	RestoreNodesMutation,
+	RestoreNodesMutationVariables
+} from '../../../types/graphql/types';
+import { isSearchView } from '../../../utils/utils';
 import { useCreateSnackbar } from '../../useCreateSnackbar';
 import { useErrorHandler } from '../../useErrorHandler';
+import { useUpdateFilterContent } from '../useUpdateFilterContent';
+import { isQueryResult } from '../utils';
 
 type UseRestoreRequiredNodeType = Pick<Node, 'id' | '__typename'> & GetNodeParentType;
 
@@ -44,9 +48,9 @@ export function useRestoreNodesMutation(): RestoreType {
 	const createSnackbar = useCreateSnackbar();
 	const [t] = useTranslation();
 	const { navigateToFolder } = useNavigation();
-	const params = useParams<{ filter: string }>();
 	const location = useLocation();
 	const { activeNodeId, removeActiveNode } = useActiveNode();
+	const { removeNodesFromFilter } = useUpdateFilterContent();
 	const [restoreNodesMutation, { error }] = useMutation<
 		RestoreNodesMutation,
 		RestoreNodesMutationVariables
@@ -55,13 +59,6 @@ export function useRestoreNodesMutation(): RestoreType {
 	});
 
 	useErrorHandler(error, 'RESTORE_NODES');
-
-	const onlyTrashed = useMemo(() => {
-		const { folderId } = searchParamsVar();
-		// close displayer of the node it is restored from the trash
-		// or from a view which includes only trashed nodes
-		return isTrashView(params) || (isSearchView(location) && folderId?.value === ROOTS.TRASH);
-	}, [params, location]);
 
 	const restoreNodes: RestoreType = useCallback(
 		(...nodes: UseRestoreRequiredNodeType[]) => {
@@ -77,66 +74,37 @@ export function useRestoreNodesMutation(): RestoreType {
 				},
 				update(cache, { data }) {
 					if (data?.restoreNodes) {
-						const restoredNodes = filter(data.restoreNodes, (node) => !!node);
-						cache.modify({
-							fields: {
-								findNodes(
-									existingNodesRefs: FindNodesCachedObject | undefined,
-									{ readField, DELETE }
-								): FindNodesCachedObject | undefined {
-									if (existingNodesRefs?.args?.folder_id === ROOTS.TRASH) {
-										const ordered = filter(existingNodesRefs.nodes?.ordered, (node) => {
-											const nodeId = readField<string>('id', node);
-											return !find(restoredNodes, (restoredNode) => restoredNode?.id === nodeId);
-										});
-										const unOrdered = filter(existingNodesRefs.nodes?.unOrdered, (node) => {
-											const nodeId = readField<string>('id', node);
-											return !find(restoredNodes, (restoredNode) => restoredNode?.id === nodeId);
-										});
-
-										if (
-											existingNodesRefs.page_token &&
-											size(ordered) === 0 &&
-											size(unOrdered) === 0
-										) {
-											return DELETE;
-										}
-
-										return {
-											args: existingNodesRefs.args,
-											page_token: existingNodesRefs.page_token,
-											nodes: {
-												ordered,
-												unOrdered
-											}
-										};
-									}
-									return existingNodesRefs;
-								}
-							}
-						});
+						const restoredNodes = filter<
+							typeof data.restoreNodes[number],
+							NonNullable<typeof data.restoreNodes[number]>
+						>(data.restoreNodes, (node): node is NonNullable<typeof node> => !!node);
+						removeNodesFromFilter(
+							map(restoredNodes, (restoredNode) => restoredNode.id),
+							(existingRefs) =>
+								existingRefs.args?.folder_id === ROOTS.TRASH && !isSearchView(location)
+						);
 
 						forEach(restoredNodes, (node) => {
-							if (node) {
-								if (activeNodeId && node.id === activeNodeId && onlyTrashed) {
-									removeActiveNode();
-								}
-
-								if (node.parent) {
-									// clear cached children for destination folder
-									cache.evict({ id: cache.identify(node.parent), fieldName: 'children' });
-									cache.gc();
-								}
+							if (node?.parent) {
+								// clear cached children for destination folder
+								cache.evict({ id: cache.identify(node.parent), fieldName: 'children' });
+								cache.gc();
 							}
 						});
 					}
 				},
-				onQueryUpdated(observableQuery, diff) {
-					if (observableQuery.options.query === FIND_NODES) {
-						if (diff.missing) {
+				onQueryUpdated(observableQuery, { missing, result }) {
+					const { query } = observableQuery.options;
+					if (isQueryResult<FindNodesQuery>(query, result, FIND_NODES)) {
+						if (missing) {
 							return observableQuery.refetch();
 						}
+						const listNodes = result.findNodes?.nodes;
+						if (activeNodeId && !some(listNodes, (resultNode) => resultNode?.id === activeNodeId)) {
+							removeActiveNode();
+						}
 					}
+
 					return observableQuery.reobserve();
 				}
 			}).then((result) => {
@@ -171,7 +139,8 @@ export function useRestoreNodesMutation(): RestoreType {
 		},
 		[
 			restoreNodesMutation,
-			onlyTrashed,
+			removeNodesFromFilter,
+			location,
 			activeNodeId,
 			removeActiveNode,
 			createSnackbar,
