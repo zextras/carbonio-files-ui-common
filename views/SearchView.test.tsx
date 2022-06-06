@@ -382,7 +382,7 @@ describe('Search view', () => {
 			expect(within(displayer).getAllByText(node.name)).toHaveLength(2);
 		});
 
-		test('Mark for deletion closes the displayer from searches without trashed nodes', async () => {
+		test('Mark for deletion does not close the displayer from searches without trashed nodes', async () => {
 			const keywords = ['keyword1', 'keyword2'];
 			const folder = populateFolder();
 			const searchParams: AdvancedFilters = {
@@ -449,11 +449,16 @@ describe('Search view', () => {
 			// await snackbar to be shown
 			const snackbar = await screen.findByText(/item moved to trash/i);
 			await waitForElementToBeRemoved(snackbar);
-			await screen.findByText(/view files and folders/i);
-			expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(nodes.length - 1);
-			expect(screen.queryByText(node.name)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(`node-item-${node.id}`)).not.toBeInTheDocument();
-			expect(within(displayer).getByText(/view files and folders/i)).toBeVisible();
+			expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(nodes.length);
+			expect(within(screen.getByTestId('list-')).getByText(node.name)).toBeVisible();
+			expect(within(displayer).getAllByText(node.name)).toHaveLength(2);
+			const trashedNodeItem = screen.getByTestId(`node-item-${node.id}`);
+			expect(trashedNodeItem).toBeVisible();
+			fireEvent.contextMenu(trashedNodeItem);
+			await screen.findByText(actionRegexp.restore);
+			expect(screen.getByText(actionRegexp.restore)).toBeVisible();
+			expect(screen.getByText(actionRegexp.deletePermanently)).toBeVisible();
+			expect(screen.queryByText(actionRegexp.moveToTrash)).not.toBeInTheDocument();
 		});
 
 		test('Mark for deletion does not close the displayer from searches with nodes both marked for deletion and not', async () => {
