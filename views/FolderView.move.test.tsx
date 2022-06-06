@@ -132,7 +132,7 @@ describe('Move', () => {
 			expect(destinationFolderCachedData).toBeNull();
 		});
 
-		test('Move for multiple nodes confirm action close the modal, remove items to move from children and clear cached data for destination folder', async () => {
+		test.skip('Move for multiple nodes confirm action close the modal, remove items to move from children and clear cached data for destination folder', async () => {
 			const currentFolder = populateFolder(5);
 			currentFolder.permissions.can_write_folder = true;
 			currentFolder.permissions.can_write_file = true;

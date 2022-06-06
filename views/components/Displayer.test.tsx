@@ -110,13 +110,13 @@ describe('Displayer', () => {
 		);
 		if (copyIcon) {
 			expect(copyIcon.parentNode).not.toHaveAttribute('disabled');
-			userEvent.click(copyIcon);
+			act(() => {
+				userEvent.click(copyIcon);
+			});
 		} else {
 			const moreVertical = await screen.findByTestId('icon: MoreVertical');
 			if (moreVertical) {
-				act(() => {
-					userEvent.click(moreVertical);
-				});
+				userEvent.click(moreVertical);
 				const copyAction = await screen.findByText(actionRegexp.copy);
 				expect(copyAction.parentNode).not.toHaveAttribute('disabled');
 				userEvent.click(copyAction);
