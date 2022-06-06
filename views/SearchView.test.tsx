@@ -296,6 +296,7 @@ describe('Search view', () => {
 			userEvent.click(closeDisplayerAction);
 			expect(within(displayer).queryByText(/details/i)).not.toBeInTheDocument();
 			expect(screen.getByText(currentSearch[0].name)).toBeVisible();
+			await screen.findByText(/view files and folders/i);
 			expect.assertions(8);
 		});
 
