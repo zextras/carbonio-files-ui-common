@@ -405,7 +405,7 @@ describe('Search view', () => {
 			expect(within(displayer).getByText(/view files and folders/i)).toBeVisible();
 		});
 
-		test.skip('Mark for deletion does not close the displayer from searches with nodes both marked for deletion and not', async () => {
+		test('Mark for deletion does not close the displayer from searches with nodes both marked for deletion and not', async () => {
 			const keywords = ['keyword1', 'keyword2'];
 			const searchParams: AdvancedFilters = { keywords: buildChipsFromKeywords(keywords) };
 			searchParamsVar(searchParams);
@@ -417,6 +417,7 @@ describe('Search view', () => {
 			node.parent.permissions.can_write_file = true;
 			node.permissions.can_write_folder = true;
 			node.permissions.can_write_file = true;
+			node.permissions.can_delete = true;
 			server.use(
 				graphql.query<FindNodesQuery, FindNodesQueryVariables>('findNodes', (req, res, ctx) =>
 					res(

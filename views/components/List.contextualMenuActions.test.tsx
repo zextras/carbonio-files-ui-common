@@ -512,7 +512,6 @@ describe('Contextual menu actions', () => {
 
 			expect(screen.queryByText(actionRegexp.openDocument)).not.toBeInTheDocument();
 			expect(screen.queryByText(actionRegexp.rename)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.move)).not.toBeInTheDocument();
 			expect(screen.queryByText(actionRegexp.download)).not.toBeInTheDocument();
 			expect(screen.queryByText(actionRegexp.unflag)).not.toBeInTheDocument();
 
