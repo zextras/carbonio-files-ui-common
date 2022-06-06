@@ -32,11 +32,13 @@ import {
 	SharedTarget,
 	User
 } from '../../../types/graphql/types';
+import { isFolder } from '../../../utils/ActionsFactory';
 import { isSearchView } from '../../../utils/utils';
 import { useCreateSnackbar } from '../../useCreateSnackbar';
 import { useErrorHandler } from '../../useErrorHandler';
 import { useUpdateFilterContent } from '../useUpdateFilterContent';
 import { useUpdateFolderContent } from '../useUpdateFolderContent';
+import { isQueryResult } from '../utils';
 
 /**
  * Mutation to delete share.
@@ -125,10 +127,14 @@ export function useDeleteShareMutation(): (
 					if (activeNodeId === node.id) {
 						const { query } = observableQuery.options;
 						let listNodes = null;
-						if (query === FIND_NODES) {
-							listNodes = (result as FindNodesQuery).findNodes?.nodes;
-						} else if (query === GET_CHILDREN) {
-							listNodes = ((result as GetChildrenQuery).getNode as Folder).children;
+						if (isQueryResult<FindNodesQuery>(query, result, FIND_NODES)) {
+							listNodes = result.findNodes?.nodes;
+						} else if (
+							isQueryResult<GetChildrenQuery>(query, result, GET_CHILDREN) &&
+							result.getNode &&
+							isFolder(result.getNode)
+						) {
+							listNodes = result.getNode.children;
 						}
 						// close displayer when deleted share cause node to be removed from the list
 						if (
