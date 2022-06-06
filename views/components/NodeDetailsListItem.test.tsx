@@ -9,7 +9,7 @@ import React from 'react';
 import { faker } from '@faker-js/faker';
 import { screen } from '@testing-library/react';
 
-import { populateNode, populateUser } from "../../mocks/mockUtils";
+import { populateNode, populateUser } from '../../mocks/mockUtils';
 import { User } from '../../types/graphql/types';
 import { render } from '../../utils/testUtils';
 import { formatDate } from '../../utils/utils';

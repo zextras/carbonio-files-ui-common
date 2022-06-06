@@ -9,6 +9,7 @@ import React from 'react';
 import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { sample } from 'lodash';
+import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 
 import {
@@ -27,7 +28,6 @@ import { mockGetPath } from '../../utils/mockUtils';
 import { buildBreadCrumbRegExp, render } from '../../utils/testUtils';
 import { formatDate, formatTime, humanFileSize, previewHandledMimeTypes } from '../../utils/utils';
 import { NodeDetails } from './NodeDetails';
-import forEach from "lodash/forEach";
 
 describe('Node Details', () => {
 	test('Show file info', () => {
@@ -89,7 +89,7 @@ describe('Node Details', () => {
 		node.owner = populateUser();
 		const children = populateNodes(2);
 		forEach(children, (child) => {
-			child.owner = node.owner
+			child.owner = node.owner;
 		});
 		const loadMore = jest.fn();
 		render(
