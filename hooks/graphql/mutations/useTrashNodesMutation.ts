@@ -30,6 +30,7 @@ import {
 	GetChildrenQuery,
 	Node,
 	ParentIdFragment,
+	QueryGetPathArgs,
 	TrashNodesMutation,
 	TrashNodesMutationVariables
 } from '../../../types/graphql/types';
@@ -122,6 +123,13 @@ export function useTrashNodesMutation(): TrashNodesType {
 										}
 									}
 								});
+
+								const getPathArgs: QueryGetPathArgs = { node_id: node.id };
+								cache.evict({
+									fieldName: 'getPath',
+									args: getPathArgs
+								});
+								cache.gc();
 							}
 						});
 						forEach(nodesByParent, (nodeIds, parentId) => {
@@ -129,7 +137,7 @@ export function useTrashNodesMutation(): TrashNodesType {
 						});
 					}
 				},
-				onQueryUpdated(observableQuery, { missing, result }, lastDiff) {
+				onQueryUpdated(observableQuery, { missing, result }) {
 					const { query } = observableQuery.options;
 					let listNodes = null;
 					if (isQueryResult<FindNodesQuery>(query, result, FIND_NODES)) {

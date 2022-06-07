@@ -24,6 +24,7 @@ import FIND_NODES from '../../../graphql/queries/findNodes.graphql';
 import { GetNodeParentType, Node } from '../../../types/common';
 import {
 	FindNodesQuery,
+	QueryGetPathArgs,
 	RestoreNodesMutation,
 	RestoreNodesMutationVariables
 } from '../../../types/graphql/types';
@@ -88,8 +89,15 @@ export function useRestoreNodesMutation(): RestoreType {
 							if (node?.parent) {
 								// clear cached children for destination folder
 								cache.evict({ id: cache.identify(node.parent), fieldName: 'children' });
-								cache.gc();
 							}
+
+							const getPathArgs: QueryGetPathArgs = { node_id: node.id };
+							cache.evict({
+								fieldName: 'getPath',
+								args: getPathArgs
+							});
+
+							cache.gc();
 						});
 					}
 				},
