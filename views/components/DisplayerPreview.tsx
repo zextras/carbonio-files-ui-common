@@ -70,9 +70,9 @@ export const DisplayerPreview: React.VFC<DisplayerPreviewProps> = ({
 	const openPreview = useCallback(() => {
 		const actions = [
 			{
-				icon: 'DriveOutline',
-				id: 'DriveOutline',
-				tooltipLabel: t('preview.actions.tooltip.addCollaborator', 'Add collaborator'),
+				icon: 'ShareOutline',
+				id: 'ShareOutline',
+				tooltipLabel: t('preview.actions.tooltip.manageShares', 'Manage Shares'),
 				onClick: (): void => setActiveNode(id, DISPLAYER_TABS.sharing)
 			},
 			{

@@ -35,7 +35,6 @@ describe('Mark for deletion - trash', () => {
 			selectNodes(map(currentFolder.children, (node) => (node as Node).id));
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(currentFolder.children.length);
-			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 
 			const selectionModeActiveListHeader = screen.getByTestId('list-header-selectionModeActive');
 
@@ -47,7 +46,7 @@ describe('Mark for deletion - trash', () => {
 			selectNodes(map(currentFolder.children, (node) => (node as Node).id));
 
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
-			expect.assertions(5);
+			expect.assertions(4);
 		});
 
 		test('Mark for deletion is visible but disabled in selection when one file do not have permission', async () => {
@@ -72,20 +71,17 @@ describe('Mark for deletion - trash', () => {
 			selectNodes(map(currentFolder.children, (node) => (node as Node).id));
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(currentFolder.children.length);
-			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 
 			const selectionModeActiveListHeader = screen.getByTestId('list-header-selectionModeActive');
 
-			const trashIcon = within(selectionModeActiveListHeader).getByTestId('icon: Trash2Outline');
+			const trashIcon = within(selectionModeActiveListHeader).queryByTestId('icon: Trash2Outline');
 
-			expect(trashIcon).toBeInTheDocument();
-			expect(trashIcon).toBeVisible();
-			expect(trashIcon.parentElement).toHaveAttribute('disabled', '');
+			expect(trashIcon).not.toBeInTheDocument();
 
 			selectNodes(map(currentFolder.children, (node) => (node as Node).id));
 
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
-			expect.assertions(6);
+			expect.assertions(3);
 		});
 	});
 
@@ -104,10 +100,9 @@ describe('Mark for deletion - trash', () => {
 			// right click to open contextual menu
 			const nodeItem = screen.getByTestId(`node-item-${node.id}`);
 			fireEvent.contextMenu(nodeItem);
-			const moveToTrashAction = await screen.findByText(actionRegexp.moveToTrash);
-			expect(moveToTrashAction).toBeVisible();
-			expect(moveToTrashAction.parentElement).toHaveAttribute('disabled', '');
-			expect.assertions(2);
+			await screen.findByText(actionRegexp.copy);
+			expect(screen.queryByText(actionRegexp.moveToTrash)).not.toBeInTheDocument();
+			expect.assertions(1);
 		});
 	});
 });

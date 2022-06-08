@@ -16,7 +16,7 @@ import { NODES_LOAD_LIMIT, ROOTS } from '../../constants';
 import { populateNodes } from '../../mocks/mockUtils';
 import { Node } from '../../types/common';
 import { getFindNodesVariables, mockFindNodes, mockFlagNodes } from '../../utils/mockUtils';
-import { actionRegexp, render, selectNodes } from '../../utils/testUtils';
+import { actionRegexp, iconRegexp, render, selectNodes } from '../../utils/testUtils';
 import FilterList from './FilterList';
 
 describe('Filter List', () => {
@@ -66,15 +66,10 @@ describe('Filter List', () => {
 
 				// check that all wanted items are selected
 				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesIdsToUnflag.length);
-				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-				userEvent.click(screen.getByTestId('icon: MoreVertical'));
-				await screen.findByText(actionRegexp.unflag);
-				// flag action should be disabled
-				const flagAction = screen.getByText(actionRegexp.flag);
-				expect(flagAction).toBeVisible();
-				expect(flagAction.parentElement).toHaveAttribute('disabled', '');
+
+				const unflagIcon = await screen.findByTestId(iconRegexp.unflag);
 				// click on unflag action on header bar
-				userEvent.click(screen.getByText(actionRegexp.unflag));
+				userEvent.click(unflagIcon);
 				// await waitForElementToBeRemoved(screen.queryAllByTestId('checkedAvatar'));
 				// wait the snackbar with successful state to appear
 				const snackbar = await screen.findByText(/Item unflagged successfully/i);
@@ -178,11 +173,8 @@ describe('Filter List', () => {
 			selectNodes(nodesToUnflag);
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length);
-			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-			userEvent.click(screen.getByTestId('icon: MoreVertical'));
-			const unflagAction = await screen.findByText(actionRegexp.unflag);
-			expect(unflagAction).toBeVisible();
-			expect(unflagAction.parentNode).not.toHaveAttribute('disabled', '');
+
+			const unflagAction = await screen.findByTestId(iconRegexp.unflag);
 			userEvent.click(unflagAction);
 			await waitForElementToBeRemoved(screen.queryByText(firstPage[0].name));
 			await screen.findByText(secondPage[0].name);

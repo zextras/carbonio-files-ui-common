@@ -28,7 +28,7 @@ import { useGetVersionsQuery } from '../../../hooks/graphql/queries/useGetVersio
 import { useConfirmationModal } from '../../../hooks/useConfirmationModal';
 import { DeleteVersionsMutation, GetVersionsQuery } from '../../../types/graphql/types';
 import { NonNullableList, NonNullableListItem } from '../../../types/utils';
-import { ActionsFactoryNodeType, canOpenWithDocs } from '../../../utils/ActionsFactory';
+import { ActionsFactoryNodeType, canOpenVersionWithDocs } from '../../../utils/ActionsFactory';
 import { getChipLabel } from '../../../utils/utils';
 import { GridContainer } from './GridElements';
 import UploadVersionButton, { UploadVersionButtonProps } from './UploadVersionButton';
@@ -132,7 +132,7 @@ export const Versioning: React.VFC<VersioningProps> = ({ node }) => {
 			canCloneVersion={canCloneVersion}
 			canDelete={false}
 			canKeepVersion={canKeepVersion(version)}
-			canOpenWithDocs={canOpenWithDocs([node])}
+			canOpenWithDocs={canOpenVersionWithDocs([node])}
 			clonedFromVersion={version.cloned_from_version || undefined}
 			cloneUpdatedAt={
 				version.cloned_from_version
@@ -160,7 +160,7 @@ export const Versioning: React.VFC<VersioningProps> = ({ node }) => {
 			canCloneVersion={canCloneVersion}
 			canDelete={canDeleteVersion(version)}
 			canKeepVersion={canKeepVersion(version)}
-			canOpenWithDocs={canOpenWithDocs([node])}
+			canOpenWithDocs={canOpenVersionWithDocs([node])}
 			clonedFromVersion={version.cloned_from_version || undefined}
 			cloneUpdatedAt={
 				version.cloned_from_version
@@ -198,7 +198,7 @@ export const Versioning: React.VFC<VersioningProps> = ({ node }) => {
 			canCloneVersion={canCloneVersion}
 			canDelete={canDeleteVersion(version)}
 			canKeepVersion={canKeepVersion(version)}
-			canOpenWithDocs={canOpenWithDocs([node])}
+			canOpenWithDocs={canOpenVersionWithDocs([node])}
 			clonedFromVersion={version.cloned_from_version || undefined}
 			cloneUpdatedAt={
 				version.cloned_from_version

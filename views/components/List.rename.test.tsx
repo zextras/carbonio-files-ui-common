@@ -18,6 +18,7 @@ import { mockUpdateNodeError } from '../../utils/mockUtils';
 import {
 	actionRegexp,
 	generateError,
+	iconRegexp,
 	renameNode,
 	render,
 	selectNodes
@@ -42,12 +43,13 @@ describe('Rename', () => {
 			selectNodes(map(children, (node) => (node as Node).id));
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(children.length);
-			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-			userEvent.click(screen.getByTestId('icon: MoreVertical'));
+
 			// check that the rename action becomes visible but disabled
-			const renameAction = await screen.findByText(actionRegexp.rename);
-			expect(renameAction).toBeVisible();
-			expect(renameAction.parentElement).toHaveAttribute('disabled', '');
+			expect(screen.queryByTestId(iconRegexp.rename)).not.toBeInTheDocument();
+			const moreIconButton = screen.queryByTestId(iconRegexp.moreVertical);
+			if (moreIconButton) {
+				expect(screen.queryByText(actionRegexp.rename)).not.toBeInTheDocument();
+			}
 		});
 
 		test('Rename is disabled if node does not have permissions', async () => {
@@ -64,11 +66,13 @@ describe('Rename', () => {
 			selectNodes([node.id]);
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(children.length);
-			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-			userEvent.click(screen.getByTestId('icon: MoreVertical'));
-			const renameAction = await screen.findByText(actionRegexp.rename);
-			expect(renameAction).toBeVisible();
-			expect(renameAction.parentElement).toHaveAttribute('disabled', '');
+
+			// check that the rename action becomes visible but disabled
+			expect(screen.queryByTestId(iconRegexp.rename)).not.toBeInTheDocument();
+			const moreIconButton = screen.queryByTestId(iconRegexp.moreVertical);
+			if (moreIconButton) {
+				expect(screen.queryByText(actionRegexp.rename)).not.toBeInTheDocument();
+			}
 		});
 
 		test('Rename operation fail shows an error in the modal and does not close it', async () => {
@@ -132,9 +136,8 @@ describe('Rename', () => {
 			// right click to open contextual menu
 			const nodeItem = screen.getByTestId(`node-item-${node.id}`);
 			fireEvent.contextMenu(nodeItem);
-			const renameAction = await screen.findByText(actionRegexp.rename);
-			expect(renameAction).toBeVisible();
-			expect(renameAction.parentElement).toHaveAttribute('disabled', '');
+			await screen.findByText(actionRegexp.manageShares);
+			expect(screen.queryByText(actionRegexp.rename)).not.toBeInTheDocument();
 		});
 
 		test('Rename is disabled if select more than 1 node in selection mode', async () => {
@@ -157,9 +160,9 @@ describe('Rename', () => {
 			// right click to open contextual menu
 			const nodeItem = screen.getByTestId(`node-item-${element0.id}`);
 			fireEvent.contextMenu(nodeItem);
-			let renameAction = await screen.findByText(actionRegexp.rename);
-			expect(renameAction).toBeVisible();
-			expect(renameAction.parentElement).toHaveAttribute('disabled', '');
+			await screen.findByText(actionRegexp.copy);
+			let renameAction = screen.queryByText(actionRegexp.rename);
+			expect(renameAction).not.toBeInTheDocument();
 			selectNodes([element1.id]);
 			fireEvent.contextMenu(nodeItem);
 			renameAction = await screen.findByText(actionRegexp.rename);

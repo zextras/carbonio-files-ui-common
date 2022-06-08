@@ -543,7 +543,7 @@ describe('Advanced search modal content', () => {
 			expect(searchAdvancedFilters).toHaveBeenCalledWith({
 				folderId: expect.objectContaining({
 					value: ROOTS.TRASH,
-					label: 'Trash',
+					label: 'in:Trash',
 					avatarIcon: 'Folder'
 				}),
 				cascade: { value: false }
@@ -602,7 +602,7 @@ describe('Advanced search modal content', () => {
 			expect(searchAdvancedFilters).toHaveBeenCalledWith({
 				folderId: expect.objectContaining({
 					value: ROOTS.TRASH,
-					label: 'Trash',
+					label: 'under:Trash',
 					avatarIcon: 'Folder'
 				}),
 				cascade: { value: true }
@@ -705,7 +705,7 @@ describe('Advanced search modal content', () => {
 			expect(searchAdvancedFilters).toHaveBeenCalledWith({
 				folderId: expect.objectContaining({
 					value: ROOTS.LOCAL_ROOT,
-					label: 'Home',
+					label: 'in:Home',
 					avatarIcon: 'Folder'
 				}),
 				cascade: { value: false },
@@ -761,7 +761,7 @@ describe('Advanced search modal content', () => {
 			expect(searchAdvancedFilters).toHaveBeenCalledWith({
 				folderId: expect.objectContaining({
 					value: undefined,
-					label: 'Shared with me',
+					label: 'in:Shared with me',
 					avatarIcon: 'Folder'
 				}),
 				cascade: { value: false },
@@ -840,7 +840,7 @@ describe('Advanced search modal content', () => {
 			expect(searchAdvancedFilters).toHaveBeenCalledWith({
 				folderId: expect.objectContaining({
 					value: ROOTS.LOCAL_ROOT,
-					label: 'Home',
+					label: 'in:Home',
 					avatarIcon: 'Folder'
 				}),
 				cascade: { value: false },
