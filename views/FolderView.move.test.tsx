@@ -34,6 +34,7 @@ import {
 import {
 	actionRegexp,
 	buildBreadCrumbRegExp,
+	iconRegexp,
 	moveNode,
 	render,
 	selectNodes,
@@ -185,9 +186,26 @@ describe('Move', () => {
 			selectNodes(map(nodesToMove, (nodeToMove) => nodeToMove.id));
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToMove.length);
-			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-			userEvent.click(screen.getByTestId('icon: MoreVertical'));
-			await moveNode(destinationFolder);
+			let moveAction = screen.queryByTestId(iconRegexp.move);
+			if (!moveAction) {
+				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
+				userEvent.click(screen.getByTestId('icon: MoreVertical'));
+				moveAction = await screen.findByText('Move');
+			}
+			expect(moveAction).toBeVisible();
+			userEvent.click(moveAction);
+			const modalList = await screen.findByTestId('modal-list-', { exact: false });
+			const destinationFolderItem = await within(modalList).findByText(destinationFolder.name);
+			userEvent.click(destinationFolderItem);
+			await waitFor(() =>
+				expect(screen.getByRole('button', { name: /move/i })).not.toHaveAttribute('disabled', '')
+			);
+			act(() => {
+				userEvent.click(screen.getByRole('button', { name: /move/i }));
+			});
+			await waitForElementToBeRemoved(screen.queryByRole('button', { name: /move/i }));
+			expect(screen.queryByRole('button', { name: /move/i })).not.toBeInTheDocument();
+			expect(screen.queryByText('Move')).not.toBeInTheDocument();
 			const snackbar = await screen.findByText(/Item moved/i);
 			await waitForElementToBeRemoved(snackbar);
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();

@@ -324,3 +324,25 @@ export type URLParams = {
 export type TargetModule = 'MAILS' | 'CONTACTS' | 'CALENDARS' | 'CHATS';
 
 export type NodeWithMetadata = BaseNodeFragment;
+
+export enum Action {
+	Edit = 'EDIT',
+	Preview = 'PREVIEW',
+	SendViaMail = 'SEND_VIA_MAIL',
+	Download = 'DOWNLOAD',
+	ManageShares = 'MANAGE_SHARES',
+	Flag = 'FLAG',
+	UnFlag = 'UNFLAG',
+	OpenWithDocs = 'OPEN_WITH_DOCS',
+	Copy = 'COPY',
+	Move = 'MOVE',
+	Rename = 'RENAME',
+	MoveToTrash = 'MOVE_TO_TRASH',
+	Restore = 'RESTORE',
+	DeletePermanently = 'DELETE_PERMANENTLY',
+	UpsertDescription = 'UPSERT_DESCRIPTION',
+	removeUpload = 'REMOVE_UPLOAD',
+	RetryUpload = 'RETRY_UPLOAD',
+	GoToFolder = 'GO_TO_FOLDER'
+	// CreateFolder = 'CREATE_FOLDER',
+}

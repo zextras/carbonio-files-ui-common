@@ -54,7 +54,6 @@ describe('Filter List', () => {
 				selectNodes(nodesIdsToDeletePermanently);
 				// check that all wanted items are selected
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
-				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 
 				const element = await screen.findByText(currentFilter[0].name);
 
@@ -79,7 +78,7 @@ describe('Filter List', () => {
 				expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 				expect(screen.queryAllByTestId(`file-icon-preview`).length).toEqual(2);
 
-				expect.assertions(9);
+				expect.assertions(8);
 			});
 
 			test('Delete Permanently is hidden if not all nodes are trashed', async () => {
@@ -108,7 +107,6 @@ describe('Filter List', () => {
 				selectNodes(nodesIdsToDeletePermanently);
 				// check that all wanted items are selected
 				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
-				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 
 				const selectionModeActiveListHeader = screen.getByTestId('list-header-selectionModeActive');
 
@@ -127,10 +125,10 @@ describe('Filter List', () => {
 				);
 				expect(deletePermanentlyIcon).not.toBeInTheDocument();
 
-				const moreIcon = within(selectionModeActiveListHeader).getByTestId('icon: MoreVertical');
-				expect(moreIcon).toBeInTheDocument();
+				const moreIcon = within(selectionModeActiveListHeader).queryByTestId('icon: MoreVertical');
+				expect(moreIcon).not.toBeInTheDocument();
 
-				expect.assertions(6);
+				expect.assertions(5);
 			});
 		});
 
@@ -189,8 +187,7 @@ describe('Filter List', () => {
 			selectNodes(nodesToDelete);
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length);
-			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-			userEvent.click(screen.getByTestId('icon: MoreVertical'));
+
 			const deletePermanentlyAction = await screen.findByTestId('icon: DeletePermanentlyOutline');
 			expect(deletePermanentlyAction).toBeVisible();
 			expect(deletePermanentlyAction.parentNode).not.toHaveAttribute('disabled', '');

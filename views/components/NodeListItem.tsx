@@ -9,6 +9,7 @@ import React, { useCallback, useContext, useMemo, useState } from 'react';
 import { Container, Icon, Padding, Row, Text } from '@zextras/carbonio-design-system';
 import { PreviewsManagerContext } from '@zextras/carbonio-ui-preview';
 import debounce from 'lodash/debounce';
+import includes from 'lodash/includes';
 import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
 import styled, { css } from 'styled-components';
@@ -25,8 +26,9 @@ import {
 	ROOTS
 } from '../../constants';
 import { useCreateSnackbar } from '../../hooks/useCreateSnackbar';
+import { Action } from '../../types/common';
 import { NodeType, User } from '../../types/graphql/types';
-import { Action, ActionItem, ActionMap, buildActionItems } from '../../utils/ActionsFactory';
+import { ActionItem, buildActionItems } from '../../utils/ActionsFactory';
 import {
 	downloadNode,
 	formatDate,
@@ -90,12 +92,13 @@ interface NodeListItemProps {
 	restoreNodeCallback?: () => void;
 	moveNodesCallback?: () => void;
 	copyNodesCallback?: () => void;
+	manageSharesCallback?: () => void;
 	// Selection props
 	isSelected?: boolean;
 	isSelectionModeActive?: boolean;
 	selectId?: (id: string) => void;
-	permittedHoverBarActions?: ActionMap;
-	permittedContextualMenuActions?: ActionMap;
+	permittedHoverBarActions?: Action[];
+	permittedContextualMenuActions?: Action[];
 	renameNode?: () => void;
 	isActive?: boolean;
 	setActive?: (event: React.SyntheticEvent) => void;
@@ -130,12 +133,13 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 	restoreNodeCallback,
 	moveNodesCallback,
 	copyNodesCallback,
+	manageSharesCallback,
 	// Selection props
 	isSelected,
 	isSelectionModeActive,
 	selectId,
-	permittedHoverBarActions = {},
-	permittedContextualMenuActions = {},
+	permittedHoverBarActions = [],
+	permittedContextualMenuActions = [],
 	renameNode,
 	isActive,
 	setActive = (): void => undefined,
@@ -179,113 +183,6 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 		sendViaMail(id);
 	}, [id, sendViaMail]);
 
-	const itemsMap = useMemo<Partial<Record<Action, ActionItem>>>(
-		() => ({
-			[Action.OpenWithDocs]: {
-				id: 'OpenWithDocs',
-				icon: 'BookOpenOutline',
-				label: t('actions.openWithDocs', 'Open document'),
-				click: (): void => {
-					openNodeWithDocs(id);
-				}
-			},
-			[Action.MarkForDeletion]: {
-				id: 'MarkForDeletion',
-				icon: 'Trash2Outline',
-				label: t('actions.moveToTrash', 'Move to Trash'),
-				click: markNodesForDeletionCallback
-			},
-			[Action.Rename]: {
-				id: 'Rename',
-				icon: 'Edit2Outline',
-				label: t('actions.rename', 'Rename'),
-				click: renameNode
-			},
-			[Action.Copy]: {
-				id: 'Copy',
-				icon: 'Copy',
-				label: t('actions.copy', 'Copy'),
-				click: copyNodesCallback
-			},
-			[Action.Move]: {
-				id: 'Move',
-				icon: 'MoveOutline',
-				label: t('actions.move', 'Move'),
-				click: moveNodesCallback
-			},
-			[Action.Flag]: {
-				id: 'Flag',
-				icon: 'FlagOutline',
-				label: t('actions.flag', 'Flag'),
-				click: toggleFlagTrue
-			},
-			[Action.UnFlag]: {
-				id: 'Unflag',
-				icon: 'UnflagOutline',
-				label: t('actions.unflag', 'Unflag'),
-				click: toggleFlagFalse
-			},
-			[Action.Download]: {
-				id: 'Download',
-				icon: 'Download',
-				label: t('actions.download', 'Download'),
-				click: (): void => {
-					// download node without version to be sure last version is downloaded
-					downloadNode(id);
-					createSnackbar({
-						key: new Date().toLocaleString(),
-						type: 'info',
-						label: t('snackbar.download.start', 'Your download will start soon'),
-						replace: true,
-						hideButton: true
-					});
-				}
-			},
-			[Action.SendViaMail]: {
-				id: 'SendViaMail',
-				icon: 'EmailOutline',
-				label: t('actions.sendViaMail', 'Send via mail'),
-				click: sendViaMailCallback
-			},
-			[Action.Restore]: {
-				id: 'Restore',
-				icon: 'RestoreOutline',
-				label: t('actions.restore', 'Restore'),
-				click: restoreNodeCallback
-			},
-			[Action.DeletePermanently]: {
-				id: 'DeletePermanently',
-				icon: 'DeletePermanentlyOutline',
-				label: t('actions.deletePermanently', 'Delete Permanently'),
-				click: deletePermanentlyCallback
-			}
-		}),
-		[
-			t,
-			markNodesForDeletionCallback,
-			renameNode,
-			copyNodesCallback,
-			moveNodesCallback,
-			toggleFlagTrue,
-			toggleFlagFalse,
-			sendViaMailCallback,
-			restoreNodeCallback,
-			deletePermanentlyCallback,
-			id,
-			createSnackbar
-		]
-	);
-
-	const permittedHoverBarActionsItems = useMemo(
-		() => buildActionItems(itemsMap, permittedHoverBarActions),
-		[itemsMap, permittedHoverBarActions]
-	);
-
-	const permittedContextualMenuActionsItems = useMemo(
-		() => buildActionItems(itemsMap, permittedContextualMenuActions),
-		[itemsMap, permittedContextualMenuActions]
-	);
-
 	const isNavigable = useMemo(
 		() =>
 			type === NodeType.Folder || type === NodeType.Root || some(ROOTS, (rootId) => rootId === id),
@@ -307,12 +204,15 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 			if (!isSelectionModeActive && !disabled && !trashed) {
 				if (isNavigable) {
 					navigateTo(id, event);
+				} else if (includes(permittedContextualMenuActions, Action.Edit)) {
+					// if can be opened with docs on edit mode, open editor
+					openNodeWithDocs(id);
 				} else if ($isSupportedByPreview) {
 					const actions = [
 						{
-							icon: 'DriveOutline',
-							id: 'DriveOutline',
-							tooltipLabel: t('preview.actions.tooltip.addCollaborator', 'Add collaborator'),
+							icon: 'ShareOutline',
+							id: 'ShareOutline',
+							tooltipLabel: t('preview.actions.tooltip.manageShares', 'Manage Shares'),
 							onClick: (): void => setActiveNode(id, DISPLAYER_TABS.sharing)
 						},
 						{
@@ -345,7 +245,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 									(documentType === PREVIEW_TYPE.DOCUMENT &&
 										getDocumentPreviewSrc(id, version)))) ||
 							'';
-						if (permittedContextualMenuActions[Action.OpenWithDocs] === true) {
+						if (includes(permittedContextualMenuActions, Action.OpenWithDocs)) {
 							actions.unshift({
 								id: 'OpenWithDocs',
 								icon: 'BookOpenOutline',
@@ -364,7 +264,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 							src
 						});
 					}
-				} else if (permittedContextualMenuActions[Action.OpenWithDocs] === true) {
+				} else if (includes(permittedContextualMenuActions, Action.OpenWithDocs)) {
 					// if preview is not supported and document can be opened with docs, open editor
 					openNodeWithDocs(id);
 				}
@@ -389,6 +289,135 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 			documentType,
 			usePdfPreviewFallback
 		]
+	);
+
+	const itemsMap = useMemo<Partial<Record<Action, ActionItem>>>(
+		() => ({
+			[Action.Edit]: {
+				id: 'Edit',
+				icon: 'Edit2Outline',
+				label: t('actions.edit', 'Edit'),
+				click: (): void => {
+					openNodeWithDocs(id);
+				}
+			},
+			[Action.Preview]: {
+				id: 'Preview',
+				icon: 'MaximizeOutline',
+				label: t('actions.preview', 'Preview'),
+				click: openNode
+			},
+			[Action.SendViaMail]: {
+				id: 'SendViaMail',
+				icon: 'EmailOutline',
+				label: t('actions.sendViaMail', 'Send via mail'),
+				click: sendViaMailCallback
+			},
+			[Action.Download]: {
+				id: 'Download',
+				icon: 'Download',
+				label: t('actions.download', 'Download'),
+				click: (): void => {
+					// download node without version to be sure last version is downloaded
+					downloadNode(id);
+					createSnackbar({
+						key: new Date().toLocaleString(),
+						type: 'info',
+						label: t('snackbar.download.start', 'Your download will start soon'),
+						replace: true,
+						hideButton: true
+					});
+				}
+			},
+			[Action.ManageShares]: {
+				id: 'ManageShares',
+				icon: 'ShareOutline',
+				label: t('actions.manageShares', 'Manage Shares'),
+				click: manageSharesCallback
+			},
+			[Action.Flag]: {
+				id: 'Flag',
+				icon: 'FlagOutline',
+				label: t('actions.flag', 'Flag'),
+				click: toggleFlagTrue
+			},
+			[Action.UnFlag]: {
+				id: 'Unflag',
+				icon: 'UnflagOutline',
+				label: t('actions.unflag', 'Unflag'),
+				click: toggleFlagFalse
+			},
+			[Action.OpenWithDocs]: {
+				id: 'OpenWithDocs',
+				icon: 'BookOpenOutline',
+				label: t('actions.openWithDocs', 'Open document'),
+				click: (): void => {
+					openNodeWithDocs(id);
+				}
+			},
+			[Action.Copy]: {
+				id: 'Copy',
+				icon: 'Copy',
+				label: t('actions.copy', 'Copy'),
+				click: copyNodesCallback
+			},
+			[Action.Move]: {
+				id: 'Move',
+				icon: 'MoveOutline',
+				label: t('actions.move', 'Move'),
+				click: moveNodesCallback
+			},
+			[Action.Rename]: {
+				id: 'Rename',
+				icon: 'Edit2Outline',
+				label: t('actions.rename', 'Rename'),
+				click: renameNode
+			},
+			[Action.MoveToTrash]: {
+				id: 'MarkForDeletion',
+				icon: 'Trash2Outline',
+				label: t('actions.moveToTrash', 'Move to Trash'),
+				click: markNodesForDeletionCallback
+			},
+			[Action.Restore]: {
+				id: 'Restore',
+				icon: 'RestoreOutline',
+				label: t('actions.restore', 'Restore'),
+				click: restoreNodeCallback
+			},
+			[Action.DeletePermanently]: {
+				id: 'DeletePermanently',
+				icon: 'DeletePermanentlyOutline',
+				label: t('actions.deletePermanently', 'Delete Permanently'),
+				click: deletePermanentlyCallback
+			}
+		}),
+		[
+			t,
+			openNode,
+			sendViaMailCallback,
+			manageSharesCallback,
+			toggleFlagTrue,
+			toggleFlagFalse,
+			copyNodesCallback,
+			moveNodesCallback,
+			renameNode,
+			markNodesForDeletionCallback,
+			restoreNodeCallback,
+			deletePermanentlyCallback,
+			id,
+			createSnackbar
+		]
+	);
+
+	const permittedHoverBarActionsItems = useMemo(
+		() => buildActionItems(itemsMap, permittedHoverBarActions),
+		[itemsMap, permittedHoverBarActions]
+	);
+
+	const permittedContextualMenuActionsItems = useMemo(
+		() => buildActionItems(itemsMap, permittedContextualMenuActions),
+		[itemsMap, permittedContextualMenuActions]
 	);
 
 	const setActiveDebounced = useMemo(

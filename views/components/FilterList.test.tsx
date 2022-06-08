@@ -24,7 +24,13 @@ import {
 	mockFlagNodes,
 	mockGetChildren
 } from '../../utils/mockUtils';
-import { buildBreadCrumbRegExp, render, selectNodes, triggerLoadMore } from '../../utils/testUtils';
+import {
+	buildBreadCrumbRegExp,
+	iconRegexp,
+	render,
+	selectNodes,
+	triggerLoadMore
+} from '../../utils/testUtils';
 import FolderView from '../FolderView';
 import { DisplayerProps } from './Displayer';
 import FilterList from './FilterList';
@@ -239,18 +245,12 @@ describe('Filter list', () => {
 				expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 				expect(screen.getAllByTestId('unCheckedAvatar')).toHaveLength(nodes.length);
 				expect(screen.getByText(/select all/i)).toBeVisible();
-				expect(screen.getByTestId('icon: RestoreOutline')).toBeVisible();
-				expect(screen.getByTestId('icon: RestoreOutline').parentNode).toHaveAttribute(
-					'disabled',
-					''
-				);
-				expect(screen.getByTestId('icon: DeletePermanentlyOutline')).toBeVisible();
-				expect(screen.getByTestId('icon: DeletePermanentlyOutline').parentNode).toHaveAttribute(
-					'disabled',
-					''
-				);
-				expect(screen.queryByTestId('icon: MoreVertical')).not.toBeInTheDocument();
-				expect(screen.queryByTestId('icon: Trash2Outline')).not.toBeInTheDocument();
+
+				expect(screen.queryByTestId(iconRegexp.moreVertical)).not.toBeInTheDocument();
+				expect(screen.queryByTestId(iconRegexp.restore)).not.toBeInTheDocument();
+				expect(screen.queryByTestId(iconRegexp.deletePermanently)).not.toBeInTheDocument();
+				expect(screen.queryByTestId(iconRegexp.moveToTrash)).not.toBeInTheDocument();
+
 				expect(screen.getByTestId('icon: ArrowBackOutline')).toBeVisible();
 				userEvent.click(screen.getByTestId('icon: ArrowBackOutline'));
 				const listHeader = screen.getByTestId('list-header', { exact: false });

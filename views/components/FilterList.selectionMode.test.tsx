@@ -5,14 +5,14 @@
  */
 import React from 'react';
 
-import { screen } from '@testing-library/react';
+import { screen, waitForElementToBeRemoved } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route } from 'react-router-dom';
 
 import { ROOTS } from '../../constants';
 import { populateNodes } from '../../mocks/mockUtils';
 import { getFindNodesVariables, mockFindNodes } from '../../utils/mockUtils';
-import { actionRegexp, render, selectNodes } from '../../utils/testUtils';
+import { iconRegexp, render, selectNodes } from '../../utils/testUtils';
 import FilterList from './FilterList';
 
 describe('Filter List', () => {
@@ -43,33 +43,23 @@ describe('Filter List', () => {
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 			expect(screen.getAllByTestId('unCheckedAvatar')).toHaveLength(nodes.length);
 			expect(screen.getByText(/select all/i)).toBeVisible();
-			expect(screen.getByTestId('icon: Trash2Outline')).toBeVisible();
-			expect(screen.getByTestId('icon: Trash2Outline').parentNode).toHaveAttribute('disabled', '');
-			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-			userEvent.click(screen.getByTestId('icon: MoreVertical'));
-			await screen.findByText(actionRegexp.rename);
-			expect(screen.getByText(actionRegexp.rename)).toBeVisible();
-			expect(screen.getByText(actionRegexp.rename).parentNode).toHaveAttribute('disabled', '');
-			expect(screen.getByText(actionRegexp.copy)).toBeVisible();
-			expect(screen.getByText(actionRegexp.copy).parentNode).toHaveAttribute('disabled', '');
-			expect(screen.getByText(actionRegexp.move)).toBeVisible();
-			expect(screen.getByText(actionRegexp.move).parentNode).toHaveAttribute('disabled', '');
-			expect(screen.getByText(actionRegexp.flag)).toBeVisible();
-			expect(screen.getByText(actionRegexp.flag).parentNode).toHaveAttribute('disabled', '');
-			expect(screen.getByText(actionRegexp.unflag)).toBeVisible();
-			expect(screen.getByText(actionRegexp.unflag).parentNode).toHaveAttribute('disabled', '');
-			expect(screen.getByText(actionRegexp.download)).toBeVisible();
-			expect(screen.getByText(actionRegexp.download).parentNode).toHaveAttribute('disabled', '');
-			expect(screen.getByText(actionRegexp.openDocument)).toBeVisible();
-			expect(screen.getByText(actionRegexp.openDocument).parentNode).toHaveAttribute(
-				'disabled',
-				''
-			);
-			expect(screen.queryByTestId('icon: RestoreOutline')).not.toBeInTheDocument();
-			expect(screen.queryByTestId('icon: DeletePermanentlyOutline')).not.toBeInTheDocument();
-			expect(screen.getByTestId('icon: ArrowBackOutline')).toBeVisible();
-			userEvent.click(screen.getByTestId('icon: ArrowBackOutline'));
-			expect(screen.queryByTestId('icon: Trash2Outline')).not.toBeInTheDocument();
+
+			expect(screen.queryByTestId(iconRegexp.moveToTrash)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(iconRegexp.moreVertical)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(iconRegexp.rename)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(iconRegexp.copy)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(iconRegexp.move)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(iconRegexp.flag)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(iconRegexp.unflag)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(iconRegexp.download)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(iconRegexp.openDocument)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(iconRegexp.restore)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(iconRegexp.deletePermanently)).not.toBeInTheDocument();
+
+			const arrowBack = screen.getByTestId('icon: ArrowBackOutline');
+			expect(arrowBack).toBeVisible();
+			userEvent.click(arrowBack);
+			await waitForElementToBeRemoved(arrowBack);
 			expect(screen.queryByTestId('unCheckedAvatar')).not.toBeInTheDocument();
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 			expect(screen.queryByText(/select all/i)).not.toBeInTheDocument();

@@ -6,7 +6,7 @@
 
 import React from 'react';
 
-import { fireEvent, screen, waitForElementToBeRemoved, within } from '@testing-library/react';
+import { fireEvent, screen, waitForElementToBeRemoved } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
@@ -80,17 +80,15 @@ describe('Mark for deletion - trash', () => {
 			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 
-			let selectionModeActiveListHeader = screen.getByTestId('list-header-selectionModeActive');
+			userEvent.click(screen.getByTestId('icon: MoreVertical'));
 
-			let trashIcon = within(selectionModeActiveListHeader).getByTestId('icon: Trash2Outline');
-			expect(trashIcon).toBeInTheDocument();
-			expect(trashIcon).toBeVisible();
-			expect(trashIcon.parentElement).not.toHaveAttribute('disabled', '');
-
-			userEvent.click(trashIcon);
+			const trashAction = await screen.findByText(actionRegexp.moveToTrash);
+			expect(trashAction.parentNode).not.toHaveAttribute('disabled');
+			userEvent.click(trashAction);
 
 			const snackbar = await screen.findByText(/item moved to trash/i);
 			await waitForElementToBeRemoved(snackbar);
+			expect(trashAction).not.toBeInTheDocument();
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 
 			expect(screen.queryAllByTestId(`file-icon-preview`).length).toEqual(1);
@@ -101,13 +99,14 @@ describe('Mark for deletion - trash', () => {
 			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 
-			selectionModeActiveListHeader = screen.getByTestId('list-header-selectionModeActive');
+			userEvent.click(screen.getByTestId('icon: MoreVertical'));
 
-			trashIcon = within(selectionModeActiveListHeader).getByTestId('icon: Trash2Outline');
-			expect(trashIcon).toBeInTheDocument();
-			expect(trashIcon).toBeVisible();
-			expect(trashIcon.parentElement).toHaveAttribute('disabled', '');
-			expect.assertions(12);
+			// wait for copy action to check that popper is open
+			const copyAction = await screen.findByText(actionRegexp.copy);
+			expect(copyAction.parentNode).not.toHaveAttribute('disabled');
+
+			expect(screen.queryByText(actionRegexp.moveToTrash)).not.toBeInTheDocument();
+			expect.assertions(10);
 		});
 
 		test('Mark for deletion of all loaded nodes trigger refetch of first page', async () => {
@@ -143,10 +142,13 @@ describe('Mark for deletion - trash', () => {
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length);
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-			const trashAction = await screen.findByTestId('icon: Trash2Outline');
+
+			userEvent.click(screen.getByTestId('icon: MoreVertical'));
+
+			const trashAction = await screen.findByText(actionRegexp.moveToTrash);
 			expect(trashAction).toBeVisible();
-			expect(trashAction).not.toHaveAttribute('disabled', '');
 			userEvent.click(trashAction);
+
 			const snackbar = await screen.findByText(/Item moved to trash/i);
 			await waitForElementToBeRemoved(snackbar);
 			expect(screen.queryByText((firstPage[0] as Node).name)).not.toBeInTheDocument();

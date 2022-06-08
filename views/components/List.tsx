@@ -7,24 +7,20 @@
 import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 
 import { Container } from '@zextras/carbonio-design-system';
-import difference from 'lodash/difference';
+import { PreviewsManagerContext } from '@zextras/carbonio-ui-preview';
 import filter from 'lodash/filter';
 import find from 'lodash/find';
 import includes from 'lodash/includes';
-import partition from 'lodash/partition';
 import size from 'lodash/size';
-import union from 'lodash/union';
 import { useTranslation } from 'react-i18next';
-import { useLocation, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import ListHeader from '../../../components/ListHeader';
-import { ACTIONS_TO_REMOVE_DUE_TO_PRODUCT_CONTEXT } from '../../../constants';
 import { useActiveNode } from '../../../hooks/useActiveNode';
 import { useNavigation } from '../../../hooks/useNavigation';
 import { useSendViaMail } from '../../../hooks/useSendViaMail';
 import useUserInfo from '../../../hooks/useUserInfo';
-import { DRAG_TYPES, ROOTS } from '../../constants';
+import { DISPLAYER_TABS, DRAG_TYPES, PREVIEW_TYPE, ROOTS } from '../../constants';
 import { ListContext, NodeAvatarIconContext } from '../../contexts';
 import {
 	DeleteNodesType,
@@ -53,18 +49,24 @@ import { OpenRenameModal, useRenameModal } from '../../hooks/modals/useRenameMod
 import { useCreateSnackbar } from '../../hooks/useCreateSnackbar';
 import useSelection from '../../hooks/useSelection';
 import { useUpload } from '../../hooks/useUpload';
-import { Crumb, NodeListItemType, URLParams } from '../../types/common';
+import { Action, Crumb, NodeListItemType } from '../../types/common';
+import { File } from '../../types/graphql/types';
 import {
-	Action,
 	ActionItem,
 	ActionsFactoryChecker,
 	ActionsFactoryCheckerMap,
 	buildActionItems,
-	getPermittedSelectionModePrimaryActions,
-	getPermittedSelectionModeSecondaryActions,
-	trashedNodeActions
+	getAllPermittedActions
 } from '../../utils/ActionsFactory';
-import { downloadNode, isTrashedVisible, isTrashView, openNodeWithDocs } from '../../utils/utils';
+import {
+	downloadNode,
+	getDocumentPreviewSrc,
+	getImgPreviewSrc,
+	getPdfPreviewSrc,
+	humanFileSize,
+	isSupportedByPreview,
+	openNodeWithDocs
+} from '../../utils/utils';
 import { Dropzone } from './Dropzone';
 import { EmptyFolder } from './EmptyFolder';
 import { ListContent } from './ListContent';
@@ -131,33 +133,6 @@ export const List: React.VFC<ListProps> = ({
 		[nodes, selectedIDs]
 	);
 
-	const params = useParams<URLParams>();
-	const location = useLocation();
-	const isATrashFilter = useMemo(() => isTrashView(params), [params]);
-	const includeTrashed = useMemo(() => isTrashedVisible(params, location), [params, location]);
-
-	const actionsToRemoveIfInsideTrash = useMemo(() => {
-		if (isATrashFilter) {
-			return difference(Object.values(Action), trashedNodeActions);
-		}
-		return [];
-	}, [isATrashFilter]);
-
-	const actionsToRemove = useMemo(() => {
-		const selectedSize = size(selectedNodes);
-		if (selectedSize > 0) {
-			const [deleted, notDeleted] = partition(selectedNodes, { rootId: ROOTS.TRASH });
-			if (selectedSize === size(deleted)) {
-				return [Action.MarkForDeletion];
-			}
-			if (selectedSize === size(notDeleted)) {
-				return trashedNodeActions;
-			}
-			return [...trashedNodeActions, Action.MarkForDeletion];
-		}
-		return !includeTrashed ? trashedNodeActions : [];
-	}, [includeTrashed, selectedNodes]);
-
 	const { me } = useUserInfo();
 
 	const moveCheckFunction = useCallback<ActionsFactoryChecker>(
@@ -175,25 +150,11 @@ export const List: React.VFC<ListProps> = ({
 		[moveCheckFunction]
 	);
 
-	const [permittedSelectionModePrimaryActions, permittedSelectionModeSecondaryActions] = useMemo(
-		() => [
-			getPermittedSelectionModePrimaryActions(
-				selectedNodes,
-				union(actionsToRemove, actionsToRemoveIfInsideTrash)
-			),
+	const permittedSelectionModeActions = useMemo(
+		() =>
 			// TODO: REMOVE CHECK ON ROOT WHEN BE WILL NOT RETURN LOCAL_ROOT AS PARENT FOR SHARED NODES
-			getPermittedSelectionModeSecondaryActions(
-				selectedNodes,
-				union(
-					actionsToRemove,
-					actionsToRemoveIfInsideTrash,
-					ACTIONS_TO_REMOVE_DUE_TO_PRODUCT_CONTEXT
-				),
-				me,
-				actionCheckers
-			)
-		],
-		[actionsToRemove, actionsToRemoveIfInsideTrash, actionCheckers, me, selectedNodes]
+			getAllPermittedActions(selectedNodes, me, actionCheckers),
+		[actionCheckers, me, selectedNodes]
 	);
 
 	const setActiveNodeHandler = useCallback<
@@ -203,6 +164,13 @@ export const List: React.VFC<ListProps> = ({
 			if (!event?.defaultPrevented) {
 				setActiveNode(node.id);
 			}
+		},
+		[setActiveNode]
+	);
+
+	const manageShares = useCallback<(nodeId: string) => void>(
+		(nodeId) => {
+			setActiveNode(nodeId, DISPLAYER_TABS.sharing);
 		},
 		[setActiveNode]
 	);
@@ -331,6 +299,14 @@ export const List: React.VFC<ListProps> = ({
 		}
 	}, [exitSelectionMode, nodes, selectedIDs, sendViaMail]);
 
+	const manageSharesSelection = useCallback(() => {
+		exitSelectionMode();
+		const nodeToShare = find(nodes, (node) => node.id === selectedIDs[0]);
+		if (nodeToShare) {
+			manageShares(nodeToShare.id);
+		}
+	}, [exitSelectionMode, manageShares, nodes, selectedIDs]);
+
 	const openWithDocsSelection = useCallback(() => {
 		const nodeToOpen = find(nodes, (node) => node.id === selectedIDs[0]);
 		if (nodeToOpen) {
@@ -339,37 +315,112 @@ export const List: React.VFC<ListProps> = ({
 		}
 	}, [nodes, selectedIDs, exitSelectionMode]);
 
+	const { createPreview } = useContext(PreviewsManagerContext);
+
+	const previewSelection = useCallback(() => {
+		const nodeToPreview = find(nodes, (node) => node.id === selectedIDs[0]);
+		const {
+			extension,
+			size: fileSize,
+			id,
+			name,
+			version,
+			mime_type: mimeType
+		} = nodeToPreview as File;
+		const [$isSupportedByPreview, documentType] = isSupportedByPreview(mimeType);
+		if ($isSupportedByPreview) {
+			const actions = [
+				{
+					icon: 'ShareOutline',
+					id: 'ShareOutline',
+					tooltipLabel: t('preview.actions.tooltip.manageShares', 'Manage Shares'),
+					onClick: (): void => setActiveNode(id, DISPLAYER_TABS.sharing)
+				},
+				{
+					icon: 'DownloadOutline',
+					tooltipLabel: t('preview.actions.tooltip.download', 'Download'),
+					id: 'DownloadOutline',
+					onClick: (): void => downloadNode(id)
+				}
+			];
+			const closeAction = {
+				id: 'close-action',
+				icon: 'ArrowBackOutline',
+				tooltipLabel: t('preview.close.tooltip', 'Close')
+			};
+			if (documentType === PREVIEW_TYPE.IMAGE) {
+				createPreview({
+					previewType: 'image',
+					filename: name,
+					extension: extension || undefined,
+					size: (fileSize && humanFileSize(fileSize)) || undefined,
+					actions,
+					closeAction,
+					src: version ? getImgPreviewSrc(id, version, 0, 0, 'high') : ''
+				});
+			} else {
+				// if supported, open document with preview
+				const src =
+					(version &&
+						((documentType === PREVIEW_TYPE.PDF && getPdfPreviewSrc(id, version)) ||
+							(documentType === PREVIEW_TYPE.DOCUMENT && getDocumentPreviewSrc(id, version)))) ||
+					'';
+				if (includes(permittedSelectionModeActions, Action.OpenWithDocs)) {
+					actions.unshift({
+						id: 'OpenWithDocs',
+						icon: 'BookOpenOutline',
+						tooltipLabel: t('actions.openWithDocs', 'Open document'),
+						onClick: (): void => openNodeWithDocs(id)
+					});
+				}
+				createPreview({
+					previewType: 'pdf',
+					filename: name,
+					extension: extension || undefined,
+					size: (fileSize && humanFileSize(fileSize)) || undefined,
+					useFallback: fileSize > 20971520,
+					actions,
+					closeAction,
+					src
+				});
+			}
+		} else if (includes(permittedSelectionModeActions, Action.OpenWithDocs)) {
+			// if preview is not supported and document can be opened with docs, open editor
+			openNodeWithDocs(id);
+		}
+	}, [nodes, permittedSelectionModeActions, selectedIDs, t, setActiveNode, createPreview]);
+
 	const itemsMap = useMemo<Partial<Record<Action, ActionItem>>>(
 		() => ({
-			[Action.OpenWithDocs]: {
-				id: 'OpenWithDocs',
-				icon: 'BookOpenOutline',
-				label: t('actions.openWithDocs', 'Open document'),
+			[Action.Edit]: {
+				id: 'Edit',
+				icon: 'Edit2Outline',
+				label: t('actions.edit', 'Edit'),
 				click: openWithDocsSelection
 			},
-			[Action.MarkForDeletion]: {
-				id: 'MarkForDeletion',
-				icon: 'Trash2Outline',
-				label: t('actions.moveToTrash', 'Move to Trash'),
-				click: markForDeletionSelection
+			[Action.Preview]: {
+				id: 'Preview',
+				icon: 'MaximizeOutline',
+				label: t('actions.preview', 'Preview'),
+				click: previewSelection
 			},
-			[Action.Rename]: {
-				id: 'Rename',
-				icon: 'EditOutline',
-				label: t('actions.rename', 'Rename'),
-				click: openRenameModalSelection
+			[Action.SendViaMail]: {
+				id: 'SendViaMail',
+				icon: 'EmailOutline',
+				label: t('actions.sendViaMail', 'Send via mail'),
+				click: sendViaMailCallback
 			},
-			[Action.Copy]: {
-				id: 'Copy',
-				icon: 'Copy',
-				label: t('actions.copy', 'Copy'),
-				click: openCopyNodesModalSelection
+			[Action.Download]: {
+				id: 'Download',
+				icon: 'Download',
+				label: t('actions.download', 'Download'),
+				click: downloadSelection
 			},
-			[Action.Move]: {
-				id: 'Move',
-				icon: 'MoveOutline',
-				label: t('actions.move', 'Move'),
-				click: openMoveNodesModalSelection
+			[Action.ManageShares]: {
+				id: 'ManageShares',
+				icon: 'ShareOutline',
+				label: t('actions.manageShares', 'Manage Shares'),
+				click: manageSharesSelection
 			},
 			[Action.Flag]: {
 				id: 'Flag',
@@ -387,17 +438,35 @@ export const List: React.VFC<ListProps> = ({
 					toggleFlagSelection(false);
 				}
 			},
-			[Action.Download]: {
-				id: 'Download',
-				icon: 'Download',
-				label: t('actions.download', 'Download'),
-				click: downloadSelection
+			[Action.OpenWithDocs]: {
+				id: 'OpenWithDocs',
+				icon: 'BookOpenOutline',
+				label: t('actions.openWithDocs', 'Open document'),
+				click: openWithDocsSelection
 			},
-			[Action.SendViaMail]: {
-				id: 'SendViaMail',
-				icon: 'EmailOutline',
-				label: t('actions.sendViaMail', 'Send via mail'),
-				click: sendViaMailCallback
+			[Action.Copy]: {
+				id: 'Copy',
+				icon: 'Copy',
+				label: t('actions.copy', 'Copy'),
+				click: openCopyNodesModalSelection
+			},
+			[Action.Move]: {
+				id: 'Move',
+				icon: 'MoveOutline',
+				label: t('actions.move', 'Move'),
+				click: openMoveNodesModalSelection
+			},
+			[Action.Rename]: {
+				id: 'Rename',
+				icon: 'EditOutline',
+				label: t('actions.rename', 'Rename'),
+				click: openRenameModalSelection
+			},
+			[Action.MoveToTrash]: {
+				id: 'MarkForDeletion',
+				icon: 'Trash2Outline',
+				label: t('actions.moveToTrash', 'Move to Trash'),
+				click: markForDeletionSelection
 			},
 			[Action.Restore]: {
 				id: 'Restore',
@@ -414,12 +483,14 @@ export const List: React.VFC<ListProps> = ({
 		}),
 		[
 			downloadSelection,
+			manageSharesSelection,
 			markForDeletionSelection,
 			openCopyNodesModalSelection,
 			openDeletePermanentlyModal,
 			openMoveNodesModalSelection,
 			openRenameModalSelection,
 			openWithDocsSelection,
+			previewSelection,
 			restoreSelection,
 			sendViaMailCallback,
 			t,
@@ -427,22 +498,9 @@ export const List: React.VFC<ListProps> = ({
 		]
 	);
 
-	const permittedSelectionModePrimaryActionsItems = useMemo(
-		() => buildActionItems(itemsMap, permittedSelectionModePrimaryActions),
-		[itemsMap, permittedSelectionModePrimaryActions]
-	);
-
-	const permittedSelectionModeSecondaryActionsItems = useMemo(
-		() => buildActionItems(itemsMap, permittedSelectionModeSecondaryActions),
-		[itemsMap, permittedSelectionModeSecondaryActions]
-	);
-
-	const selectionContextualMenuActionsItems = useMemo(
-		() => [
-			...permittedSelectionModePrimaryActionsItems,
-			...permittedSelectionModeSecondaryActionsItems
-		],
-		[permittedSelectionModePrimaryActionsItems, permittedSelectionModeSecondaryActionsItems]
+	const permittedSelectionModeActionsItems = useMemo(
+		() => buildActionItems(itemsMap, permittedSelectionModeActions),
+		[itemsMap, permittedSelectionModeActions]
 	);
 
 	const { add } = useUpload();
@@ -513,8 +571,7 @@ export const List: React.VFC<ListProps> = ({
 				unSelectAll={unSelectAll}
 				selectAll={selectAll}
 				exitSelectionMode={exitSelectionMode}
-				permittedSelectionModePrimaryActionsItems={permittedSelectionModePrimaryActionsItems}
-				permittedSelectionModeSecondaryActionsItems={permittedSelectionModeSecondaryActionsItems}
+				permittedSelectionModeActionsItems={permittedSelectionModeActionsItems}
 				actionComponent={<SortingComponent />}
 			/>
 			<Dropzone
@@ -542,6 +599,7 @@ export const List: React.VFC<ListProps> = ({
 									isSelectionModeActive={isSelectionModeActive}
 									exitSelectionMode={exitSelectionMode}
 									toggleFlag={toggleFlag}
+									manageShares={manageShares}
 									renameNode={openRenameModalAction}
 									markNodesForDeletion={markNodesForDeletion}
 									restore={restore}
@@ -556,7 +614,7 @@ export const List: React.VFC<ListProps> = ({
 									loadMore={loadMore}
 									draggable
 									customCheckers={actionCheckers}
-									selectionContextualMenuActionsItems={selectionContextualMenuActionsItems}
+									selectionContextualMenuActionsItems={permittedSelectionModeActionsItems}
 									fillerWithActions={fillerWithActions}
 								/>
 								{fillerWithActions &&

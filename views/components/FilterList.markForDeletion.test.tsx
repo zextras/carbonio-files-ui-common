@@ -54,10 +54,9 @@ describe('Filter List', () => {
 				// check that all wanted items are selected
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
+				userEvent.click(screen.getByTestId('icon: MoreVertical'));
 
-				const selectionModeActiveListHeader = screen.getByTestId('list-header-selectionModeActive');
-
-				const trashIcon = within(selectionModeActiveListHeader).getByTestId('icon: Trash2Outline');
+				const trashIcon = await screen.findByText(actionRegexp.moveToTrash);
 				expect(trashIcon).toBeInTheDocument();
 				expect(trashIcon).toBeVisible();
 				expect(trashIcon).not.toHaveAttribute('disabled', '');
@@ -99,7 +98,6 @@ describe('Filter List', () => {
 				selectNodes(nodesIdsToMFD);
 				// check that all wanted items are selected
 				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
-				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 
 				const selectionModeActiveListHeader = screen.getByTestId('list-header-selectionModeActive');
 
@@ -107,7 +105,7 @@ describe('Filter List', () => {
 					'icon: Trash2Outline'
 				);
 				expect(trashIcon).not.toBeInTheDocument();
-				expect.assertions(3);
+				expect.assertions(2);
 			});
 		});
 
@@ -127,8 +125,6 @@ describe('Filter List', () => {
 				// right click to open contextual menu
 				const nodeItem = screen.getByTestId(`node-item-${node.id}`);
 				fireEvent.contextMenu(nodeItem);
-				const renameAction = await screen.findByText(actionRegexp.rename);
-				expect(renameAction).toBeVisible();
 				const restoreAction = await screen.findByText(actionRegexp.restore);
 				expect(restoreAction).toBeVisible();
 				const moveToTrashAction = screen.queryByText(actionRegexp.moveToTrash);
@@ -177,7 +173,8 @@ describe('Filter List', () => {
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length);
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-			const trashAction = await screen.findByTestId('icon: Trash2Outline');
+			userEvent.click(screen.getByTestId('icon: MoreVertical'));
+			const trashAction = await screen.findByText(actionRegexp.moveToTrash);
 			expect(trashAction).toBeVisible();
 			expect(trashAction.parentNode).not.toHaveAttribute('disabled', '');
 			userEvent.click(trashAction);

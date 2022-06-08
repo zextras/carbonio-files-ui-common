@@ -23,7 +23,7 @@ import { useDeleteVersionsMutation } from '../../../hooks/graphql/mutations/useD
 import { useKeepVersionsMutation } from '../../../hooks/graphql/mutations/useKeepVersionsMutation';
 import { useGetVersionsQuery } from '../../../hooks/graphql/queries/useGetVersionsQuery';
 import { NonNullableList } from '../../../types/utils';
-import { ActionsFactoryNodeType, canOpenWithDocs } from '../../../utils/ActionsFactory';
+import { ActionsFactoryNodeType, canOpenVersionWithDocs } from '../../../utils/ActionsFactory';
 import { getChipLabel } from '../../../utils/utils';
 import { GridContainer } from './GridElements';
 import UploadVersionButton, { UploadVersionButtonProps } from './UploadVersionButton';
@@ -86,7 +86,7 @@ export const Versioning: React.VFC<VersioningProps> = ({ node }) => {
 			canCloneVersion={node.permissions.can_write_file}
 			canDelete={false}
 			canKeepVersion={node.permissions.can_write_file}
-			canOpenWithDocs={canOpenWithDocs([node])}
+			canOpenWithDocs={canOpenVersionWithDocs([node])}
 			clonedFromVersion={version.cloned_from_version || undefined}
 			cloneUpdatedAt={
 				version.cloned_from_version
@@ -114,7 +114,7 @@ export const Versioning: React.VFC<VersioningProps> = ({ node }) => {
 			canCloneVersion={node.permissions.can_write_file}
 			canDelete={!version.keep_forever && node.permissions.can_write_file}
 			canKeepVersion={node.permissions.can_write_file}
-			canOpenWithDocs={canOpenWithDocs([node])}
+			canOpenWithDocs={canOpenVersionWithDocs([node])}
 			clonedFromVersion={version.cloned_from_version || undefined}
 			cloneUpdatedAt={
 				version.cloned_from_version
@@ -152,7 +152,7 @@ export const Versioning: React.VFC<VersioningProps> = ({ node }) => {
 			canCloneVersion={node.permissions.can_write_file}
 			canDelete={!version.keep_forever && node.permissions.can_write_file}
 			canKeepVersion={node.permissions.can_write_file}
-			canOpenWithDocs={canOpenWithDocs([node])}
+			canOpenWithDocs={canOpenVersionWithDocs([node])}
 			clonedFromVersion={version.cloned_from_version || undefined}
 			cloneUpdatedAt={
 				version.cloned_from_version

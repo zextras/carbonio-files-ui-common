@@ -53,6 +53,9 @@ const handleFindNodesRequest: ResponseResolver<
 		} else if (sharedByMe === false && sharedWithMe === false) {
 			node.shares = [];
 		}
+		node.permissions.can_delete = true;
+		node.permissions.can_write_folder = true;
+		node.permissions.can_write_file = true;
 		nodes.push(node);
 	}
 
