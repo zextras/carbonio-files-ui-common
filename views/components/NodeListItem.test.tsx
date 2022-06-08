@@ -395,7 +395,7 @@ describe('Node List Item', () => {
 		expect(screen.getAllByText(new RegExp(`^${node.extension}`, 'i'))).toHaveLength(2);
 		expect(screen.getAllByText(new RegExp(humanFileSize(node.size), 'i'))).toHaveLength(2);
 		expect(screen.getByTestId('icon: ArrowBackOutline')).toBeInTheDocument();
-		expect(screen.getByTestId('icon: DriveOutline')).toBeInTheDocument();
+		expect(screen.getByTestId('icon: ShareOutline')).toBeInTheDocument();
 		expect(screen.getByTestId('icon: DownloadOutline')).toBeInTheDocument();
 		expect(screen.queryByTestId('icon: BookOpenOutline')).not.toBeInTheDocument();
 	});
@@ -429,7 +429,7 @@ describe('Node List Item', () => {
 		expect(screen.getAllByText(new RegExp(humanFileSize(node.size), 'i'))).toHaveLength(2);
 		expect(screen.getByText(/loading pdf/i)).toBeInTheDocument();
 		expect(screen.getByTestId('icon: ArrowBackOutline')).toBeInTheDocument();
-		expect(screen.getByTestId('icon: DriveOutline')).toBeInTheDocument();
+		expect(screen.getByTestId('icon: ShareOutline')).toBeInTheDocument();
 		expect(screen.getByTestId('icon: DownloadOutline')).toBeInTheDocument();
 		expect(screen.getByTestId('icon: BookOpenOutline')).toBeInTheDocument();
 		expect(openWithDocsFn).not.toHaveBeenCalled();

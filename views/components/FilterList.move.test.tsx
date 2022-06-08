@@ -105,8 +105,8 @@ describe('Filter List', () => {
 
 				// check that all wanted items are selected
 				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
-				expect(screen.queryByTestId(iconRegexp.moreVertical)).not.toBeInTheDocument();
 				expect(screen.queryByText(iconRegexp.move)).not.toBeInTheDocument();
+				// TODO improve when popper selector will be available
 			});
 
 			test('Move is disabled if node has no parent or parent has not right permissions', async () => {
