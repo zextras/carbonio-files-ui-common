@@ -27,7 +27,9 @@ export type KeepVersionsType = (
 ) => Promise<FetchResult<KeepVersionsMutation>>;
 
 /**
- * Can return error: TODO
+ * Can return error:
+ * VERSIONS_LIMIT_REACHED: too many versions are marked to be kept forever
+ * FILE_VERSION_NOT_FOUND: version not found
  */
 export function useKeepVersionsMutation(): KeepVersionsType {
 	const [keepVersionsMutation, { error: keepVersionsError }] = useMutation<

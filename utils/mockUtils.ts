@@ -34,6 +34,7 @@ import FIND_NODES from '../graphql/queries/findNodes.graphql';
 import GET_ACCOUNT_BY_EMAIL from '../graphql/queries/getAccountByEmail.graphql';
 import GET_BASE_NODE from '../graphql/queries/getBaseNode.graphql';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
+import GET_CONFIGS from '../graphql/queries/getConfigs.graphql';
 import GET_NODE from '../graphql/queries/getNode.graphql';
 import GET_NODE_LINKS from '../graphql/queries/getNodeLinks.graphql';
 import GET_PARENT from '../graphql/queries/getParent.graphql';
@@ -42,7 +43,7 @@ import GET_PERMISSIONS from '../graphql/queries/getPermissions.graphql';
 import GET_ROOTS_LIST from '../graphql/queries/getRootsList.graphql';
 import GET_SHARES from '../graphql/queries/getShares.graphql';
 import GET_VERSIONS from '../graphql/queries/getVersions.graphql';
-import { populateNodePage } from '../mocks/mockUtils';
+import { populateConfigs, populateNodePage } from '../mocks/mockUtils';
 import {
 	CopyNodesMutationVariables,
 	CreateFolderMutationVariables,
@@ -104,7 +105,9 @@ import {
 	GetRootsListQuery,
 	GetRootsListQueryVariables,
 	GetPermissionsQueryVariables,
-	GetPermissionsQuery
+	GetPermissionsQuery,
+	GetConfigsQuery,
+	GetConfigsQueryVariables
 } from '../types/graphql/types';
 
 type Id = string;
@@ -789,6 +792,22 @@ export function mockGetRootsList(): Mock<GetRootsListQuery, GetRootsListQueryVar
 					{ __typename: 'Root', id: ROOTS.LOCAL_ROOT, name: ROOTS.LOCAL_ROOT },
 					{ __typename: 'Root', id: ROOTS.TRASH, name: ROOTS.TRASH }
 				]
+			}
+		}
+	};
+}
+
+export function mockGetConfigs(
+	configs: Array<{ name: string; value: string }> = populateConfigs()
+): Mock<GetConfigsQuery, GetConfigsQueryVariables> {
+	return {
+		request: {
+			query: GET_CONFIGS,
+			variables: {}
+		},
+		result: {
+			data: {
+				getConfigs: configs
 			}
 		}
 	};
