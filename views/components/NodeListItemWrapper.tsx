@@ -20,9 +20,8 @@ import { useMoveNodesMutation } from '../../hooks/graphql/mutations/useMoveNodes
 import { useDeletePermanentlyModal } from '../../hooks/modals/useDeletePermanentlyModal';
 import { useCreateSnackbar } from '../../hooks/useCreateSnackbar';
 import { useUpload } from '../../hooks/useUpload';
-import { NodeListItemType, URLParams } from '../../types/common';
+import { Action, NodeListItemType, URLParams } from '../../types/common';
 import {
-	Action,
 	ActionItem,
 	canBeMoveDestination,
 	canUploadFile,
