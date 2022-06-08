@@ -22,9 +22,8 @@ import { ListContext } from '../../contexts';
 import { useCreateSnackbar } from '../../hooks/useCreateSnackbar';
 import useSelection from '../../hooks/useSelection';
 import { useUpload } from '../../hooks/useUpload';
-import { UploadType } from '../../types/common';
+import { Action, UploadType } from '../../types/common';
 import {
-	Action,
 	ActionItem,
 	buildActionItems,
 	getPermittedUploadActions

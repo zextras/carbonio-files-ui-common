@@ -29,10 +29,9 @@ import { useCopyModal } from '../../hooks/modals/useCopyModal';
 import { useDeletePermanentlyModal } from '../../hooks/modals/useDeletePermanentlyModal';
 import { useMoveModal } from '../../hooks/modals/useMoveModal';
 import { useRenameModal } from '../../hooks/modals/useRenameModal';
-import { GetNodeParentType } from '../../types/common';
+import { Action, GetNodeParentType } from '../../types/common';
 import { File, MakeOptional, Node } from '../../types/graphql/types';
 import {
-	Action,
 	ActionItem,
 	ActionsFactoryNodeType,
 	buildActionItems,

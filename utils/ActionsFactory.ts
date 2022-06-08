@@ -18,32 +18,10 @@ import some from 'lodash/some';
 
 import { ACTIONS_TO_REMOVE_DUE_TO_PRODUCT_CONTEXT } from '../../constants';
 import { ROOTS } from '../constants';
-import { GetNodeParentType, Node, UploadStatus, UploadType } from '../types/common';
+import { Action, GetNodeParentType, Node, UploadStatus, UploadType } from '../types/common';
 import { File as FilesFile, File, Folder, MakeOptional, Root } from '../types/graphql/types';
 import { OneOrMany } from '../types/utils';
 import { docsHandledMimeTypes, isSupportedByPreview } from './utils';
-
-export enum Action {
-	Edit = 'EDIT',
-	Preview = 'PREVIEW',
-	SendViaMail = 'SEND_VIA_MAIL',
-	Download = 'DOWNLOAD',
-	ManageShares = 'MANAGE_SHARES',
-	Flag = 'FLAG',
-	UnFlag = 'UNFLAG',
-	OpenWithDocs = 'OPEN_WITH_DOCS',
-	Copy = 'COPY',
-	Move = 'MOVE',
-	Rename = 'RENAME',
-	MoveToTrash = 'MOVE_TO_TRASH',
-	Restore = 'RESTORE',
-	DeletePermanently = 'DELETE_PERMANENTLY',
-	UpsertDescription = 'UPSERT_DESCRIPTION',
-	removeUpload = 'REMOVE_UPLOAD',
-	RetryUpload = 'RETRY_UPLOAD',
-	GoToFolder = 'GO_TO_FOLDER'
-	// CreateFolder = 'CREATE_FOLDER',
-}
 
 export interface ActionItem {
 	id: string;

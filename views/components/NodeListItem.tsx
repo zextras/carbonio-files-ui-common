@@ -26,8 +26,9 @@ import {
 	ROOTS
 } from '../../constants';
 import { useCreateSnackbar } from '../../hooks/useCreateSnackbar';
+import { Action } from '../../types/common';
 import { NodeType, User } from '../../types/graphql/types';
-import { Action, ActionItem, buildActionItems } from '../../utils/ActionsFactory';
+import { ActionItem, buildActionItems } from '../../utils/ActionsFactory';
 import {
 	downloadNode,
 	formatDate,

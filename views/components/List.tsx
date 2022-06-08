@@ -49,10 +49,9 @@ import { OpenRenameModal, useRenameModal } from '../../hooks/modals/useRenameMod
 import { useCreateSnackbar } from '../../hooks/useCreateSnackbar';
 import useSelection from '../../hooks/useSelection';
 import { useUpload } from '../../hooks/useUpload';
-import { Crumb, NodeListItemType } from '../../types/common';
+import { Action, Crumb, NodeListItemType } from '../../types/common';
 import { File } from '../../types/graphql/types';
 import {
-	Action,
 	ActionItem,
 	ActionsFactoryChecker,
 	ActionsFactoryCheckerMap,

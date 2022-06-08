@@ -16,11 +16,10 @@ import useUserInfo from '../../../hooks/useUserInfo';
 import { draggedItemsVar } from '../../apollo/dragAndDropVar';
 import { DRAG_TYPES } from '../../constants';
 import { DeleteNodesType } from '../../hooks/graphql/mutations/useDeleteNodesMutation';
-import { GetNodeParentType, NodeListItemType, PickIdNodeType } from '../../types/common';
+import { Action, GetNodeParentType, NodeListItemType, PickIdNodeType } from '../../types/common';
 import { Node } from '../../types/graphql/types';
 import { DeepPick, OneOrMany } from '../../types/utils';
 import {
-	Action,
 	ActionItem,
 	ActionsFactoryCheckerMap,
 	getPermittedActions,
