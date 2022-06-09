@@ -104,12 +104,9 @@ export function useDeleteShareMutation(): (
 								}
 							}
 						});
-						// remove node from shared with me when user remove self share
+						// always remove node when user remove self share
 						if (shareTargetId === me) {
-							removeNodesFromFilter(
-								[node.id],
-								(existingNodesRefs) => existingNodesRefs.args?.shared_with_me === true
-							);
+							removeNodesFromFilter([node.id], () => true);
 
 							const parentFolder = cache.readFragment<ParentIdFragment>({
 								id: cache.identify(node),
