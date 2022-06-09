@@ -15,7 +15,7 @@ import { graphql } from 'msw';
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import server from '../../mocks/server';
 import { searchParamsVar } from '../apollo/searchVar';
-import { NODES_LOAD_LIMIT, ROOTS } from '../constants';
+import { ROOTS } from '../constants';
 import BASE_NODE from '../graphql/fragments/baseNode.graphql';
 import {
 	populateFolder,
@@ -29,7 +29,6 @@ import {
 import { AdvancedFilters, Node } from '../types/common';
 import {
 	BaseNodeFragment,
-	File,
 	FindNodesQuery,
 	FindNodesQueryVariables,
 	Folder,
@@ -58,7 +57,6 @@ import {
 	buildChipsFromKeywords,
 	moveNode,
 	render,
-	selectNodes,
 	waitForNetworkResponse
 } from '../utils/testUtils';
 import { getChipLabel } from '../utils/utils';
@@ -72,103 +70,6 @@ jest.mock('../../hooks/useCreateOptions', () => ({
 }));
 
 describe('Search view', () => {
-	test.skip('all actions are available in the nodes', async () => {
-		const keywords = ['keyword1', 'keyword2'];
-		const searchParams: AdvancedFilters = { keywords: buildChipsFromKeywords(keywords) };
-		searchParamsVar(searchParams);
-		const nodes = populateNodes(2);
-		nodes[0].permissions = populatePermissions(true);
-		nodes[0].flagged = false;
-
-		server.use(
-			graphql.query<FindNodesQuery, FindNodesQueryVariables>('findNodes', (req, res, ctx) =>
-				res(ctx.data({ findNodes: populateNodePage(nodes, NODES_LOAD_LIMIT) }))
-			),
-			graphql.query<GetNodeQuery, GetNodeQueryVariables>('getNode', (req, res, ctx) => {
-				const { node_id: id } = req.variables;
-				return res(
-					ctx.data({ getNode: (find(nodes, (node) => node.id === id) as File | Folder) || null })
-				);
-			})
-		);
-		render(<SearchView />, {
-			initialRouterEntries: ['/search']
-		});
-
-		// right click to open contextual menu
-		const nodeItems = await screen.findAllByTestId('node-item', { exact: false });
-		fireEvent.contextMenu(nodeItems[0]);
-		await screen.findByText(actionRegexp.moveToTrash);
-		expect(screen.queryByText(actionRegexp.restore)).not.toBeInTheDocument();
-		expect(screen.queryByText(actionRegexp.deletePermanently)).not.toBeInTheDocument();
-		expect(screen.getByText(actionRegexp.moveToTrash)).toBeVisible();
-		expect(screen.getByText(actionRegexp.rename)).toBeVisible();
-		expect(screen.getByText(actionRegexp.flag)).toBeVisible();
-		expect(screen.queryByText(actionRegexp.unflag)).not.toBeInTheDocument();
-		expect(screen.getByText(actionRegexp.move)).toBeVisible();
-		expect(screen.getByText(actionRegexp.download)).toBeVisible();
-		expect(screen.getByText(actionRegexp.copy)).toBeVisible();
-
-		// selection mode
-		selectNodes([nodes[0].id]);
-		await screen.findByText(/select all/i);
-		expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
-		expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-		const moveToTrashActionSelection = await within(
-			screen.getByTestId('list-header-selectionModeActive')
-		).findByTestId('icon: Trash2Outline');
-		expect(moveToTrashActionSelection).toBeVisible();
-		const selectionModeHeader = screen.getByTestId('list-header-selectionModeActive');
-		expect(
-			within(selectionModeHeader).queryByTestId('icon: RestoreOutline')
-		).not.toBeInTheDocument();
-		expect(
-			within(selectionModeHeader).queryByTestId('icon: DeletePermanentlyOutline')
-		).not.toBeInTheDocument();
-		act(() => {
-			userEvent.click(screen.getByTestId('icon: MoreVertical'));
-		});
-		await screen.findByText(actionRegexp.rename);
-		expect(screen.getByText(actionRegexp.rename)).toBeVisible();
-		expect(screen.getByText(actionRegexp.flag)).toBeVisible();
-		expect(screen.getByText(actionRegexp.unflag)).toBeVisible();
-		expect(screen.getByText(actionRegexp.move)).toBeVisible();
-		expect(screen.getByText(actionRegexp.download)).toBeVisible();
-		expect(screen.getByText(actionRegexp.copy)).toBeVisible();
-		// exit selection mode
-		userEvent.click(screen.getByTestId('icon: ArrowBackOutline'));
-		await screen.findByText(/advanced filter/i);
-		expect(screen.queryByTestId('icon: MoreVertical')).not.toBeInTheDocument();
-		expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
-
-		// displayer
-		userEvent.click(nodeItems[0]);
-		await screen.findByText(/details/i);
-		const displayer = screen.getByTestId('displayer');
-		await within(displayer).findAllByText(nodes[0].name);
-		expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-		expect(within(displayer).queryByTestId('icon: RestoreOutline')).not.toBeInTheDocument();
-		expect(
-			within(displayer).queryByTestId('icon: DeletePermanentlyOutline')
-		).not.toBeInTheDocument();
-		expect(within(displayer).queryByTestId('icon: Trash2Outline')).toBeVisible();
-		userEvent.click(screen.getByTestId('icon: MoreVertical'));
-		await screen.findByText(actionRegexp.rename);
-		expect(screen.getByText(actionRegexp.rename)).toBeVisible();
-		expect(screen.getByText(actionRegexp.flag)).toBeVisible();
-		expect(screen.getByText(actionRegexp.unflag)).toBeVisible();
-		expect(screen.getByText(actionRegexp.move)).toBeVisible();
-		expect(screen.getByText(actionRegexp.download)).toBeVisible();
-		expect(screen.getByText(actionRegexp.copy)).toBeVisible();
-
-		act(() => {
-			// run timers of displayer preview
-			jest.runOnlyPendingTimers();
-		});
-
-		expect.assertions(32);
-	});
-
 	describe('Shared by me param', () => {
 		test('Deletion of all collaborators does not remove node from list. Displayer is kept open', async () => {
 			const searchParams: AdvancedFilters = { sharedByMe: { label: 'shared', value: true } };

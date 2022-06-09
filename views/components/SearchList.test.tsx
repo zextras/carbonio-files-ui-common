@@ -43,7 +43,8 @@ import {
 import {
 	actionRegexp,
 	buildChipsFromKeywords,
-	iconRegexp,render,
+	iconRegexp,
+	render,
 	selectNodes,
 	waitForNetworkResponse
 } from '../../utils/testUtils';
