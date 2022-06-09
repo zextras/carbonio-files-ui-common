@@ -301,6 +301,7 @@ describe('Search view', () => {
 			node.parent.permissions.can_write_file = true;
 			node.permissions.can_write_folder = true;
 			node.permissions.can_write_file = true;
+			node.permissions.can_delete = true;
 			server.use(
 				graphql.query<FindNodesQuery, FindNodesQueryVariables>('findNodes', (req, res, ctx) =>
 					res(
