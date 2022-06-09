@@ -6,19 +6,20 @@
 
 /* eslint-disable arrow-body-style,camelcase */
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useContext, useMemo } from 'react';
 
 import { Container, Dropdown, IconButton, Padding, Tooltip } from '@zextras/carbonio-design-system';
-import difference from 'lodash/difference';
+import { PreviewsManagerContext } from '@zextras/carbonio-ui-preview';
+import drop from 'lodash/drop';
+import includes from 'lodash/includes';
 import map from 'lodash/map';
-import union from 'lodash/union';
+import take from 'lodash/take';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
 
-import { ACTIONS_TO_REMOVE_DUE_TO_PRODUCT_CONTEXT } from '../../../constants';
+import { useActiveNode } from '../../../hooks/useActiveNode';
 import { useSendViaMail } from '../../../hooks/useSendViaMail';
 import useUserInfo from '../../../hooks/useUserInfo';
-import { ROOTS } from '../../constants';
+import { DISPLAYER_TABS, PREVIEW_TYPE } from '../../constants';
 import { useDeleteNodesMutation } from '../../hooks/graphql/mutations/useDeleteNodesMutation';
 import { useFlagNodesMutation } from '../../hooks/graphql/mutations/useFlagNodesMutation';
 import { useRestoreNodesMutation } from '../../hooks/graphql/mutations/useRestoreNodesMutation';
@@ -28,19 +29,24 @@ import { useCopyModal } from '../../hooks/modals/useCopyModal';
 import { useDeletePermanentlyModal } from '../../hooks/modals/useDeletePermanentlyModal';
 import { useMoveModal } from '../../hooks/modals/useMoveModal';
 import { useRenameModal } from '../../hooks/modals/useRenameModal';
-import { GetNodeParentType } from '../../types/common';
+import { Action, GetNodeParentType } from '../../types/common';
 import { File, MakeOptional, Node } from '../../types/graphql/types';
 import {
-	Action,
 	ActionItem,
 	ActionsFactoryNodeType,
 	buildActionItems,
-	getPermittedPreviewPanelPrimaryActions,
-	getPermittedPreviewPanelSecondaryActions,
-	isFolder,
-	trashedNodeActions
+	getAllPermittedActions,
+	isFile
 } from '../../utils/ActionsFactory';
-import { downloadNode, isTrashView, openNodeWithDocs } from '../../utils/utils';
+import {
+	downloadNode,
+	getDocumentPreviewSrc,
+	getImgPreviewSrc,
+	getPdfPreviewSrc,
+	humanFileSize,
+	isSupportedByPreview,
+	openNodeWithDocs
+} from '../../utils/utils';
 
 interface PreviewPanelActionsParams {
 	node: ActionsFactoryNodeType &
@@ -79,55 +85,16 @@ export const PreviewPanelActions: React.VFC<PreviewPanelActionsParams> = ({ node
 
 	const { openDeletePermanentlyModal } = useDeletePermanentlyModal(deletePermanentlyCallback);
 
-	const params = useParams();
-	const isATrashFilter = useMemo(() => isTrashView(params), [params]);
-
-	const actionsToRemoveIfInsideTrash = useMemo(() => {
-		if (isATrashFilter) {
-			return difference(Object.values(Action), trashedNodeActions);
-		}
-		return [];
-	}, [isATrashFilter]);
-
-	const actionsToRemove = useMemo(() => {
-		if (node.rootId === ROOTS.TRASH) {
-			return [Action.MarkForDeletion];
-		}
-		return trashedNodeActions;
-	}, [node]);
-
-	const actionsToRemoveIfIsAFolder = useMemo(() => {
-		if (isFolder(node)) {
-			return [Action.OpenWithDocs];
-		}
-		return [];
-	}, [node]);
-
-	const permittedPreviewPanelPrimaryActions: Partial<Record<Action, boolean>> = useMemo(
-		() =>
-			getPermittedPreviewPanelPrimaryActions(
-				[node],
-				union(actionsToRemove, actionsToRemoveIfInsideTrash)
-			),
-		[actionsToRemove, actionsToRemoveIfInsideTrash, node]
-	);
-
 	const { me } = useUserInfo();
 
-	const permittedPreviewPanelSecondaryActions: Partial<Record<Action, boolean>> = useMemo(
+	const permittedPreviewPanelActions: Action[] = useMemo(
 		() =>
-			getPermittedPreviewPanelSecondaryActions(
+			getAllPermittedActions(
 				[node],
-				union(
-					actionsToRemove,
-					actionsToRemoveIfInsideTrash,
-					actionsToRemoveIfIsAFolder,
-					ACTIONS_TO_REMOVE_DUE_TO_PRODUCT_CONTEXT
-				),
 				// TODO: REMOVE CHECK ON ROOT WHEN BE WILL NOT RETURN LOCAL_ROOT AS PARENT FOR SHARED NODES
 				me
 			),
-		[actionsToRemove, actionsToRemoveIfInsideTrash, actionsToRemoveIfIsAFolder, me, node]
+		[me, node]
 	);
 
 	const { openMoveNodesModal } = useMoveModal();
@@ -146,49 +113,126 @@ export const PreviewPanelActions: React.VFC<PreviewPanelActionsParams> = ({ node
 		sendViaMail(node.id);
 	}, [node, sendViaMail]);
 
+	const { setActiveNode } = useActiveNode();
+
+	const manageShares = useCallback(() => {
+		setActiveNode(node.id, DISPLAYER_TABS.sharing);
+	}, [node.id, setActiveNode]);
+
+	const { createPreview } = useContext(PreviewsManagerContext);
+
+	const [$isSupportedByPreview, documentType] = useMemo<
+		[boolean, typeof PREVIEW_TYPE[keyof typeof PREVIEW_TYPE] | undefined]
+	>(() => isSupportedByPreview((isFile(node) && node.mime_type) || undefined), [node]);
+
+	const preview = useCallback(() => {
+		if ($isSupportedByPreview) {
+			const { extension, size, id, name, version } = node as File;
+			const actions = [
+				{
+					icon: 'ShareOutline',
+					id: 'ShareOutline',
+					tooltipLabel: t('preview.actions.tooltip.manageShares', 'Manage Shares'),
+					onClick: (): void => setActiveNode(id, DISPLAYER_TABS.sharing)
+				},
+				{
+					icon: 'DownloadOutline',
+					tooltipLabel: t('preview.actions.tooltip.download', 'Download'),
+					id: 'DownloadOutline',
+					onClick: (): void => downloadNode(id)
+				}
+			];
+			const closeAction = {
+				id: 'close-action',
+				icon: 'ArrowBackOutline',
+				tooltipLabel: t('preview.close.tooltip', 'Close')
+			};
+			if (documentType === PREVIEW_TYPE.IMAGE) {
+				createPreview({
+					previewType: 'image',
+					filename: name,
+					extension: extension || undefined,
+					size: (size && humanFileSize(size)) || undefined,
+					actions,
+					closeAction,
+					src: version ? getImgPreviewSrc(id, version, 0, 0, 'high') : ''
+				});
+			} else {
+				// if supported, open document with preview
+				const src =
+					(version &&
+						((documentType === PREVIEW_TYPE.PDF && getPdfPreviewSrc(id, version)) ||
+							(documentType === PREVIEW_TYPE.DOCUMENT && getDocumentPreviewSrc(id, version)))) ||
+					'';
+				if (includes(permittedPreviewPanelActions, Action.OpenWithDocs)) {
+					actions.unshift({
+						id: 'OpenWithDocs',
+						icon: 'BookOpenOutline',
+						tooltipLabel: t('actions.openWithDocs', 'Open document'),
+						onClick: (): void => openNodeWithDocs(node.id)
+					});
+				}
+				createPreview({
+					previewType: 'pdf',
+					filename: name,
+					extension: extension || undefined,
+					size: (size && humanFileSize(size)) || undefined,
+					useFallback: size > 20971520,
+					actions,
+					closeAction,
+					src
+				});
+			}
+		} else if (includes(permittedPreviewPanelActions, Action.OpenWithDocs)) {
+			// if preview is not supported and document can be opened with docs, open editor
+			openNodeWithDocs(node.id);
+		}
+	}, [
+		$isSupportedByPreview,
+		permittedPreviewPanelActions,
+		node,
+		t,
+		documentType,
+		setActiveNode,
+		createPreview
+	]);
+
 	const itemsMap = useMemo<Partial<Record<Action, ActionItem>>>(
 		() => ({
-			[Action.OpenWithDocs]: {
-				id: 'OpenWithDocs',
-				icon: 'BookOpenOutline',
-				label: t('actions.openWithDocs', 'Open document'),
+			[Action.Edit]: {
+				id: 'Edit',
+				icon: 'Edit2Outline',
+				label: t('actions.edit', 'Edit'),
 				click: (): void => {
 					openNodeWithDocs(node.id);
 				}
 			},
-			[Action.MarkForDeletion]: {
-				id: 'MarkForDeletion',
-				icon: 'Trash2Outline',
-				label: t('actions.moveToTrash', 'Move to Trash'),
-				click: markNodesForDeletionCallback
+			[Action.Preview]: {
+				id: 'Preview',
+				icon: 'MaximizeOutline',
+				label: t('actions.preview', 'Preview'),
+				click: preview
 			},
-			[Action.Restore]: {
-				id: 'Restore',
-				icon: 'RestoreOutline',
-				label: t('actions.restore', 'Restore'),
-				click: restoreNodeCallback
+			[Action.SendViaMail]: {
+				id: 'SendViaMail',
+				icon: 'EmailOutline',
+				label: t('actions.sendViaMail', 'Send via mail'),
+				click: sendViaMailCallback
 			},
-			[Action.DeletePermanently]: {
-				id: 'DeletePermanently',
-				icon: 'DeletePermanentlyOutline',
-				label: t('actions.deletePermanently', 'Delete Permanently'),
-				click: openDeletePermanentlyModal
-			},
-			[Action.Rename]: {
-				id: 'Rename',
-				icon: 'EditOutline',
-				label: t('actions.rename', 'Rename'),
+			[Action.Download]: {
+				id: 'Download',
+				icon: 'Download',
+				label: t('actions.download', 'Download'),
 				click: (): void => {
-					openRenameModal(node);
+					// download node without version to be sure last version is downlaoded
+					downloadNode(node.id);
 				}
 			},
-			[Action.Copy]: {
-				id: 'Copy',
-				icon: 'Copy',
-				label: t('actions.copy', 'Copy'),
-				click: (): void => {
-					openCopyNodesModal([node], node.parent?.id);
-				}
+			[Action.ManageShares]: {
+				id: 'ManageShares',
+				icon: 'ShareOutline',
+				label: t('actions.manageShares', 'Manage Shares'),
+				click: manageShares
 			},
 			[Action.Flag]: {
 				id: 'Flag',
@@ -206,13 +250,20 @@ export const PreviewPanelActions: React.VFC<PreviewPanelActionsParams> = ({ node
 					toggleFlag(false, node);
 				}
 			},
-			[Action.Download]: {
-				id: 'Download',
-				icon: 'Download',
-				label: t('actions.download', 'Download'),
+			[Action.OpenWithDocs]: {
+				id: 'OpenWithDocs',
+				icon: 'BookOpenOutline',
+				label: t('actions.openWithDocs', 'Open document'),
 				click: (): void => {
-					// download node without version to be sure last version is downlaoded
-					downloadNode(node.id);
+					openNodeWithDocs(node.id);
+				}
+			},
+			[Action.Copy]: {
+				id: 'Copy',
+				icon: 'Copy',
+				label: t('actions.copy', 'Copy'),
+				click: (): void => {
+					openCopyNodesModal([node], node.parent?.id);
 				}
 			},
 			[Action.Move]: {
@@ -223,11 +274,31 @@ export const PreviewPanelActions: React.VFC<PreviewPanelActionsParams> = ({ node
 					openMoveNodesModal([node], node.parent?.id);
 				}
 			},
-			[Action.SendViaMail]: {
-				id: 'SendViaMail',
-				icon: 'EmailOutline',
-				label: t('actions.sendViaMail', 'Send via mail'),
-				click: sendViaMailCallback
+			[Action.Rename]: {
+				id: 'Rename',
+				icon: 'EditOutline',
+				label: t('actions.rename', 'Rename'),
+				click: (): void => {
+					openRenameModal(node);
+				}
+			},
+			[Action.MoveToTrash]: {
+				id: 'MarkForDeletion',
+				icon: 'Trash2Outline',
+				label: t('actions.moveToTrash', 'Move to Trash'),
+				click: markNodesForDeletionCallback
+			},
+			[Action.Restore]: {
+				id: 'Restore',
+				icon: 'RestoreOutline',
+				label: t('actions.restore', 'Restore'),
+				click: restoreNodeCallback
+			},
+			[Action.DeletePermanently]: {
+				id: 'DeletePermanently',
+				icon: 'DeletePermanentlyOutline',
+				label: t('actions.deletePermanently', 'Delete Permanently'),
+				click: openDeletePermanentlyModal
 			}
 			// [Action.UpsertDescription]: {
 			// 	id: 'Upsert',
@@ -239,12 +310,14 @@ export const PreviewPanelActions: React.VFC<PreviewPanelActionsParams> = ({ node
 			// }
 		}),
 		[
+			manageShares,
 			markNodesForDeletionCallback,
 			node,
 			openCopyNodesModal,
 			openDeletePermanentlyModal,
 			openMoveNodesModal,
 			openRenameModal,
+			preview,
 			restoreNodeCallback,
 			sendViaMailCallback,
 			t,
@@ -253,23 +326,22 @@ export const PreviewPanelActions: React.VFC<PreviewPanelActionsParams> = ({ node
 	);
 
 	const permittedPreviewPanelPrimaryActionsIconButtons = map(
-		permittedPreviewPanelPrimaryActions,
-		(value: boolean, key: Action) => {
+		take(permittedPreviewPanelActions, 3),
+		(value: Action) => {
 			return (
-				<Padding left="extrasmall" key={itemsMap[key]?.label}>
-					<Tooltip label={itemsMap[key]?.label}>
+				<Padding left="extrasmall" key={itemsMap[value]?.label}>
+					<Tooltip label={itemsMap[value]?.label}>
 						<IconButton
-							icon={itemsMap[key]?.icon}
+							icon={itemsMap[value]?.icon}
 							size="medium"
-							key={key}
+							key={value}
 							onClick={(ev: React.MouseEvent<HTMLButtonElement>): void => {
 								if (ev) ev.preventDefault();
-								if (itemsMap && itemsMap[key]?.click) {
-									const clickFn = itemsMap[key]?.click as () => void;
+								if (itemsMap && itemsMap[value]?.click) {
+									const clickFn = itemsMap[value]?.click as () => void;
 									clickFn();
 								}
 							}}
-							disabled={!permittedPreviewPanelPrimaryActions[key]}
 						/>
 					</Tooltip>
 				</Padding>
@@ -278,8 +350,8 @@ export const PreviewPanelActions: React.VFC<PreviewPanelActionsParams> = ({ node
 	);
 
 	const permittedPreviewPanelSecondaryActionsItems = useMemo(
-		() => buildActionItems(itemsMap, permittedPreviewPanelSecondaryActions),
-		[itemsMap, permittedPreviewPanelSecondaryActions]
+		() => buildActionItems(itemsMap, drop(permittedPreviewPanelActions, 3)),
+		[itemsMap, permittedPreviewPanelActions]
 	);
 
 	return (
@@ -289,6 +361,7 @@ export const PreviewPanelActions: React.VFC<PreviewPanelActionsParams> = ({ node
 			crossAlignment="center"
 			height="auto"
 			padding={{ horizontal: 'large', vertical: 'small' }}
+			data-testid="displayer-actions-header"
 		>
 			{permittedPreviewPanelPrimaryActionsIconButtons}
 

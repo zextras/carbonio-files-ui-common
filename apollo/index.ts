@@ -18,6 +18,7 @@ import { GRAPHQL_ENDPOINT } from '../constants';
 import { FindNodesCachedObject, FindNodesObject, NodesListCachedObject } from '../types/apollo';
 import introspection from '../types/graphql/possible-types';
 import {
+	File,
 	FindNodesQueryVariables,
 	FolderChildrenArgs,
 	GetChildrenQueryVariables,
@@ -217,6 +218,15 @@ const cache = new InMemoryCache({
 							};
 						}
 						return existing;
+					}
+				},
+				getVersions: {
+					merge(
+						existing: File[] | null | undefined,
+						incoming: File[] | null | undefined
+					): File[] | null | undefined {
+						// always overwrite existing data with incoming one
+						return incoming;
 					}
 				}
 			}

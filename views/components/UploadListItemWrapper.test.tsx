@@ -111,19 +111,17 @@ describe('Upload List Item Wrapper', () => {
 		expect(screen.getByText(file.file.name)).toBeVisible();
 		// hover bar
 		userEvent.hover(screen.getByText(file.file.name));
-		expect(screen.getByTestId('icon: PlayCircleOutline')).toBeInTheDocument();
+		expect(screen.queryByTestId('icon: PlayCircleOutline')).not.toBeInTheDocument();
 		expect(screen.getByTestId('icon: CloseCircleOutline')).toBeInTheDocument();
 		expect(screen.getByTestId('icon: FolderOutline')).toBeInTheDocument();
-		userEvent.click(screen.getByTestId('icon: PlayCircleOutline'));
 		userEvent.click(screen.getByTestId('icon: CloseCircleOutline'));
 		userEvent.click(screen.getByTestId('icon: FolderOutline'));
-		expect(mockedUseUploadHook.retryById).not.toHaveBeenCalled();
 		expect(mockedUseUploadHook.removeById).toHaveBeenCalledWith([file.id]);
 		expect(mockedUseNavigationHook.navigateToFolder).toHaveBeenCalledWith(destinationFolder.id);
 		// contextual menu
 		fireEvent.contextMenu(screen.getByText(file.file.name));
 		await screen.findByText(/go to destination folder/i);
-		expect(screen.getByText(/retry upload/i).parentElement).toHaveAttribute('disabled', '');
+		expect(screen.queryByText(/retry upload/i)).not.toBeInTheDocument();
 		expect(screen.getByText(/remove upload/i).parentElement).not.toHaveAttribute('disabled', '');
 		expect(screen.getByText(/go to destination folder/i).parentElement).not.toHaveAttribute(
 			'disabled',

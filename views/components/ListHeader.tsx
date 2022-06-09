@@ -14,8 +14,10 @@ import {
 	Row,
 	Tooltip
 } from '@zextras/carbonio-design-system';
+import drop from 'lodash/drop';
 import map from 'lodash/map';
 import size from 'lodash/size';
+import take from 'lodash/take';
 import { useTranslation } from 'react-i18next';
 
 import { ActionItem } from '../../utils/ActionsFactory';
@@ -26,8 +28,7 @@ export interface ListHeaderProps {
 	selectAll: () => void;
 	isAllSelected: boolean;
 	exitSelectionMode: () => void;
-	permittedSelectionModePrimaryActionsItems: ActionItem[];
-	permittedSelectionModeSecondaryActionsItems?: ActionItem[];
+	permittedSelectionModeActionsItems: ActionItem[];
 	hide?: boolean;
 	firstCustomComponent?: React.ReactNode;
 	secondCustomComponent?: React.ReactNode;
@@ -40,8 +41,7 @@ export const ListHeader: React.VFC<ListHeaderProps> = ({
 	selectAll,
 	isAllSelected,
 	exitSelectionMode,
-	permittedSelectionModePrimaryActionsItems,
-	permittedSelectionModeSecondaryActionsItems,
+	permittedSelectionModeActionsItems,
 	hide = false,
 	firstCustomComponent,
 	secondCustomComponent,
@@ -51,7 +51,7 @@ export const ListHeader: React.VFC<ListHeaderProps> = ({
 
 	const permittedSelectionModePrimaryActionsIconButtons = useMemo(
 		() =>
-			map(permittedSelectionModePrimaryActionsItems, (actionItem) => (
+			map(take(permittedSelectionModeActionsItems, 3), (actionItem) => (
 				<Tooltip label={actionItem.label} key={actionItem.id}>
 					<IconButton
 						icon={actionItem.icon}
@@ -62,7 +62,7 @@ export const ListHeader: React.VFC<ListHeaderProps> = ({
 					/>
 				</Tooltip>
 			)),
-		[permittedSelectionModePrimaryActionsItems]
+		[permittedSelectionModeActionsItems]
 	);
 
 	return !isSelectionModeActive ? (
@@ -130,8 +130,8 @@ export const ListHeader: React.VFC<ListHeaderProps> = ({
 				</Row>
 				<Row mainAlignment="flex-end" wrap="nowrap" flexGrow={1}>
 					{permittedSelectionModePrimaryActionsIconButtons}
-					{size(permittedSelectionModeSecondaryActionsItems) > 0 && (
-						<Dropdown items={permittedSelectionModeSecondaryActionsItems} placement="bottom-end">
+					{size(drop(permittedSelectionModeActionsItems, 3)) > 0 && (
+						<Dropdown items={drop(permittedSelectionModeActionsItems, 3)} placement="bottom-end">
 							<IconButton icon="MoreVertical" size="large" iconColor="primary" />
 						</Dropdown>
 					)}

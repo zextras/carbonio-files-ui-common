@@ -7,12 +7,14 @@
 import { faker } from '@faker-js/faker';
 import filter from 'lodash/filter';
 import find from 'lodash/find';
+import map from 'lodash/map';
 import some from 'lodash/some';
 
 import { LOGGED_USER } from '../../mocks/constants';
-import { NODES_LOAD_LIMIT, NODES_SORT_DEFAULT, ROOTS } from '../constants';
+import { CONFIGS, NODES_LOAD_LIMIT, NODES_SORT_DEFAULT, ROOTS } from '../constants';
 import { SortableNode } from '../types/common';
 import {
+	Config,
 	DistributionList,
 	File as FilesFile,
 	Folder,
@@ -346,4 +348,13 @@ export function populateLinks(node: Node, limit = 2): Link[] {
 		links.push(link);
 	}
 	return links;
+}
+
+export function populateConfigs(configMap?: Record<string, string>): Config[] {
+	const defaultConfigs: Record<typeof CONFIGS[keyof typeof CONFIGS], string> = {
+		[CONFIGS.MAX_VERSIONS]: '5',
+		[CONFIGS.MAX_KEEP_VERSIONS]: '3'
+	};
+	const configs = { ...defaultConfigs, ...configMap };
+	return map(configs, (configValue, configName) => ({ name: configName, value: configValue }));
 }

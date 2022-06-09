@@ -18,6 +18,12 @@ export type Scalars = {
 
 export type Account = DistributionList | User;
 
+export type Config = {
+	__typename?: 'Config';
+	name: Scalars['String'];
+	value: Scalars['String'];
+};
+
 export type DistributionList = {
 	__typename?: 'DistributionList';
 	id: Scalars['ID'];
@@ -452,6 +458,7 @@ export type Query = {
 	/** <strong> Returns a NodePage based on the given criteria </strong> */
 	findNodes?: Maybe<NodePage>;
 	getAccountByEmail?: Maybe<Account>;
+	getConfigs: Array<Maybe<Config>>;
 	/**
 	 *  Returns all the links of the specified node.
 	 *  The response is not paginated because each node can have a maximum of 50 links.
@@ -1977,6 +1984,13 @@ export type GetChildrenQuery = {
 				>;
 		  }
 		| null;
+};
+
+export type GetConfigsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type GetConfigsQuery = {
+	__typename?: 'Query';
+	getConfigs: Array<{ __typename?: 'Config'; name: string; value: string } | null>;
 };
 
 export type GetNodeQueryVariables = Exact<{

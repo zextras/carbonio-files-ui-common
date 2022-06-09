@@ -270,7 +270,7 @@ describe('Upload list', () => {
 
 			expect(screen.getByText(uploadedFiles[0].name)).toBeVisible();
 			expect(screen.getByTestId('icon: AlertCircle')).toBeVisible();
-			const folderItem = screen.getByTestId('node-item-0');
+			const folderItem = screen.getByTestId(/node-item-0-\d*/);
 			expect(within(folderItem).getByTestId('icon: PlayCircleOutline')).not.toHaveAttribute(
 				'disabled',
 				''
