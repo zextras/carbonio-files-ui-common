@@ -7,18 +7,23 @@
 import { useCallback } from 'react';
 
 import { FetchResult, useMutation } from '@apollo/client';
-import filter from 'lodash/filter';
 import map from 'lodash/map';
-import size from 'lodash/size';
+import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
 
+import { useActiveNode } from '../../../../hooks/useActiveNode';
 import DELETE_NODES from '../../../graphql/mutations/deleteNodes.graphql';
 import FIND_NODES from '../../../graphql/queries/findNodes.graphql';
-import { FindNodesCachedObject } from '../../../types/apollo';
 import { PickIdNodeType } from '../../../types/common';
-import { DeleteNodesMutation, DeleteNodesMutationVariables } from '../../../types/graphql/types';
+import {
+	DeleteNodesMutation,
+	DeleteNodesMutationVariables,
+	FindNodesQuery
+} from '../../../types/graphql/types';
 import { useCreateSnackbar } from '../../useCreateSnackbar';
 import { useErrorHandler } from '../../useErrorHandler';
+import { useUpdateFilterContent } from '../useUpdateFilterContent';
+import { isQueryResult } from '../utils';
 
 export type DeleteNodesType = (
 	...nodes: PickIdNodeType[]
@@ -38,8 +43,10 @@ export function useDeleteNodesMutation(): DeleteNodesType {
 	>(DELETE_NODES, {
 		errorPolicy: 'all'
 	});
+	const { removeNodesFromFilter } = useUpdateFilterContent();
+	const { activeNodeId, removeActiveNode } = useActiveNode();
 
-	useErrorHandler(error, 'DELETE_NODES');
+	useErrorHandler(error, 'DELETE_NODES', 'error');
 
 	const deleteNodes = useCallback<DeleteNodesType>(
 		(...nodes: PickIdNodeType[]) => {
@@ -56,57 +63,36 @@ export function useDeleteNodesMutation(): DeleteNodesType {
 				update(cache, { data }) {
 					if (data?.deleteNodes) {
 						const deletedNodes = data.deleteNodes;
-						cache.modify({
-							fields: {
-								findNodes(
-									existingNodesRefs: FindNodesCachedObject | undefined,
-									{ readField, DELETE }
-								): FindNodesCachedObject | undefined {
-									if (existingNodesRefs?.args) {
-										const ordered = filter(existingNodesRefs.nodes?.ordered, (node) => {
-											const nodeId = readField<string>('id', node);
-											return !!nodeId && !deletedNodes.includes(nodeId);
-										});
-										const unOrdered = filter(existingNodesRefs.nodes?.unOrdered, (node) => {
-											const nodeId = readField<string>('id', node);
-											return !!nodeId && !deletedNodes.includes(nodeId);
-										});
-
-										if (
-											existingNodesRefs.page_token &&
-											size(ordered) === 0 &&
-											size(unOrdered) === 0
-										) {
-											return DELETE;
-										}
-
-										return {
-											args: existingNodesRefs.args,
-											page_token: existingNodesRefs.page_token,
-											nodes: {
-												ordered,
-												unOrdered
-											}
-										};
-									}
-									return existingNodesRefs;
-								}
-							}
-						});
-
+						// remove deleted nodes from every filter/search
+						removeNodesFromFilter(deletedNodes, () => true);
 						cache.gc();
 					}
 				},
-				onQueryUpdated(observableQuery, diff) {
-					if (observableQuery.options.query === FIND_NODES && diff.missing) {
+				onQueryUpdated(observableQuery, { missing, result }) {
+					const { query } = observableQuery.options;
+					if (missing) {
 						return observableQuery.refetch();
 					}
-					return false;
+					if (isQueryResult<FindNodesQuery>(query, result, FIND_NODES)) {
+						const listNodes = result.findNodes?.nodes;
+						if (
+							activeNodeId &&
+							some(
+								nodesIds,
+								(nodeId) =>
+									nodeId === activeNodeId &&
+									!some(listNodes, (resultNode) => resultNode?.id === nodeId)
+							)
+						) {
+							removeActiveNode();
+						}
+					}
+					return observableQuery.reobserve();
 				}
 			}).then((value) => {
 				createSnackbar({
 					key: new Date().toLocaleString(),
-					type: 'info',
+					type: 'success',
 					label: t('snackbar.deletePermanently.success', 'Success'),
 					replace: true,
 					hideButton: true
@@ -114,7 +100,7 @@ export function useDeleteNodesMutation(): DeleteNodesType {
 				return value;
 			});
 		},
-		[createSnackbar, deleteNodesMutation, t]
+		[activeNodeId, createSnackbar, deleteNodesMutation, removeActiveNode, removeNodesFromFilter, t]
 	);
 
 	return deleteNodes;

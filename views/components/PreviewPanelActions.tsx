@@ -367,7 +367,7 @@ export const PreviewPanelActions: React.VFC<PreviewPanelActionsParams> = ({ node
 
 			{permittedPreviewPanelSecondaryActionsItems.length > 0 && (
 				<Padding left="extrasmall">
-					<Dropdown placement="right-end" items={permittedPreviewPanelSecondaryActionsItems}>
+					<Dropdown placement="bottom-end" items={permittedPreviewPanelSecondaryActionsItems}>
 						<IconButton size="medium" icon="MoreVertical" />
 					</Dropdown>
 				</Padding>

@@ -4,17 +4,18 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-/* eslint-disable arrow-body-style */
 import { useCallback } from 'react';
 
 import { ApolloError, FetchResult, gql, useMutation } from '@apollo/client';
 
+import SHARE_TARGET from '../../../graphql/fragments/shareTarget.graphql';
 import CREATE_SHARE from '../../../graphql/mutations/createShare.graphql';
 import { Node } from '../../../types/common';
 import {
 	CreateShareMutation,
 	CreateShareMutationVariables,
-	SharePermission
+	SharePermission,
+	ShareTargetFragment
 } from '../../../types/graphql/types';
 import { useErrorHandler } from '../../useErrorHandler';
 
@@ -38,8 +39,8 @@ export function useCreateShareMutation(): [
 	>(CREATE_SHARE);
 
 	const createShare = useCallback<CreateShareType>(
-		(node, shareTargetId, permission, customMessage) => {
-			return createShareMutation({
+		(node, shareTargetId, permission, customMessage) =>
+			createShareMutation({
 				variables: {
 					node_id: node.id,
 					share_target_id: shareTargetId,
@@ -62,25 +63,10 @@ export function useCreateShareMutation(): [
 										`
 									});
 									let targetRef;
-									if (data.createShare.share_target?.__typename === 'User') {
-										// TODO: move fragment to graphql file and add type
-										targetRef = cache.writeFragment({
+									if (data.createShare.share_target) {
+										targetRef = cache.writeFragment<ShareTargetFragment>({
 											data: data.createShare.share_target,
-											fragment: gql`
-												fragment UserFragment on User {
-													id
-												}
-											`
-										});
-									} else {
-										// TODO: move fragment to graphql file and add type
-										targetRef = cache.writeFragment({
-											data: data.createShare.share_target,
-											fragment: gql`
-												fragment DLFragment on DistributionList {
-													id
-												}
-											`
+											fragment: SHARE_TARGET
 										});
 									}
 
@@ -95,8 +81,7 @@ export function useCreateShareMutation(): [
 						});
 					}
 				}
-			});
-		},
+			}),
 		[createShareMutation]
 	);
 	useErrorHandler(createShareError, 'CREATE_SHARE');

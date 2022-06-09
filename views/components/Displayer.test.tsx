@@ -29,7 +29,6 @@ import {
 	mockGetPath,
 	mockGetShares,
 	mockMoveNodes,
-	mockTrashNodes,
 	mockUpdateNode
 } from '../../utils/mockUtils';
 import {
@@ -43,38 +42,6 @@ import { getChipLabel } from '../../utils/utils';
 import { Displayer } from './Displayer';
 
 describe('Displayer', () => {
-	test('Mark for deletion close the displayer', async () => {
-		const node = populateNode();
-		node.permissions.can_write_file = true;
-		node.permissions.can_write_folder = true;
-		node.permissions.can_delete = true;
-		const mocks = [
-			mockGetNode(getNodeVariables(node.id), node),
-			mockTrashNodes({ node_ids: [node.id] }, [node.id])
-		];
-		render(<Displayer translationKey="no.key" />, {
-			initialRouterEntries: [`/?node=${node.id}`],
-			mocks
-		});
-		await screen.findAllByText(node.name);
-
-		const moreActions = screen.getByTestId(iconRegexp.moreVertical);
-		userEvent.click(moreActions);
-
-		const markForDeletionAction = await screen.findByText(actionRegexp.moveToTrash);
-		expect(markForDeletionAction).toBeVisible();
-		act(() => {
-			// wrap in act cause it trigger tooltip
-			userEvent.click(markForDeletionAction);
-		});
-		const snackbar = await screen.findByText(/item moved to trash/i);
-		await waitForElementToBeRemoved(snackbar);
-		await screen.findByText(/view files and folders/i);
-		expect(screen.getByText(/view files and folders/i)).toBeVisible();
-		expect(screen.queryByText(node.name)).not.toBeInTheDocument();
-		expect(markForDeletionAction).not.toBeInTheDocument();
-	});
-
 	test('Copy action open copy modal', async () => {
 		const node = populateNode();
 		const parent = populateFolder(1);

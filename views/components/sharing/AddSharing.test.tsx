@@ -200,8 +200,8 @@ describe('Add Sharing', () => {
 		await screen.findByText('m');
 		// wait for the dropdown to be shown
 		await screen.findAllByText(/contact/i);
-		// only contacts that starts with "m" are visible
-		expect(screen.getAllByText(/matching-contact-[0-9]$/i)).toHaveLength(3);
+		// only contacts that start with "m" are visible
+		expect(screen.getAllByText(/matching-contact-\d$/i)).toHaveLength(3);
 		expect(screen.queryByText(/excluded-contact/i)).not.toBeInTheDocument();
 	});
 

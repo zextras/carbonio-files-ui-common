@@ -8,22 +8,26 @@ import { useCallback, useContext } from 'react';
 
 import { FetchResult, useMutation } from '@apollo/client';
 import { SnackbarManagerContext } from '@zextras/carbonio-design-system';
-import filter from 'lodash/filter';
 import find from 'lodash/find';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
-import size from 'lodash/size';
+import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
-import { searchParamsVar } from '../../../apollo/searchVar';
+import { useActiveNode } from '../../../../hooks/useActiveNode';
 import FLAG_NODES from '../../../graphql/mutations/flagNodes.graphql';
 import FIND_NODES from '../../../graphql/queries/findNodes.graphql';
-import { FindNodesCachedObject } from '../../../types/apollo';
 import { PickIdNodeType } from '../../../types/common';
-import { FlagNodesMutation, FlagNodesMutationVariables } from '../../../types/graphql/types';
+import {
+	FindNodesQuery,
+	FlagNodesMutation,
+	FlagNodesMutationVariables
+} from '../../../types/graphql/types';
 import { isSearchView } from '../../../utils/utils';
 import { useErrorHandler } from '../../useErrorHandler';
+import { useUpdateFilterContent } from '../useUpdateFilterContent';
+import { isQueryResult } from '../utils';
 
 export type FlagNodesType = (
 	flagValue: boolean,
@@ -48,10 +52,10 @@ type CreateSnackbarFunctionType = (createSnackbarObject: CreateSnackbarObjectTyp
 
 export function useFlagNodesMutation(): FlagNodesType {
 	const location = useLocation();
-	const { filter: filterParam } = useParams<{ filter: string }>();
-	const isFlaggedFilter = filterParam === 'flagged';
 	const [t] = useTranslation();
 	const createSnackbar = useContext<CreateSnackbarFunctionType>(SnackbarManagerContext);
+	const { activeNodeId, removeActiveNode } = useActiveNode();
+	const { removeNodesFromFilter } = useUpdateFilterContent();
 	const [flagNodesMutation, { error }] = useMutation<FlagNodesMutation, FlagNodesMutationVariables>(
 		FLAG_NODES,
 		{
@@ -90,66 +94,59 @@ export function useFlagNodesMutation(): FlagNodesType {
 							}
 						});
 						// update flagged filter list
-						cache.modify({
-							fields: {
-								findNodes(
-									existingNodesRefs: FindNodesCachedObject | undefined,
-									{ readField, DELETE }
-								): FindNodesCachedObject | undefined {
-									if (existingNodesRefs?.args?.flagged && !flagValue) {
-										// in case of unflag action remove items from the filter
-										const ordered = filter(existingNodesRefs.nodes?.ordered, (node) => {
-											const nodeId = readField<string>('id', node);
-											return !!nodeId && !flaggedNodes.includes(nodeId);
-										});
-										const unOrdered = filter(existingNodesRefs.nodes?.unOrdered, (node) => {
-											const nodeId = readField<string>('id', node);
-											return !!nodeId && !flaggedNodes.includes(nodeId);
-										});
-
-										if (
-											existingNodesRefs.page_token &&
-											size(ordered) === 0 &&
-											size(unOrdered) === 0
-										) {
-											return DELETE;
-										}
-
-										return {
-											args: existingNodesRefs.args,
-											page_token: existingNodesRefs.page_token,
-											nodes: {
-												ordered,
-												unOrdered
-											}
-										};
-									}
-									// if no update is needed, return existing data (new requests are handled with navigation)
-									return existingNodesRefs;
-								}
-							}
-						});
-						if (isFlaggedFilter || (isSearchView(location) && searchParamsVar().flagged?.value)) {
+						removeNodesFromFilter(
+							flaggedNodes,
+							(existingRefs) =>
+								existingRefs?.args?.flagged === true && !flagValue && !isSearchView(location)
+						);
+					}
+				},
+				onQueryUpdated(observableQuery, { missing, result }) {
+					const { query } = observableQuery.options;
+					let listNodes: Array<PickIdNodeType | null> | undefined;
+					if (isQueryResult<FindNodesQuery>(query, result, FIND_NODES)) {
+						listNodes = result.findNodes?.nodes;
+						if (
+							some(
+								nodesIds,
+								(nodeId) => !some(listNodes, (resultNode) => resultNode?.id === nodeId)
+							)
+						) {
+							// if there is some node that is removed from the list show a success snackbar
 							createSnackbar({
-								key: 'filterList.toggleFlag.success',
-								type: 'success',
+								key: new Date().toLocaleString(),
+								type: 'info',
 								label: t('snackbar.unflag.success', 'Item unflagged successfully'),
 								replace: true,
 								hideButton: true
 							});
+							if (
+								activeNodeId &&
+								!some(listNodes, (resultNode) => resultNode?.id === activeNodeId)
+							) {
+								// close displayer if node is removed from the list
+								removeActiveNode();
+							}
+						}
+						if (missing) {
+							return observableQuery.refetch();
 						}
 					}
-				},
-				onQueryUpdated(observableQuery, diff) {
-					if (observableQuery.options.query === FIND_NODES && diff.missing) {
-						return observableQuery.refetch();
-					}
-					return false;
+					return observableQuery.reobserve();
 				}
 			});
 		},
-		[createSnackbar, flagNodesMutation, isFlaggedFilter, location, t]
+		[
+			activeNodeId,
+			createSnackbar,
+			flagNodesMutation,
+			location,
+			removeActiveNode,
+			removeNodesFromFilter,
+			t
+		]
 	);
+
 	useErrorHandler(error, 'FLAG_NODES');
 
 	return flagNodes;

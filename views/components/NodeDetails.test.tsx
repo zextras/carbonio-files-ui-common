@@ -9,6 +9,7 @@ import React from 'react';
 import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { sample } from 'lodash';
+import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 
 import {
@@ -85,7 +86,11 @@ describe('Node Details', () => {
 		node.parent = populateFolder();
 		node.last_editor = populateUser();
 		node.shares = populateShares(node, 5);
+		node.owner = populateUser();
 		const children = populateNodes(2);
+		forEach(children, (child) => {
+			child.owner = node.owner;
+		});
 		const loadMore = jest.fn();
 		render(
 			<NodeDetails

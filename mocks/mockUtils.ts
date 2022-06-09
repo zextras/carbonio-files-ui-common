@@ -10,6 +10,7 @@ import find from 'lodash/find';
 import map from 'lodash/map';
 import some from 'lodash/some';
 
+import { LOGGED_USER } from '../../mocks/constants';
 import { CONFIGS, NODES_LOAD_LIMIT, NODES_SORT_DEFAULT, ROOTS } from '../constants';
 import { SortableNode } from '../types/common';
 import {
@@ -121,7 +122,7 @@ function populateNodeFields(type?: NodeType, id?: string, name?: string): Node {
 	return {
 		id: id || faker.datatype.uuid(),
 		creator: populateUser(),
-		owner: populateUser('me', 'Me Myself'),
+		owner: populateUser(LOGGED_USER.id, LOGGED_USER.name),
 		last_editor: populateUser(),
 		created_at: faker.date.past().getTime(),
 		updated_at: faker.date.recent().getTime(),
