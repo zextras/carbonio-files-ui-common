@@ -8,6 +8,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import filter from 'lodash/filter';
 import forEach from 'lodash/forEach';
+import includes from 'lodash/includes';
 import map from 'lodash/map';
 import styled from 'styled-components';
 
@@ -15,11 +16,10 @@ import useUserInfo from '../../../hooks/useUserInfo';
 import { draggedItemsVar } from '../../apollo/dragAndDropVar';
 import { DRAG_TYPES } from '../../constants';
 import { DeleteNodesType } from '../../hooks/graphql/mutations/useDeleteNodesMutation';
-import { GetNodeParentType, NodeListItemType, PickIdNodeType } from '../../types/common';
+import { Action, GetNodeParentType, NodeListItemType, PickIdNodeType } from '../../types/common';
 import { Node } from '../../types/graphql/types';
 import { DeepPick, OneOrMany } from '../../types/utils';
 import {
-	Action,
 	ActionItem,
 	ActionsFactoryCheckerMap,
 	getPermittedActions,
@@ -57,6 +57,7 @@ interface ListContentProps {
 	copyNodes?: (...nodes: Array<Pick<NodeListItemType, '__typename' | 'id'>>) => void;
 	activeNodes?: OneOrMany<string>;
 	setActiveNode?: (node: NodeListItemType, event: React.SyntheticEvent) => void;
+	manageShares?: (nodeId: string) => void;
 	compact?: boolean;
 	navigateTo?: (id: string, event?: React.SyntheticEvent) => void;
 	loading?: boolean;
@@ -93,7 +94,8 @@ export const ListContent = React.forwardRef<HTMLDivElement, ListContentProps>(
 			draggable = false,
 			customCheckers,
 			selectionContextualMenuActionsItems,
-			fillerWithActions
+			fillerWithActions,
+			manageShares
 		},
 		ref
 	) {
@@ -118,7 +120,7 @@ export const ListContent = React.forwardRef<HTMLDivElement, ListContentProps>(
 					const draggedItemsTmp: JSX.Element[] = [];
 					const permittedActions = getPermittedActions(
 						nodesToDrag,
-						[Action.Move, Action.MarkForDeletion],
+						[Action.Move, Action.MoveToTrash],
 						me,
 						customCheckers
 					);
@@ -146,10 +148,10 @@ export const ListContent = React.forwardRef<HTMLDivElement, ListContentProps>(
 					setDragImage(draggedItemsTmp);
 					dragImageRef.current && event.dataTransfer.setDragImage(dragImageRef.current, 0, 0);
 					draggedItemsVar(nodesToDrag);
-					if (permittedActions.MOVE) {
+					if (includes(permittedActions, Action.Move)) {
 						event.dataTransfer.setData(DRAG_TYPES.move, JSON.stringify(nodesToDrag));
 					}
-					if (permittedActions.MARK_FOR_DELETION) {
+					if (includes(permittedActions, Action.MoveToTrash)) {
 						event.dataTransfer.setData(DRAG_TYPES.markForDeletion, JSON.stringify(nodesToDrag));
 					}
 				},
@@ -179,6 +181,7 @@ export const ListContent = React.forwardRef<HTMLDivElement, ListContentProps>(
 							deletePermanently={deletePermanently}
 							moveNodes={moveNodes}
 							copyNodes={copyNodes}
+							manageShares={manageShares}
 							isSelected={selectedMap && selectedMap[node.id]}
 							isSelectionModeActive={isSelectionModeActive}
 							selectId={selectId}
@@ -202,6 +205,7 @@ export const ListContent = React.forwardRef<HTMLDivElement, ListContentProps>(
 			[
 				nodes,
 				draggable,
+				dragStartHandler,
 				dragEndHandler,
 				toggleFlag,
 				markNodesForDeletion,
@@ -209,6 +213,7 @@ export const ListContent = React.forwardRef<HTMLDivElement, ListContentProps>(
 				deletePermanently,
 				moveNodes,
 				copyNodes,
+				manageShares,
 				selectedMap,
 				isSelectionModeActive,
 				selectId,
@@ -218,8 +223,7 @@ export const ListContent = React.forwardRef<HTMLDivElement, ListContentProps>(
 				setActiveNode,
 				compact,
 				navigateTo,
-				selectionContextualMenuActionsItems,
-				dragStartHandler
+				selectionContextualMenuActionsItems
 			]
 		);
 

@@ -22,7 +22,7 @@ import {
 	mockGetChildren,
 	mockGetPath
 } from '../utils/mockUtils';
-import { actionRegexp, render, selectNodes } from '../utils/testUtils';
+import { actionRegexp, iconRegexp, render, selectNodes } from '../utils/testUtils';
 import { DisplayerProps } from './components/Displayer';
 import FolderView from './FolderView';
 
@@ -62,9 +62,7 @@ describe('Copy', () => {
 
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
-			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-			userEvent.click(screen.getByTestId('icon: MoreVertical'));
-			const copyAction = await screen.findByText(actionRegexp.copy);
+			const copyAction = await screen.findByTestId(iconRegexp.copy);
 			expect(copyAction).toBeVisible();
 			expect(copyAction).not.toHaveAttribute('disabled', '');
 		});
@@ -116,10 +114,13 @@ describe('Copy', () => {
 			selectNodes([nodeToCopy.id]);
 			// check that all wanted items are selected
 			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
-			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-			userEvent.click(screen.getByTestId('icon: MoreVertical'));
-			const CopyAction = await screen.findByText(actionRegexp.copy);
-			expect(CopyAction).toBeVisible();
+			let CopyAction = screen.queryByTestId(iconRegexp.copy);
+			if (!CopyAction) {
+				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
+				userEvent.click(screen.getByTestId('icon: MoreVertical'));
+				CopyAction = await screen.findByText(actionRegexp.copy);
+				expect(CopyAction).toBeVisible();
+			}
 			userEvent.click(CopyAction);
 
 			const modalList = await screen.findByTestId(`modal-list-${currentFolder.id}`);
@@ -183,11 +184,15 @@ describe('Copy', () => {
 				selectNodes(map(nodesToCopy, (node) => node.id));
 				// check that all wanted items are selected
 				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToCopy.length);
-				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-				userEvent.click(screen.getByTestId('icon: MoreVertical'));
-				const copyAction = await screen.findByText(actionRegexp.copy);
-				expect(copyAction).toBeVisible();
-				userEvent.click(copyAction);
+
+				let CopyAction = screen.queryByTestId(iconRegexp.copy);
+				if (!CopyAction) {
+					expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
+					userEvent.click(screen.getByTestId('icon: MoreVertical'));
+					CopyAction = await screen.findByText(actionRegexp.copy);
+					expect(CopyAction).toBeVisible();
+				}
+				userEvent.click(CopyAction);
 
 				const modalList = await screen.findByTestId(`modal-list-${currentFolder.id}`);
 				expect(within(modalList).getAllByTestId('node-item', { exact: false })).toHaveLength(

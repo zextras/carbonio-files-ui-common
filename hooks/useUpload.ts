@@ -56,28 +56,15 @@ const isMaybeFolder = (file: File): boolean => !file.type && file.size % 4096 ==
 
 const addVersionToCache = (
 	apolloClient: ApolloClient<NormalizedCacheObject>,
-	nodeId: string,
-	version: number
+	nodeId: string
 ): void => {
-	apolloClient
-		.query<GetVersionsQuery, GetVersionsQueryVariables>({
-			query: GET_VERSIONS,
-			fetchPolicy: 'no-cache',
-			variables: {
-				node_id: nodeId,
-				versions: [version]
-			}
-		})
-		.then((result) => {
-			if (result.data) {
-				apolloClient.cache.updateQuery<GetVersionsQuery, GetVersionsQueryVariables>(
-					{ query: GET_VERSIONS, variables: { node_id: nodeId }, overwrite: true },
-					(existingVersions) => ({
-						getVersions: [result.data.getVersions[0], ...(existingVersions?.getVersions || [])]
-					})
-				);
-			}
-		});
+	apolloClient.query<GetVersionsQuery, GetVersionsQueryVariables>({
+		query: GET_VERSIONS,
+		fetchPolicy: 'network-only',
+		variables: {
+			node_id: nodeId
+		}
+	});
 };
 
 const uploadCompleted = (
@@ -88,105 +75,85 @@ const uploadCompleted = (
 	addNodeToFolder: UpdateFolderContentType['addNodeToFolder'],
 	isUploadVersion: boolean
 ): void => {
-	switch (xhr.status) {
-		case 200: {
-			const response = JSON.parse(xhr.response);
-			const { nodeId, version } = response;
-			if (isUploadVersion) {
-				addVersionToCache(apolloClient, nodeId, version);
+	function updateStatus(uploadItem: UploadType, status: UploadStatus): void {
+		const oldState = uploadVar();
+		const newState = map(oldState, (item) => {
+			if (item.id === uploadItem.id) {
+				return {
+					...uploadItem,
+					status
+				};
 			}
+			return item;
+		});
+		uploadVar(newState);
+	}
 
-			const oldState = uploadVar();
-			const newState = map(oldState, (item) => {
-				if (item.id === fileEnriched.id) {
-					return {
-						...fileEnriched,
-						status: UploadStatus.COMPLETED,
-						percentage: 100,
-						nodeId
-					};
+	if (xhr.status === 200) {
+		const response = JSON.parse(xhr.response);
+		const { nodeId } = response;
+		if (isUploadVersion) {
+			addVersionToCache(apolloClient, nodeId);
+		}
+
+		const oldState = uploadVar();
+		const newState = map(oldState, (item) => {
+			if (item.id === fileEnriched.id) {
+				return {
+					...fileEnriched,
+					status: UploadStatus.COMPLETED,
+					percentage: 100,
+					nodeId
+				};
+			}
+			return item;
+		});
+		uploadVar(newState);
+
+		apolloClient
+			.query<GetChildQuery, GetChildQueryVariables>({
+				query: GET_CHILD,
+				fetchPolicy: 'no-cache',
+				variables: {
+					node_id: nodeId as string
 				}
-				return item;
-			});
-			uploadVar(newState);
-
-			apolloClient
-				.query<GetChildQuery, GetChildQueryVariables>({
-					query: GET_CHILD,
-					fetchPolicy: 'no-cache',
-					variables: {
-						node_id: nodeId as string
-					}
-				})
-				.then((result) => {
-					if (result?.data?.getNode?.parent) {
-						const parentId = result.data.getNode.parent.id;
-						const parentFolder = apolloClient.cache.readQuery<
-							GetChildrenQuery,
-							GetChildrenQueryVariables
-						>({
-							query: GET_CHILDREN,
-							variables: {
-								node_id: parentId,
-								// load all cached children
-								children_limit: Number.MAX_SAFE_INTEGER,
-								sort: nodeSort
-							}
-						});
-						if (parentFolder?.getNode && isFolder(parentFolder.getNode)) {
-							const parentNode = parentFolder.getNode;
-							addNodeToFolder(parentNode, result.data.getNode);
+			})
+			.then((result) => {
+				if (result?.data?.getNode?.parent) {
+					const parentId = result.data.getNode.parent.id;
+					const parentFolder = apolloClient.cache.readQuery<
+						GetChildrenQuery,
+						GetChildrenQueryVariables
+					>({
+						query: GET_CHILDREN,
+						variables: {
+							node_id: parentId,
+							// load all cached children
+							children_limit: Number.MAX_SAFE_INTEGER,
+							sort: nodeSort
 						}
+					});
+					if (parentFolder?.getNode && isFolder(parentFolder.getNode)) {
+						const parentNode = parentFolder.getNode;
+						addNodeToFolder(parentNode, result.data.getNode);
 					}
-				})
-				.catch((err) => {
-					console.error(err);
-				});
-
-			break;
-		}
-		case 413: {
-			const oldState = uploadVar();
-			const newState = map(oldState, (item) => {
-				if (item.id === fileEnriched.id) {
-					return {
-						...fileEnriched,
-						status: UploadStatus.FAILED
-					};
 				}
-				return item;
+			})
+			.catch((err) => {
+				console.error(err);
 			});
-			uploadVar(newState);
-			break;
-		}
-		// name already exists
-		case 500: {
-			const oldState = uploadVar();
-			const newState = map(oldState, (item) => {
-				if (item.id === fileEnriched.id) {
-					return {
-						...fileEnriched,
-						status: UploadStatus.FAILED
-					};
-				}
-				return item;
-			});
-			uploadVar(newState);
-			break;
-		}
-		default: {
-			const oldState = uploadVar();
-			const newState = map(oldState, (item) => {
-				if (item.id === fileEnriched.id) {
-					return {
-						...fileEnriched,
-						status: UploadStatus.FAILED
-					};
-				}
-				return item;
-			});
-			uploadVar(newState);
-			console.error('Unhandled status');
+	} else {
+		/*
+		 * Handled Statuses
+		 * 405: upload-version error should happen only when number of versions is
+		 * 			strictly greater than max number of version config value (config changed)
+		 * 413:
+		 * 500: name already exists
+		 */
+		updateStatus(fileEnriched, UploadStatus.FAILED);
+		const handledStatuses = [405, 413, 500];
+		if (!handledStatuses.includes(xhr.status)) {
+			console.error('upload error: unhandled status', xhr.status);
 		}
 	}
 };
@@ -244,7 +211,7 @@ const upload = (
 };
 
 const uploadVersion = (
-	fileEnriched: UploadType,
+	fileEnriched: Required<UploadType>,
 	apolloClient: ApolloClient<NormalizedCacheObject>,
 	nodeSort: NodeSort,
 	addNodeToFolder: UpdateFolderContentType['addNodeToFolder'],
@@ -254,7 +221,7 @@ const uploadVersion = (
 	const url = `${REST_ENDPOINT}${UPLOAD_VERSION_PATH}`;
 	xhr.open('POST', url, true);
 
-	xhr.setRequestHeader('NodeId', fileEnriched.id);
+	xhr.setRequestHeader('NodeId', fileEnriched.nodeId);
 	xhr.setRequestHeader('Filename', encodeBase64(fileEnriched.file.name));
 	xhr.setRequestHeader('OverwriteVersion', `${overwriteVersion}`);
 
@@ -363,7 +330,7 @@ export const useUpload: UseUploadHook = () => {
 						parentId,
 						percentage: 0,
 						status: isItemMaybeFolder ? UploadStatus.FAILED : UploadStatus.LOADING,
-						id: (uploadCounterVar() + index).toString()
+						id: `${(uploadCounterVar() + index).toString()}-${new Date().getTime()}`
 					};
 					const abortFunction: UploadFunctions['abort'] = isItemMaybeFolder
 						? noop
@@ -399,11 +366,11 @@ export const useUpload: UseUploadHook = () => {
 
 	const update = useCallback<ReturnType<UseUploadHook>['update']>(
 		(node, file, overwriteVersion) => {
-			const fileEnriched: UploadType = {
+			const fileEnriched: Required<UploadType> = {
 				file,
 				percentage: 0,
 				status: UploadStatus.LOADING,
-				id: node.id,
+				id: `${node.id}-${new Date().getTime()}`,
 				nodeId: node.id,
 				parentId: (node.parent as Folder).id
 			};
@@ -417,7 +384,14 @@ export const useUpload: UseUploadHook = () => {
 				overwriteVersion
 			);
 			const retryFunction: UploadFunctions['retry'] = (newFile) =>
-				uploadVersion(newFile, apolloClient, nodeSortVar(), addNodeToFolder, overwriteVersion);
+				uploadVersion(
+					// add default node id, but there should be already included in newFile obj
+					{ nodeId: node.id, ...newFile },
+					apolloClient,
+					nodeSortVar(),
+					addNodeToFolder,
+					overwriteVersion
+				);
 			uploadFunctionsVar({
 				...uploadFunctionsVar(),
 				[fileEnriched.id]: { abort: abortFunction, retry: retryFunction }

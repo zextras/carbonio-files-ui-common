@@ -415,6 +415,7 @@ describe('Contextual menu actions', () => {
 			forEach(currentFolder.children, (mockedNode) => {
 				(mockedNode as Node).permissions.can_write_file = true;
 				(mockedNode as Node).permissions.can_write_folder = true;
+				(mockedNode as Node).flagged = false;
 				(mockedNode as Node).parent = populateFolder(0, currentFolder.id, currentFolder.name);
 			});
 			const element0 = currentFolder.children[0] as Node;
@@ -439,36 +440,29 @@ describe('Contextual menu actions', () => {
 			const moveToTrashAction = await screen.findByText(actionRegexp.moveToTrash);
 			expect(moveToTrashAction).toBeVisible();
 
-			const openWithDocsAction = await screen.findByText(actionRegexp.openDocument);
-			expect(openWithDocsAction).toBeVisible();
-
-			const renameAction = await screen.findByText(actionRegexp.rename);
-			expect(renameAction).toBeVisible();
-			expect(renameAction).toHaveAttribute('disabled', '');
+			expect(screen.queryByText(actionRegexp.openDocument)).not.toBeInTheDocument();
+			expect(screen.queryByText(actionRegexp.rename)).not.toBeInTheDocument();
+			expect(screen.queryByText(actionRegexp.download)).not.toBeInTheDocument();
+			expect(screen.queryByText(actionRegexp.unflag)).not.toBeInTheDocument();
 
 			const copyAction = await screen.findByText(actionRegexp.copy);
 			expect(copyAction).toBeVisible();
 
-			const moveAction = await screen.findByText(actionRegexp.move);
-			expect(moveAction).toBeVisible();
-
 			const flagAction = await screen.findByText(actionRegexp.flag);
 			expect(flagAction).toBeVisible();
-
-			const unflagAction = await screen.findByText(actionRegexp.unflag);
-			expect(unflagAction).toBeVisible();
-
-			const downloadAction = await screen.findByText(actionRegexp.download);
-			expect(downloadAction).toBeVisible();
 		});
 
 		test('Contextual menu works only on selected nodes', async () => {
 			const currentFolder = populateFolder(5);
-			// enable permission to Mfd
+			currentFolder.permissions.can_write_file = true;
+			currentFolder.permissions.can_write_folder = true;
+
 			forEach(currentFolder.children, (mockedNode) => {
 				(mockedNode as Node).permissions.can_write_file = true;
 				(mockedNode as Node).permissions.can_write_folder = true;
-				(mockedNode as Node).parent = populateFolder(0, currentFolder.id, currentFolder.name);
+				(mockedNode as Node).parent = currentFolder;
+				(mockedNode as Node).owner = currentFolder.owner;
+				(mockedNode as Node).flagged = false;
 			});
 			const element0 = currentFolder.children[0] as Node;
 			const element1 = currentFolder.children[1] as Node;
@@ -493,40 +487,27 @@ describe('Contextual menu actions', () => {
 			const moveToTrashAction = await screen.findByText(actionRegexp.moveToTrash);
 			expect(moveToTrashAction).toBeVisible();
 
-			const openWithDocsAction = await screen.findByText(actionRegexp.openDocument);
-			expect(openWithDocsAction).toBeVisible();
-
-			const renameAction = await screen.findByText(actionRegexp.rename);
-			expect(renameAction).toBeVisible();
-			expect(renameAction).toHaveAttribute('disabled', '');
+			const moveAction = await screen.findByText(actionRegexp.move);
+			expect(moveAction).toBeVisible();
 
 			const copyAction = await screen.findByText(actionRegexp.copy);
 			expect(copyAction).toBeVisible();
 
-			const moveAction = await screen.findByText(actionRegexp.move);
-			expect(moveAction).toBeVisible();
-
 			const flagAction = await screen.findByText(actionRegexp.flag);
 			expect(flagAction).toBeVisible();
 
-			const unflagAction = await screen.findByText(actionRegexp.unflag);
-			expect(unflagAction).toBeVisible();
-
-			const downloadAction = await screen.findByText(actionRegexp.download);
-			expect(downloadAction).toBeVisible();
+			expect(screen.queryByText(actionRegexp.openDocument)).not.toBeInTheDocument();
+			expect(screen.queryByText(actionRegexp.rename)).not.toBeInTheDocument();
+			expect(screen.queryByText(actionRegexp.download)).not.toBeInTheDocument();
+			expect(screen.queryByText(actionRegexp.unflag)).not.toBeInTheDocument();
 
 			// right click on unSelected node close open contextual menu
 			const nodeItem2 = screen.getByTestId(`node-item-${element2.id}`);
 			fireEvent.contextMenu(nodeItem2);
 
 			expect(moveToTrashAction).not.toBeVisible();
-			expect(openWithDocsAction).not.toBeVisible();
-			expect(renameAction).not.toBeVisible();
 			expect(copyAction).not.toBeVisible();
-			expect(moveAction).not.toBeVisible();
 			expect(flagAction).not.toBeVisible();
-			expect(unflagAction).not.toBeVisible();
-			expect(downloadAction).not.toBeVisible();
 		});
 	});
 

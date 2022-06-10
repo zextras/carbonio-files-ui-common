@@ -16,7 +16,8 @@ import { GetChildrenQuery, GetChildrenQueryVariables } from '../../../types/grap
 import { useErrorHandler } from '../../useErrorHandler';
 import { useMemoCompare } from '../../useMemoCompare';
 
-interface GetChildrenQueryHookReturnType extends QueryResult<GetChildrenQuery> {
+interface GetChildrenQueryHookReturnType
+	extends QueryResult<GetChildrenQuery, GetChildrenQueryVariables> {
 	hasMore: boolean;
 	lastChild: string | null | undefined;
 	loadMore: () => void;

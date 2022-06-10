@@ -16,7 +16,13 @@ import { populateFolder, populateNode } from '../mocks/mockUtils';
 import { Node } from '../types/common';
 import { Folder } from '../types/graphql/types';
 import { getChildrenVariables, mockFlagNodes, mockGetChildren } from '../utils/mockUtils';
-import { actionRegexp, render, selectNodes, waitForNetworkResponse } from '../utils/testUtils';
+import {
+	actionRegexp,
+	iconRegexp,
+	render,
+	selectNodes,
+	waitForNetworkResponse
+} from '../utils/testUtils';
 import { DisplayerProps } from './components/Displayer';
 import FolderView from './FolderView';
 
@@ -82,11 +88,10 @@ describe('Flag', () => {
 
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesIdsToFlag.length);
-			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-			userEvent.click(screen.getByTestId('icon: MoreVertical'));
-			await screen.findByText(actionRegexp.flag);
+
+			const flagIcon = await screen.findByTestId(iconRegexp.flag);
 			// click on flag action on header bar
-			userEvent.click(screen.getByText(actionRegexp.flag));
+			userEvent.click(flagIcon);
 			await waitForElementToBeRemoved(screen.queryAllByTestId('checkedAvatar'));
 			await screen.findAllByTestId('icon: Flag');
 			expect(screen.getAllByTestId('icon: Flag')).toHaveLength(nodesIdsToFlag.length);
@@ -95,11 +100,9 @@ describe('Flag', () => {
 			selectNodes(nodesIdsToUnflag);
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesIdsToUnflag.length);
-			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-			userEvent.click(screen.getByTestId('icon: MoreVertical'));
-			await screen.findByText(actionRegexp.unflag);
-			// click on unflag action on header bar
-			userEvent.click(screen.getByText(actionRegexp.unflag));
+
+			const unflagIcon = await screen.findByTestId(iconRegexp.unflag);
+			userEvent.click(unflagIcon);
 			await waitForElementToBeRemoved(screen.queryAllByTestId('checkedAvatar'));
 			await screen.findAllByTestId('icon: Flag');
 			expect(screen.getAllByTestId('icon: Flag')).toHaveLength(

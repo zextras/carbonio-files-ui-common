@@ -64,6 +64,8 @@ describe('Node Sharing', () => {
 		const dlShare = populateShare(node, 'dl-share', distributionList);
 		const loggedUserShare = populateShare(node, 'logged-user-share', mockedUserLogged);
 		node.shares = [userShare, dlShare, loggedUserShare];
+		// set an owner different from logged user
+		node.owner = populateUser();
 		const mocks = [
 			mockGetShares(getSharesVariables(node.id), node),
 			mockGetNodeLinks({ node_id: node.id }, node)
@@ -108,6 +110,8 @@ describe('Node Sharing', () => {
 			const loggedUserShare = populateShare(node, 'logged-user-share', mockedUserLogged);
 			shares.push(loggedUserShare);
 			node.shares = shares;
+			// set owner different from logged user
+			node.owner = populateUser();
 			const mocks = [
 				mockGetShares(getSharesVariables(node.id), node),
 				mockDeleteShare(
@@ -166,6 +170,8 @@ describe('Node Sharing', () => {
 			node.permissions.can_share = true;
 			const shares = populateShares(node, 10);
 			node.shares = shares;
+			// set owner different from logged user
+			node.owner = populateUser();
 			const mocks = [
 				mockGetShares(getSharesVariables(node.id), node),
 				mockGetNodeLinks({ node_id: node.id }, node)

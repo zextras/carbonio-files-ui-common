@@ -64,11 +64,17 @@ describe('Filter List', () => {
 				selectNodes(map(nodes, (node) => node.id));
 				// check that all wanted items are selected
 				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodes.length);
-				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-				userEvent.click(screen.getByTestId('icon: MoreVertical'));
-				const renameAction = await screen.findByText(actionRegexp.rename);
-				expect(renameAction).toBeVisible();
-				expect(renameAction).toHaveAttribute('disabled', '');
+
+				expect(screen.queryByTestId('icon: EditOutline')).not.toBeInTheDocument();
+
+				const moreIconButton = screen.queryByTestId('icon: MoreVertical');
+				if (moreIconButton) {
+					userEvent.click(moreIconButton);
+					// wait for trash action to check that popper is open
+					const trashAction = await screen.findByText(actionRegexp.moveToTrash);
+					expect(trashAction).not.toHaveAttribute('disabled');
+					expect(screen.queryByText(actionRegexp.rename)).not.toBeInTheDocument();
+				}
 			});
 
 			test('Rename is disabled if node does not have permissions', async () => {
@@ -87,11 +93,17 @@ describe('Filter List', () => {
 				selectNodes([node.id]);
 				// check that all wanted items are selected
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
-				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-				userEvent.click(screen.getByTestId('icon: MoreVertical'));
-				const renameAction = await screen.findByText(actionRegexp.rename);
-				expect(renameAction).toBeVisible();
-				expect(renameAction).toHaveAttribute('disabled', '');
+
+				expect(screen.queryByTestId('icon: EditOutline')).not.toBeInTheDocument();
+
+				const moreIconButton = screen.queryByTestId('icon: MoreVertical');
+				if (moreIconButton) {
+					userEvent.click(moreIconButton);
+					// wait for trash action to check that popper is open
+					const trashAction = await screen.findByText(actionRegexp.copy);
+					expect(trashAction).not.toHaveAttribute('disabled');
+					expect(screen.queryByText(actionRegexp.rename)).not.toBeInTheDocument();
+				}
 			});
 
 			test('Rename operation fail shows an error in the modal and does not close it', async () => {
@@ -254,9 +266,9 @@ describe('Filter List', () => {
 				// right click to open contextual menu
 				const nodeItem = screen.getByTestId(`node-item-${node.id}`);
 				fireEvent.contextMenu(nodeItem);
-				const renameAction = await screen.findByText(actionRegexp.rename);
-				expect(renameAction).toBeVisible();
-				expect(renameAction).toHaveAttribute('disabled', '');
+				// wait for copy action to check that popper is open
+				await screen.findByText(actionRegexp.copy);
+				expect(screen.queryByText(actionRegexp.rename)).not.toBeInTheDocument();
 			});
 
 			test('Rename change node name and leave node at same position in the list', async () => {

@@ -13,3 +13,11 @@ export function isOperationVariables<TVariables>(
 ): variables is TVariables {
 	return query === documentNode;
 }
+
+export function isQueryResult<TData>(
+	query: ObservableQuery['options']['query'],
+	result: unknown,
+	documentNode: DocumentNode
+): result is TData {
+	return query === documentNode;
+}

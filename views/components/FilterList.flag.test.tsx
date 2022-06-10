@@ -16,7 +16,7 @@ import { NODES_LOAD_LIMIT, ROOTS } from '../../constants';
 import { populateNodes } from '../../mocks/mockUtils';
 import { Node } from '../../types/common';
 import { getFindNodesVariables, mockFindNodes, mockFlagNodes } from '../../utils/mockUtils';
-import { actionRegexp, render, selectNodes } from '../../utils/testUtils';
+import { actionRegexp, iconRegexp, render, selectNodes } from '../../utils/testUtils';
 import FilterList from './FilterList';
 
 describe('Filter List', () => {
@@ -66,15 +66,10 @@ describe('Filter List', () => {
 
 				// check that all wanted items are selected
 				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesIdsToUnflag.length);
-				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-				userEvent.click(screen.getByTestId('icon: MoreVertical'));
-				await screen.findByText(actionRegexp.unflag);
-				// flag action should be disabled
-				const flagAction = screen.getByText(actionRegexp.flag);
-				expect(flagAction).toBeVisible();
-				expect(flagAction).toHaveAttribute('disabled', '');
+
+				const unflagIcon = await screen.findByTestId(iconRegexp.unflag);
 				// click on unflag action on header bar
-				userEvent.click(screen.getByText(actionRegexp.unflag));
+				userEvent.click(unflagIcon);
 				// await waitForElementToBeRemoved(screen.queryAllByTestId('checkedAvatar'));
 				// wait the snackbar with successful state to appear
 				const snackbar = await screen.findByText(/Item unflagged successfully/i);
@@ -145,12 +140,10 @@ describe('Filter List', () => {
 		test('refetch filter if not all pages are loaded and all nodes are unflagged', async () => {
 			const firstPage = populateNodes(NODES_LOAD_LIMIT);
 			forEach(firstPage, (node) => {
-				// eslint-disable-next-line no-param-reassign
 				node.flagged = true;
 			});
 			const secondPage = populateNodes(NODES_LOAD_LIMIT);
 			forEach(secondPage, (node) => {
-				// eslint-disable-next-line no-param-reassign
 				node.flagged = true;
 			});
 			const nodesToUnflag = map(firstPage, (node) => node.id);
@@ -178,17 +171,16 @@ describe('Filter List', () => {
 			selectNodes(nodesToUnflag);
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length);
-			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-			userEvent.click(screen.getByTestId('icon: MoreVertical'));
-			const unflagAction = await screen.findByText(actionRegexp.unflag);
-			expect(unflagAction).toBeVisible();
-			expect(unflagAction).not.toHaveAttribute('disabled', '');
+
+			const unflagAction = await screen.findByTestId(iconRegexp.unflag);
 			userEvent.click(unflagAction);
 			await waitForElementToBeRemoved(screen.queryByText(firstPage[0].name));
+			const snackbar = await screen.findByText(/success/i);
 			await screen.findByText(secondPage[0].name);
+			await waitForElementToBeRemoved(snackbar);
 			expect(screen.getByText(secondPage[0].name)).toBeVisible();
 			expect(screen.queryByText(firstPage[0].name)).not.toBeInTheDocument();
 			expect(screen.queryByText((last(firstPage) as Node).name)).not.toBeInTheDocument();
-		}, 60000);
+		});
 	});
 });

@@ -7,7 +7,6 @@
 /* eslint-disable no-else-return */
 import React from 'react';
 
-import difference from 'lodash/difference';
 import every from 'lodash/every';
 import find from 'lodash/find';
 import forEach from 'lodash/forEach';
@@ -17,30 +16,12 @@ import reduce from 'lodash/reduce';
 import size from 'lodash/size';
 import some from 'lodash/some';
 
+import { ACTIONS_TO_REMOVE_DUE_TO_PRODUCT_CONTEXT } from '../../constants';
 import { ROOTS } from '../constants';
-import { GetNodeParentType, Node, UploadStatus, UploadType } from '../types/common';
+import { Action, GetNodeParentType, Node, UploadStatus, UploadType } from '../types/common';
 import { File as FilesFile, File, Folder, MakeOptional, Root } from '../types/graphql/types';
 import { OneOrMany } from '../types/utils';
-import { docsHandledMimeTypes } from './utils';
-
-export enum Action {
-	Rename = 'RENAME',
-	Flag = 'FLAG',
-	UnFlag = 'UNFLAG',
-	// CreateFolder = 'CREATE_FOLDER',
-	MarkForDeletion = 'MARK_FOR_DELETION',
-	Move = 'MOVE',
-	Copy = 'COPY',
-	Restore = 'RESTORE',
-	UpsertDescription = 'UPSERT_DESCRIPTION',
-	DeletePermanently = 'DELETE_PERMANENTLY',
-	Download = 'DOWNLOAD',
-	removeUpload = 'REMOVE_UPLOAD',
-	RetryUpload = 'RETRY_UPLOAD',
-	GoToFolder = 'GO_TO_FOLDER',
-	OpenWithDocs = 'OPEN_WITH_DOCS',
-	SendViaMail = 'SEND_VIA_MAIL'
-}
+import { docsHandledMimeTypes, isSupportedByPreview } from './utils';
 
 export interface ActionItem {
 	id: string;
@@ -68,67 +49,34 @@ export type ActionsFactoryChecker = (nodes: ActionsFactoryGlobalType[]) => boole
 
 export type ActionsFactoryCheckerMap = Partial<Record<Action, ActionsFactoryChecker>>;
 
-export type ActionMap = Partial<Record<Action, boolean>>;
-
-const selectionModePrimaryActions: Action[] = [
-	Action.MarkForDeletion,
-	Action.Restore,
-	Action.DeletePermanently
-];
-
-const previewPanelPrimaryActions: Action[] = [
-	Action.MarkForDeletion,
-	Action.Restore,
-	Action.DeletePermanently
-];
-
-const selectionModeSecondaryActions: Action[] = [
-	Action.OpenWithDocs,
-	Action.Rename,
-	Action.Flag,
-	Action.UnFlag,
-	Action.Copy,
-	Action.Move,
-	Action.Download,
-	Action.SendViaMail
-];
-
-const previewPanelSecondaryActions: Action[] = [
-	Action.OpenWithDocs,
-	Action.Rename,
-	Action.Flag,
-	Action.UnFlag,
-	Action.Copy,
-	Action.Move,
-	Action.Download,
-	Action.SendViaMail
-];
-
 const hoverBarActions: Action[] = [
+	Action.SendViaMail,
 	Action.Download,
+	Action.ManageShares,
 	Action.Flag,
 	Action.UnFlag,
 	Action.Restore,
 	Action.DeletePermanently
 ];
 
-const contextualMenuActions: Action[] = [
-	Action.OpenWithDocs,
-	Action.Rename,
+const completeListActions: Action[] = [
+	Action.Edit,
+	Action.Preview,
+	Action.SendViaMail,
+	Action.Download,
+	Action.ManageShares,
 	Action.Flag,
 	Action.UnFlag,
-	Action.MarkForDeletion,
-	Action.Move,
+	Action.OpenWithDocs,
 	Action.Copy,
+	Action.Move,
+	Action.Rename,
+	Action.MoveToTrash,
 	Action.Restore,
-	Action.DeletePermanently,
-	Action.Download,
-	Action.SendViaMail
+	Action.DeletePermanently
 ];
 
 const uploadActions: Action[] = [Action.removeUpload, Action.RetryUpload, Action.GoToFolder];
-
-export const trashedNodeActions: Action[] = [Action.Restore, Action.DeletePermanently];
 
 export function isFile(node: { __typename?: string }): node is File {
 	return node.__typename === 'File';
@@ -198,6 +146,10 @@ export function canFlag(nodes: OneOrMany<ActionsFactoryGlobalType>): boolean {
 		throw Error('cannot evaluate canFlag on empty nodes array');
 	}
 	const $nodes = nodes as ActionsFactoryNodeType[];
+	const notTrashedNodes = every($nodes, (node) => node.rootId !== ROOTS.TRASH);
+	if (!notTrashedNodes) {
+		return false;
+	}
 	if (size($nodes) > 1) {
 		// can flag if there is at least 1 unflagged node
 		return find($nodes, (node) => !node.flagged) !== undefined;
@@ -214,6 +166,10 @@ export function canUnFlag(nodes: OneOrMany<ActionsFactoryGlobalType>): boolean {
 		throw Error('cannot evaluate canUnFlag on empty nodes array');
 	}
 	const $nodes = nodes as ActionsFactoryNodeType[];
+	const notTrashedNodes = every($nodes, (node) => node.rootId !== ROOTS.TRASH);
+	if (!notTrashedNodes) {
+		return false;
+	}
 	if (size($nodes) > 1) {
 		// can unflag if there is at least 1 flagged node
 		return find($nodes, (node) => node.flagged) !== undefined;
@@ -419,7 +375,7 @@ export function canDownload(nodes: OneOrMany<ActionsFactoryGlobalType>): boolean
 	const $nodes = nodes as ActionsFactoryNodeType[];
 	// TODO: evaluate when batch will be enabled
 	// TODO: remove file check when download will be implemented also for folders
-	return size($nodes) === 1 && isFile($nodes[0]);
+	return size($nodes) === 1 && isFile($nodes[0]) && $nodes[0].rootId !== ROOTS.TRASH;
 }
 
 export function canOpenWithDocs(nodes: OneOrMany<ActionsFactoryGlobalType>): boolean {
@@ -434,7 +390,62 @@ export function canOpenWithDocs(nodes: OneOrMany<ActionsFactoryGlobalType>): boo
 		size($nodes) === 1 &&
 		isFile($nodes[0]) &&
 		includes(docsHandledMimeTypes, $nodes[0].mime_type) &&
+		$nodes[0].rootId !== ROOTS.TRASH &&
+		!$nodes[0].permissions.can_write_file &&
+		$nodes[0].permissions.can_read
+	);
+}
+
+export function canOpenVersionWithDocs(nodes: OneOrMany<ActionsFactoryGlobalType>): boolean {
+	if (!(nodes instanceof Array)) {
+		throw Error('cannot evaluate canOpenWithDocs on Node type');
+	}
+	if (size(nodes) === 0) {
+		throw Error('cannot evaluate canOpenWithDocs on empty nodes array');
+	}
+	const $nodes = nodes as ActionsFactoryNodeType[];
+	return (
+		size($nodes) === 1 &&
+		isFile($nodes[0]) &&
+		includes(docsHandledMimeTypes, $nodes[0].mime_type) &&
 		$nodes[0].rootId !== ROOTS.TRASH
+	);
+}
+
+export function canEdit(nodes: OneOrMany<ActionsFactoryGlobalType>): boolean {
+	if (!(nodes instanceof Array)) {
+		throw Error('cannot evaluate canEdit on Node type');
+	}
+	if (size(nodes) === 0) {
+		throw Error('cannot evaluate canEdit on empty nodes array');
+	}
+	const $nodes = nodes as ActionsFactoryNodeType[];
+	return (
+		size($nodes) === 1 &&
+		isFile($nodes[0]) &&
+		includes(docsHandledMimeTypes, $nodes[0].mime_type) &&
+		$nodes[0].rootId !== ROOTS.TRASH &&
+		$nodes[0].permissions.can_write_file
+	);
+}
+
+export function canPreview(nodes: OneOrMany<ActionsFactoryGlobalType>): boolean {
+	if (!(nodes instanceof Array)) {
+		throw Error('cannot evaluate canPreview on Node type');
+	}
+	if (size(nodes) === 0) {
+		throw Error('cannot evaluate canPreview on empty nodes array');
+	}
+	const $nodes = nodes as ActionsFactoryNodeType[];
+	return (
+		size($nodes) === 1 &&
+		isFile($nodes[0]) &&
+		$nodes[0].rootId !== ROOTS.TRASH &&
+		!(
+			$nodes[0].permissions.can_write_file && includes(docsHandledMimeTypes, $nodes[0].mime_type)
+		) &&
+		(isSupportedByPreview($nodes[0].mime_type)[0] ||
+			includes(docsHandledMimeTypes, $nodes[0].mime_type))
 	);
 }
 
@@ -477,6 +488,9 @@ export function canGoToFolder(nodes: OneOrMany<ActionsFactoryGlobalType>): boole
 }
 
 export function canSendViaMail(nodes: OneOrMany<ActionsFactoryGlobalType>): boolean {
+	if (includes(ACTIONS_TO_REMOVE_DUE_TO_PRODUCT_CONTEXT, Action.SendViaMail)) {
+		return false;
+	}
 	if (!(nodes instanceof Array)) {
 		throw Error('cannot evaluate canSendViaMail on Node type');
 	}
@@ -486,28 +500,42 @@ export function canSendViaMail(nodes: OneOrMany<ActionsFactoryGlobalType>): bool
 	const $nodes = nodes as ActionsFactoryNodeType[];
 	// TODO: evaluate when batch will be enabled
 	// TODO: remove file check when canSendViaMail will be implemented also for folders
-	return size($nodes) === 1 && isFile($nodes[0]);
+	return size($nodes) === 1 && isFile($nodes[0]) && $nodes[0].rootId !== ROOTS.TRASH;
+}
+
+export function canManageShares(nodes: OneOrMany<ActionsFactoryGlobalType>): boolean {
+	if (!(nodes instanceof Array)) {
+		throw Error('cannot evaluate canManageShares on Node type');
+	}
+	if (size(nodes) === 0) {
+		throw Error('cannot evaluate canManageShares on empty nodes array');
+	}
+	const $nodes = nodes as ActionsFactoryNodeType[];
+	return size(nodes) === 1 && $nodes[0].rootId !== ROOTS.TRASH;
 }
 
 const actionsCheckMap: {
 	[key in Action]: (nodes: OneOrMany<ActionsFactoryGlobalType>, loggedUserId?: string) => boolean;
 } = {
-	[Action.Rename]: canRename,
+	[Action.Edit]: canEdit,
+	[Action.Preview]: canPreview,
+	[Action.SendViaMail]: canSendViaMail,
+	[Action.Download]: canDownload,
+	[Action.ManageShares]: canManageShares,
 	[Action.Flag]: canFlag,
 	[Action.UnFlag]: canUnFlag,
-	// [Actions.CreateFolder]: canCreateFolder,
-	[Action.MarkForDeletion]: canMarkForDeletion,
-	[Action.Move]: canMove,
-	[Action.Restore]: canRestore,
-	[Action.UpsertDescription]: canUpsertDescription,
-	[Action.DeletePermanently]: canDeletePermanently,
-	[Action.Copy]: canCopy,
-	[Action.Download]: canDownload,
-	[Action.removeUpload]: canRemoveUpload,
-	[Action.RetryUpload]: canRetryUpload,
-	[Action.GoToFolder]: canGoToFolder,
 	[Action.OpenWithDocs]: canOpenWithDocs,
-	[Action.SendViaMail]: canSendViaMail
+	[Action.Copy]: canCopy,
+	[Action.Move]: canMove,
+	[Action.Rename]: canRename,
+	[Action.MoveToTrash]: canMarkForDeletion,
+	[Action.Restore]: canRestore,
+	[Action.DeletePermanently]: canDeletePermanently,
+	[Action.UpsertDescription]: canUpsertDescription,
+	[Action.GoToFolder]: canGoToFolder,
+	[Action.RetryUpload]: canRetryUpload,
+	[Action.removeUpload]: canRemoveUpload
+	// [Actions.CreateFolder]: canCreateFolder,
 };
 
 export function getPermittedActions(
@@ -516,144 +544,58 @@ export function getPermittedActions(
 	// TODO: REMOVE CHECK ON ROOT WHEN BE WILL NOT RETURN LOCAL_ROOT AS PARENT FOR SHARED NODES
 	loggedUserId?: string,
 	customCheckers?: ActionsFactoryCheckerMap
-): ActionMap {
+): Action[] {
 	return reduce(
 		actions,
-		(accumulator: ActionMap, action: Action) => {
-			if (size(nodes) === 0) {
-				accumulator[action] = false;
-			} else {
+		(accumulator: Action[], action: Action) => {
+			if (size(nodes) > 0) {
 				let externalCheckerResult = true;
 				const externalChecker = customCheckers && customCheckers[action];
 				if (externalChecker) {
 					externalCheckerResult = externalChecker(nodes);
 				}
-				accumulator[action] = actionsCheckMap[action](nodes, loggedUserId) && externalCheckerResult;
+				if (actionsCheckMap[action](nodes, loggedUserId) && externalCheckerResult) {
+					accumulator.push(action);
+				}
 			}
 			return accumulator;
 		},
-		{}
+		[]
 	);
 }
 
-export function getPermittedSelectionModePrimaryActions(
+export function getAllPermittedActions(
 	nodes: ActionsFactoryNodeType[],
-	actionsToRemove?: Action[]
-): ActionMap {
-	return getPermittedActions(
-		nodes as ActionsFactoryGlobalType[],
-		actionsToRemove
-			? difference(selectionModePrimaryActions, actionsToRemove)
-			: selectionModePrimaryActions
-	);
-}
-
-export function getPermittedSelectionModeSecondaryActions(
-	nodes: ActionsFactoryNodeType[],
-	actionsToRemove?: Action[],
 	// TODO: REMOVE CHECK ON ROOT WHEN BE WILL NOT RETURN LOCAL_ROOT AS PARENT FOR SHARED NODES
 	loggedUserId?: string,
 	customCheckers?: ActionsFactoryCheckerMap
-): ActionMap {
+): Action[] {
 	return getPermittedActions(
 		nodes as ActionsFactoryGlobalType[],
-		actionsToRemove
-			? difference(selectionModeSecondaryActions, actionsToRemove)
-			: selectionModeSecondaryActions,
+		completeListActions,
 		loggedUserId,
 		customCheckers
 	);
 }
 
-export function getPermittedPreviewPanelPrimaryActions(
-	nodes: ActionsFactoryNodeType[],
-	actionsToRemove?: Action[]
-): ActionMap {
-	return getPermittedActions(
-		nodes as ActionsFactoryGlobalType[],
-		actionsToRemove
-			? difference(previewPanelPrimaryActions, actionsToRemove)
-			: previewPanelPrimaryActions
-	);
+export function getPermittedHoverBarActions(node: ActionsFactoryNodeType): Action[] {
+	return getPermittedActions([node as ActionsFactoryGlobalType], hoverBarActions);
 }
 
-export function getPermittedPreviewPanelSecondaryActions(
-	nodes: ActionsFactoryNodeType[],
-	actionsToRemove?: Action[],
-	// TODO: REMOVE CHECK ON ROOT WHEN BE WILL NOT RETURN LOCAL_ROOT AS PARENT FOR SHARED NODES
-	loggedUserId?: string
-): ActionMap {
-	return getPermittedActions(
-		nodes as ActionsFactoryGlobalType[],
-		actionsToRemove
-			? difference(previewPanelSecondaryActions, actionsToRemove)
-			: previewPanelSecondaryActions,
-		loggedUserId
-	);
-}
-
-export function getPermittedHoverBarActions(
-	node: ActionsFactoryNodeType,
-	actionsToRemove?: Action[]
-): ActionMap {
-	const result = getPermittedActions(
-		[node as ActionsFactoryGlobalType],
-		actionsToRemove ? difference(hoverBarActions, actionsToRemove) : hoverBarActions
-	);
-	// flag / unflag actions are exclusive for a single node
-	if (result[Action.Flag]) {
-		delete result[Action.UnFlag];
-	} else if (result[Action.UnFlag]) {
-		delete result[Action.Flag];
-	}
-	// hide download hoverBar action for type folder to avoid tooltip on disabled iconButton
-	if (isFolder(node) && Action.Download in result) {
-		delete result[Action.Download];
-	}
-
-	return result;
-}
-
-export function getPermittedContextualMenuActions(
-	nodes: ActionsFactoryNodeType[],
-	actionsToRemove?: Action[],
-	loggedUserId?: string
-): ActionMap {
-	const result = getPermittedActions(
-		nodes as ActionsFactoryGlobalType[],
-		actionsToRemove ? difference(contextualMenuActions, actionsToRemove) : contextualMenuActions,
-		loggedUserId
-	);
-	if (size(nodes) === 1) {
-		// flag / unflag actions are exclusive for a single node
-		if (result[Action.Flag]) {
-			delete result[Action.UnFlag];
-		} else if (result[Action.UnFlag]) {
-			delete result[Action.Flag];
-		}
-	}
-	return result;
-}
-
-export function getPermittedUploadActions(nodes: ActionsFactoryUploadType[]): ActionMap {
+export function getPermittedUploadActions(nodes: ActionsFactoryUploadType[]): Action[] {
 	return getPermittedActions(nodes as ActionsFactoryGlobalType[], uploadActions);
 }
 
 export function buildActionItems(
 	itemsMap: Partial<Record<Action, ActionItem>>,
-	actions: ActionMap = {}
+	actions: Action[] = []
 ): ActionItem[] {
 	return reduce(
-		itemsMap,
-		(accumulator: ActionItem[], actionItem, key) => {
+		actions,
+		(accumulator: ActionItem[], action) => {
+			const actionItem = itemsMap[action as Action];
 			if (actionItem) {
-				const actionEnabled = actions[key as Action];
-				if (actionEnabled !== undefined) {
-					accumulator.push({
-						...actionItem,
-						disabled: !actionEnabled
-					});
-				}
+				accumulator.push(actionItem);
 			}
 			return accumulator;
 		},

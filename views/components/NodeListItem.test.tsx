@@ -11,8 +11,9 @@ import userEvent from '@testing-library/user-event';
 
 import { PREVIEW_PATH, PREVIEW_TYPE, REST_ENDPOINT, ROOTS } from '../../constants';
 import { populateFile, populateFolder, populateNode, populateUser } from '../../mocks/mockUtils';
+import { Action } from '../../types/common';
 import { NodeType, User } from '../../types/graphql/types';
-import { Action, getPermittedHoverBarActions } from '../../utils/ActionsFactory';
+import { getPermittedHoverBarActions } from '../../utils/ActionsFactory';
 import { render } from '../../utils/testUtils';
 import { formatDate, humanFileSize } from '../../utils/utils';
 import * as moduleUtils from '../../utils/utils';
@@ -221,6 +222,7 @@ describe('Node List Item', () => {
 
 	test('owner is visible if different from logged user', () => {
 		const node = populateNode();
+		node.owner = populateUser();
 		render(<NodeListItem id={node.id} name={node.name} type={node.type} owner={node.owner} />);
 		expect(screen.getByText(node.owner.full_name)).toBeVisible();
 	});
@@ -395,7 +397,7 @@ describe('Node List Item', () => {
 		expect(screen.getAllByText(new RegExp(`^${node.extension}`, 'i'))).toHaveLength(2);
 		expect(screen.getAllByText(new RegExp(humanFileSize(node.size), 'i'))).toHaveLength(2);
 		expect(screen.getByTestId('icon: ArrowBackOutline')).toBeInTheDocument();
-		expect(screen.getByTestId('icon: DriveOutline')).toBeInTheDocument();
+		expect(screen.getByTestId('icon: ShareOutline')).toBeInTheDocument();
 		expect(screen.getByTestId('icon: DownloadOutline')).toBeInTheDocument();
 		expect(screen.queryByTestId('icon: BookOpenOutline')).not.toBeInTheDocument();
 	});
@@ -416,7 +418,7 @@ describe('Node List Item', () => {
 				size={node.size}
 				version={node.version}
 				mimeType={node.mime_type}
-				permittedContextualMenuActions={{ [Action.OpenWithDocs]: true }}
+				permittedContextualMenuActions={[Action.OpenWithDocs]}
 			/>
 		);
 		expect(screen.getByText(node.name)).toBeInTheDocument();
@@ -429,7 +431,7 @@ describe('Node List Item', () => {
 		expect(screen.getAllByText(new RegExp(humanFileSize(node.size), 'i'))).toHaveLength(2);
 		expect(screen.getByText(/loading pdf/i)).toBeInTheDocument();
 		expect(screen.getByTestId('icon: ArrowBackOutline')).toBeInTheDocument();
-		expect(screen.getByTestId('icon: DriveOutline')).toBeInTheDocument();
+		expect(screen.getByTestId('icon: ShareOutline')).toBeInTheDocument();
 		expect(screen.getByTestId('icon: DownloadOutline')).toBeInTheDocument();
 		expect(screen.getByTestId('icon: BookOpenOutline')).toBeInTheDocument();
 		expect(openWithDocsFn).not.toHaveBeenCalled();
@@ -443,6 +445,7 @@ describe('Node List Item', () => {
 		const node = populateFile();
 		node.type = NodeType.Text;
 		node.extension = 'txt';
+		node.mime_type = 'text/plain';
 
 		render(
 			<NodeListItem
@@ -453,7 +456,7 @@ describe('Node List Item', () => {
 				size={node.size}
 				version={node.version}
 				mimeType={node.mime_type}
-				permittedContextualMenuActions={{ [Action.OpenWithDocs]: false }}
+				permittedContextualMenuActions={[]}
 			/>
 		);
 		expect(screen.getByText(node.name)).toBeInTheDocument();

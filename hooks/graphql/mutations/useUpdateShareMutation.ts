@@ -4,21 +4,20 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-/* eslint-disable arrow-body-style */
 import { useCallback } from 'react';
 
-import { ApolloError, FetchResult, gql, useMutation } from '@apollo/client';
+import { ApolloError, FetchResult, useMutation } from '@apollo/client';
 import reduce from 'lodash/reduce';
 
+import SHARE_TARGET from '../../../graphql/fragments/shareTarget.graphql';
 import UPDATE_SHARE from '../../../graphql/mutations/updateShare.graphql';
 import { PickIdNodeType } from '../../../types/common';
 import {
-	DistributionList,
 	Share,
 	SharePermission,
+	ShareTargetFragment,
 	UpdateShareMutation,
-	UpdateShareMutationVariables,
-	User
+	UpdateShareMutationVariables
 } from '../../../types/graphql/types';
 import { useErrorHandler } from '../../useErrorHandler';
 
@@ -41,8 +40,8 @@ export function useUpdateShareMutation(): [
 	>(UPDATE_SHARE);
 
 	const updateShare: UpdateShareType = useCallback(
-		(node: PickIdNodeType, shareTargetId: string, permission: SharePermission) => {
-			return updateShareMutation({
+		(node: PickIdNodeType, shareTargetId: string, permission: SharePermission) =>
+			updateShareMutation({
 				variables: {
 					node_id: node.id,
 					share_target_id: shareTargetId,
@@ -56,21 +55,11 @@ export function useUpdateShareMutation(): [
 								const updatedShares = reduce(
 									existingShareRefs,
 									(accumulator: Share[], existingShareRef: Share) => {
-										const sharedTarget: User | DistributionList | null | undefined =
+										const sharedTarget =
 											existingShareRef.share_target &&
-											// TODO: move fragment to graphql file and add type
-											cache.readFragment({
+											cache.readFragment<ShareTargetFragment>({
 												id: cache.identify(existingShareRef.share_target),
-												fragment: gql`
-													fragment SharedTargetId on SharedTarget {
-														... on DistributionList {
-															id
-														}
-														... on User {
-															id
-														}
-													}
-												`
+												fragment: SHARE_TARGET
 											});
 										if (sharedTarget && sharedTarget.id === shareTargetId) {
 											const newExistingShareRef = {
@@ -91,8 +80,7 @@ export function useUpdateShareMutation(): [
 						}
 					});
 				}
-			});
-		},
+			}),
 		[updateShareMutation]
 	);
 	useErrorHandler(updateShareError, 'UPDATE_SHARE');

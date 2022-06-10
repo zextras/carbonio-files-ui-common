@@ -6,7 +6,7 @@
 
 import React from 'react';
 
-import { screen, waitForElementToBeRemoved } from '@testing-library/react';
+import { screen, waitForElementToBeRemoved, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { act } from 'react-dom/test-utils';
 
@@ -29,42 +29,19 @@ import {
 	mockGetPath,
 	mockGetShares,
 	mockMoveNodes,
-	mockTrashNodes,
 	mockUpdateNode
 } from '../../utils/mockUtils';
-import { actionRegexp, buildBreadCrumbRegExp, renameNode, render } from '../../utils/testUtils';
+import {
+	actionRegexp,
+	buildBreadCrumbRegExp,
+	iconRegexp,
+	renameNode,
+	render
+} from '../../utils/testUtils';
 import { getChipLabel } from '../../utils/utils';
 import { Displayer } from './Displayer';
 
 describe('Displayer', () => {
-	test('Mark for deletion close the displayer', async () => {
-		const node = populateNode();
-		node.permissions.can_write_file = true;
-		node.permissions.can_write_folder = true;
-		node.permissions.can_delete = true;
-		const mocks = [
-			mockGetNode(getNodeVariables(node.id), node),
-			mockTrashNodes({ node_ids: [node.id] }, [node.id])
-		];
-		render(<Displayer translationKey="no.key" />, {
-			initialRouterEntries: [`/?node=${node.id}`],
-			mocks
-		});
-		await screen.findAllByText(node.name);
-		const markForDeletionAction = screen.getByTestId('icon: Trash2Outline');
-		expect(markForDeletionAction).toBeVisible();
-		act(() => {
-			// wrap in act cause it trigger tooltip
-			userEvent.click(markForDeletionAction);
-		});
-		const snackbar = await screen.findByText(/item moved to trash/i);
-		await waitForElementToBeRemoved(snackbar);
-		await screen.findByText(/view files and folders/i);
-		expect(screen.getByText(/view files and folders/i)).toBeVisible();
-		expect(screen.queryByText(node.name)).not.toBeInTheDocument();
-		expect(markForDeletionAction).not.toBeInTheDocument();
-	});
-
 	test('Copy action open copy modal', async () => {
 		const node = populateNode();
 		const parent = populateFolder(1);
@@ -94,12 +71,26 @@ describe('Displayer', () => {
 			mocks
 		});
 		await screen.findAllByText(node.name);
-		const moreVertical = screen.getByTestId('icon: MoreVertical');
-		expect(moreVertical).toBeVisible();
-		userEvent.click(moreVertical);
-		const copyAction = await screen.findByText(actionRegexp.copy);
-		expect(copyAction.parentNode).not.toHaveAttribute('disabled');
-		userEvent.click(copyAction);
+
+		const copyIcon = within(screen.getByTestId('displayer-actions-header')).queryByTestId(
+			iconRegexp.copy
+		);
+		if (copyIcon) {
+			expect(copyIcon.parentNode).not.toHaveAttribute('disabled');
+			act(() => {
+				userEvent.click(copyIcon);
+			});
+		} else {
+			const moreVertical = await screen.findByTestId('icon: MoreVertical');
+			if (moreVertical) {
+				userEvent.click(moreVertical);
+				const copyAction = await screen.findByText(actionRegexp.copy);
+				expect(copyAction.parentNode).not.toHaveAttribute('disabled');
+				userEvent.click(copyAction);
+			} else {
+				fail();
+			}
+		}
 		// modal opening
 		const copyButton = await screen.findByRole('button', { name: actionRegexp.copy });
 		// breadcrumb loading

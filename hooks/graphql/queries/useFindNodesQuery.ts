@@ -17,7 +17,8 @@ import { FindNodesQuery, FindNodesQueryVariables } from '../../../types/graphql/
 import { useErrorHandler } from '../../useErrorHandler';
 import { useMemoCompare } from '../../useMemoCompare';
 
-export interface FindNodesQueryHookReturnType extends QueryResult<FindNodesQuery> {
+export interface FindNodesQueryHookReturnType
+	extends QueryResult<FindNodesQuery, FindNodesQueryVariables> {
 	hasMore: boolean;
 	loadMore: () => Promise<ApolloQueryResult<FindNodesQuery>>;
 	pageToken?: string | null;

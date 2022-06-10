@@ -27,7 +27,13 @@ import {
 	mockGetChildren,
 	mockGetPath
 } from '../../utils/mockUtils';
-import { actionRegexp, buildBreadCrumbRegExp, render, selectNodes } from '../../utils/testUtils';
+import {
+	actionRegexp,
+	buildBreadCrumbRegExp,
+	iconRegexp,
+	render,
+	selectNodes
+} from '../../utils/testUtils';
 import FilterList from './FilterList';
 
 describe('Filter List', () => {
@@ -50,9 +56,8 @@ describe('Filter List', () => {
 
 				// check that all wanted items are selected
 				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
-				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-				userEvent.click(screen.getByTestId('icon: MoreVertical'));
-				const copyAction = await screen.findByText(actionRegexp.copy);
+
+				const copyAction = await screen.findByTestId(iconRegexp.copy);
 				expect(copyAction).toBeVisible();
 				expect(copyAction).not.toHaveAttribute('disabled', '');
 			});
@@ -109,9 +114,13 @@ describe('Filter List', () => {
 				selectNodes([nodeToCopy.id]);
 				// check that all wanted items are selected
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
-				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-				userEvent.click(screen.getByTestId('icon: MoreVertical'));
-				const copyAction = await screen.findByText(actionRegexp.copy);
+
+				let copyAction = screen.queryByTestId(iconRegexp.copy);
+				if (!copyAction) {
+					const moreAction = await screen.findByTestId(iconRegexp.moreVertical);
+					userEvent.click(moreAction);
+					copyAction = await screen.findByText(actionRegexp.copy);
+				}
 				expect(copyAction).toBeVisible();
 				userEvent.click(copyAction);
 
@@ -210,9 +219,7 @@ describe('Filter List', () => {
 				selectNodes(map(nodesToCopy, (node) => node.id));
 				// check that all wanted items are selected
 				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToCopy.length);
-				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-				userEvent.click(screen.getByTestId('icon: MoreVertical'));
-				const copyAction = await screen.findByText(actionRegexp.copy);
+				const copyAction = await screen.findByTestId(iconRegexp.copy);
 				expect(copyAction).toBeVisible();
 				userEvent.click(copyAction);
 
@@ -307,10 +314,12 @@ describe('Filter List', () => {
 				selectNodes(map(nodesToCopy, (node) => node.id));
 				// check that all wanted items are selected
 				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToCopy.length);
-				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-				userEvent.click(screen.getByTestId('icon: MoreVertical'));
-				const copyAction = await screen.findByText(actionRegexp.copy);
-				expect(copyAction).toBeVisible();
+				let copyAction = screen.queryByTestId(iconRegexp.copy);
+				if (!copyAction) {
+					const moreAction = await screen.findByTestId(iconRegexp.moreVertical);
+					userEvent.click(moreAction);
+					copyAction = await screen.findByText(actionRegexp.copy);
+				}
 				userEvent.click(copyAction);
 
 				// open modal with roots

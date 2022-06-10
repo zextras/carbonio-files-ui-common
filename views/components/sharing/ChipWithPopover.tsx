@@ -71,7 +71,7 @@ export const ChipWithPopover = React.forwardRef<HTMLDivElement, ChipWithPopoverP
 
 		return (
 			<>
-				<div ref={innerRef}>
+				<div ref={innerRef} data-testid="chip-with-popover">
 					<ActiveChip
 						$active={open}
 						background={background}

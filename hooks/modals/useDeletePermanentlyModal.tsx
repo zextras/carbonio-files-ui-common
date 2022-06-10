@@ -10,7 +10,6 @@ import { FetchResult } from '@apollo/client';
 import { Container, Text, useModal } from '@zextras/carbonio-design-system';
 import { useTranslation } from 'react-i18next';
 
-import { useActiveNode } from '../../../hooks/useActiveNode';
 import { DeleteNodesMutation } from '../../types/graphql/types';
 
 export type DeletePermanentlyAction = () => Promise<FetchResult<DeleteNodesMutation>>;
@@ -23,18 +22,14 @@ export function useDeletePermanentlyModal(
 } {
 	const createModal = useModal();
 	const [t] = useTranslation();
-	const { activeNodeId, removeActiveNode } = useActiveNode();
 	const openDeletePermanentlyModal = useCallback(() => {
 		const closeModal = createModal({
 			title: t('modal.deletePermanently.header', 'This action is irreversible'),
 			confirmLabel: t('modal.deletePermanently.button.confirm', 'Delete permanently'),
 			confirmColor: 'error',
 			onConfirm: () => {
-				deletePermanentlyAction().then(({ data }) => {
+				deletePermanentlyAction().then(() => {
 					deletePermanentlyActionCallback && deletePermanentlyActionCallback();
-					if (activeNodeId && data?.deleteNodes?.includes(activeNodeId)) {
-						removeActiveNode();
-					}
 					closeModal();
 				});
 			},
@@ -53,14 +48,7 @@ export function useDeletePermanentlyModal(
 				</Container>
 			)
 		});
-	}, [
-		activeNodeId,
-		createModal,
-		deletePermanentlyAction,
-		deletePermanentlyActionCallback,
-		removeActiveNode,
-		t
-	]);
+	}, [createModal, deletePermanentlyAction, deletePermanentlyActionCallback, t]);
 
 	return { openDeletePermanentlyModal };
 }

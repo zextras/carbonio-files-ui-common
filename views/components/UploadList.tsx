@@ -21,9 +21,8 @@ import { DRAG_TYPES, ROOTS } from '../../constants';
 import { ListContext } from '../../contexts';
 import useSelection from '../../hooks/useSelection';
 import { useUpload } from '../../hooks/useUpload';
-import { UploadType } from '../../types/common';
+import { Action, UploadType } from '../../types/common';
 import {
-	Action,
 	ActionItem,
 	buildActionItems,
 	getPermittedUploadActions
@@ -193,7 +192,7 @@ export const UploadList: React.VFC = () => {
 				isSelectionModeActive={isSelectionModeActive}
 				unSelectAll={unSelectAll}
 				selectAll={selectAll}
-				permittedSelectionModePrimaryActionsItems={permittedSelectionModePrimaryActionsItems}
+				permittedSelectionModeActionsItems={permittedSelectionModePrimaryActionsItems}
 				actionComponent={headerAction}
 				exitSelectionMode={exitSelectionMode}
 				isAllSelected={size(selectedIDs) === size(items)}

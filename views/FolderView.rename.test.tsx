@@ -455,7 +455,8 @@ describe('Rename', () => {
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length - 1);
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-			const trashAction = await screen.findByTestId('icon: Trash2Outline');
+			userEvent.click(screen.getByTestId('icon: MoreVertical'));
+			const trashAction = await screen.findByText(actionRegexp.moveToTrash);
 			expect(trashAction).toBeVisible();
 			expect(trashAction.parentNode).not.toHaveAttribute('disabled', '');
 			userEvent.click(trashAction);
