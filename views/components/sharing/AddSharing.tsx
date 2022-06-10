@@ -128,7 +128,6 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 	const [chips, setChips] = useState<ShareChip[]>([]);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const [loading, setLoading] = useState(false);
-	const [searchText, setSearchText] = useState('');
 
 	const createShareCallback = useCallback(() => {
 		forEach(chips, (chip) => {
@@ -154,7 +153,6 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 
 	const addChip = useCallback(
 		(contact: Contact): void => {
-			setSearchText('');
 			setSearchResult([]);
 			const alreadyInChips = some(chips, ['email', contact.email]);
 			if (!alreadyInChips && contact.email) {
@@ -284,7 +282,6 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 			if (ev.key.length === 1 || ev.key === 'Delete' || ev.key === 'Backspace') {
 				search(ev);
 			}
-			setSearchText(ev.textContent);
 		},
 		[search]
 	);
@@ -341,6 +338,7 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 					onAdd={onAdd}
 					background="gray5"
 					bottomBorderColor="gray3"
+					wrap="wrap"
 				/>
 			</Container>
 
