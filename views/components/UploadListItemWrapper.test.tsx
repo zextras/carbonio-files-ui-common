@@ -123,9 +123,6 @@ describe('Upload List Item Wrapper', () => {
 		await screen.findByText(/go to destination folder/i);
 		expect(screen.queryByText(/retry upload/i)).not.toBeInTheDocument();
 		expect(screen.getByText(/remove upload/i)).not.toHaveAttribute('disabled', '');
-		expect(screen.getByText(/go to destination folder/i)).not.toHaveAttribute(
-			'disabled',
-			''
-		);
+		expect(screen.getByText(/go to destination folder/i)).not.toHaveAttribute('disabled', '');
 	});
 });
