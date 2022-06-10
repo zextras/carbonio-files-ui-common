@@ -51,7 +51,7 @@ interface NodeListItemWrapperProps {
 	isActive?: boolean;
 	setActive?: (node: NodeListItemType, event: React.SyntheticEvent) => void;
 	compact?: boolean;
-	navigateTo?: (id: string, event?: React.SyntheticEvent) => void;
+	navigateTo?: (id: string, event?: React.SyntheticEvent | Event) => void;
 	selectionContextualMenuActionsItems?: ActionItem[];
 }
 

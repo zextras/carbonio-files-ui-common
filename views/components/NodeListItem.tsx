@@ -80,7 +80,7 @@ interface NodeListItemProps {
 	isActive?: boolean;
 	setActive?: (event: React.SyntheticEvent) => void;
 	compact?: boolean;
-	navigateTo?: (id: string, event?: React.SyntheticEvent) => void;
+	navigateTo?: (id: string, event?: React.SyntheticEvent | Event) => void;
 	disabled?: boolean;
 	selectable?: boolean;
 	trashed?: boolean;
@@ -171,7 +171,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 	>(() => isSupportedByPreview(mimeType), [mimeType]);
 
 	const openNode = useCallback(
-		(event: React.SyntheticEvent) => {
+		(event: React.SyntheticEvent | KeyboardEvent) => {
 			// remove text selection on double click
 			if (window.getSelection) {
 				const selection = window.getSelection();

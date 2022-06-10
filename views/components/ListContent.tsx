@@ -59,7 +59,7 @@ interface ListContentProps {
 	setActiveNode?: (node: NodeListItemType, event: React.SyntheticEvent) => void;
 	manageShares?: (nodeId: string) => void;
 	compact?: boolean;
-	navigateTo?: (id: string, event?: React.SyntheticEvent) => void;
+	navigateTo?: (id: string, event?: React.SyntheticEvent | Event) => void;
 	loading?: boolean;
 	hasMore?: boolean;
 	loadMore?: () => void;

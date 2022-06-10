@@ -344,7 +344,7 @@ export const PreviewPanelActions: React.VFC<PreviewPanelActionsParams> = ({ node
 								icon={item.icon}
 								size="medium"
 								key={value}
-								onClick={(ev: React.MouseEvent<HTMLButtonElement>): void => {
+								onClick={(ev: React.MouseEvent<HTMLButtonElement> | KeyboardEvent): void => {
 									if (ev) ev.preventDefault();
 									if (itemsMap && item.click) {
 										const clickFn = item.click as () => void;
