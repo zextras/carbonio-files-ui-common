@@ -13,10 +13,18 @@ import { captureException } from '../../utils/utils';
 import { decodeError } from '../utils/utils';
 import { SnackbarProps, useCreateSnackbar } from './useCreateSnackbar';
 
+type ErrorHandlerOptions = {
+	type?: SnackbarProps['type'];
+	showSnackbar?: boolean;
+};
+
 export function useErrorHandler(
 	error: ApolloError | undefined,
 	consoleErrorName: string,
-	type: SnackbarProps['type'] = 'warning'
+	{ type = 'warning', showSnackbar = true }: ErrorHandlerOptions = {
+		type: 'warning',
+		showSnackbar: true
+	}
 ): void {
 	const [t] = useTranslation();
 	const createSnackbar = useCreateSnackbar();
@@ -25,15 +33,17 @@ export function useErrorHandler(
 		if (error) {
 			captureException(new Error(`Failure on ${consoleErrorName}`));
 			console.error(`${consoleErrorName}: `, { ...error });
-			createSnackbar({
-				key: new Date().toLocaleString(),
-				type,
-				label:
-					decodeError(error, t) ||
-					t('errorCode.code', 'Something went wrong', { context: 'Generic' }),
-				replace: true,
-				hideButton: true
-			});
+			if (showSnackbar) {
+				createSnackbar({
+					key: new Date().toLocaleString(),
+					type,
+					label:
+						decodeError(error, t) ||
+						t('errorCode.code', 'Something went wrong', { context: 'Generic' }),
+					replace: true,
+					hideButton: true
+				});
+			}
 		}
-	}, [consoleErrorName, createSnackbar, error, t, type]);
+	}, [consoleErrorName, createSnackbar, error, showSnackbar, t, type]);
 }

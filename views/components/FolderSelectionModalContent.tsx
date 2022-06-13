@@ -196,7 +196,6 @@ export const FolderSelectionModalContent: React.VFC<FolderSelectionModalContentP
 					loadMore={loadMore}
 					hasMore={hasMore}
 					navigateTo={navigateTo}
-					error={error}
 					loading={loading}
 					limitNavigation={false}
 					allowRootNavigation

@@ -6,7 +6,6 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useQuery } from '@apollo/client';
 import { Container, Responsive } from '@zextras/carbonio-design-system';
 import filter from 'lodash/filter';
 import { useTranslation } from 'react-i18next';
@@ -17,15 +16,14 @@ import { useActiveNode } from '../../hooks/useActiveNode';
 import { useCreateOptions } from '../../hooks/useCreateOptions';
 import { DISPLAYER_WIDTH, FILES_APP_ID, LIST_WIDTH, ROOTS } from '../constants';
 import { ListContext } from '../contexts';
-import GET_PERMISSIONS from '../graphql/queries/getPermissions.graphql';
 import { useCreateFolderMutation } from '../hooks/graphql/mutations/useCreateFolderMutation';
 import { useGetChildrenQuery } from '../hooks/graphql/queries/useGetChildrenQuery';
+import { useGetPermissionsQuery } from '../hooks/graphql/queries/useGetPermissionsQuery';
 import { useCreateModal } from '../hooks/modals/useCreateModal';
 import { useCreateDocsFile } from '../hooks/useCreateDocsFile';
 import useQueryParam from '../hooks/useQueryParam';
 import { useUpload } from '../hooks/useUpload';
 import { DocsType, NodeListItemType, URLParams } from '../types/common';
-import { GetPermissionsQuery, GetPermissionsQueryVariables } from '../types/graphql/types';
 import { NonNullableListItem, Unwrap } from '../types/utils';
 import {
 	ActionItem,
@@ -67,14 +65,7 @@ const FolderView: React.VFC = () => {
 
 	const { data: currentFolder, loading, hasMore, loadMore } = useGetChildrenQuery(currentFolderId);
 
-	const { data: permissionsData } = useQuery<GetPermissionsQuery, GetPermissionsQueryVariables>(
-		GET_PERMISSIONS,
-		{
-			variables: {
-				node_id: currentFolderId
-			}
-		}
-	);
+	const { data: permissionsData } = useGetPermissionsQuery(currentFolderId);
 
 	const isCanUploadFile = useMemo(
 		() => !!permissionsData?.getNode && canUploadFile(permissionsData.getNode),
@@ -94,7 +85,7 @@ const FolderView: React.VFC = () => {
 	// folder creation
 	const [newFolder, setNewFolder] = useState(false);
 
-	const [createFolder] = useCreateFolderMutation();
+	const { createFolder } = useCreateFolderMutation();
 
 	const createFolderCallback = useCallback(
 		(_parentId, newName) => {

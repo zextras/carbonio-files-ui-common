@@ -189,7 +189,6 @@ export const MoveNodesModalContent: React.VFC<MoveNodesModalContentProps> = ({
 				loadMore={loadMore}
 				hasMore={hasMore}
 				navigateTo={navigateTo}
-				error={error}
 				loading={loading}
 				writingFile={movingFile}
 				writingFolder={movingFolder}
