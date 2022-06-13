@@ -20,6 +20,7 @@ import {
 	getChildrenVariables,
 	mockGetChildren,
 	mockGetParent,
+	mockGetPermissions,
 	mockTrashNodes
 } from '../utils/mockUtils';
 import { actionRegexp, render, selectNodes, triggerLoadMore } from '../utils/testUtils';
@@ -61,6 +62,7 @@ describe('Mark for deletion - trash', () => {
 
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockTrashNodes(
 					{
 						node_ids: [folderId1]
@@ -124,6 +126,7 @@ describe('Mark for deletion - trash', () => {
 					...currentFolder,
 					children: firstPage
 				} as Folder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockGetParent({ node_id: currentFolder.id }, currentFolder),
 				mockTrashNodes({ node_ids: nodesToTrash }, nodesToTrash),
 				mockGetChildren(getChildrenVariables(currentFolder.id), {
@@ -179,6 +182,7 @@ describe('Mark for deletion - trash', () => {
 
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockTrashNodes(
 					{
 						node_ids: [element.id]
@@ -228,6 +232,7 @@ describe('Mark for deletion - trash', () => {
 
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockTrashNodes(
 					{
 						node_ids: [element0.id, element1.id]
@@ -279,6 +284,7 @@ describe('Mark for deletion - trash', () => {
 					...currentFolder,
 					children: firstPage
 				} as Folder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockGetParent({ node_id: currentFolder.id }, currentFolder),
 				mockTrashNodes({ node_ids: [firstPage[NODES_LOAD_LIMIT - 1].id] }, [
 					firstPage[NODES_LOAD_LIMIT - 1].id

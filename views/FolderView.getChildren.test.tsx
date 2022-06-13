@@ -20,7 +20,8 @@ import {
 	getChildrenVariables,
 	mockGetChildren,
 	mockGetChildrenError,
-	mockGetParent
+	mockGetParent,
+	mockGetPermissions
 } from '../utils/mockUtils';
 import { generateError, render, triggerLoadMore } from '../utils/testUtils';
 import { DisplayerProps } from './components/Displayer';
@@ -45,6 +46,12 @@ describe('Get children', () => {
 	test('access to a folder with network error response show an error page', async () => {
 		const currentFolder = populateFolder();
 		const mocks = [
+			mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
+			mockGetChildrenError(
+				getChildrenVariables(currentFolder.id),
+				new ApolloError({ graphQLErrors: [generateError('An error occurred')] })
+			),
+			// query is made 2 times (?)
 			mockGetChildrenError(
 				getChildrenVariables(currentFolder.id),
 				new ApolloError({ graphQLErrors: [generateError('An error occurred')] })
@@ -94,6 +101,7 @@ describe('Get children', () => {
 				...currentFolder,
 				children: currentFolder.children.slice(0, NODES_LOAD_LIMIT)
 			} as Folder),
+			mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 			mockGetChildren(
 				{
 					...getChildrenVariables(currentFolder.id),

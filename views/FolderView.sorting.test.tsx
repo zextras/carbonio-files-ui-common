@@ -12,7 +12,7 @@ import userEvent from '@testing-library/user-event';
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { populateFile, populateFolder } from '../mocks/mockUtils';
 import { NodeSort } from '../types/graphql/types';
-import { getChildrenVariables, mockGetChildren } from '../utils/mockUtils';
+import { getChildrenVariables, mockGetChildren, mockGetPermissions } from '../utils/mockUtils';
 import { render } from '../utils/testUtils';
 import { DisplayerProps } from './components/Displayer';
 import FolderView from './FolderView';
@@ -54,6 +54,7 @@ describe('Sorting', () => {
 
 		const mocks = [
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+			mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 			mockGetChildren(
 				getChildrenVariables(currentFolder2.id, undefined, NodeSort.NameDesc),
 				currentFolder2

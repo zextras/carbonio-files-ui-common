@@ -139,6 +139,7 @@ describe('Filter view', () => {
 			// node is removed from main list
 			expect(nodeItem).not.toBeInTheDocument();
 			// displayer is closed
+			await screen.findByText(/view files and folders/i);
 			expect(screen.queryByText(nodeWithShares.name)).not.toBeInTheDocument();
 			expect(screen.queryByText(/sharing/i)).not.toBeInTheDocument();
 		});

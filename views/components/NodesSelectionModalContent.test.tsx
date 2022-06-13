@@ -29,6 +29,7 @@ import {
 	mockGetBaseNode,
 	mockGetChildren,
 	mockGetPath,
+	mockGetPermissions,
 	mockGetRootsList
 } from '../../utils/mockUtils';
 import { buildBreadCrumbRegExp, render } from '../../utils/testUtils';
@@ -85,6 +86,7 @@ describe('Nodes Selection Modal Content', () => {
 			mockGetRootsList(),
 			mockGetPath({ node_id: localRoot.id }, [localRoot]),
 			mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+			mockGetPermissions({ node_id: localRoot.id }, localRoot),
 			mockGetBaseNode({ node_id: localRoot.id }, localRoot)
 		];
 
@@ -150,6 +152,7 @@ describe('Nodes Selection Modal Content', () => {
 			mockGetRootsList(),
 			mockGetPath({ node_id: localRoot.id }, [localRoot]),
 			mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+			mockGetPermissions({ node_id: localRoot.id }, localRoot),
 			mockGetBaseNode({ node_id: localRoot.id }, localRoot)
 		];
 
@@ -223,6 +226,7 @@ describe('Nodes Selection Modal Content', () => {
 			mockGetRootsList(),
 			mockGetPath({ node_id: localRoot.id }, [localRoot]),
 			mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+			mockGetPermissions({ node_id: localRoot.id }, localRoot),
 			mockGetBaseNode({ node_id: localRoot.id }, localRoot)
 		];
 
@@ -424,7 +428,8 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
-					mockGetChildren(getChildrenVariables(localRoot.id), localRoot)
+					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot)
 				];
 
 				const { findByTextWithMarkup } = render(
@@ -483,7 +488,8 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
-					mockGetChildren(getChildrenVariables(localRoot.id), localRoot)
+					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot)
 				];
 
 				const { findByTextWithMarkup } = render(
@@ -544,7 +550,8 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
 					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
-					mockGetBaseNode({ node_id: localRoot.id }, localRoot)
+					mockGetBaseNode({ node_id: localRoot.id }, localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot)
 				];
 
 				const { findByTextWithMarkup } = render(
@@ -612,6 +619,7 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
 					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot)
 				];
 
@@ -858,8 +866,10 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
 					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot),
 					mockGetPath({ node_id: folder.id }, [localRoot, folder]),
-					mockGetChildren(getChildrenVariables(folder.id), folder)
+					mockGetChildren(getChildrenVariables(folder.id), folder),
+					mockGetPermissions({ node_id: folder.id }, folder)
 				];
 
 				const { findByTextWithMarkup } = render(
@@ -1078,7 +1088,8 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
-					mockGetChildren(getChildrenVariables(localRoot.id), localRoot)
+					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot)
 				];
 
 				render(
@@ -1160,7 +1171,8 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
-					mockGetChildren(getChildrenVariables(localRoot.id), localRoot)
+					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot)
 				];
 
 				render(
@@ -1245,7 +1257,9 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
 					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot),
 					mockGetChildren(getChildrenVariables(invalidFolder.id), invalidFolder),
+					mockGetPermissions({ node_id: invalidFolder.id }, invalidFolder),
 					mockGetPath({ node_id: invalidFolder.id }, [localRoot, invalidFolder])
 				];
 
@@ -1366,7 +1380,8 @@ describe('Nodes Selection Modal Content', () => {
 				mockGetRootsList(),
 				mockGetBaseNode({ node_id: localRoot.id }, localRoot),
 				mockGetPath({ node_id: localRoot.id }, [localRoot]),
-				mockGetChildren(getChildrenVariables(localRoot.id), localRoot)
+				mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+				mockGetPermissions({ node_id: localRoot.id }, localRoot)
 			];
 
 			const { findByTextWithMarkup } = render(
@@ -1429,7 +1444,8 @@ describe('Nodes Selection Modal Content', () => {
 				mockGetRootsList(),
 				mockGetBaseNode({ node_id: localRoot.id }, localRoot),
 				mockGetPath({ node_id: localRoot.id }, [localRoot]),
-				mockGetChildren(getChildrenVariables(localRoot.id), localRoot)
+				mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+				mockGetPermissions({ node_id: localRoot.id }, localRoot)
 			];
 
 			const { findByTextWithMarkup } = render(
@@ -1505,7 +1521,8 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
-					mockGetChildren(getChildrenVariables(localRoot.id), localRoot)
+					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot)
 				];
 
 				const { findByTextWithMarkup } = render(
@@ -1564,7 +1581,8 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
-					mockGetChildren(getChildrenVariables(localRoot.id), localRoot)
+					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot)
 				];
 
 				const { findByTextWithMarkup } = render(
@@ -1625,6 +1643,7 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
 					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot)
 				];
 
@@ -1693,6 +1712,7 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
 					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot)
 				];
 
@@ -1759,6 +1779,7 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
 					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot)
 				];
 
@@ -1848,6 +1869,7 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
 					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot)
 				];
 
@@ -1932,6 +1954,7 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
 					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot)
 				];
 
@@ -2009,6 +2032,7 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
 					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot)
 				];
 
@@ -2094,7 +2118,8 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
-					mockGetChildren(getChildrenVariables(localRoot.id), localRoot)
+					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot)
 				];
 
 				render(
@@ -2206,7 +2231,8 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
-					mockGetChildren(getChildrenVariables(localRoot.id), localRoot)
+					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot)
 				];
 
 				render(
@@ -2326,7 +2352,9 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
 					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot),
 					mockGetChildren(getChildrenVariables(invalidFolder.id), invalidFolder),
+					mockGetPermissions({ node_id: invalidFolder.id }, invalidFolder),
 					mockGetPath({ node_id: invalidFolder.id }, [localRoot, invalidFolder])
 				];
 

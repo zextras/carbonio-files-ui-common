@@ -20,7 +20,8 @@ import {
 	getChildrenVariables,
 	mockCopyNodes,
 	mockGetChildren,
-	mockGetPath
+	mockGetPath,
+	mockGetPermissions
 } from '../utils/mockUtils';
 import { actionRegexp, iconRegexp, render, selectNodes } from '../utils/testUtils';
 import { DisplayerProps } from './components/Displayer';
@@ -53,7 +54,10 @@ describe('Copy', () => {
 			folder.parent = currentFolder;
 			currentFolder.children.push(file, folder);
 
-			const mocks = [mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder)];
+			const mocks = [
+				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder)
+			];
 
 			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
 
@@ -86,6 +90,7 @@ describe('Copy', () => {
 			const mocks = [
 				mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockCopyNodes(
 					{
 						node_ids: [nodeToCopy.id],
@@ -147,76 +152,73 @@ describe('Copy', () => {
 			expect(destinationFolderCachedData).toBeNull();
 		});
 
-		test(
-			'Copy confirm action close the modal and add copied node in current folder list if it is the destination folder.' +
-				'New nodes are ordered in the list',
-			async () => {
-				const currentFolder = populateFolder(5);
-				currentFolder.permissions.can_write_folder = true;
-				currentFolder.permissions.can_write_file = true;
-				const nodesToCopy = [currentFolder.children[0], currentFolder.children[1]] as Node[];
-				const copiedNodes = map(nodesToCopy, (node) => ({
-					...node,
-					id: faker.datatype.uuid(),
-					name: `${node.name}-copied`
-				}));
+		test('Copy confirm action close the modal and add copied node in current folder list if it is the destination folder. New nodes are ordered in the list', async () => {
+			const currentFolder = populateFolder(5);
+			currentFolder.permissions.can_write_folder = true;
+			currentFolder.permissions.can_write_file = true;
+			const nodesToCopy = [currentFolder.children[0], currentFolder.children[1]] as Node[];
+			const copiedNodes = map(nodesToCopy, (node) => ({
+				...node,
+				id: faker.datatype.uuid(),
+				name: `${node.name}-copied`
+			}));
 
-				const mocks = [
-					mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
-					mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
-					mockCopyNodes(
-						{
-							node_ids: map(nodesToCopy, (node) => node.id),
-							destination_id: currentFolder.id
-						},
-						copiedNodes
-					)
-				];
+			const mocks = [
+				mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
+				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
+				mockCopyNodes(
+					{
+						node_ids: map(nodesToCopy, (node) => node.id),
+						destination_id: currentFolder.id
+					},
+					copiedNodes
+				)
+			];
 
-				render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
 
-				await screen.findByText(nodesToCopy[0].name);
+			await screen.findByText(nodesToCopy[0].name);
 
-				expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
-					currentFolder.children.length
-				);
-				// activate selection mode by selecting items
-				selectNodes(map(nodesToCopy, (node) => node.id));
-				// check that all wanted items are selected
-				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToCopy.length);
+			expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
+				currentFolder.children.length
+			);
+			// activate selection mode by selecting items
+			selectNodes(map(nodesToCopy, (node) => node.id));
+			// check that all wanted items are selected
+			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToCopy.length);
 
-				let CopyAction = screen.queryByTestId(iconRegexp.copy);
-				if (!CopyAction) {
-					expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-					userEvent.click(screen.getByTestId('icon: MoreVertical'));
-					CopyAction = await screen.findByText(actionRegexp.copy);
-					expect(CopyAction).toBeVisible();
-				}
-				userEvent.click(CopyAction);
-
-				const modalList = await screen.findByTestId(`modal-list-${currentFolder.id}`);
-				expect(within(modalList).getAllByTestId('node-item', { exact: false })).toHaveLength(
-					currentFolder.children.length
-				);
-				expect(screen.getByRole('button', { name: actionRegexp.copy })).not.toHaveAttribute(
-					'disabled',
-					''
-				);
-				userEvent.click(screen.getByRole('button', { name: actionRegexp.copy }));
-				const snackbar = await screen.findByText(/Item copied/i);
-				await waitForElementToBeRemoved(snackbar);
-				expect(screen.queryByRole('button', { name: actionRegexp.copy })).not.toBeInTheDocument();
-				expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
-
-				const nodeItems = screen.getAllByTestId('node-item', { exact: false });
-				expect(screen.getByText(copiedNodes[0].name)).toBeVisible();
-				expect(screen.getByText(copiedNodes[1].name)).toBeVisible();
-				expect(nodeItems).toHaveLength(currentFolder.children.length + copiedNodes.length);
-				// each node is positioned after its original
-				expect(screen.getByTestId(`node-item-${copiedNodes[0].id}`)).toBe(nodeItems[1]);
-				expect(screen.getByTestId(`node-item-${copiedNodes[1].id}`)).toBe(nodeItems[3]);
+			let CopyAction = screen.queryByTestId(iconRegexp.copy);
+			if (!CopyAction) {
+				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
+				userEvent.click(screen.getByTestId('icon: MoreVertical'));
+				CopyAction = await screen.findByText(actionRegexp.copy);
+				expect(CopyAction).toBeVisible();
 			}
-		);
+			userEvent.click(CopyAction);
+
+			const modalList = await screen.findByTestId(`modal-list-${currentFolder.id}`);
+			expect(within(modalList).getAllByTestId('node-item', { exact: false })).toHaveLength(
+				currentFolder.children.length
+			);
+			expect(screen.getByRole('button', { name: actionRegexp.copy })).not.toHaveAttribute(
+				'disabled',
+				''
+			);
+			userEvent.click(screen.getByRole('button', { name: actionRegexp.copy }));
+			const snackbar = await screen.findByText(/Item copied/i);
+			await waitForElementToBeRemoved(snackbar);
+			expect(screen.queryByRole('button', { name: actionRegexp.copy })).not.toBeInTheDocument();
+			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+
+			const nodeItems = screen.getAllByTestId('node-item', { exact: false });
+			expect(screen.getByText(copiedNodes[0].name)).toBeVisible();
+			expect(screen.getByText(copiedNodes[1].name)).toBeVisible();
+			expect(nodeItems).toHaveLength(currentFolder.children.length + copiedNodes.length);
+			// each node is positioned after its original
+			expect(screen.getByTestId(`node-item-${copiedNodes[0].id}`)).toBe(nodeItems[1]);
+			expect(screen.getByTestId(`node-item-${copiedNodes[1].id}`)).toBe(nodeItems[3]);
+		});
 	});
 
 	describe('Contextual menu actions', () => {
@@ -240,6 +242,7 @@ describe('Copy', () => {
 			const mocks = [
 				mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockCopyNodes(
 					{
 						node_ids: [nodeToCopy.id],

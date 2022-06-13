@@ -23,6 +23,7 @@ import {
 	getChildrenVariables,
 	mockGetChildren,
 	mockGetParent,
+	mockGetPermissions,
 	mockTrashNodes,
 	mockUpdateNode
 } from '../utils/mockUtils';
@@ -78,6 +79,7 @@ describe('Rename', () => {
 
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockUpdateNode(
 					{
 						node_id: element.id,
@@ -141,6 +143,7 @@ describe('Rename', () => {
 
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockUpdateNode(
 					{
 						node_id: element.id,
@@ -221,6 +224,7 @@ describe('Rename', () => {
 					...currentFolder,
 					children: currentFolder.children.slice(0, NODES_LOAD_LIMIT)
 				} as Folder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockUpdateNode(
 					{
 						node_id: element.id,
@@ -361,6 +365,7 @@ describe('Rename', () => {
 					children: firstPage
 				} as Folder),
 				mockGetParent({ node_id: currentFolder.id }, currentFolder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockUpdateNode(
 					{ node_id: nodeToRename.id, name: newName },
 					{ ...nodeToRename, name: newName }
@@ -427,6 +432,7 @@ describe('Rename', () => {
 					children: firstPage
 				} as Folder),
 				mockGetParent({ node_id: currentFolder.id }, currentFolder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockUpdateNode(
 					{ node_id: nodeToRename.id, name: newName },
 					{ ...nodeToRename, name: newName }

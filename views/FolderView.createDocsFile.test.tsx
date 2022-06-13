@@ -26,7 +26,12 @@ import {
 import { populateFile, populateFolder, populateNodes, sortNodes } from '../mocks/mockUtils';
 import { Node } from '../types/common';
 import { Folder, GetNodeQuery, GetNodeQueryVariables } from '../types/graphql/types';
-import { getChildrenVariables, mockGetChildren, mockGetParent } from '../utils/mockUtils';
+import {
+	getChildrenVariables,
+	mockGetChildren,
+	mockGetParent,
+	mockGetPermissions
+} from '../utils/mockUtils';
 import { render, triggerLoadMore } from '../utils/testUtils';
 import { DisplayerProps } from './components/Displayer';
 import FolderView from './FolderView';
@@ -92,7 +97,8 @@ describe('Create docs file', () => {
 
 		const mocks = [
 			mockGetParent({ node_id: currentFolder.id }, currentFolder),
-			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder)
+			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+			mockGetPermissions({ node_id: currentFolder.id }, currentFolder)
 		];
 
 		server.use(
@@ -150,7 +156,8 @@ describe('Create docs file', () => {
 
 		const mocks = [
 			mockGetParent({ node_id: currentFolder.id }, currentFolder),
-			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder)
+			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+			mockGetPermissions({ node_id: currentFolder.id }, currentFolder)
 		];
 
 		server.use(
@@ -222,6 +229,7 @@ describe('Create docs file', () => {
 
 		const mocks = [
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+			mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 			// fetchMore request, cursor is still last ordered node (last child of initial folder)
 			mockGetChildren(
 				{
