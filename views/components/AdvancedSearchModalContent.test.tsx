@@ -541,8 +541,10 @@ describe('Advanced search modal content', () => {
 			expect(screen.getByTestId('icon: Folder')).toBeVisible();
 			// 2 close icon: folder chip and modal close
 			expect(screen.getAllByTestId('icon: Close')).toHaveLength(2);
+			userEvent.click(screen.getByRole('button', { name: /search/i }));
 			act(() => {
-				userEvent.click(screen.getByRole('button', { name: /search/i }));
+				// run timers of tooltip
+				jest.runOnlyPendingTimers();
 			});
 			expect(searchAdvancedFilters).toHaveBeenCalledWith({
 				folderId: expect.objectContaining({
@@ -585,8 +587,10 @@ describe('Advanced search modal content', () => {
 				userEvent.click(screen.getByText(/search also in contained folders/i));
 			});
 			await screen.findByTestId('icon: CheckmarkSquare');
+			userEvent.click(screen.getByRole('button', { name: /choose folder/i }));
 			act(() => {
-				userEvent.click(screen.getByRole('button', { name: /choose folder/i }));
+				// run timers of tooltip
+				jest.runOnlyPendingTimers();
 			});
 			await waitFor(() =>
 				expect(screen.getByRole('button', { name: /search/i })).not.toHaveAttribute('disabled', '')
@@ -600,8 +604,10 @@ describe('Advanced search modal content', () => {
 			expect(screen.getByTestId('icon: Folder')).toBeVisible();
 			// 2 close icon: folder chip and modal close
 			expect(screen.getAllByTestId('icon: Close')).toHaveLength(2);
+			userEvent.click(screen.getByRole('button', { name: /search/i }));
 			act(() => {
-				userEvent.click(screen.getByRole('button', { name: /search/i }));
+				// run timers of tooltip
+				jest.runOnlyPendingTimers();
 			});
 			expect(searchAdvancedFilters).toHaveBeenCalledWith({
 				folderId: expect.objectContaining({
@@ -688,8 +694,10 @@ describe('Advanced search modal content', () => {
 					''
 				)
 			);
+			userEvent.click(screen.getByRole('button', { name: /choose folder/i }));
 			act(() => {
-				userEvent.click(screen.getByRole('button', { name: /choose folder/i }));
+				// run timers of tooltip
+				jest.runOnlyPendingTimers();
 			});
 			await waitFor(() =>
 				expect(screen.getByRole('button', { name: /search/i })).not.toHaveAttribute('disabled', '')
@@ -703,8 +711,10 @@ describe('Advanced search modal content', () => {
 			expect(screen.getByTestId('icon: Folder')).toBeVisible();
 			// 2 close icon: folder chip and modal close
 			expect(screen.getAllByTestId('icon: Close')).toHaveLength(2);
+			userEvent.click(screen.getByRole('button', { name: /search/i }));
 			act(() => {
-				userEvent.click(screen.getByRole('button', { name: /search/i }));
+				// run timers of tooltip
+				jest.runOnlyPendingTimers();
 			});
 			expect(searchAdvancedFilters).toHaveBeenCalledWith({
 				folderId: expect.objectContaining({
@@ -744,8 +754,10 @@ describe('Advanced search modal content', () => {
 					''
 				)
 			);
+			userEvent.click(screen.getByRole('button', { name: /choose folder/i }));
 			act(() => {
-				userEvent.click(screen.getByRole('button', { name: /choose folder/i }));
+				// run timers of tooltip
+				jest.runOnlyPendingTimers();
 			});
 			await waitFor(() =>
 				expect(screen.getByRole('button', { name: /search/i })).not.toHaveAttribute('disabled', '')
@@ -759,8 +771,10 @@ describe('Advanced search modal content', () => {
 			expect(screen.getByTestId('icon: Folder')).toBeVisible();
 			// 2 close icon: folder chip and modal close
 			expect(screen.getAllByTestId('icon: Close')).toHaveLength(2);
+			userEvent.click(screen.getByRole('button', { name: /search/i }));
 			act(() => {
-				userEvent.click(screen.getByRole('button', { name: /search/i }));
+				// run timers of tooltip
+				jest.runOnlyPendingTimers();
 			});
 			expect(searchAdvancedFilters).toHaveBeenCalledWith({
 				folderId: expect.objectContaining({
@@ -823,11 +837,9 @@ describe('Advanced search modal content', () => {
 				userEvent.click(screen.getByTestId('icon: CheckmarkSquare'));
 			});
 			expect(screen.getByTestId('icon: Square')).toBeVisible();
+			userEvent.click(screen.getByRole('button', { name: /choose folder/i }));
 			act(() => {
-				userEvent.click(screen.getByRole('button', { name: /choose folder/i }));
-			});
-			act(() => {
-				// run modal timers
+				// run timers of tooltip
 				jest.runOnlyPendingTimers();
 			});
 			await waitFor(() =>
@@ -838,8 +850,10 @@ describe('Advanced search modal content', () => {
 			expect(screen.getByTestId('icon: Folder')).toBeVisible();
 			// 2 close icon: 1 chip, 1 close modal
 			expect(screen.getAllByTestId('icon: Close')).toHaveLength(2);
+			userEvent.click(screen.getByRole('button', { name: /search/i }));
 			act(() => {
-				userEvent.click(screen.getByRole('button', { name: /search/i }));
+				// run timers of tooltip
+				jest.runOnlyPendingTimers();
 			});
 			expect(searchAdvancedFilters).toHaveBeenCalledWith({
 				folderId: expect.objectContaining({

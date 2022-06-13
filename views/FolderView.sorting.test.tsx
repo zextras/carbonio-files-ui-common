@@ -72,9 +72,8 @@ describe('Sorting', () => {
 		expect(sortIcon).toBeInTheDocument();
 		expect(sortIcon).toBeVisible();
 		expect(sortIcon.parentElement).not.toHaveAttribute('disabled', '');
-		act(() => {
-			userEvent.click(sortIcon);
-		});
+		userEvent.click(sortIcon);
+		await screen.findByText(/ascending order by name/i);
 		const descendingOrderOption = await screen.findByText('Descending Order');
 		act(() => {
 			userEvent.click(descendingOrderOption);

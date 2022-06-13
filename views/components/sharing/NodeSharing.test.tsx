@@ -249,10 +249,9 @@ describe('Node Sharing', () => {
 			expect(screen.queryByTestId('icon: Edit2Outline')).not.toBeInTheDocument();
 			expect(screen.queryByTestId('icon: Share')).not.toBeInTheDocument();
 			// open on chip to open popover
-			act(() => {
-				userEvent.click(screen.getByText(getChipLabel(shareToUpdate.share_target)));
-			});
+			userEvent.click(screen.getByText(getChipLabel(shareToUpdate.share_target)));
 			await screen.findByText(/viewer/i);
+			await screen.findByText(/edit \w+'s collaboration/i);
 			expect(screen.getByText(/viewer/i)).toBeVisible();
 			expect(screen.getByText(/editor/i)).toBeVisible();
 			expect(screen.getByText(/sharing allowed/i)).toBeVisible();
@@ -265,7 +264,9 @@ describe('Node Sharing', () => {
 				userEvent.click(screen.getByTestId('icon: Square'));
 			});
 			await screen.findByTestId('icon: CheckmarkSquare');
-			userEvent.click(screen.getByRole('button', { name: /save/i }));
+			act(() => {
+				userEvent.click(screen.getByRole('button', { name: /save/i }));
+			});
 			await screen.findByTestId('icon: Edit2Outline');
 			await screen.findByTestId('icon: Share');
 			expect(screen.queryByRole('button', { name: /save/i })).not.toBeInTheDocument();

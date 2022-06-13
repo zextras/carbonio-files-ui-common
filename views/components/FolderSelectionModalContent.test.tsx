@@ -257,8 +257,10 @@ describe('Folder Selection Modal Content', () => {
 		expect(
 			findStyled(screen.getByTestId(`node-item-${localRoot.id}`), HoverContainer)
 		).not.toHaveStyle('background-color: #d5e3f6');
+		userEvent.click(chooseButton);
 		act(() => {
-			userEvent.click(chooseButton);
+			// run timers of tooltip
+			jest.runOnlyPendingTimers();
 		});
 		expect(confirmAction).not.toHaveBeenCalled();
 		// navigate again inside local root
@@ -271,16 +273,20 @@ describe('Folder Selection Modal Content', () => {
 		// choose button is disabled because active folder (opened folder) is same as set one
 		expect(chooseButton).toBeVisible();
 		expect(chooseButton).toHaveAttribute('disabled', '');
+		userEvent.click(chooseButton);
 		act(() => {
-			userEvent.click(chooseButton);
+			// run timers of tooltip
+			jest.runOnlyPendingTimers();
 		});
 		expect(confirmAction).not.toHaveBeenCalled();
 		// select a valid folder
 		userEvent.click(screen.getByText(folder.name));
 		// choose button is active because folder is a valid selection
 		await waitFor(() => expect(chooseButton).not.toHaveAttribute('disabled', ''));
+		userEvent.click(chooseButton);
 		act(() => {
-			userEvent.click(chooseButton);
+			// run timers of tooltip
+			jest.runOnlyPendingTimers();
 		});
 		expect(confirmAction).toHaveBeenCalled();
 		expect(confirmAction).toHaveBeenCalledWith(
@@ -365,8 +371,10 @@ describe('Folder Selection Modal Content', () => {
 			userEvent.click(checkboxUnchecked);
 		});
 		await screen.findByTestId('icon: CheckmarkSquare');
+		userEvent.click(chooseButton);
 		act(() => {
-			userEvent.click(chooseButton);
+			// run timers of tooltip
+			jest.runOnlyPendingTimers();
 		});
 		expect(confirmAction).toHaveBeenCalled();
 		expect(confirmAction).toHaveBeenCalledWith(
@@ -407,6 +415,10 @@ describe('Folder Selection Modal Content', () => {
 		// shared with me item is a valid selection
 		await waitFor(() => expect(chooseButton).not.toHaveAttribute('disabled', ''));
 		userEvent.click(chooseButton);
+		act(() => {
+			// run timers of tooltip
+			jest.runOnlyPendingTimers();
+		});
 		expect(confirmAction).toHaveBeenCalled();
 		expect(confirmAction).toHaveBeenCalledWith(
 			expect.objectContaining({ id: ROOTS.SHARED_WITH_ME, name: 'Shared with me' }),
@@ -419,6 +431,10 @@ describe('Folder Selection Modal Content', () => {
 		// trash item is a valid selection
 		await waitFor(() => expect(chooseButton).not.toHaveAttribute('disabled', ''));
 		userEvent.click(chooseButton);
+		act(() => {
+			// run timers of tooltip
+			jest.runOnlyPendingTimers();
+		});
 		expect(confirmAction).toHaveBeenCalledTimes(2);
 		expect(confirmAction).toHaveBeenLastCalledWith(
 			expect.objectContaining({ id: ROOTS.TRASH, name: 'Trash' }),
@@ -437,13 +453,17 @@ describe('Folder Selection Modal Content', () => {
 		expect(findStyled(screen.getByTestId(`node-item-${ROOTS.TRASH}`), HoverContainer)).toHaveStyle(
 			'background-color: #d5e3f6'
 		);
-		userEvent.dblClick(screen.getByText(/shared with me/i));
+		act(() => {
+			userEvent.dblClick(screen.getByText(/shared with me/i));
+		});
 		await screen.findByText(sharedWithMeFilter[0].name);
 		expect(screen.getByText(sharedWithMeFilter[0].name)).toBeVisible();
 		expect(getByTextWithMarkup(buildBreadCrumbRegExp('Files', 'Shared with me'))).toBeVisible();
 		expect(chooseButton).not.toHaveAttribute('disabled', '');
+		userEvent.click(chooseButton);
 		act(() => {
-			userEvent.click(chooseButton);
+			// run timers of tooltip
+			jest.runOnlyPendingTimers();
 		});
 		expect(confirmAction).toHaveBeenCalledTimes(3);
 		expect(confirmAction).toHaveBeenLastCalledWith(
@@ -474,8 +494,10 @@ describe('Folder Selection Modal Content', () => {
 		await screen.findByText((folder.children[0] as Node).name);
 		const chooseButton = screen.getByRole('button', { name: /choose folder/i });
 		expect(chooseButton).not.toHaveAttribute('disabled', '');
+		userEvent.click(chooseButton);
 		act(() => {
-			userEvent.click(chooseButton);
+			// run timers of tooltip
+			jest.runOnlyPendingTimers();
 		});
 		expect(confirmAction).toHaveBeenCalled();
 		expect(confirmAction).toHaveBeenLastCalledWith(
@@ -511,8 +533,10 @@ describe('Folder Selection Modal Content', () => {
 		await screen.findByText((folder.children[0] as Node).name);
 		const chooseButton = screen.getByRole('button', { name: /choose folder/i });
 		expect(chooseButton).not.toHaveAttribute('disabled', '');
+		userEvent.click(chooseButton);
 		act(() => {
-			userEvent.click(chooseButton);
+			// run timers of tooltip
+			jest.runOnlyPendingTimers();
 		});
 		expect(confirmAction).toHaveBeenCalled();
 		expect(confirmAction).toHaveBeenLastCalledWith(

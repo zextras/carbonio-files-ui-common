@@ -513,7 +513,7 @@ describe('Versioning', () => {
 		userEvent.click(versions1MoreButton);
 
 		const cloneAsCurrentItem = await screen.findByText(/clone as current/i);
-		expect(cloneAsCurrentItem.parentElement).toHaveAttribute('disabled', '');
+		expect(cloneAsCurrentItem).toHaveAttribute('disabled', '');
 		userEvent.click(cloneAsCurrentItem);
 
 		await waitForNetworkResponse();
@@ -567,7 +567,7 @@ describe('Versioning', () => {
 		userEvent.click(versionWithoutKeepMoreButton);
 
 		const keepVersionItem = await screen.findByText(/keep this version forever/i);
-		expect(keepVersionItem.parentElement).toHaveAttribute('disabled', '');
+		expect(keepVersionItem).toHaveAttribute('disabled', '');
 		userEvent.click(keepVersionItem);
 
 		await waitForNetworkResponse();

@@ -7,7 +7,7 @@
 import React from 'react';
 
 import { ApolloError } from '@apollo/client';
-import { act, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { map } from 'lodash';
 
@@ -110,24 +110,21 @@ describe('ListHeader', () => {
 			// by default only 2 levels are shown
 			expect(getByTextWithMarkup(shortBreadcrumbRegExp)).toBeVisible();
 			// user clicks on the cta
-			act(() => {
-				userEvent.click(screen.getByTestId('icon: FolderOutline'));
-			});
+			userEvent.click(screen.getByTestId('icon: FolderOutline'));
+			await screen.findByText(/Hide previous folders/i);
 			// wait for the full path to be loaded
 			await screen.findByTestId('icon: ChevronLeft');
 			// all levels are now shown
 			expect(getByTextWithMarkup(fullBreadcrumbRegExp)).toBeVisible();
 			// user clicks again on the cta
-			act(() => {
-				userEvent.click(screen.getByTestId('icon: FolderOutline'));
-			});
+			userEvent.click(screen.getByTestId('icon: FolderOutline'));
+			await screen.findByText(/show previous folders/i);
 			// root element is not shown now, only the short breadcrumb, without a request to the API
 			expect(getByTextWithMarkup(shortBreadcrumbRegExp)).toBeVisible();
 			expect(screen.queryByText(path[0].name)).not.toBeInTheDocument();
 			// user clicks on the cta
-			act(() => {
-				userEvent.click(screen.getByTestId('icon: FolderOutline'));
-			});
+			userEvent.click(screen.getByTestId('icon: FolderOutline'));
+			await screen.findByText(/Hide previous folders/i);
 			// wait for the full path to be loaded
 			await screen.findByTestId('icon: ChevronLeft');
 			// all levels are now shown immediately without a request to the API
@@ -171,9 +168,8 @@ describe('ListHeader', () => {
 			// by default only 2 levels are shown
 			expect(getByTextWithMarkup(shortBreadcrumbRegExp)).toBeVisible();
 			// user clicks on the cta
-			act(() => {
-				userEvent.click(screen.getByTestId('icon: FolderOutline'));
-			});
+			userEvent.click(screen.getByTestId('icon: FolderOutline'));
+			await screen.findByText(/Show previous folders/i);
 			// wait for response
 			await waitFor(
 				() =>

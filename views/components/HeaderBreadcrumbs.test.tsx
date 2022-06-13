@@ -486,10 +486,9 @@ describe('Header Breadcrumbs', () => {
 			expect(screen.queryByText(path[0].name)).not.toBeInTheDocument();
 			expect(screen.getByTestId('icon: ChevronRight')).toBeVisible();
 			expect(screen.queryByTestId('icon: ChevronLeft')).not.toBeInTheDocument();
-			act(() => {
-				userEvent.click(screen.getByTestId('icon: FolderOutline'));
-			});
+			userEvent.click(screen.getByTestId('icon: FolderOutline'));
 			await waitForElementToBeRemoved(screen.queryByTestId('icon: ChevronRight'));
+			await screen.findByText(/hide previous folders/i);
 			expect(screen.getByTestId('icon: ChevronLeft')).toBeVisible();
 			const destinationCrumbItem = await screen.findByText(path[0].name);
 			expect(
@@ -858,10 +857,9 @@ describe('Header Breadcrumbs', () => {
 			expect(screen.getByTestId('icon: ChevronRight')).toBeVisible();
 			expect(screen.queryByTestId('icon: ChevronLeft')).not.toBeInTheDocument();
 			// simulate a drag of a node of the list
-			act(() => {
-				userEvent.click(screen.getByTestId('icon: FolderOutline'));
-			});
+			userEvent.click(screen.getByTestId('icon: FolderOutline'));
 			await waitForElementToBeRemoved(screen.queryByTestId('icon: ChevronRight'));
+			await screen.findByText(/hide previous folders/i);
 			expect(screen.getByTestId('icon: ChevronLeft')).toBeVisible();
 			expect(
 				getByTextWithMarkup(buildBreadCrumbRegExp(...map(path, (parent) => parent.name)))
