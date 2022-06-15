@@ -287,7 +287,8 @@ export const actionRegexp = {
 	openDocument: /^open document$/i,
 	deletePermanently: /^delete permanently$/i,
 	restore: /^restore$/i,
-	manageShares: /^manage shares$/i
+	manageShares: /^manage shares$/i,
+	preview: /^preview$/i
 } as const;
 
 export const iconRegexp = {

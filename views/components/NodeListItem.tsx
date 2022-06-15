@@ -22,6 +22,7 @@ import {
 	LIST_ITEM_AVATAR_HEIGHT,
 	LIST_ITEM_HEIGHT,
 	LIST_ITEM_HEIGHT_COMPACT,
+	PREVIEW_MAX_SIZE,
 	PREVIEW_TYPE,
 	ROOTS
 } from '../../constants';
@@ -157,12 +158,6 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 	const { createPreview } = useContext(PreviewsManagerContext);
 	const { setActiveNode } = useActiveNode();
 
-	const usePdfPreviewFallback = useMemo(() => {
-		if (size) {
-			return size > 20971520;
-		}
-		return true;
-	}, [size]);
 	const userInfo = useUserInfo();
 	const [isContextualMenuActive, setIsContextualMenuActive] = useState(false);
 	const selectIdCallback = useCallback(
@@ -257,8 +252,8 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 							previewType: 'pdf',
 							filename: name,
 							extension: extension || undefined,
-							size: (size && humanFileSize(size)) || undefined,
-							useFallback: usePdfPreviewFallback,
+							size: (size !== undefined && humanFileSize(size)) || undefined,
+							useFallback: size !== undefined && size > PREVIEW_MAX_SIZE,
 							actions,
 							closeAction,
 							src
@@ -286,8 +281,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 			t,
 			version,
 			setActiveNode,
-			documentType,
-			usePdfPreviewFallback
+			documentType
 		]
 	);
 

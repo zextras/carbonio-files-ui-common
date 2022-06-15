@@ -19,7 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { useActiveNode } from '../../../hooks/useActiveNode';
 import { useSendViaMail } from '../../../hooks/useSendViaMail';
 import useUserInfo from '../../../hooks/useUserInfo';
-import { DISPLAYER_TABS, PREVIEW_TYPE } from '../../constants';
+import { DISPLAYER_TABS, PREVIEW_MAX_SIZE, PREVIEW_TYPE } from '../../constants';
 import { useDeleteNodesMutation } from '../../hooks/graphql/mutations/useDeleteNodesMutation';
 import { useFlagNodesMutation } from '../../hooks/graphql/mutations/useFlagNodesMutation';
 import { useRestoreNodesMutation } from '../../hooks/graphql/mutations/useRestoreNodesMutation';
@@ -176,8 +176,8 @@ export const PreviewPanelActions: React.VFC<PreviewPanelActionsParams> = ({ node
 					previewType: 'pdf',
 					filename: name,
 					extension: extension || undefined,
-					size: (size && humanFileSize(size)) || undefined,
-					useFallback: size > 20971520,
+					size: (size !== undefined && humanFileSize(size)) || undefined,
+					useFallback: size !== undefined && size > PREVIEW_MAX_SIZE,
 					actions,
 					closeAction,
 					src

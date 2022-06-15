@@ -20,7 +20,7 @@ import { useActiveNode } from '../../../hooks/useActiveNode';
 import { useNavigation } from '../../../hooks/useNavigation';
 import { useSendViaMail } from '../../../hooks/useSendViaMail';
 import useUserInfo from '../../../hooks/useUserInfo';
-import { DISPLAYER_TABS, DRAG_TYPES, PREVIEW_TYPE, ROOTS } from '../../constants';
+import { DISPLAYER_TABS, DRAG_TYPES, PREVIEW_MAX_SIZE, PREVIEW_TYPE, ROOTS } from '../../constants';
 import { ListContext, NodeAvatarIconContext } from '../../contexts';
 import {
 	DeleteNodesType,
@@ -353,7 +353,7 @@ export const List: React.VFC<ListProps> = ({
 					previewType: 'image',
 					filename: name,
 					extension: extension || undefined,
-					size: (fileSize && humanFileSize(fileSize)) || undefined,
+					size: (fileSize !== undefined && humanFileSize(fileSize)) || undefined,
 					actions,
 					closeAction,
 					src: version ? getImgPreviewSrc(id, version, 0, 0, 'high') : ''
@@ -377,8 +377,8 @@ export const List: React.VFC<ListProps> = ({
 					previewType: 'pdf',
 					filename: name,
 					extension: extension || undefined,
-					size: (fileSize && humanFileSize(fileSize)) || undefined,
-					useFallback: fileSize > 20971520,
+					size: (fileSize !== undefined && humanFileSize(fileSize)) || undefined,
+					useFallback: fileSize !== undefined && fileSize > PREVIEW_MAX_SIZE,
 					actions,
 					closeAction,
 					src
