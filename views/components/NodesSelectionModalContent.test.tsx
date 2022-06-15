@@ -3104,5 +3104,104 @@ describe('Nodes Selection Modal Content', () => {
 			expect(closeAction).toHaveBeenCalled();
 			expect(confirmAction).not.toHaveBeenCalled();
 		});
+
+		test('Create folder input is hidden on navigation through breadcrumb', async () => {
+			const localRoot = populateLocalRoot();
+			const folder = populateFolder();
+			const file = populateFile();
+			localRoot.children = [folder, file];
+			localRoot.permissions.can_write_folder = true;
+			folder.parent = localRoot;
+			folder.permissions.can_write_folder = true;
+			file.parent = localRoot;
+
+			const mocks = [
+				mockGetRootsList(),
+				mockGetPath({ node_id: localRoot.id }, [localRoot]),
+				mockGetBaseNode({ node_id: localRoot.id }, localRoot),
+				mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+				mockGetPermissions({ node_id: localRoot.id }, localRoot),
+				mockGetPath({ node_id: folder.id }, [localRoot, folder]),
+				mockGetBaseNode({ node_id: folder.id }, folder),
+				mockGetChildren(getChildrenVariables(folder.id), folder),
+				mockGetPermissions({ node_id: folder.id }, folder)
+			];
+
+			const isValidSelection = jest.fn().mockReturnValue(true);
+
+			const newFolderName = 'new folder name';
+
+			const { findByTextWithMarkup } = render(
+				<NodesSelectionModalContent
+					confirmAction={confirmAction}
+					confirmLabel="Select"
+					title="Select nodes"
+					closeAction={closeAction}
+					canSelectOpenedFolder={false}
+					maxSelection={undefined}
+					isValidSelection={isValidSelection}
+					canCreateFolder
+				/>,
+				{
+					mocks
+				}
+			);
+
+			await screen.findByText(/home/i);
+			// wait for root list query to be executed
+			await waitForNetworkResponse();
+			expect(screen.getByRole('button', { name: /select/i })).toBeVisible();
+			userEvent.dblClick(screen.getByText(/home/i));
+			await screen.findByText(folder.name);
+			await findByTextWithMarkup(buildBreadCrumbRegExp('Files', localRoot.name));
+			await waitForNetworkResponse();
+			userEvent.dblClick(screen.getByText(folder.name));
+			await findByTextWithMarkup(buildBreadCrumbRegExp('Files', localRoot.name, folder.name));
+			await screen.findByText(/nothing here/i);
+			// new folder button is visible inside a folder
+			let newFolderButton = screen.getByRole('button', { name: /new folder/i });
+			expect(newFolderButton).toBeVisible();
+			expect(newFolderButton).not.toHaveAttribute('disabled', '');
+			act(() => {
+				userEvent.click(newFolderButton);
+			});
+			let inputElement = await screen.findByRole('textbox', { name: /new folder's name/i });
+			let createActionButton = await screen.findByRole('button', { name: /create/i });
+			expect(createActionButton).toHaveAttribute('disabled', '');
+			userEvent.type(inputElement, newFolderName);
+			await waitFor(() => expect(createActionButton).not.toHaveAttribute('disabled', ''));
+			expect(inputElement).toHaveValue(newFolderName);
+			// navigate back to local root folder
+			userEvent.click(screen.getByText(localRoot.name));
+			await screen.findByText(folder.name);
+			await findByTextWithMarkup(buildBreadCrumbRegExp('Files', localRoot.name));
+			await waitForNetworkResponse();
+			// input is hidden and new folder button is visible
+			newFolderButton = await screen.findByRole('button', { name: /new folder/i });
+			expect(newFolderButton).toBeVisible();
+			expect(inputElement).not.toBeInTheDocument();
+			expect(createActionButton).not.toBeInTheDocument();
+			expect(newFolderButton).not.toHaveAttribute('disabled', '');
+			// input value is reset
+			act(() => {
+				userEvent.click(newFolderButton);
+			});
+			inputElement = await screen.findByRole('textbox', { name: /new folder's name/i });
+			createActionButton = await screen.findByRole('button', { name: /create/i });
+			expect(createActionButton).toHaveAttribute('disabled', '');
+			// write again inside the input element
+			userEvent.type(inputElement, newFolderName);
+			await waitFor(() => expect(createActionButton).not.toHaveAttribute('disabled', ''));
+			expect(inputElement).toHaveValue(newFolderName);
+			// navigate back to root list through breadcrumb
+			userEvent.click(screen.getByText(/files/i));
+			await screen.findByText(/home/i);
+			// input is hidden
+			expect(screen.queryByRole('textbox', { name: /new folder's name/i })).not.toBeInTheDocument();
+			// create button is hidden
+			expect(screen.queryByRole('button', { name: /create/i })).not.toBeInTheDocument();
+			// new folder button is hidden
+			expect(screen.queryByRole('button', { name: /new folder/i })).not.toBeInTheDocument();
+		});
 	});
 });

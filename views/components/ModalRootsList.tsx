@@ -52,13 +52,7 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 			'flagged' | 'sharedWithMe' | 'folderId' | 'cascade'
 		>
 	>({});
-	const {
-		data: findNodesData,
-		loading,
-		error,
-		loadMore,
-		hasMore
-	} = useFindNodesQuery(filterQueryParams);
+	const { data: findNodesData, loading, loadMore, hasMore } = useFindNodesQuery(filterQueryParams);
 
 	const listRef = useRef<HTMLDivElement | null>(null);
 

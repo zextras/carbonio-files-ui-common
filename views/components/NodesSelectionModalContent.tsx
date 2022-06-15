@@ -293,7 +293,8 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 	const navigateTo = useCallback(
 		(id: string) => {
 			setOpenedFolder(id || '');
-			hideCreateFolderInputDebounced.flush();
+			hideCreateFolderInputDebounced.cancel();
+			hideCreateFolderInput();
 			navigationOccurredRef.current = true;
 			if (canSelectOpenedFolder && id) {
 				setSelectedNodeHandler({ id, __typename: 'Folder' }, undefined, true);
@@ -301,7 +302,13 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 				unSelectAll();
 			}
 		},
-		[canSelectOpenedFolder, hideCreateFolderInputDebounced, setSelectedNodeHandler, unSelectAll]
+		[
+			canSelectOpenedFolder,
+			hideCreateFolderInput,
+			hideCreateFolderInputDebounced,
+			setSelectedNodeHandler,
+			unSelectAll
+		]
 	);
 
 	const closeHandler = useCallback(() => {
