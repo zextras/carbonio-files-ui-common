@@ -458,6 +458,7 @@ export type Query = {
 	/** <strong> Returns a NodePage based on the given criteria </strong> */
 	findNodes?: Maybe<NodePage>;
 	getAccountByEmail?: Maybe<Account>;
+	getAccountsByEmail: Array<Maybe<Account>>;
 	getConfigs: Array<Maybe<Config>>;
 	/**
 	 *  Returns all the links of the specified node.
@@ -494,6 +495,10 @@ export type QueryFindNodesArgs = {
 
 export type QueryGetAccountByEmailArgs = {
 	email: Scalars['String'];
+};
+
+export type QueryGetAccountsByEmailArgs = {
+	emails: Array<Scalars['String']>;
 };
 
 export type QueryGetLinksArgs = {
@@ -1623,6 +1628,19 @@ export type GetAccountByEmailQuery = {
 		| { __typename?: 'DistributionList'; id: string }
 		| { __typename?: 'User'; id: string }
 		| null;
+};
+
+export type GetAccountsByEmailQueryVariables = Exact<{
+	emails: Array<Scalars['String']> | Scalars['String'];
+}>;
+
+export type GetAccountsByEmailQuery = {
+	__typename?: 'Query';
+	getAccountsByEmail: Array<
+		| { __typename?: 'DistributionList'; id: string; name: string }
+		| { __typename?: 'User'; id: string; email: string; full_name: string }
+		| null
+	>;
 };
 
 export type GetBaseNodeQueryVariables = Exact<{

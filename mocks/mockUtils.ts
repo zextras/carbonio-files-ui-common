@@ -30,7 +30,7 @@ import {
 	SharePermission,
 	User
 } from '../types/graphql/types';
-import { ContactMatch } from '../types/network';
+import { Match } from '../types/network';
 import { ActionsFactoryNodeType } from '../utils/ActionsFactory';
 import { nodeSortComparator } from '../utils/utils';
 
@@ -317,7 +317,7 @@ export function populateNodePage(nodes: Node[], pageSize: number = NODES_LOAD_LI
 	};
 }
 
-export function populateContact(fullName?: string, email?: string): ContactMatch {
+export function populateContact(fullName?: string, email?: string): Match {
 	return {
 		id: faker.datatype.uuid(),
 		email: email || faker.internet.exampleEmail(fullName),
