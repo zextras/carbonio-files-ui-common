@@ -45,6 +45,7 @@ export const CONFIGS = {
 	MAX_VERSIONS: 'max-number-of-versions',
 	MAX_KEEP_VERSIONS: 'max-number-of-keep-versions'
 } as const;
+export const PREVIEW_MAX_SIZE = 20971520;
 
 // endpoint
 // keep endpoint without trailing slash

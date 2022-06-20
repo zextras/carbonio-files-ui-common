@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 
 import { useActiveNode } from '../../../hooks/useActiveNode';
-import { DISPLAYER_TABS, PREVIEW_TYPE } from '../../constants';
+import { DISPLAYER_TABS, PREVIEW_MAX_SIZE, PREVIEW_TYPE } from '../../constants';
 import { Node } from '../../types/common';
 import { NodeType } from '../../types/graphql/types';
 import { canOpenWithDocs } from '../../utils/ActionsFactory';
@@ -119,7 +119,7 @@ export const DisplayerPreview: React.VFC<DisplayerPreviewProps> = ({
 				filename: name,
 				extension: extension || undefined,
 				size: (size && humanFileSize(size)) || undefined,
-				useFallback: !!size && size > 20971520,
+				useFallback: size !== undefined && size > PREVIEW_MAX_SIZE,
 				actions,
 				closeAction,
 				src
