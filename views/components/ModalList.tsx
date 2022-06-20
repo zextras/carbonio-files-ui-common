@@ -6,7 +6,7 @@
 
 import React, { useLayoutEffect, useMemo, useRef } from 'react';
 
-import { ApolloError, useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import { Container, Row } from '@zextras/carbonio-design-system';
 import takeRightWhile from 'lodash/takeRightWhile';
 import { useTranslation } from 'react-i18next';
@@ -18,7 +18,7 @@ import { Crumb, NodeListItemType } from '../../types/common';
 import { GetPathQuery, GetPathQueryVariables, Node } from '../../types/graphql/types';
 import { OneOrMany } from '../../types/utils';
 import { canBeWriteNodeDestination } from '../../utils/ActionsFactory';
-import { buildCrumbs, decodeError } from '../../utils/utils';
+import { buildCrumbs } from '../../utils/utils';
 import { InteractiveBreadcrumbs } from '../InteractiveBreadcrumbs';
 import { EmptyFolder } from './EmptyFolder';
 import { ListContent } from './ListContent';
@@ -33,7 +33,6 @@ interface ModalListProps {
 	loadMore: () => void;
 	hasMore: boolean;
 	navigateTo: (id: string, event?: React.SyntheticEvent) => void;
-	error?: ApolloError;
 	loading: boolean;
 	writingFile?: boolean;
 	writingFolder?: boolean;
@@ -53,7 +52,6 @@ export const ModalList: React.VFC<ModalListProps> = ({
 	loadMore,
 	hasMore,
 	navigateTo,
-	error,
 	loading,
 	writingFile = false,
 	writingFolder = false,
@@ -149,7 +147,6 @@ export const ModalList: React.VFC<ModalListProps> = ({
 					</Row>
 				)}
 			</Row>
-			{error && <p>Error: {decodeError(error, t)}</p>}
 			<Container mainAlignment="flex-start" minHeight="0">
 				{nodes.length > 0 ? (
 					<ListContent

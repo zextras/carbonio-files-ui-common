@@ -22,7 +22,8 @@ import {
 	mockCreateFolder,
 	mockCreateFolderError,
 	mockGetChildren,
-	mockGetParent
+	mockGetParent,
+	mockGetPermissions
 } from '../utils/mockUtils';
 import { generateError, render, triggerLoadMore } from '../utils/testUtils';
 import { addNodeInSortedList } from '../utils/utils';
@@ -98,6 +99,7 @@ describe('Create folder', () => {
 
 		const mocks = [
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+			mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 			mockCreateFolderError(
 				{
 					destination_id: currentFolder.id,
@@ -128,13 +130,13 @@ describe('Create folder', () => {
 
 		await createNode(node2);
 		await waitFor(() =>
-			expect(screen.getAllByText(/Error! Name already assigned/)).toHaveLength(2)
+			expect(screen.getAllByText(/Error! Name already assigned/i)).toHaveLength(2)
 		);
 		await waitFor(() =>
 			// eslint-disable-next-line jest-dom/prefer-in-document
-			expect(screen.getAllByText(/Error! Name already assigned/)).toHaveLength(1)
+			expect(screen.getAllByText(/Error! Name already assigned/i)).toHaveLength(1)
 		);
-		const error = screen.getByText(/Error! Name already assigned/);
+		const error = screen.getByText(/Error! Name already assigned/i);
 		expect(error).toBeVisible();
 		const inputFieldDiv = screen.getByTestId('input-name');
 		const inputField = within(inputFieldDiv).getByRole('textbox');
@@ -157,6 +159,7 @@ describe('Create folder', () => {
 		const mocks = [
 			mockGetParent({ node_id: currentFolder.id }, currentFolder),
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+			mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 			mockCreateFolder(
 				{
 					destination_id: currentFolder.id,
@@ -216,6 +219,7 @@ describe('Create folder', () => {
 
 		const mocks = [
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+			mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 			mockCreateFolder(
 				{
 					destination_id: currentFolder.id,
@@ -320,6 +324,7 @@ describe('Create folder', () => {
 		const mocks = [
 			mockGetParent({ node_id: currentFolder.id }, currentFolder),
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+			mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 			mockCreateFolder(
 				{
 					destination_id: currentFolder.id,

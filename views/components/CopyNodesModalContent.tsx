@@ -241,7 +241,6 @@ export const CopyNodesModalContent: React.VFC<CopyNodesModalContentProps> = ({
 					loadMore={loadMore}
 					hasMore={hasMore}
 					navigateTo={navigateTo}
-					error={error}
 					loading={loading}
 					limitNavigation={false}
 					writingFolder={copyingFolder}

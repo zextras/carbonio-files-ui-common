@@ -12,13 +12,14 @@ import debounce from 'lodash/debounce';
 import includes from 'lodash/includes';
 import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 
 import { useActiveNode } from '../../../hooks/useActiveNode';
 import { useSendViaMail } from '../../../hooks/useSendViaMail';
 import useUserInfo from '../../../hooks/useUserInfo';
 import {
 	DISPLAYER_TABS,
+	DOUBLE_CLICK_DELAY,
 	LIST_ITEM_AVATAR_HEIGHT,
 	LIST_ITEM_HEIGHT,
 	LIST_ITEM_HEIGHT_COMPACT,
@@ -45,32 +46,15 @@ import {
 import { ContextualMenu } from './ContextualMenu';
 import { NodeAvatarIcon } from './NodeAvatarIcon';
 import { NodeHoverBar } from './NodeHoverBar';
-import { HoverBarContainer, HoverContainer, ListItemContainer } from './StyledComponents';
+import {
+	FlexContainer,
+	HoverBarContainer,
+	HoverContainer,
+	ListItemContainer
+} from './StyledComponents';
 
 const CustomText = styled(Text)`
 	text-transform: uppercase;
-`;
-
-const FlexContainer = styled(Container)`
-	flex-grow: ${({ flexGrow }): number => flexGrow || 1};
-	flex-shrink: ${({ flexShrink }): number => flexShrink || 1};
-	flex-basis: ${({ flexBasis }): string => flexBasis || 'auto'};
-	${({ margin }): string =>
-		margin &&
-		`
-		${
-			margin.left &&
-			css`
-				margin-left: ${margin.left};
-			`
-		}
-		${
-			margin.right &&
-			css`
-				margin-left: ${margin.left};
-			`
-		}
-	`}
 `;
 
 interface NodeListItemProps {
@@ -420,7 +404,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 				(event: React.SyntheticEvent) => {
 					setActive(event);
 				},
-				200,
+				DOUBLE_CLICK_DELAY,
 				{ leading: false, trailing: true }
 			),
 		[setActive]
@@ -555,7 +539,9 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 									mainAlignment="flex-start"
 								>
 									<FlexContainer
-										flexShrink={0}
+										$flexShrink={0}
+										$flexGrow={1}
+										$flexBasis="auto"
 										mainAlignment="flex-start"
 										orientation="horizontal"
 										width="fit"
@@ -576,7 +562,9 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 										<FlexContainer
 											width="fit"
 											minWidth={0}
-											flexShrink={1}
+											$flexShrink={1}
+											$flexGrow={1}
+											$flexBasis="auto"
 											orientation="horizontal"
 											mainAlignment="flex-end"
 											padding={{ left: 'small' }}

@@ -29,6 +29,7 @@ import {
 	mockGetChildren,
 	mockGetParent,
 	mockGetPath,
+	mockGetPermissions,
 	mockMoveNodes
 } from '../utils/mockUtils';
 import {
@@ -83,6 +84,7 @@ describe('Move', () => {
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 				mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockMoveNodes(
 					{
 						node_ids: [nodeToMove.id],
@@ -157,6 +159,7 @@ describe('Move', () => {
 			});
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 				mockMoveNodes(
 					{
@@ -252,6 +255,7 @@ describe('Move', () => {
 					...currentFolder,
 					children: firstPage
 				} as Folder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockGetParent({ node_id: currentFolder.id }, currentFolder),
 				mockGetPath({ node_id: currentFolder.id }, [commonParent, currentFolder]),
 				mockGetChildren(getChildrenVariables(commonParent.id), commonParent),
@@ -336,6 +340,7 @@ describe('Move', () => {
 
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 				mockMoveNodes(
 					{
@@ -403,6 +408,7 @@ describe('Move', () => {
 					...currentFolder,
 					children: firstPage
 				} as Folder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockGetParent({ node_id: currentFolder.id }, currentFolder),
 				mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 				mockMoveNodes(

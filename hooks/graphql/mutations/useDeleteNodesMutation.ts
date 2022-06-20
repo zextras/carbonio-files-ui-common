@@ -46,7 +46,7 @@ export function useDeleteNodesMutation(): DeleteNodesType {
 	const { removeNodesFromFilter } = useUpdateFilterContent();
 	const { activeNodeId, removeActiveNode } = useActiveNode();
 
-	useErrorHandler(error, 'DELETE_NODES', 'error');
+	useErrorHandler(error, 'DELETE_NODES', { type: 'error' });
 
 	const deleteNodes = useCallback<DeleteNodesType>(
 		(...nodes: PickIdNodeType[]) => {

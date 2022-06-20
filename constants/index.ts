@@ -19,6 +19,7 @@ export const LIST_WIDTH = '40%';
 export const DISPLAYER_WIDTH = '60%';
 export const FULL_SHARES_LOAD_LIMIT = 100;
 export const SHARES_LOAD_LIMIT = 6;
+export const DOUBLE_CLICK_DELAY = 200;
 export const DISPLAYER_TABS = {
 	details: 'details',
 	sharing: 'sharing',

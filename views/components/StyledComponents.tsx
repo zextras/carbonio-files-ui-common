@@ -165,3 +165,30 @@ export const OverFlowHiddenRow = styled(Row)`
 export const ItalicText = styled(Text)`
 	font-style: italic;
 `;
+
+export const FlexContainer = styled(Container)<{
+	$flexGrow?: number | string;
+	$flexShrink?: number | string;
+	$flexBasis?: string;
+	$margin?: { left?: string; right?: string };
+}>`
+	flex-grow: ${({ $flexGrow }): SimpleInterpolation => $flexGrow};
+	flex-shrink: ${({ $flexShrink }): SimpleInterpolation => $flexShrink};
+	flex-basis: ${({ $flexBasis }): SimpleInterpolation => $flexBasis};
+	${({ $margin }): string =>
+		$margin &&
+		`
+		${
+			$margin.left &&
+			css`
+				margin-left: ${$margin.left};
+			`
+		}
+		${
+			$margin.right &&
+			css`
+				margin-left: ${$margin.left};
+			`
+		}
+	`}
+`;

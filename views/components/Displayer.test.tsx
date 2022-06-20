@@ -165,6 +165,7 @@ describe('Displayer', () => {
 		await waitForElementToBeRemoved(moveButton);
 		const snackbar = await screen.findByText(/item moved/i);
 		await waitForElementToBeRemoved(snackbar);
+		await screen.findByText(/view files and folders/i);
 		const queryResult = global.apolloClient.readQuery<GetChildrenQuery, GetChildrenQueryVariables>({
 			query: GET_CHILDREN,
 			variables: getChildrenVariables(parent.id)

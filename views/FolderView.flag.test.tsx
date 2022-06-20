@@ -15,7 +15,12 @@ import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { populateFolder, populateNode } from '../mocks/mockUtils';
 import { Node } from '../types/common';
 import { Folder } from '../types/graphql/types';
-import { getChildrenVariables, mockFlagNodes, mockGetChildren } from '../utils/mockUtils';
+import {
+	getChildrenVariables,
+	mockFlagNodes,
+	mockGetChildren,
+	mockGetPermissions
+} from '../utils/mockUtils';
 import {
 	actionRegexp,
 	iconRegexp,
@@ -61,6 +66,7 @@ describe('Flag', () => {
 					...currentFolder,
 					children: currentFolder.children
 				} as Folder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockFlagNodes(
 					{
 						node_ids: nodesIdsToFlag,
@@ -121,6 +127,7 @@ describe('Flag', () => {
 
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockFlagNodes(
 					{
 						node_ids: [node.id],

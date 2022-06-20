@@ -61,7 +61,7 @@ export function useDeleteShareMutation(): (
 		DeleteShareMutationVariables
 	>(DELETE_SHARE);
 
-	useErrorHandler(error, 'DELETE_SHARE', 'error');
+	useErrorHandler(error, 'DELETE_SHARE', { type: 'error' });
 
 	const deleteShare: (
 		node: PickIdNodeType,

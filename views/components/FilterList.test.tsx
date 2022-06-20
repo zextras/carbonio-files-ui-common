@@ -22,7 +22,8 @@ import {
 	getFindNodesVariables,
 	mockFindNodes,
 	mockFlagNodes,
-	mockGetChildren
+	mockGetChildren,
+	mockGetPermissions
 } from '../../utils/mockUtils';
 import {
 	buildBreadCrumbRegExp,
@@ -158,6 +159,7 @@ describe('Filter list', () => {
 			const mocks = [
 				mockFindNodes(getFindNodesVariables({ flagged: true }), nodes),
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockFlagNodes(
 					{
 						node_ids: [node.id],

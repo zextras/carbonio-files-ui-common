@@ -15,7 +15,12 @@ import { NODES_LOAD_LIMIT } from '../constants';
 import { populateFolder, populateNodes } from '../mocks/mockUtils';
 import { Node } from '../types/common';
 import { Folder } from '../types/graphql/types';
-import { getChildrenVariables, mockGetChildren, mockGetParent } from '../utils/mockUtils';
+import {
+	getChildrenVariables,
+	mockGetChildren,
+	mockGetParent,
+	mockGetPermissions
+} from '../utils/mockUtils';
 import { iconRegexp, render, selectNodes, triggerLoadMore } from '../utils/testUtils';
 import { DisplayerProps } from './components/Displayer';
 import FolderView from './FolderView';
@@ -40,7 +45,8 @@ describe('Folder View Selection mode', () => {
 		const currentFolder = populateFolder(10);
 		const mocks = [
 			mockGetParent({ node_id: currentFolder.id }, currentFolder),
-			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder)
+			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+			mockGetPermissions({ node_id: currentFolder.id }, currentFolder)
 		];
 		render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
 
@@ -87,6 +93,7 @@ describe('Folder View Selection mode', () => {
 		const mocks = [
 			mockGetParent({ node_id: currentFolder.id }, currentFolder),
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+			mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 			mockGetChildren(
 				{
 					...getChildrenVariables(currentFolder.id),

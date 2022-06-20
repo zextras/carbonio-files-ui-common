@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/no-autofocus */
 /*
  * SPDX-FileCopyrightText: 2022 Zextras <https://www.zextras.com>
  *
@@ -7,18 +8,31 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ApolloError, useApolloClient } from '@apollo/client';
-import { Container, Text } from '@zextras/carbonio-design-system';
+import {
+	Button,
+	Container,
+	Input,
+	Padding,
+	Row,
+	Text,
+	Tooltip
+} from '@zextras/carbonio-design-system';
+import debounce from 'lodash/debounce';
 import findIndex from 'lodash/findIndex';
 import map from 'lodash/map';
 import reduce from 'lodash/reduce';
 import some from 'lodash/some';
+import trim from 'lodash/trim';
 import { useTranslation } from 'react-i18next';
 
+import { DOUBLE_CLICK_DELAY } from '../../constants';
 import { NodeAvatarIconContext } from '../../contexts';
 import BASE_NODE from '../../graphql/fragments/baseNode.graphql';
 import CHILD from '../../graphql/fragments/child.graphql';
 import GET_BASE_NODE from '../../graphql/queries/getBaseNode.graphql';
+import { useCreateFolderMutation } from '../../hooks/graphql/mutations/useCreateFolderMutation';
 import { useGetChildrenQuery } from '../../hooks/graphql/queries/useGetChildrenQuery';
+import { useGetPermissionsQuery } from '../../hooks/graphql/queries/useGetPermissionsQuery';
 import { useGetRootsListQuery } from '../../hooks/graphql/queries/useGetRootsListQuery';
 import { useErrorHandler } from '../../hooks/useErrorHandler';
 import { NodeListItemType, NodeWithMetadata, RootListItemType } from '../../types/common';
@@ -28,12 +42,14 @@ import {
 	GetBaseNodeQueryVariables
 } from '../../types/graphql/types';
 import { ArrayOneOrMore } from '../../types/utils';
-import { isFile, isFolder } from '../../utils/ActionsFactory';
+import { canCreateFolder, isFile, isFolder } from '../../utils/ActionsFactory';
+import { decodeError } from '../../utils/utils';
 import { LoadingIcon } from './LoadingIcon';
 import { ModalFooter } from './ModalFooter';
 import { ModalHeader } from './ModalHeader';
 import { ModalList } from './ModalList';
 import { ModalRootsList } from './ModalRootsList';
+import { FlexContainer } from './StyledComponents';
 
 interface NodesSelectionModalContentProps {
 	title: string;
@@ -45,7 +61,12 @@ interface NodesSelectionModalContentProps {
 	disabledTooltip?: string;
 	canSelectOpenedFolder?: boolean;
 	description?: string;
+	canCreateFolder?: boolean;
 }
+
+const stopPropagation = (e: Event | React.SyntheticEvent): void => {
+	e.stopPropagation();
+};
 
 export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentProps> = ({
 	title,
@@ -56,7 +77,8 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 	maxSelection,
 	disabledTooltip,
 	canSelectOpenedFolder,
-	description
+	description,
+	canCreateFolder: canCreateFolderProp
 }) => {
 	const [t] = useTranslation();
 	const apolloClient = useApolloClient();
@@ -65,20 +87,24 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 	const [selectedNodes, setSelectedNodes] = useState<NodeWithMetadata[]>([]);
 	const selectedNodesIds = useMemo(() => map(selectedNodes, (node) => node.id), [selectedNodes]);
 	const navigationOccurredRef = useRef(false);
+	const [newFolderInputVisible, setNewFolderInputVisible] = useState(false);
+	const [newFolderName, setNewFolderName] = useState('');
+	const newFolderInputRef = useRef<HTMLInputElement>(null);
 
-	const {
-		data: currentFolder,
-		loading,
-		error: getChildrenError,
-		hasMore,
-		loadMore
-	} = useGetChildrenQuery(openedFolder);
+	const { data: currentFolder, loading, hasMore, loadMore } = useGetChildrenQuery(openedFolder);
+
+	const { data: currentFolderPermissions } = useGetPermissionsQuery(openedFolder);
+
+	const currentFolderNode = useMemo(
+		() =>
+			(currentFolder?.getNode && isFolder(currentFolder.getNode) && currentFolder.getNode) || null,
+		[currentFolder?.getNode]
+	);
 
 	const selectId = useCallback(
 		(node: NodeWithMetadata) => {
 			setSelectedNodes((prevState) => {
 				if (!maxSelection || maxSelection > 1) {
-					const currentFolderNode = currentFolder?.getNode;
 					if (prevState.length === 1) {
 						// if previous selected node is the opened folder and user is selecting a node from the list,
 						// reset the selection to contains only the list node
@@ -110,7 +136,7 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 				return [node];
 			});
 		},
-		[apolloClient, canSelectOpenedFolder, currentFolder?.getNode, maxSelection]
+		[apolloClient, canSelectOpenedFolder, currentFolderNode, maxSelection]
 	);
 
 	const unSelectAll = useCallback(() => {
@@ -122,6 +148,31 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 	const { data: rootsData } = useGetRootsListQuery();
 
 	useErrorHandler(error, 'NODES_SELECTION_MODAL_CONTENT');
+
+	useEffect(() => {
+		if (newFolderInputVisible && newFolderInputRef.current) {
+			newFolderInputRef.current.focus();
+		}
+	}, [newFolderInputVisible]);
+
+	const showCreateFolderInput = useCallback(
+		(e: React.SyntheticEvent | Event) => {
+			stopPropagation(e);
+			setNewFolderInputVisible(true);
+			unSelectAll();
+		},
+		[unSelectAll]
+	);
+
+	const hideCreateFolderInput = useCallback(() => {
+		setNewFolderInputVisible(false);
+		setNewFolderName('');
+	}, []);
+
+	const hideCreateFolderInputDebounced = useMemo(
+		() => debounce(hideCreateFolderInput, DOUBLE_CLICK_DELAY, { leading: false, trailing: true }),
+		[hideCreateFolderInput]
+	);
 
 	const checkSelectable = useCallback(
 		(node: NodeWithMetadata | RootListItemType) =>
@@ -138,13 +189,9 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 	);
 
 	const nodes = useMemo<Array<NodeListItemType>>(() => {
-		if (
-			currentFolder?.getNode &&
-			isFolder(currentFolder.getNode) &&
-			currentFolder.getNode.children.length > 0
-		) {
-			return reduce<typeof currentFolder.getNode.children[number], NodeListItemType[]>(
-				currentFolder.getNode.children,
+		if (currentFolderNode && currentFolderNode.children.length > 0) {
+			return reduce<typeof currentFolderNode.children[number], NodeListItemType[]>(
+				currentFolderNode.children,
 				(result, node) => {
 					if (node) {
 						result.push({
@@ -159,7 +206,7 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 			);
 		}
 		return [];
-	}, [checkDisabled, checkSelectable, currentFolder]);
+	}, [checkDisabled, checkSelectable, currentFolderNode]);
 
 	const getBaseNodeData = useCallback(
 		(node: Pick<NodeListItemType, 'id'>) =>
@@ -189,11 +236,15 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 				if (
 					nodeWithMetadata &&
 					isValidSelection(nodeWithMetadata) &&
-					(canSelectOpenedFolder || nodeWithMetadata.id !== currentFolder?.getNode?.id)
+					(canSelectOpenedFolder || nodeWithMetadata.id !== currentFolderNode?.id)
 				) {
 					event && event.stopPropagation();
 					// if is valid set it directly
 					selectId(nodeWithMetadata);
+					// delay the hide callback of the input to make navigation to be executed before this one, in order
+					// to avoid a resize of the modal height on double click, which could lead to double-click on the wrong item
+					// (flick is caused by the input change state from visible to hidden)
+					hideCreateFolderInputDebounced();
 				}
 			};
 
@@ -229,8 +280,9 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 		[
 			apolloClient,
 			canSelectOpenedFolder,
-			currentFolder?.getNode?.id,
+			currentFolderNode?.id,
 			getBaseNodeData,
+			hideCreateFolderInputDebounced,
 			isValidSelection,
 			rootsData?.getRootsList,
 			selectId,
@@ -241,6 +293,8 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 	const navigateTo = useCallback(
 		(id: string) => {
 			setOpenedFolder(id || '');
+			hideCreateFolderInputDebounced.cancel();
+			hideCreateFolderInput();
 			navigationOccurredRef.current = true;
 			if (canSelectOpenedFolder && id) {
 				setSelectedNodeHandler({ id, __typename: 'Folder' }, undefined, true);
@@ -248,7 +302,13 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 				unSelectAll();
 			}
 		},
-		[canSelectOpenedFolder, setSelectedNodeHandler, unSelectAll]
+		[
+			canSelectOpenedFolder,
+			hideCreateFolderInput,
+			hideCreateFolderInputDebounced,
+			setSelectedNodeHandler,
+			unSelectAll
+		]
 	);
 
 	const closeHandler = useCallback(() => {
@@ -272,14 +332,14 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 	const resetSelectedNodesHandler = useCallback(() => {
 		if (maxSelection === 1 || selectedNodes.length === 0) {
 			if (canSelectOpenedFolder) {
-				setSelectedNodeHandler(currentFolder?.getNode, undefined, true);
+				setSelectedNodeHandler(currentFolderNode, undefined, true);
 			} else if (selectedNodes.length > 0) {
 				unSelectAll();
 			}
 		}
 	}, [
 		canSelectOpenedFolder,
-		currentFolder?.getNode,
+		currentFolderNode,
 		maxSelection,
 		selectedNodes.length,
 		setSelectedNodeHandler,
@@ -307,7 +367,61 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 		};
 	}, [clickModalHandler]);
 
-	const modalHeight = useMemo(() => (nodes?.length >= 10 ? '60vh' : '40vh'), [nodes?.length]);
+	const {
+		createFolder,
+		loading: createFolderPendingRequest,
+		error: createFolderError,
+		reset: resetCreateFolderError
+	} = useCreateFolderMutation({ showSnackbar: false });
+
+	const createFolderHandler = useCallback(
+		(e: Event | React.SyntheticEvent) => {
+			stopPropagation(e);
+			// create folder and add it to the list
+			if (!createFolderPendingRequest && currentFolderNode && newFolderName) {
+				createFolder(currentFolderNode, newFolderName)
+					.then((result) => {
+						result.data && setSelectedNodeHandler(result.data.createFolder);
+						hideCreateFolderInput();
+					})
+					.catch((err) => {
+						setError(err);
+					});
+			}
+		},
+		[
+			createFolder,
+			createFolderPendingRequest,
+			currentFolderNode,
+			hideCreateFolderInput,
+			newFolderName,
+			setSelectedNodeHandler
+		]
+	);
+
+	const onNewFolderInputChange = useCallback(
+		({ target: { value } }) => {
+			if (!createFolderPendingRequest) {
+				if (trim(value).length === 0) {
+					setNewFolderName('');
+				} else {
+					setNewFolderName(value);
+				}
+				if (createFolderError) {
+					resetCreateFolderError();
+				}
+			}
+		},
+		[createFolderError, createFolderPendingRequest, resetCreateFolderError]
+	);
+
+	const newFolderButtonDisabled = useMemo(
+		() =>
+			!currentFolderNode ||
+			!currentFolderPermissions?.getNode ||
+			!canCreateFolder(currentFolderPermissions.getNode),
+		[currentFolderNode, currentFolderPermissions?.getNode]
+	);
 
 	return (
 		<Container
@@ -315,7 +429,7 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 			mainAlignment="flex-start"
 			crossAlignment="flex-start"
 			minHeight="40vh"
-			height={modalHeight}
+			height="auto"
 			maxHeight="60vh"
 			onClick={resetSelectedNodesHandler}
 			ref={mainContainerRef}
@@ -337,16 +451,15 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 					tooltipDisabled: ({ selectable }): boolean => selectable
 				}}
 			>
-				{currentFolder?.getNode ? (
+				{currentFolderNode ? (
 					<ModalList
-						folderId={currentFolder.getNode.id}
+						folderId={currentFolderNode.id}
 						nodes={nodes}
 						activeNodes={selectedNodesIds}
 						setActiveNode={setSelectedNodeHandler}
 						loadMore={loadMore}
 						hasMore={hasMore}
 						navigateTo={navigateTo}
-						error={getChildrenError}
 						loading={loading}
 						limitNavigation={false}
 						allowRootNavigation
@@ -362,13 +475,15 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 							showTrash={false}
 						/>
 					)) || (
-						<Container
+						<FlexContainer
 							mainAlignment="flex-end"
 							crossAlignment="flex-start"
 							orientation="horizontal"
+							$flexGrow={1}
+							$flexBasis="100%"
 						>
 							<LoadingIcon icon="Refresh" color="primary" />
-						</Container>
+						</FlexContainer>
 					)
 				)}
 			</NodeAvatarIconContext.Provider>
@@ -377,18 +492,83 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 				confirmHandler={confirmHandler}
 				confirmDisabled={confirmDisabled}
 			>
-				{(!maxSelection || maxSelection > 1) && selectedNodes.length > 0 && (
-					<Container mainAlignment="flex-start" crossAlignment="center" orientation="horizontal">
-						<Text size="small" weight="light">
-							{t('modal.nodesSelection.selectedCount', {
-								defaultValue:
-									selectedNodes.length === 1
-										? '{{count}} element selected'
-										: '{{count}} elements selected',
-								count: selectedNodes.length
-							})}
-						</Text>
-					</Container>
+				{!newFolderInputVisible && (
+					<>
+						{(!maxSelection || maxSelection > 1) && selectedNodes.length > 0 && (
+							<Container
+								mainAlignment="flex-start"
+								crossAlignment="center"
+								orientation="horizontal"
+							>
+								<Text size="small" weight="light">
+									{t('modal.nodesSelection.selectedCount', {
+										defaultValue:
+											selectedNodes.length === 1
+												? '{{count}} element selected'
+												: '{{count}} elements selected',
+										count: selectedNodes.length
+									})}
+								</Text>
+							</Container>
+						)}
+						{canCreateFolderProp && openedFolder && (
+							<Padding left="small">
+								<Tooltip
+									disabled={!newFolderButtonDisabled}
+									label={t(
+										'modal.nodeSelection.button.newFolder.disabled',
+										"You don't have the correct permissions"
+									)}
+									placement="top"
+								>
+									<Button
+										color="primary"
+										type="outlined"
+										onClick={showCreateFolderInput}
+										label={t('modal.nodeSelection.button.newFolder.label', 'New folder')}
+										disabled={newFolderButtonDisabled}
+									/>
+								</Tooltip>
+							</Padding>
+						)}
+					</>
+				)}
+				{newFolderInputVisible && (
+					<>
+						<Container
+							orientation="vertical"
+							mainAlignment="flex-start"
+							crossAlignment="flex-start"
+							onClick={stopPropagation}
+						>
+							<Input
+								value={newFolderName}
+								onChange={onNewFolderInputChange}
+								label={`${t('modal.nodeSelection.input.newFolder', "New folder's name")}*`}
+								data-testid="input-name"
+								onEnter={createFolderHandler}
+								hasError={createFolderError !== undefined}
+								backgroundColor="gray5"
+								inputRef={newFolderInputRef}
+							/>
+							{createFolderError && (
+								<Row padding={{ top: 'small' }}>
+									<Text color="error" overflow="break-word" size="small">
+										{decodeError(createFolderError, t)}
+									</Text>
+								</Row>
+							)}
+						</Container>
+						<Padding left="small" top="small" onClick={stopPropagation}>
+							<Button
+								color="primary"
+								type="outlined"
+								onClick={createFolderHandler}
+								label={t('modal.nodeSelection.button.create', 'Create')}
+								disabled={newFolderName.length === 0 || createFolderPendingRequest}
+							/>
+						</Padding>
+					</>
 				)}
 			</ModalFooter>
 		</Container>
