@@ -3,6 +3,7 @@
  *
  * SPDX-License-Identifier: AGPL-3.0-only
  */
+export type RequestName = 'AutoComplete' | 'GetContacts';
 
 /**
  * @see https://files.zimbra.com/docs/soap_api/8.8.15/api-reference/zimbraMail/AutoComplete.html
@@ -40,12 +41,12 @@ export function isDerefMember(member: Member): member is DerefMember {
 }
 
 export interface ContactInformation {
-	d: number;
+	d?: number;
 	id: string;
-	l: string;
-	fileAsStr: string;
-	rev: number;
-	_attrs: {
+	l?: string;
+	fileAsStr?: string;
+	rev?: number;
+	_attrs?: {
 		firstName?: string;
 		fileAs?: string;
 		email?: string;
@@ -55,7 +56,7 @@ export interface ContactInformation {
 		type?: string;
 		zimbraId?: string;
 	};
-	m: Array<Member>;
+	m?: Array<Member>;
 }
 
 export interface DerefContactInformation extends ContactInformation {
@@ -72,7 +73,7 @@ export interface DerefContactInformation extends ContactInformation {
 }
 
 export interface GetContactsResponse {
-	cn: Array<ContactInformation>;
+	cn?: Array<ContactInformation>;
 }
 
 export interface Match {
