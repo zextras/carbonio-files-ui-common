@@ -697,25 +697,6 @@ export function mockGetAccountsByEmail(
 	};
 }
 
-export function mockGetAccountsByEmail(
-	variables: GetAccountsByEmailQueryVariables,
-	accounts: QueryType['getAccountsByEmail'],
-	error?: ApolloError
-): Mock<GetAccountsByEmailQuery, GetAccountsByEmailQueryVariables> {
-	return {
-		request: {
-			query: GET_ACCOUNTS_BY_EMAIL,
-			variables
-		},
-		result: {
-			data: {
-				getAccountsByEmail: accounts
-			}
-		},
-		error
-	};
-}
-
 /**
  * Get Node Links mock
  */
