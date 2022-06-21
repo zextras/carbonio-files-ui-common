@@ -32,6 +32,7 @@ import UPDATE_NODE_DESCRIPTION from '../graphql/mutations/updateNodeDescription.
 import UPDATE_SHARE from '../graphql/mutations/updateShare.graphql';
 import FIND_NODES from '../graphql/queries/findNodes.graphql';
 import GET_ACCOUNT_BY_EMAIL from '../graphql/queries/getAccountByEmail.graphql';
+import GET_ACCOUNTS_BY_EMAIL from '../graphql/queries/getAccountsByEmail.graphql';
 import GET_BASE_NODE from '../graphql/queries/getBaseNode.graphql';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import GET_CONFIGS from '../graphql/queries/getConfigs.graphql';
@@ -107,7 +108,9 @@ import {
 	GetPermissionsQueryVariables,
 	GetPermissionsQuery,
 	GetConfigsQuery,
-	GetConfigsQueryVariables
+	GetConfigsQueryVariables,
+	GetAccountsByEmailQueryVariables,
+	GetAccountsByEmailQuery
 } from '../types/graphql/types';
 
 type Id = string;
@@ -134,6 +137,7 @@ type MockVariablePossibleType =
 	| CreateShareMutationVariables
 	| UpdateShareMutationVariables
 	| GetAccountByEmailQueryVariables
+	| GetAccountsByEmailQueryVariables
 	| GetNodeLinksQueryVariables
 	| DeleteVersionsMutationVariables
 	| GetVersionsQueryVariables;
@@ -668,6 +672,25 @@ export function mockGetAccountByEmail(
 		result: {
 			data: {
 				getAccountByEmail: account
+			}
+		},
+		error
+	};
+}
+
+export function mockGetAccountsByEmail(
+	variables: GetAccountsByEmailQueryVariables,
+	accounts: QueryType['getAccountsByEmail'],
+	error?: ApolloError
+): Mock<GetAccountsByEmailQuery, GetAccountsByEmailQueryVariables> {
+	return {
+		request: {
+			query: GET_ACCOUNTS_BY_EMAIL,
+			variables
+		},
+		result: {
+			data: {
+				getAccountsByEmail: accounts
 			}
 		},
 		error

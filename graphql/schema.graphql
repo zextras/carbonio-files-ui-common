@@ -484,6 +484,11 @@ type Query {
     """ The email of the user or distribution list to retrieve (required)"""
     email: String!
   ): Account
+  getAccountsByEmail(
+    """ The list of emails of the user or distribution list to retrieve (required)
+    """
+    emails: [String!]!
+  ): [Account]!
   getConfigs: [Config]!
 
   " Returns all the links of the specified node.\n The response is not paginated because each node can have a maximum of 50 links."

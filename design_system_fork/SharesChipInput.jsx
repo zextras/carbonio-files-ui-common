@@ -273,6 +273,7 @@ export const ShareChipInput = React.forwardRef(function ChipInputFn(
 								onClose={(ev) => onChipClose(index, ev)}
 								onUpdate={onChipUpdate}
 								value={item}
+								error={item.id === undefined}
 							/>
 						))}
 						<InputContainer>
