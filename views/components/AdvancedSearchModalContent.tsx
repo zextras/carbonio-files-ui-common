@@ -296,7 +296,7 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 						(currentFilters.sharedWithMe?.value && ROOTS.SHARED_WITH_ME) ||
 						undefined
 					}
-					cascadeDefault={!!currentFilters.cascade?.value}
+					cascadeDefault={currentFilters.cascade?.value || undefined}
 					confirmAction={folderOnChange}
 					closeAction={closeFolderSelectionModal}
 				/>
