@@ -543,14 +543,14 @@ describe('Advanced search modal content', () => {
 			expect(searchAdvancedFilters).toHaveBeenCalledWith({
 				folderId: expect.objectContaining({
 					value: ROOTS.TRASH,
-					label: 'in:Trash',
+					label: 'under:Trash',
 					avatarIcon: 'Folder'
 				}),
-				cascade: { value: false }
+				cascade: { value: true }
 			});
 		});
 
-		test('search in sub-folders checkbox set cascade param', async () => {
+		test('search in sub-folders checkbox toggle cascade param', async () => {
 			const filters = {};
 			const closeAction = jest.fn();
 			const searchAdvancedFilters = jest.fn();
@@ -570,6 +570,7 @@ describe('Advanced search modal content', () => {
 				jest.runOnlyPendingTimers();
 			});
 			expect(screen.getByText(/trash/i)).toBeVisible();
+			expect(screen.getByTestId('icon: CheckmarkSquare')).toBeVisible();
 			userEvent.click(screen.getByText(/trash/i));
 			await waitFor(() =>
 				expect(screen.getByRole('button', { name: /choose folder/i })).not.toHaveAttribute(
@@ -580,7 +581,7 @@ describe('Advanced search modal content', () => {
 			act(() => {
 				userEvent.click(screen.getByText(/search also in contained folders/i));
 			});
-			await screen.findByTestId('icon: CheckmarkSquare');
+			await screen.findByTestId('icon: Square');
 			act(() => {
 				userEvent.click(screen.getByRole('button', { name: /choose folder/i }));
 			});
@@ -602,10 +603,10 @@ describe('Advanced search modal content', () => {
 			expect(searchAdvancedFilters).toHaveBeenCalledWith({
 				folderId: expect.objectContaining({
 					value: ROOTS.TRASH,
-					label: 'under:Trash',
+					label: 'in:Trash',
 					avatarIcon: 'Folder'
 				}),
-				cascade: { value: true }
+				cascade: { value: false }
 			});
 		});
 
@@ -705,10 +706,10 @@ describe('Advanced search modal content', () => {
 			expect(searchAdvancedFilters).toHaveBeenCalledWith({
 				folderId: expect.objectContaining({
 					value: ROOTS.LOCAL_ROOT,
-					label: 'in:Home',
+					label: 'under:Home',
 					avatarIcon: 'Folder'
 				}),
-				cascade: { value: false },
+				cascade: { value: true },
 				sharedWithMe: { value: false }
 			});
 		});
@@ -761,10 +762,10 @@ describe('Advanced search modal content', () => {
 			expect(searchAdvancedFilters).toHaveBeenCalledWith({
 				folderId: expect.objectContaining({
 					value: undefined,
-					label: 'in:Shared with me',
+					label: 'under:Shared with me',
 					avatarIcon: 'Folder'
 				}),
-				cascade: { value: false },
+				cascade: { value: true },
 				sharedWithMe: { value: true }
 			});
 		});

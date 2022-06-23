@@ -113,7 +113,7 @@ describe('Folder Selection Modal Content', () => {
 				id: parent.id,
 				name: parent.name
 			}),
-			false
+			true
 		);
 		// confirm reset active folder in the modal
 		expect(chooseButton).toHaveAttribute('disabled', '');
@@ -130,7 +130,7 @@ describe('Folder Selection Modal Content', () => {
 				id: folder2.id,
 				name: folder2.name
 			}),
-			false
+			true
 		);
 		// confirm reset active folder in the modal
 		expect(chooseButton).toHaveAttribute('disabled', '');
@@ -288,7 +288,7 @@ describe('Folder Selection Modal Content', () => {
 				id: folder.id,
 				name: folder.name
 			}),
-			false
+			true
 		);
 	});
 
@@ -340,9 +340,9 @@ describe('Folder Selection Modal Content', () => {
 		);
 		await screen.findByText(/home/i);
 		const checkboxLabel = screen.getByText('search also in contained folders');
-		let checkboxUnchecked = screen.getByTestId('icon: Square');
+		let checkboxChecked = screen.getByTestId('icon: CheckmarkSquare');
 		expect(checkboxLabel).toBeVisible();
-		expect(checkboxUnchecked).toBeVisible();
+		expect(checkboxChecked).toBeVisible();
 		const chooseButton = screen.getByRole('button', { name: /choose folder/i });
 		expect(chooseButton).toBeVisible();
 		// choose button is disabled because active folder and cascade have same value as current filter
@@ -350,21 +350,21 @@ describe('Folder Selection Modal Content', () => {
 		act(() => {
 			userEvent.click(checkboxLabel);
 		});
-		const checkboxChecked = await screen.findByTestId('icon: CheckmarkSquare');
-		expect(checkboxChecked).toBeVisible();
+		const checkboxUnchecked = await screen.findByTestId('icon: Square');
+		expect(checkboxUnchecked).toBeVisible();
 		// choose button is active because cascade has changed its value
 		expect(chooseButton).not.toHaveAttribute('disabled', '');
 		act(() => {
-			userEvent.click(checkboxChecked);
+			userEvent.click(checkboxUnchecked);
 		});
-		checkboxUnchecked = await screen.findByTestId('icon: Square');
-		expect(checkboxUnchecked).toBeVisible();
+		checkboxChecked = await screen.findByTestId('icon: CheckmarkSquare');
+		expect(checkboxChecked).toBeVisible();
 		// choose button is disabled because active folder and cascade have same value as current filter
 		expect(chooseButton).toHaveAttribute('disabled', '');
 		act(() => {
-			userEvent.click(checkboxUnchecked);
+			userEvent.click(checkboxChecked);
 		});
-		await screen.findByTestId('icon: CheckmarkSquare');
+		await screen.findByTestId('icon: Square');
 		act(() => {
 			userEvent.click(chooseButton);
 		});
@@ -374,7 +374,7 @@ describe('Folder Selection Modal Content', () => {
 				id: localRoot.id,
 				name: localRoot.name
 			}),
-			true
+			false
 		);
 	});
 
@@ -410,7 +410,7 @@ describe('Folder Selection Modal Content', () => {
 		expect(confirmAction).toHaveBeenCalled();
 		expect(confirmAction).toHaveBeenCalledWith(
 			expect.objectContaining({ id: ROOTS.SHARED_WITH_ME, name: 'Shared with me' }),
-			false
+			true
 		);
 		// choose button is now disabled because of reset
 		expect(chooseButton).toHaveAttribute('disabled', '');
@@ -422,7 +422,7 @@ describe('Folder Selection Modal Content', () => {
 		expect(confirmAction).toHaveBeenCalledTimes(2);
 		expect(confirmAction).toHaveBeenLastCalledWith(
 			expect.objectContaining({ id: ROOTS.TRASH, name: 'Trash' }),
-			false
+			true
 		);
 		// choose button is now disabled because of reset
 		expect(chooseButton).toHaveAttribute('disabled', '');
@@ -448,7 +448,7 @@ describe('Folder Selection Modal Content', () => {
 		expect(confirmAction).toHaveBeenCalledTimes(3);
 		expect(confirmAction).toHaveBeenLastCalledWith(
 			expect.objectContaining({ id: ROOTS.SHARED_WITH_ME, name: 'Shared with me' }),
-			false
+			true
 		);
 	});
 
@@ -480,7 +480,7 @@ describe('Folder Selection Modal Content', () => {
 		expect(confirmAction).toHaveBeenCalled();
 		expect(confirmAction).toHaveBeenLastCalledWith(
 			expect.objectContaining({ id: folder.id, name: folder.name }),
-			false
+			true
 		);
 	});
 
@@ -517,7 +517,7 @@ describe('Folder Selection Modal Content', () => {
 		expect(confirmAction).toHaveBeenCalled();
 		expect(confirmAction).toHaveBeenLastCalledWith(
 			expect.objectContaining({ id: folder.id, name: folder.name }),
-			false
+			true
 		);
 	});
 });
