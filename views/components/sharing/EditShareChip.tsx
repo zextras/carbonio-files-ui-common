@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-/* eslint-disable arrow-body-style */
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { FetchResult, useLazyQuery } from '@apollo/client';
@@ -141,13 +140,15 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 		}
 	};
 
-	const updateShareCallback = useCallback(() => {
-		return updateShare(
-			share.node,
-			share.share_target?.id as string,
-			sharePermissionsGetter(rowIdxToRoleMap[activeRow], checkboxValue)
-		);
-	}, [activeRow, checkboxValue, share, updateShare]);
+	const updateShareCallback = useCallback(
+		() =>
+			updateShare(
+				share.node,
+				share.share_target?.id as string,
+				sharePermissionsGetter(rowIdxToRoleMap[activeRow], checkboxValue)
+			),
+		[activeRow, checkboxValue, share, updateShare]
+	);
 
 	const { openDeletePermanentlyModal } = useDecreaseYourOwnSharePermissionModal(
 		updateShareCallback,
@@ -212,7 +213,10 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 				color: 'gray0',
 				label: (permissions.can_share && editChipTooltipLabel) || undefined
 			});
-		} else {
+		} else if (
+			share.permission === SharePermission.ReadAndWrite ||
+			share.permission === SharePermission.ReadWriteAndShare
+		) {
 			icons.push({
 				icon: 'Edit2Outline',
 				id: 'Edit2Outline',

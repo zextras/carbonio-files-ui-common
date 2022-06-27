@@ -246,7 +246,7 @@ const cache = new InMemoryCache({
 								});
 								return canRead(nodeRef);
 							});
-							console.log('found reference for typename', typename, args.node_id);
+
 							return toReference({
 								__typename: typename,
 								id: args.node_id

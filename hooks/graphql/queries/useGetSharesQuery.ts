@@ -23,7 +23,9 @@ export function useGetSharesQuery(
 			shares_limit: FULL_SHARES_LOAD_LIMIT
 		},
 		skip: !nodeId,
-		notifyOnNetworkStatusChange: true
+		notifyOnNetworkStatusChange: true,
+		errorPolicy: 'all',
+		returnPartialData: true
 	});
 	useErrorHandler(error, 'GET_SHARES');
 

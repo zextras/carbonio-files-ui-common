@@ -44,6 +44,7 @@ export function useGetNodeQuery(
 			},
 			skip: !nodeId,
 			notifyOnNetworkStatusChange: true,
+			errorPolicy: 'all',
 			...options
 		}
 	);

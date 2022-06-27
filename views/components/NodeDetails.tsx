@@ -7,7 +7,15 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ApolloError, useQuery } from '@apollo/client';
-import { Avatar, Container, Padding, Row, Text, Tooltip } from '@zextras/carbonio-design-system';
+import {
+	Avatar,
+	Container,
+	Padding,
+	Row,
+	Shimmer,
+	Text,
+	Tooltip
+} from '@zextras/carbonio-design-system';
 import reduce from 'lodash/reduce';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
@@ -33,6 +41,8 @@ import {
 	Share,
 	User
 } from '../../types/graphql/types';
+import { NonNullableListItem } from '../../types/utils';
+import { isFile } from '../../utils/ActionsFactory';
 import {
 	buildCrumbs,
 	copyToClipboard,
@@ -45,7 +55,7 @@ import { DisplayerPreview } from './DisplayerPreview';
 import { EmptyFolder } from './EmptyFolder';
 import { NodeDetailsDescription } from './NodeDetailsDescription';
 import { NodeDetailsList } from './NodeDetailsList';
-import { DisplayerContentContainer, RoundedButton } from './StyledComponents';
+import { DisplayerContentContainer, RoundedButton, ShimmerText } from './StyledComponents';
 
 interface NodeDetailsProps {
 	typeName: Node['__typename'];
@@ -57,7 +67,7 @@ interface NodeDetailsProps {
 	size?: number;
 	createdAt: number;
 	updatedAt: number;
-	description: string;
+	description: string | undefined;
 	canUpsertDescription: boolean;
 	downloads?: number;
 	nodes?: Array<Maybe<ChildFragment> | undefined>;
@@ -90,6 +100,27 @@ const Label: React.FC = ({ children }) => (
 			{children}
 		</Text>
 	</Padding>
+);
+
+interface TextRowProps extends React.ComponentPropsWithRef<typeof Row> {
+	loading: boolean;
+	label: string;
+	content: string | number | null | undefined;
+	shimmerWidth?: string;
+}
+
+const TextRowWithShim = ({
+	loading,
+	label,
+	content,
+	shimmerWidth,
+	...rest
+}: TextRowProps): JSX.Element => (
+	<Row orientation="vertical" crossAlignment="flex-start" padding={{ vertical: 'small' }} {...rest}>
+		<Label>{label}</Label>
+		{(loading && <ShimmerText $size="medium" width={shimmerWidth} />) ||
+			(content !== undefined && content !== null && <Text size="medium">{content}</Text>)}
+	</Row>
 );
 
 const CustomAvatar = styled(Avatar)`
@@ -173,42 +204,46 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 
 	const collaborators = useMemo(() => {
 		const collaboratorsToShow = 5;
-		return reduce(
+		return reduce<NonNullableListItem<typeof shares> | null | undefined, JSX.Element[]>(
 			shares,
-			(avatars: JSX.Element[], share, index) => {
-				// show first 5 collaborators avatar
-				if (share?.share_target && index < collaboratorsToShow) {
-					const label = getChipLabel(share.share_target);
-					avatars.push(
-						<Tooltip
-							key={`${share.share_target.id}-tip`}
-							label={t('displayer.details.collaboratorsTooltip', 'See the list of collaborators')}
-						>
-							<CustomAvatar key={share.share_target.id} label={label} onClick={openShareTab} />
-						</Tooltip>
-					);
-				} else if (index === collaboratorsToShow) {
-					// if there is a 6th collaborator, then show a special avatar to let user know there are more
-					avatars.push(
-						<Tooltip
-							key="showMoreAvatar-tip"
-							label={t('displayer.details.collaboratorsTooltip', 'See the list of collaborators')}
-						>
-							<CustomAvatar
-								key="showMoreAvatar"
-								label="..."
-								icon="MoreHorizontalOutline"
-								background="primary"
-								onClick={openShareTab}
-							/>
-						</Tooltip>
-					);
+			(avatars, share, index) => {
+				if (share) {
+					// show first 5 collaborators avatar
+					if (share.share_target && index < collaboratorsToShow) {
+						const label = getChipLabel(share.share_target);
+						avatars.push(
+							<Tooltip
+								key={`${share.share_target.id}-tip`}
+								label={t('displayer.details.collaboratorsTooltip', 'See the list of collaborators')}
+							>
+								<CustomAvatar key={share.share_target.id} label={label} onClick={openShareTab} />
+							</Tooltip>
+						);
+					} else if (index === collaboratorsToShow) {
+						// if there is a 6th collaborator, then show a special avatar to let user know there are more
+						avatars.push(
+							<Tooltip
+								key="showMoreAvatar-tip"
+								label={t('displayer.details.collaboratorsTooltip', 'See the list of collaborators')}
+							>
+								<CustomAvatar
+									key="showMoreAvatar"
+									label="..."
+									icon="MoreHorizontalOutline"
+									background="primary"
+									onClick={openShareTab}
+								/>
+							</Tooltip>
+						);
+					} else if (loading) {
+						avatars.push(<Shimmer.Avatar size="medium" />);
+					}
 				}
 				return avatars;
 			},
 			[]
 		);
-	}, [openShareTab, shares, t]);
+	}, [loading, openShareTab, shares, t]);
 
 	const { navigateToFolder } = useNavigation();
 
@@ -304,6 +339,8 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 		[mimeType]
 	);
 
+	const nodeIsFile = useMemo(() => isFile({ __typename: typeName }), [typeName]);
+
 	return (
 		<MainContainer mainAlignment="flex-start" background="gray5" height="auto">
 			<Container background="gray6" height="auto">
@@ -362,11 +399,13 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 							/>
 						)}
 					</Container>
-					{size != null && (
-						<Row orientation="vertical" crossAlignment="flex-start" padding={{ vertical: 'small' }}>
-							<Label>{t('displayer.details.size', 'Size')}</Label>
-							<Text size="large">{humanFileSize(size)}</Text>
-						</Row>
+					{nodeIsFile && (
+						<TextRowWithShim
+							loading={loading}
+							label={t('displayer.details.size', 'Size')}
+							content={(size && humanFileSize(size)) || undefined}
+							shimmerWidth="5em"
+						/>
 					)}
 					<Row
 						orientation="vertical"
@@ -393,35 +432,39 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 						key={'NodeDetailsUserRow-Owner'}
 						label={t('displayer.details.owner', 'Owner')}
 						user={owner}
+						loading={loading && owner === undefined}
 					/>
-					{creator && (
-						<NodeDetailsUserRow
-							key={'NodeDetailsUserRow-Creator'}
-							label={t('displayer.details.createdBy', 'Created by')}
-							user={creator}
-							dateTime={createdAt}
-						/>
-					)}
-					{lastEditor && (
-						<NodeDetailsUserRow
-							key={'NodeDetailsUserRow-LastEditor'}
-							label={t('displayer.details.lastEdit', 'Last edit')}
-							user={lastEditor}
-							dateTime={updatedAt}
-						/>
-					)}
+					<NodeDetailsUserRow
+						key={'NodeDetailsUserRow-Creator'}
+						label={t('displayer.details.createdBy', 'Created by')}
+						user={creator}
+						dateTime={createdAt}
+						loading={loading && creator === undefined}
+					/>
+					<NodeDetailsUserRow
+						key={'NodeDetailsUserRow-LastEditor'}
+						label={t('displayer.details.lastEdit', 'Last edit')}
+						user={lastEditor}
+						dateTime={updatedAt}
+						loading={loading && lastEditor === undefined}
+					/>
 					<NodeDetailsDescription
 						canUpsertDescription={canUpsertDescription}
 						description={description}
 						id={id}
 						key={`NodeDetailsDescription${id}`}
+						loading={loading && description === undefined}
 					/>
-					{downloads && (
-						<Row orientation="vertical" crossAlignment="flex-start" padding={{ vertical: 'small' }}>
-							<Label>{t('displayer.details.downloads', 'Downloads by public link')}</Label>
-							<Text>{downloads}</Text>
-						</Row>
-					)}
+					{/*
+					TODO: download count is not implemented yet
+					{nodeIsFile && (
+						<TextRowWithShim
+							loading={loading}
+							label={t('displayer.details.downloads', 'Downloads by public link')}
+							content={downloads}
+							shimmerWidth="3em"
+						/>
+					)} */}
 				</DisplayerContentContainer>
 			</Container>
 			{nodes && (

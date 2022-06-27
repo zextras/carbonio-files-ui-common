@@ -135,7 +135,6 @@ export const NodeSharing: React.VFC<NodeSharingProps> = ({ node }) => {
 				padding={{ all: 'large' }}
 				background="gray6"
 			>
-				{error && <Text color="error">{error}</Text>}
 				{!node.permissions.can_share && (
 					<Padding bottom="large" width="100%">
 						<Container
