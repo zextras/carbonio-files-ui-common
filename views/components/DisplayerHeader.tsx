@@ -11,22 +11,24 @@ import { Container, Divider, Icon, IconButton, Row, Text } from '@zextras/carbon
 import { Maybe, NodeType } from '../../types/graphql/types';
 import { getIconByFileType } from '../../utils/utils';
 
-interface PreviewPanelHeaderParams {
+interface DisplayerHeaderParams {
 	name: string;
 	type: NodeType;
 	mimeType?: Maybe<string>;
 	closeAction: () => void;
+	trashed?: boolean;
 }
 
-export const PreviewPanelHeader: React.VFC<PreviewPanelHeaderParams> = ({
+export const DisplayerHeader: React.VFC<DisplayerHeaderParams> = ({
 	name,
 	type,
 	mimeType,
-	closeAction
+	closeAction,
+	trashed
 }) => (
 	<>
 		<Container
-			data-testid="PreviewPanelHeader"
+			data-testid="DisplayerHeader"
 			orientation="horizontal"
 			height="48px"
 			background="gray5"
@@ -35,7 +37,7 @@ export const PreviewPanelHeader: React.VFC<PreviewPanelHeaderParams> = ({
 			padding={{ left: 'large', right: 'extrasmall' }}
 			style={{ minHeight: '48px' }}
 		>
-			<Icon size="large" icon={`${getIconByFileType(type, mimeType)}`} />
+			<Icon size="large" icon={(trashed && 'Trash2Outline') || getIconByFileType(type, mimeType)} />
 			<Row mainAlignment="flex-start" padding={{ left: 'large' }} takeAvailableSpace>
 				<Text>{name}</Text>
 			</Row>

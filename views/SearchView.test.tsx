@@ -190,7 +190,7 @@ describe('Search view', () => {
 			await screen.findByText(/details/i);
 			expect(within(displayer).getAllByText(currentSearch[0].name)).toHaveLength(2);
 			expect(getByTextWithMarkup(buildBreadCrumbRegExp(currentSearch[0].name))).toBeVisible();
-			const closeDisplayerAction = within(screen.getByTestId('PreviewPanelHeader')).getByTestId(
+			const closeDisplayerAction = within(screen.getByTestId('DisplayerHeader')).getByTestId(
 				'icon: Close'
 			);
 			expect(closeDisplayerAction).toBeVisible();
