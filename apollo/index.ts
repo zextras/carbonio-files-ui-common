@@ -11,6 +11,7 @@ import {
 	NormalizedCacheObject,
 	Reference
 } from '@apollo/client';
+import find from 'lodash/find';
 import keyBy from 'lodash/keyBy';
 import last from 'lodash/last';
 
@@ -22,8 +23,10 @@ import {
 	FindNodesQueryVariables,
 	FolderChildrenArgs,
 	GetChildrenQueryVariables,
+	GetNodeQueryVariables,
 	NodeSharesArgs,
 	QueryFindNodesArgs,
+	QueryGetNodeArgs,
 	Share
 } from '../types/graphql/types';
 import { nodeListCursorVar } from './nodeListCursorVar';
@@ -227,6 +230,29 @@ const cache = new InMemoryCache({
 					): File[] | null | undefined {
 						// always overwrite existing data with incoming one
 						return incoming;
+					}
+				},
+				getNode: {
+					read(_, fieldFunctionOptions): Reference | undefined {
+						const { args, toReference, canRead } = fieldFunctionOptions as FieldFunctionOptions<
+							QueryGetNodeArgs,
+							GetNodeQueryVariables
+						>;
+						if (args?.node_id) {
+							const typename = find(introspection.possibleTypes.Node, (nodePossibleType) => {
+								const nodeRef = toReference({
+									__typename: nodePossibleType,
+									id: args.node_id
+								});
+								return canRead(nodeRef);
+							});
+							console.log('found reference for typename', typename, args.node_id);
+							return toReference({
+								__typename: typename,
+								id: args.node_id
+							});
+						}
+						return undefined;
 					}
 				}
 			}

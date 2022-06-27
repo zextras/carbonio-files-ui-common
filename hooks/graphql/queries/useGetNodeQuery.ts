@@ -6,7 +6,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import { QueryResult, useQuery, useReactiveVar } from '@apollo/client';
+import { QueryOptions, QueryResult, useQuery, useReactiveVar } from '@apollo/client';
 
 import { nodeSortVar } from '../../../apollo/nodeSortVar';
 import { NODES_LOAD_LIMIT, SHARES_LOAD_LIMIT } from '../../../constants';
@@ -25,14 +25,10 @@ interface GetNodeQueryHook extends Pick<QueryResult<GetNodeQuery>, 'data' | 'loa
 export function useGetNodeQuery(
 	nodeId?: string,
 	sharesLimit = SHARES_LOAD_LIMIT,
-	fetchPolicy:
-		| 'cache-first'
-		| 'network-only'
-		| 'cache-only'
-		| 'no-cache'
-		| 'standby'
-		| 'cache-and-network'
-		| undefined = 'cache-first'
+	options: Omit<
+		QueryOptions<GetNodeQuery, GetNodeQueryVariables>,
+		'query' | 'variables' | 'skip'
+	> = {}
 ): GetNodeQueryHook {
 	const [hasMore, setHasMore] = useState(false);
 	const [lastChild, setLastChild] = useState<string | null | undefined>(undefined);
@@ -47,8 +43,8 @@ export function useGetNodeQuery(
 				shares_limit: sharesLimit
 			},
 			skip: !nodeId,
-			fetchPolicy,
-			notifyOnNetworkStatusChange: true
+			notifyOnNetworkStatusChange: true,
+			...options
 		}
 	);
 	useErrorHandler(error, 'GET_NODE');
