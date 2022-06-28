@@ -16,7 +16,6 @@ import {
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import forEach from 'lodash/forEach';
-import map from 'lodash/map';
 import { graphql } from 'msw';
 
 import server from '../../../mocks/server';
@@ -124,15 +123,20 @@ describe('Upload list', () => {
 				file.parent = localRoot;
 				files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 			});
-			const uploadList = map<FilesFile, UploadType>(uploadedFiles, (file, index) => ({
-				file: files[index],
-				parentId: localRoot.id,
-				nodeId: file.id,
-				status: UploadStatus.COMPLETED,
-				percentage: 100,
-				id: file.id
-			}));
-			uploadVar(uploadList);
+
+			const uploadMap: { [id: string]: UploadType } = {};
+			forEach(uploadedFiles, (file, index) => {
+				uploadMap[file.id] = {
+					file: files[index],
+					parentId: localRoot.id,
+					nodeId: file.id,
+					status: UploadStatus.COMPLETED,
+					percentage: 100,
+					id: file.id
+				};
+			});
+
+			uploadVar(uploadMap);
 
 			const nodesToDrag = [uploadedFiles[0]];
 
