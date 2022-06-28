@@ -12,6 +12,7 @@ import debounce from 'lodash/debounce';
 import includes from 'lodash/includes';
 import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { useActiveNode } from '../../../hooks/useActiveNode';
@@ -41,7 +42,8 @@ import {
 	humanFileSize,
 	openNodeWithDocs,
 	getDocumentPreviewSrc,
-	isSupportedByPreview
+	isSupportedByPreview,
+	isSearchView
 } from '../../utils/utils';
 import { ContextualMenu } from './ContextualMenu';
 import { NodeAvatarIcon } from './NodeAvatarIcon';
@@ -141,7 +143,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 	const [t] = useTranslation();
 	const { createPreview } = useContext(PreviewsManagerContext);
 	const { setActiveNode } = useActiveNode();
-
+	const location = useLocation();
 	const userInfo = useUserInfo();
 	const [isContextualMenuActive, setIsContextualMenuActive] = useState(false);
 	const selectIdCallback = useCallback(
@@ -521,6 +523,11 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 										{outgoingShare && (
 											<Padding left="extrasmall">
 												<Icon icon="ArrowCircleRight" customColor="#FFB74D" disabled={disabled} />
+											</Padding>
+										)}
+										{trashed && isSearchView(location) && (
+											<Padding left="extrasmall">
+												<Icon icon="Trash2Outline" disabled={disabled} />
 											</Padding>
 										)}
 										<Padding left="extrasmall">

@@ -303,7 +303,8 @@ export const iconRegexp = {
 	unflag: /^icon: UnflagOutline$/i,
 	download: /^icon: Download$/i,
 	openDocument: /^icon: BookOpenOutline$/i,
-	close: /^icon: Close$/i
+	close: /^icon: Close$/i,
+	trash: /^icon: Trash2Outline$/i
 } as const;
 
 export function waitForNetworkResponse(): Promise<void> {
