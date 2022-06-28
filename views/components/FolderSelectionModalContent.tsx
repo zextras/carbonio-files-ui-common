@@ -26,14 +26,14 @@ import { ModalRootsList } from './ModalRootsList';
 
 interface FolderSelectionModalContentProps {
 	folderId?: string;
-	cascadeDefault?: boolean;
+	cascadeDefault?: boolean | undefined;
 	confirmAction: (folder: Pick<Folder, 'id' | 'name'>, cascade: boolean) => void;
 	closeAction?: () => void;
 }
 
 export const FolderSelectionModalContent: React.VFC<FolderSelectionModalContentProps> = ({
 	folderId,
-	cascadeDefault = false,
+	cascadeDefault = true,
 	confirmAction,
 	closeAction
 }) => {
@@ -47,13 +47,7 @@ export const FolderSelectionModalContent: React.VFC<FolderSelectionModalContentP
 	>();
 	const [cascade, setCascade] = useState(cascadeDefault);
 	const [openedFolder, setOpenedFolder] = useState<string>('');
-	const {
-		data: currentFolder,
-		loading,
-		error,
-		hasMore,
-		loadMore
-	} = useGetChildrenQuery(openedFolder);
+	const { data: currentFolder, loading, hasMore, loadMore } = useGetChildrenQuery(openedFolder);
 
 	useEffect(() => {
 		if (currentFilterPathData?.getPath) {
