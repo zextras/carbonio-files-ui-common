@@ -14,7 +14,7 @@ import { populateFile, populateFolder, populateNode, populateUser } from '../../
 import { Action } from '../../types/common';
 import { NodeType, User } from '../../types/graphql/types';
 import { getPermittedHoverBarActions } from '../../utils/ActionsFactory';
-import { render } from '../../utils/testUtils';
+import { iconRegexp, render } from '../../utils/testUtils';
 import { formatDate, humanFileSize } from '../../utils/utils';
 import * as moduleUtils from '../../utils/utils';
 import { NodeListItem } from './NodeListItem';
@@ -468,5 +468,30 @@ describe('Node List Item', () => {
 		expect(getPdfPreviewSrcFn).not.toHaveBeenCalled();
 		expect(getImgPreviewSrcFn).not.toHaveBeenCalled();
 		expect(openWithDocsFn).not.toHaveBeenCalled();
+	});
+
+	test('Trash icon is visible if node is trashed and is search view', () => {
+		const node = populateNode();
+		render(<NodeListItem id={node.id} name={node.name} type={node.type} trashed />, {
+			initialRouterEntries: ['/search']
+		});
+		expect(screen.getByText(node.name)).toBeVisible();
+		expect(screen.getByTestId(iconRegexp.trash)).toBeVisible();
+	});
+
+	test('Trash icon is not visible if node is trashed but is not search view', () => {
+		const node = populateNode();
+		render(<NodeListItem id={node.id} name={node.name} type={node.type} trashed />);
+		expect(screen.getByText(node.name)).toBeVisible();
+		expect(screen.queryByTestId(iconRegexp.trash)).not.toBeInTheDocument();
+	});
+
+	test('Trash icon is not visible if node is not trashed and is search view', () => {
+		const node = populateNode();
+		render(<NodeListItem id={node.id} name={node.name} type={node.type} trashed={false} />, {
+			initialRouterEntries: ['/search']
+		});
+		expect(screen.getByText(node.name)).toBeVisible();
+		expect(screen.queryByTestId(iconRegexp.trash)).not.toBeInTheDocument();
 	});
 });
