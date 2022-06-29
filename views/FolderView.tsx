@@ -322,6 +322,7 @@ const FolderView: React.VFC = () => {
 		if (
 			currentFolder?.getNode &&
 			isFolder(currentFolder.getNode) &&
+			currentFolder.getNode.children &&
 			currentFolder.getNode.children.length > 0
 		) {
 			const { children } = currentFolder.getNode;

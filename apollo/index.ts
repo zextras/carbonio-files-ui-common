@@ -99,9 +99,6 @@ const cache = new InMemoryCache({
 							return [...newExisting, ...incoming];
 						}
 						return [...incoming];
-					},
-					read(existing: Share[] | undefined): Share[] {
-						return existing || [];
 					}
 				}
 			}

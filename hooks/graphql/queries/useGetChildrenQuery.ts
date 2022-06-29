@@ -44,7 +44,8 @@ export function useGetChildrenQuery(
 			},
 			skip: !parentNode,
 			displayName,
-			errorPolicy: 'all'
+			errorPolicy: 'all',
+			returnPartialData: true
 		}
 	);
 
