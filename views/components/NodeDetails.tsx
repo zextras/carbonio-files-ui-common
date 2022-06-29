@@ -6,7 +6,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { ApolloError, useQuery } from '@apollo/client';
+import { ApolloError, useLazyQuery } from '@apollo/client';
 import {
 	Avatar,
 	Container,
@@ -115,13 +115,20 @@ const TextRowWithShim = ({
 	content,
 	shimmerWidth,
 	...rest
-}: TextRowProps): JSX.Element => (
-	<Row orientation="vertical" crossAlignment="flex-start" padding={{ vertical: 'small' }} {...rest}>
-		<Label>{label}</Label>
-		{(loading && <ShimmerText $size="medium" width={shimmerWidth} />) ||
-			(content !== undefined && content !== null && <Text size="medium">{content}</Text>)}
-	</Row>
-);
+}: TextRowProps): JSX.Element | null =>
+	((loading || (content !== undefined && content !== null)) && (
+		<Row
+			orientation="vertical"
+			crossAlignment="flex-start"
+			padding={{ vertical: 'small' }}
+			{...rest}
+		>
+			<Label>{label}</Label>
+			{(loading && <ShimmerText $size="medium" width={shimmerWidth} />) ||
+				(content !== undefined && content !== null && <Text size="medium">{content}</Text>)}
+		</Row>
+	)) ||
+	null;
 
 const CustomAvatar = styled(Avatar)`
 	margin-right: -4px;
@@ -140,7 +147,6 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 	updatedAt,
 	description,
 	canUpsertDescription,
-	downloads,
 	nodes,
 	hasMore,
 	loadMore,
@@ -236,7 +242,13 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 							</Tooltip>
 						);
 					} else if (loading) {
-						avatars.push(<Shimmer.Avatar size="medium" />);
+						avatars.push(
+							<Shimmer.Avatar
+								key={`avatar-shim-${index}`}
+								data-testid="shimmer-avatar"
+								size="medium"
+							/>
+						);
 					}
 				}
 				return avatars;
@@ -266,56 +278,60 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 			(node: Pick<Node, 'id' | 'name' | 'type'>) => isCrumbNavigable(node)
 		)
 	);
+
 	const [crumbsRequested, setCrumbsRequested] = useState<boolean>(false);
 	const createSnackbar = useCreateSnackbar();
 
-	// TODO: investigate if this can be requested with lazy query or move into custom hook to better handle error
-	// use a useQuery to load full path only when required so that operations like move that cleanup cache trigger a refetch
-	const { data } = useQuery<GetPathQuery, GetPathQueryVariables>(GET_PATH, {
-		variables: {
-			node_id: id
-		},
-		skip: !id || !crumbsRequested,
-		onError(err) {
-			console.error(err);
-			setCrumbsRequested(false);
-		}
-	});
+	// use a lazy query to load full path only when requested
+	const [getPathQuery] = useLazyQuery<GetPathQuery, GetPathQueryVariables>(GET_PATH);
 
 	useEffect(() => {
-		if (crumbsRequested && data?.getPath) {
-			setCrumbs(
-				buildCrumbs(data.getPath, navigateToFolder, t, (node: Pick<Node, 'id' | 'type'>) =>
-					isCrumbNavigable(node)
-				)
-			);
-		} else {
-			setCrumbs(
-				buildCrumbs(
-					[{ name, id, type }],
-					navigateToFolder,
-					t,
-					(node: Pick<Node, 'id' | 'name' | 'type'>) => isCrumbNavigable(node)
-				)
-			);
-		}
-	}, [
-		crumbsRequested,
-		data?.getPath,
-		id,
-		name,
-		type,
-		navigateToFolder,
-		t,
-		activeFolderId,
-		activeRootId,
-		rootId,
-		isCrumbNavigable
-	]);
+		// when node changes, check if getPath is already in cache
+		// if so, show full path
+		// otherwise, show collapsed crumbs
+		getPathQuery({
+			variables: {
+				node_id: id
+			},
+			fetchPolicy: 'cache-only'
+		}).then((result) => {
+			if (result?.data?.getPath) {
+				setCrumbsRequested(true);
+				setCrumbs(
+					buildCrumbs(result.data.getPath, navigateToFolder, t, (node: Pick<Node, 'id' | 'type'>) =>
+						isCrumbNavigable(node)
+					)
+				);
+			} else {
+				setCrumbsRequested(false);
+				setCrumbs(
+					buildCrumbs(
+						[{ name, id, type }],
+						navigateToFolder,
+						t,
+						(node: Pick<Node, 'id' | 'name' | 'type'>) => isCrumbNavigable(node)
+					)
+				);
+			}
+		});
+	}, [getPathQuery, id, isCrumbNavigable, name, navigateToFolder, t, type]);
 
 	const loadPath = useCallback(() => {
-		setCrumbsRequested(true);
-	}, []);
+		getPathQuery({
+			variables: {
+				node_id: id
+			}
+		}).then((result) => {
+			if (result?.data?.getPath) {
+				setCrumbs(
+					buildCrumbs(result.data.getPath, navigateToFolder, t, (node: Pick<Node, 'id' | 'type'>) =>
+						isCrumbNavigable(node)
+					)
+				);
+				setCrumbsRequested(true);
+			}
+		});
+	}, [getPathQuery, id, isCrumbNavigable, navigateToFolder, t]);
 
 	const copyShortcut = useCallback(
 		(_event) => {
