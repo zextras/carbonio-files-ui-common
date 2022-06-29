@@ -6,7 +6,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Padding, Row, Text } from '@zextras/carbonio-design-system';
+import { Container, Padding, Text } from '@zextras/carbonio-design-system';
 import { useTranslation } from 'react-i18next';
 
 import useUserInfo from '../../../hooks/useUserInfo';
@@ -43,13 +43,15 @@ export const NodeDetailsListItem: React.VFC<NodeDetailsListItemProps> = ({
 	}, [owner, t, userInfo.me]);
 
 	return (
-		<Row
+		<Container
+			orientation="horizontal"
 			id={id}
 			data-testid={`details-node-item-${id}`}
 			mainAlignment="flex-start"
 			width="fill"
 			height={LIST_ITEM_HEIGHT_DETAILS}
 			padding={{ all: 'small' }}
+			wrap="nowrap"
 		>
 			<NodeAvatarIcon
 				selectionModeActive={false}
@@ -57,11 +59,17 @@ export const NodeDetailsListItem: React.VFC<NodeDetailsListItemProps> = ({
 				icon={getIconByFileType(type, mimeType)}
 				compact
 			/>
-			<Row flexGrow={2} mainAlignment="flex-start" padding={{ horizontal: 'small' }}>
+			<Container
+				orientation="horizontal"
+				flexGrow={2}
+				mainAlignment="flex-start"
+				padding={{ horizontal: 'small' }}
+				minWidth={0}
+			>
 				<Text overflow="ellipsis" size="small">
 					{name}
 				</Text>
-			</Row>
+			</Container>
 			<Padding right="extrasmall">
 				<Text overflow="ellipsis" size="extrasmall">
 					{displayName}
@@ -77,6 +85,6 @@ export const NodeDetailsListItem: React.VFC<NodeDetailsListItemProps> = ({
 					</Padding>
 				</>
 			)}
-		</Row>
+		</Container>
 	);
 };
