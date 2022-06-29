@@ -197,5 +197,6 @@ export const FlexContainer = styled(Container)<{
 export const ShimmerText = styled(Shimmer.Text).attrs<{
 	$size: 'extrasmall' | 'small' | 'medium' | 'large' | 'extralarge';
 }>(({ $size, theme }) => ({
-	height: css`calc(${theme.sizes.font[$size]} * 1.2)`
+	height: css`calc(${theme.sizes.font[$size]} * 1.2)`,
+	'data-testid': 'shimmer-text'
 }))``;

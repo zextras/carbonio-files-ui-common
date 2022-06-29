@@ -65,7 +65,7 @@ export const NodeSharing: React.VFC<NodeSharingProps> = ({ node }) => {
 	const [t] = useTranslation();
 	const { me } = useUserInfo();
 
-	const { data, error } = useGetSharesQuery(node.id);
+	const { data } = useGetSharesQuery(node.id);
 
 	const deleteShare = useDeleteShareMutation();
 

@@ -218,6 +218,7 @@ describe('Displayer', () => {
 			mocks
 		});
 		await screen.findAllByText(node.name);
+		await screen.findByTestId('icon: MoreHorizontalOutline');
 		expect(screen.queryByText(collaborator0Name)).not.toBeInTheDocument();
 		expect(screen.queryByText(collaborator5Name)).not.toBeInTheDocument();
 		expect(screen.getByTestId('icon: MoreHorizontalOutline')).toBeVisible();
@@ -225,6 +226,8 @@ describe('Displayer', () => {
 			userEvent.click(screen.getByTestId('icon: MoreHorizontalOutline'));
 		});
 		await screen.findByText(collaborator0Name);
+		await screen.findByText(collaborator5Name);
+		await screen.findAllByTestId(/icon: (EyeOutline|Edit2Outline)/);
 		// tab is changed
 		expect(screen.getByText(collaborator0Name)).toBeVisible();
 		expect(screen.getByText(collaborator5Name)).toBeVisible();
