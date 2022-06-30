@@ -194,7 +194,6 @@ describe('Displayer', () => {
 		const moreVertical = screen.getByTestId('icon: MoreVertical');
 		expect(moreVertical).toBeVisible();
 		userEvent.click(moreVertical);
-		// breadcrumb loading
 		await renameNode(newName);
 		await waitForElementToBeRemoved(screen.queryByRole('button', { name: actionRegexp.rename }));
 		expect(screen.getAllByText(newName)).toHaveLength(2);

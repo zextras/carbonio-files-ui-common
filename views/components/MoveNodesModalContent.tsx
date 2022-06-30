@@ -70,7 +70,9 @@ export const MoveNodesModalContent: React.VFC<MoveNodesModalContentProps> = ({
 
 	const nodes = useMemo<Array<NodeListItemType>>(() => {
 		if (
-			currentFolder?.getNode?.__typename === 'Folder' &&
+			currentFolder?.getNode &&
+			isFolder(currentFolder.getNode) &&
+			currentFolder.getNode.children &&
 			currentFolder.getNode.children.length > 0
 		) {
 			return reduce(

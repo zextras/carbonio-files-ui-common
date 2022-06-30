@@ -115,6 +115,7 @@ export const CopyNodesModalContent: React.VFC<CopyNodesModalContentProps> = ({
 		if (
 			currentFolder?.getNode &&
 			isFolder(currentFolder.getNode) &&
+			currentFolder.getNode.children &&
 			currentFolder.getNode.children.length > 0
 		) {
 			return reduce(

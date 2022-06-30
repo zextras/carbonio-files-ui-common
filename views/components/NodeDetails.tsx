@@ -283,55 +283,54 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 	const createSnackbar = useCreateSnackbar();
 
 	// use a lazy query to load full path only when requested
-	const [getPathQuery] = useLazyQuery<GetPathQuery, GetPathQueryVariables>(GET_PATH);
+	const [getPathQuery, { data: getPathData }] = useLazyQuery<GetPathQuery, GetPathQueryVariables>(
+		GET_PATH,
+		{
+			notifyOnNetworkStatusChange: true
+		}
+	);
 
 	useEffect(() => {
 		// when node changes, check if getPath is already in cache
 		// if so, show full path
-		// otherwise, show collapsed crumbs
+		// otherwise, show collapsed crumbs (by default show collapsed crumbs)
+		setCrumbsRequested(false);
+		setCrumbs(
+			buildCrumbs(
+				[{ name, id, type }],
+				navigateToFolder,
+				t,
+				(node: Pick<Node, 'id' | 'name' | 'type'>) => isCrumbNavigable(node)
+			)
+		);
 		getPathQuery({
 			variables: {
 				node_id: id
 			},
 			fetchPolicy: 'cache-only'
-		}).then((result) => {
-			if (result?.data?.getPath) {
-				setCrumbsRequested(true);
-				setCrumbs(
-					buildCrumbs(result.data.getPath, navigateToFolder, t, (node: Pick<Node, 'id' | 'type'>) =>
-						isCrumbNavigable(node)
-					)
-				);
-			} else {
-				setCrumbsRequested(false);
-				setCrumbs(
-					buildCrumbs(
-						[{ name, id, type }],
-						navigateToFolder,
-						t,
-						(node: Pick<Node, 'id' | 'name' | 'type'>) => isCrumbNavigable(node)
-					)
-				);
-			}
 		});
 	}, [getPathQuery, id, isCrumbNavigable, name, navigateToFolder, t, type]);
+
+	useEffect(() => {
+		// use an effect on data returned by lazy query to update the crumbs in order to trigger rerender of the UI
+		// when lazy query reload following an eviction of the cache
+		if (getPathData?.getPath) {
+			setCrumbs(
+				buildCrumbs(getPathData.getPath, navigateToFolder, t, (node: Pick<Node, 'id' | 'type'>) =>
+					isCrumbNavigable(node)
+				)
+			);
+			setCrumbsRequested(true);
+		}
+	}, [getPathData, isCrumbNavigable, navigateToFolder, t]);
 
 	const loadPath = useCallback(() => {
 		getPathQuery({
 			variables: {
 				node_id: id
 			}
-		}).then((result) => {
-			if (result?.data?.getPath) {
-				setCrumbs(
-					buildCrumbs(result.data.getPath, navigateToFolder, t, (node: Pick<Node, 'id' | 'type'>) =>
-						isCrumbNavigable(node)
-					)
-				);
-				setCrumbsRequested(true);
-			}
 		});
-	}, [getPathQuery, id, isCrumbNavigable, navigateToFolder, t]);
+	}, [getPathQuery, id]);
 
 	const copyShortcut = useCallback(
 		(_event) => {
