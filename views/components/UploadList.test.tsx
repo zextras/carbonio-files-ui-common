@@ -408,5 +408,11 @@ describe('Upload list', () => {
 				).toHaveLength(uploadedFiles.length);
 			});
 		});
+
+		test.todo('when an uploading item fails, the next in the queue is uploaded');
+
+		test.todo('when an uploading item is aborted, the next in the queue is uploaded');
+
+		test.todo('the queue use FIFO strategy');
 	});
 });
