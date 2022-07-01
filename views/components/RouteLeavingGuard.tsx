@@ -11,8 +11,6 @@ import { Location } from 'history';
 import { useTranslation } from 'react-i18next';
 import { Prompt, useHistory } from 'react-router-dom';
 
-import { ModalFooter } from './ModalFooter';
-
 export const RouteLeavingGuard: FC<{
 	when?: boolean;
 	onSave: () => void;
@@ -66,17 +64,31 @@ export const RouteLeavingGuard: FC<{
 			<Modal
 				showCloseIcon
 				open={modalVisible}
-				title={t('label.unsaved_changes', 'You have unsaved changes')}
+				title={
+					dataHasError
+						? t('label.cannot_saved_changes', 'Some changes cannot be saved')
+						: t('label.unsaved_changes', 'You have unsaved changes')
+				}
 				onClose={cancel}
-				customFooter={
-					<ModalFooter
-						confirmLabel={t('label.save_and_leave', 'Save and leave')}
-						confirmHandler={onConfirm}
-						cancelLabel={t('label.leave_anyway', 'Leave anyway')}
-						cancelHandler={onSecondaryAction}
-					>
-						<Button label="Cancel" onClick={cancel} />
-					</ModalFooter>
+				onConfirm={dataHasError ? onSecondaryAction : onConfirm}
+				confirmLabel={
+					dataHasError
+						? t('label.leave_anyway', 'Leave anyway')
+						: t('label.save_and_leave', 'Save and leave')
+				}
+				onSecondaryAction={dataHasError ? cancel : onSecondaryAction}
+				secondaryActionLabel={
+					dataHasError ? t('label.cancel', 'Cancel') : t('label.leave_anyway', 'Leave anyway')
+				}
+				optionalFooter={
+					!dataHasError ? (
+						<Button
+							color="secondary"
+							type="outlined"
+							label={t('label.cancel', 'Cancel')}
+							onClick={cancel}
+						/>
+					) : undefined
 				}
 			>
 				{children}
