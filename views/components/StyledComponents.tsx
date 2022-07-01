@@ -192,5 +192,5 @@ export const FlexContainer = styled(Container)<{
 			`
 		}
 	`}
-	${({ gap }): SimpleInterpolation => gap}
+	gap: ${({ gap }): SimpleInterpolation => gap}
 `;
