@@ -171,6 +171,7 @@ export const FlexContainer = styled(Container)<{
 	$flexShrink?: number | string;
 	$flexBasis?: string;
 	$margin?: { left?: string; right?: string };
+	gap?: string;
 }>`
 	flex-grow: ${({ $flexGrow }): SimpleInterpolation => $flexGrow};
 	flex-shrink: ${({ $flexShrink }): SimpleInterpolation => $flexShrink};
@@ -191,4 +192,5 @@ export const FlexContainer = styled(Container)<{
 			`
 		}
 	`}
+	${({ gap }): SimpleInterpolation => gap}
 `;
