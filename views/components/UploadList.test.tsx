@@ -6,6 +6,7 @@
 
 import React from 'react';
 
+import { faker } from '@faker-js/faker';
 import {
 	act,
 	fireEvent,
@@ -15,12 +16,19 @@ import {
 	within
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import filter from 'lodash/filter';
+import find from 'lodash/find';
 import forEach from 'lodash/forEach';
-import { graphql } from 'msw';
+import { graphql, rest } from 'msw';
 
 import server from '../../../mocks/server';
 import { uploadVar } from '../../apollo/uploadVar';
-import { ROOTS } from '../../constants';
+import { REST_ENDPOINT, ROOTS, UPLOAD_PATH } from '../../constants';
+import {
+	UploadRequestBody,
+	UploadRequestParams,
+	UploadResponse
+} from '../../mocks/handleUploadFileRequest';
 import { populateFolder, populateNodes } from '../../mocks/mockUtils';
 import { UploadStatus, UploadType } from '../../types/common';
 import {
@@ -287,6 +295,118 @@ describe('Upload list', () => {
 			await waitForElementToBeRemoved(snackbar2);
 			expect(screen.getByText(uploadedFiles[1].name)).toBeVisible();
 			expect(screen.getByTestId('icon: CheckmarkCircle2')).toBeVisible();
+		});
+
+		test('upload more then 3 files in the upload list queues excess elements', async () => {
+			const localRoot = populateFolder(0, ROOTS.LOCAL_ROOT);
+			const uploadedFiles = populateNodes(4, 'File') as FilesFile[];
+			const files: File[] = [];
+			forEach(uploadedFiles, (file) => {
+				// eslint-disable-next-line no-param-reassign
+				file.parent = localRoot;
+				const f = new File(['😂😂😂😂'], file.name, { type: file.mime_type });
+				files.push(f);
+			});
+			let reqIndex = 0;
+
+			// write local root data in cache as if it was already loaded
+			const getChildrenMockedQuery = mockGetChildren(getChildrenVariables(localRoot.id), localRoot);
+			global.apolloClient.cache.writeQuery<GetChildrenQuery, GetChildrenQueryVariables>({
+				...getChildrenMockedQuery.request,
+				data: {
+					getNode: localRoot
+				}
+			});
+
+			server.use(
+				graphql.query<GetChildQuery, GetChildQueryVariables>('getChild', (req, res, ctx) => {
+					const { node_id: id } = req.variables;
+					const result = (reqIndex < uploadedFiles.length && uploadedFiles[reqIndex]) || null;
+					if (result) {
+						result.id = id;
+					}
+					reqIndex += 1;
+					return res(ctx.data({ getNode: result }));
+				}),
+				rest.post<UploadRequestBody, UploadRequestParams, UploadResponse>(
+					`${REST_ENDPOINT}${UPLOAD_PATH}`,
+					(req, res, ctx) =>
+						res(
+							ctx.delay(1000),
+							ctx.json({
+								nodeId: faker.datatype.uuid()
+							})
+						)
+				)
+			);
+
+			const dataTransferObj = {
+				types: ['Files'],
+				files
+			};
+
+			const mocks = [mockGetBaseNode({ node_id: localRoot.id }, localRoot)];
+
+			render(<UploadList />, { mocks });
+
+			await screen.findByText(/nothing here/i);
+
+			fireEvent.dragEnter(screen.getByText(/nothing here/i), {
+				dataTransfer: dataTransferObj
+			});
+
+			await screen.findByTestId('dropzone-overlay');
+			expect(
+				screen.getByText(/Drop here your attachments to quick-add them to your Home/m)
+			).toBeVisible();
+
+			fireEvent.drop(screen.getByText(/nothing here/i), {
+				dataTransfer: dataTransferObj
+			});
+
+			const loadingIcons = await screen.findAllByTestId('icon: AnimatedLoader');
+			expect(loadingIcons).toHaveLength(4);
+
+			const uploadStatus = uploadVar();
+			expect(
+				filter(uploadStatus, (uploadItem) => uploadItem.status === UploadStatus.QUEUED)
+			).toHaveLength(1);
+			expect(
+				filter(uploadStatus, (uploadItem) => uploadItem.status === UploadStatus.LOADING)
+			).toHaveLength(3);
+
+			const queuedElement = find(uploadStatus, ['status', UploadStatus.QUEUED]);
+			let queuedItem: HTMLElement;
+			let queuedIconLoader: HTMLElement;
+			if (queuedElement) {
+				queuedItem = await screen.findByTestId(`node-item-${queuedElement.id}`);
+				expect(within(queuedItem).getByText(/queued/i)).toBeInTheDocument();
+				queuedIconLoader = within(queuedItem).getByTestId('icon: AnimatedLoader');
+				expect(queuedIconLoader).toBeInTheDocument();
+			} else {
+				fail();
+			}
+
+			const loadingItems = await screen.findAllByText('0%');
+			expect(loadingItems).toHaveLength(3);
+
+			expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
+				uploadedFiles.length
+			);
+			expect(screen.queryByText(/Drop here your attachments/m)).not.toBeInTheDocument();
+
+			await waitForElementToBeRemoved(queuedIconLoader, { timeout: 3000 });
+			expect(within(queuedItem).getByTestId('icon: CheckmarkCircle2')).toBeInTheDocument();
+
+			await waitFor(() => {
+				const localRootCachedData = global.apolloClient.readQuery<
+					GetChildrenQuery,
+					GetChildrenQueryVariables
+				>(getChildrenMockedQuery.request);
+				return expect(
+					(localRootCachedData?.getNode as Maybe<Folder> | undefined)?.children || []
+				).toHaveLength(uploadedFiles.length);
+			});
 		});
 	});
 });
