@@ -66,26 +66,28 @@ export const RouteLeavingGuard: FC<{
 				open={modalVisible}
 				title={
 					dataHasError
-						? t('label.cannot_saved_changes', 'Some changes cannot be saved')
-						: t('label.unsaved_changes', 'You have unsaved changes')
+						? t('modal.unsaved_changes.title.cannot_saved_changes', 'Some changes cannot be saved')
+						: t('modal.unsaved_changes.title.unsaved_changes', 'You have unsaved changes')
 				}
 				onClose={cancel}
 				onConfirm={dataHasError ? onSecondaryAction : onConfirm}
 				confirmLabel={
 					dataHasError
-						? t('label.leave_anyway', 'Leave anyway')
-						: t('label.save_and_leave', 'Save and leave')
+						? t('modal.unsaved_changes.button.leave_anyway', 'Leave anyway')
+						: t('modal.unsaved_changes.button.save_and_leave', 'Save and leave')
 				}
 				onSecondaryAction={dataHasError ? cancel : onSecondaryAction}
 				secondaryActionLabel={
-					dataHasError ? t('label.cancel', 'Cancel') : t('label.leave_anyway', 'Leave anyway')
+					dataHasError
+						? t('modal.button.cancel', 'Cancel')
+						: t('modal.unsaved_changes.button.leave_anyway', 'Leave anyway')
 				}
 				optionalFooter={
 					!dataHasError ? (
 						<Button
 							color="secondary"
 							type="outlined"
-							label={t('label.cancel', 'Cancel')}
+							label={t('modal.button.cancel', 'Cancel')}
 							onClick={cancel}
 						/>
 					) : undefined
