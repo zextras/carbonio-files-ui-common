@@ -25,7 +25,7 @@ import { NodeDetailsUserRow } from '../../../components/NodeDetailsUserRow';
 import { useActiveNode } from '../../../hooks/useActiveNode';
 import { useInternalLink } from '../../../hooks/useInternalLink';
 import { useNavigation } from '../../../hooks/useNavigation';
-import { DISPLAYER_TABS, ROOTS } from '../../constants';
+import { DISPLAYER_TABS, LIST_ITEM_HEIGHT_DETAILS, ROOTS } from '../../constants';
 import GET_PATH from '../../graphql/queries/getPath.graphql';
 import { useCreateSnackbar } from '../../hooks/useCreateSnackbar';
 import useQueryParam from '../../hooks/useQueryParam';
@@ -42,7 +42,7 @@ import {
 	User
 } from '../../types/graphql/types';
 import { NonNullableListItem } from '../../types/utils';
-import { isFile } from '../../utils/ActionsFactory';
+import { isFile, isFolder } from '../../utils/ActionsFactory';
 import {
 	buildCrumbs,
 	copyToClipboard,
@@ -55,7 +55,12 @@ import { DisplayerPreview } from './DisplayerPreview';
 import { EmptyFolder } from './EmptyFolder';
 import { NodeDetailsDescription } from './NodeDetailsDescription';
 import { NodeDetailsList } from './NodeDetailsList';
-import { DisplayerContentContainer, RoundedButton, ShimmerText } from './StyledComponents';
+import {
+	DisplayerContentContainer,
+	FlexContainer,
+	RoundedButton,
+	ShimmerText
+} from './StyledComponents';
 
 interface NodeDetailsProps {
 	typeName: Node['__typename'];
@@ -129,6 +134,26 @@ const TextRowWithShim = ({
 		</Row>
 	)) ||
 	null;
+
+const ShimmerNodeDetailsItem = (): JSX.Element => (
+	<Container
+		orientation="horizontal"
+		mainAlignment="flex-start"
+		width="fill"
+		height={LIST_ITEM_HEIGHT_DETAILS}
+		padding={{ all: 'small' }}
+	>
+		<Container width="fit" height="fit">
+			<Shimmer.Avatar size="medium" radius="8px" />
+		</Container>
+		<Padding horizontal="small">
+			<ShimmerText $size="small" width="150px" />
+		</Padding>
+		<FlexContainer orientation="horizontal" mainAlignment="flex-end">
+			<ShimmerText $size="small" width="60px" />
+		</FlexContainer>
+	</Container>
+);
 
 const CustomAvatar = styled(Avatar)`
 	margin-right: -4px;
@@ -355,6 +380,7 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 	);
 
 	const nodeIsFile = useMemo(() => isFile({ __typename: typeName }), [typeName]);
+	const nodeIsFolder = useMemo(() => isFolder({ __typename: typeName }), [typeName]);
 
 	return (
 		<MainContainer mainAlignment="flex-start" background="gray5" height="auto">
@@ -482,11 +508,11 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 					)} */}
 				</DisplayerContentContainer>
 			</Container>
-			{nodes && (
+			{nodeIsFolder && (nodes || loading) && (
 				<DisplayerContentContainer
 					mainAlignment="flex-start"
 					crossAlignment="flex-start"
-					minHeight={nodes.length > 7 ? 400 : 0}
+					minHeight={nodes && nodes.length > 7 ? 400 : 0}
 					data-testid={`details-list-${id || ''}`}
 					background="gray6"
 					padding={{ all: 'large' }}
@@ -496,22 +522,22 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 					<Padding bottom="large">
 						<Text>{t('displayer.details.content', 'Content')}</Text>
 					</Padding>
-					{nodes.length > 0 ? (
+					{nodes && nodes.length > 0 && (
 						<NodeDetailsList
 							nodes={nodes}
 							loading={loading}
 							hasMore={hasMore}
 							loadMore={loadMore}
 						/>
-					) : (
-						!loading && (
-							<EmptyFolder
-								message={t('empty.folder.displayerContent', 'This folder has no content')}
-								size="extrasmall"
-								weight="regular"
-							/>
-						)
 					)}
+					{!loading && nodes && nodes.length === 0 && (
+						<EmptyFolder
+							message={t('empty.folder.displayerContent', 'This folder has no content')}
+							size="extrasmall"
+							weight="regular"
+						/>
+					)}
+					{loading && !nodes && <ShimmerNodeDetailsItem />}
 				</DisplayerContentContainer>
 			)}
 		</MainContainer>
