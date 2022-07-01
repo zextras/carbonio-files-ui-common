@@ -19,6 +19,7 @@ import {
 import { useTranslation } from 'react-i18next';
 
 import { PublicLinkRowStatus } from '../../../../types/common';
+import { RouteLeavingGuard } from '../../RouteLeavingGuard';
 
 interface AddPublicLinkComponentProps {
 	status: PublicLinkRowStatus;
@@ -49,6 +50,12 @@ export const AddPublicLinkComponent: React.FC<AddPublicLinkComponentProps> = ({
 	}, []);
 
 	const [date, setDate] = useState<Date | undefined>(undefined);
+
+	const isSomethingChanged = useMemo(
+		() => date != null || linkDescriptionValue.length > 0,
+		[date, linkDescriptionValue.length]
+	);
+
 	const handleChange = useCallback((d) => {
 		if (typeof d === 'string' && d.length === 0) {
 			setDate(undefined);
@@ -85,6 +92,16 @@ export const AddPublicLinkComponent: React.FC<AddPublicLinkComponentProps> = ({
 
 	return (
 		<Container>
+			<RouteLeavingGuard
+				when={isSomethingChanged}
+				onSave={onGenerateCallback}
+				dataHasError={moreThan300Characters}
+			>
+				<Text overflow="">
+					{t('modal.unsaved_changes.body.line1', 'Do you want to leave the page without saving?')}
+				</Text>
+				<Text>{t('modal.unsaved_changes.body.line2', 'All unsaved changes will be lost')}</Text>
+			</RouteLeavingGuard>
 			<Container orientation="horizontal" mainAlignment="space-between">
 				<Text size="medium">{t('publicLink.addLink.title', 'Public Link')}</Text>
 				{limitReached && (

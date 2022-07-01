@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 
 import { useUpdateNodeDescriptionMutation } from '../../hooks/graphql/mutations/useUpdateNodeDescriptionMutation';
+import { RouteLeavingGuard } from './RouteLeavingGuard';
 import { ItalicText } from './StyledComponents';
 
 interface NodeDetailsDescriptionProps {
@@ -54,6 +55,11 @@ export const NodeDetailsDescription: React.VFC<NodeDetailsDescriptionProps> = ({
 
 	const [descriptionValue, setDescriptionValue] = useState(description || '');
 
+	const isDescriptionChanged = useMemo(
+		() => descriptionValue !== description,
+		[description, descriptionValue]
+	);
+
 	const moreThan4096Characters = useMemo(
 		() => descriptionValue != null && descriptionValue.length > 4096,
 		[descriptionValue]
@@ -86,6 +92,16 @@ export const NodeDetailsDescription: React.VFC<NodeDetailsDescriptionProps> = ({
 
 	return (
 		<>
+			<RouteLeavingGuard
+				when={isDescriptionChanged}
+				onSave={save}
+				dataHasError={moreThan4096Characters}
+			>
+				<Text overflow="">
+					{t('modal.unsaved_changes.body.line1', 'Do you want to leave the page without saving?')}
+				</Text>
+				<Text>{t('modal.unsaved_changes.body.line2', 'All unsaved changes will be lost')}</Text>
+			</RouteLeavingGuard>
 			{editingDescription && (
 				<Row
 					width="fill"
@@ -110,7 +126,7 @@ export const NodeDetailsDescription: React.VFC<NodeDetailsDescriptionProps> = ({
 								<IconButton iconColor="secondary" size="small" icon="Close" onClick={closeEdit} />
 							</Tooltip>
 							<Tooltip
-								disabled={description === descriptionValue || moreThan4096Characters}
+								disabled={!isDescriptionChanged || moreThan4096Characters}
 								label={t('displayer.details.editDescription.saveIconTooltip', 'Save edits')}
 							>
 								<CustomIconButton
@@ -118,7 +134,7 @@ export const NodeDetailsDescription: React.VFC<NodeDetailsDescriptionProps> = ({
 									size="small"
 									icon="SaveOutline"
 									onClick={save}
-									disabled={description === descriptionValue || moreThan4096Characters}
+									disabled={!isDescriptionChanged || moreThan4096Characters}
 								/>
 							</Tooltip>
 						</Container>
