@@ -128,7 +128,7 @@ const uploadCompleted = (
 		uploadVar({ ...state });
 	}
 
-	if (xhr.status === 200) {
+	if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
 		const response = JSON.parse(xhr.response);
 		const { nodeId } = response;
 		if (isUploadVersion) {
@@ -187,7 +187,7 @@ const uploadCompleted = (
 		 */
 		updateStatus(fileEnriched, UploadStatus.FAILED);
 		const handledStatuses = [405, 413, 500, 0];
-		if (!handledStatuses.includes(xhr.status)) {
+		if (xhr.readyState !== XMLHttpRequest.UNSENT && !handledStatuses.includes(xhr.status)) {
 			console.error('upload error: unhandled status', xhr.status);
 		}
 	}
