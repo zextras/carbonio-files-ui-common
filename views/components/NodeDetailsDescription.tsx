@@ -58,8 +58,8 @@ export const NodeDetailsDescription: React.VFC<NodeDetailsDescriptionProps> = ({
 	const [descriptionValue, setDescriptionValue] = useState(description || '');
 
 	const isDescriptionChanged = useMemo(
-		() => descriptionValue !== description,
-		[description, descriptionValue]
+		() => editingDescription && descriptionValue !== description,
+		[description, descriptionValue, editingDescription]
 	);
 
 	const moreThan4096Characters = useMemo(
