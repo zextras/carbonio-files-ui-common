@@ -7,25 +7,23 @@
 import { useCallback, useMemo } from 'react';
 
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client';
+import filter from 'lodash/filter';
 import find from 'lodash/find';
 import forEach from 'lodash/forEach';
+import head from 'lodash/head';
 import includes from 'lodash/includes';
-import map from 'lodash/map';
+import keyBy from 'lodash/keyBy';
 import noop from 'lodash/noop';
 import partition from 'lodash/partition';
-import reduce from 'lodash/reduce';
+import pullAt from 'lodash/pullAt';
 import remove from 'lodash/remove';
+import size from 'lodash/size';
 import { useTranslation } from 'react-i18next';
 
 import buildClient from '../apollo';
 import { nodeSortVar } from '../apollo/nodeSortVar';
-import {
-	uploadCounterVar,
-	UploadFunctions,
-	uploadFunctionsVar,
-	uploadVar
-} from '../apollo/uploadVar';
-import { REST_ENDPOINT, UPLOAD_PATH, UPLOAD_VERSION_PATH } from '../constants';
+import { UploadFunctions, uploadFunctionsVar, uploadVar } from '../apollo/uploadVar';
+import { REST_ENDPOINT, UPLOAD_PATH, UPLOAD_QUEUE_LIMIT, UPLOAD_VERSION_PATH } from '../constants';
 import GET_CHILD from '../graphql/queries/getChild.graphql';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import GET_VERSIONS from '../graphql/queries/getVersions.graphql';
@@ -54,6 +52,11 @@ import { useCreateSnackbar } from './useCreateSnackbar';
 // https://stackoverflow.com/a/25095250/17280436
 const isMaybeFolder = (file: File): boolean => !file.type && file.size % 4096 === 0;
 
+const waitingQueue: Array<string> = [];
+const loadingQueue: Array<string> = [];
+// window.waitingQueue = waitingQueue;
+// window.loadingQueue = loadingQueue;
+
 const addVersionToCache = (
 	apolloClient: ApolloClient<NormalizedCacheObject>,
 	nodeId: string
@@ -66,6 +69,47 @@ const addVersionToCache = (
 		}
 	});
 };
+const updateProgress = (ev: ProgressEvent, fileEnriched: UploadType): void => {
+	if (ev.lengthComputable) {
+		const updatedValue = {
+			...fileEnriched,
+			percentage: Math.floor((ev.loaded / ev.total) * 100)
+		};
+
+		const state = uploadVar();
+		state[fileEnriched.id] = updatedValue;
+		uploadVar({ ...state });
+	}
+};
+
+const singleRetry = (id: string): void => {
+	const state = uploadVar();
+	const retryFile = find(state, (item) => item.id === id);
+	if (retryFile == null) {
+		throw new Error('unable to retry missing file');
+	}
+	if (retryFile.status !== UploadStatus.FAILED && retryFile.status !== UploadStatus.QUEUED) {
+		throw new Error('unable to retry, upload must be Failed');
+	}
+
+	state[id] = {
+		...state[id],
+		status: UploadStatus.LOADING,
+		percentage: 0
+	};
+	uploadVar({ ...state });
+	const newRetryFile = find(state, (item) => item.id === id);
+	if (newRetryFile) {
+		const prevState = uploadFunctionsVar();
+		const itemFunctions = prevState[newRetryFile.id];
+
+		const abortFunction = itemFunctions.retry(newRetryFile);
+		uploadFunctionsVar({
+			...prevState,
+			[newRetryFile.id]: { ...itemFunctions, abort: abortFunction }
+		});
+	}
+};
 
 const uploadCompleted = (
 	xhr: XMLHttpRequest,
@@ -76,39 +120,29 @@ const uploadCompleted = (
 	isUploadVersion: boolean
 ): void => {
 	function updateStatus(uploadItem: UploadType, status: UploadStatus): void {
-		const oldState = uploadVar();
-		const newState = map(oldState, (item) => {
-			if (item.id === uploadItem.id) {
-				return {
-					...uploadItem,
-					status
-				};
-			}
-			return item;
-		});
-		uploadVar(newState);
+		const state = uploadVar();
+		state[uploadItem.id] = {
+			...uploadItem,
+			status
+		};
+		uploadVar({ ...state });
 	}
 
-	if (xhr.status === 200) {
+	if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
 		const response = JSON.parse(xhr.response);
 		const { nodeId } = response;
 		if (isUploadVersion) {
 			addVersionToCache(apolloClient, nodeId);
 		}
 
-		const oldState = uploadVar();
-		const newState = map(oldState, (item) => {
-			if (item.id === fileEnriched.id) {
-				return {
-					...fileEnriched,
-					status: UploadStatus.COMPLETED,
-					percentage: 100,
-					nodeId
-				};
-			}
-			return item;
-		});
-		uploadVar(newState);
+		const state = uploadVar();
+		state[fileEnriched.id] = {
+			...fileEnriched,
+			status: UploadStatus.COMPLETED,
+			percentage: 100,
+			nodeId
+		};
+		uploadVar({ ...state });
 
 		apolloClient
 			.query<GetChildQuery, GetChildQueryVariables>({
@@ -149,30 +183,22 @@ const uploadCompleted = (
 		 * 			strictly greater than max number of version config value (config changed)
 		 * 413:
 		 * 500: name already exists
+		 * 0: aborted
 		 */
 		updateStatus(fileEnriched, UploadStatus.FAILED);
-		const handledStatuses = [405, 413, 500];
-		if (!handledStatuses.includes(xhr.status)) {
+		const handledStatuses = [405, 413, 500, 0];
+		if (xhr.readyState !== XMLHttpRequest.UNSENT && !handledStatuses.includes(xhr.status)) {
 			console.error('upload error: unhandled status', xhr.status);
 		}
 	}
-};
 
-const updateProgress = (ev: ProgressEvent, fileEnriched: UploadType): void => {
-	if (ev.lengthComputable) {
-		const updatedValue = {
-			...fileEnriched,
-			percentage: Math.floor((ev.loaded / ev.total) * 100)
-		};
-
-		const oldState = uploadVar();
-		const newState = map(oldState, (item) => {
-			if (item.id === fileEnriched.id) {
-				return updatedValue;
-			}
-			return item;
-		});
-		uploadVar(newState);
+	if (includes(loadingQueue, fileEnriched.id)) {
+		remove(loadingQueue, (item) => item === fileEnriched.id);
+		if (size(waitingQueue) > 0) {
+			const next = head(pullAt(waitingQueue, [0]));
+			loadingQueue.push(next as string);
+			singleRetry(next as string);
+		}
 	}
 };
 
@@ -294,17 +320,13 @@ export const useUpload: UseUploadHook = () => {
 			createSnackbarForUploadError(
 				t('snackbar.upload.foldersNotAllowed', 'Folders cannot be uploaded')
 			);
-			const newState = map(uploadVar(), (item) => {
-				if (item.id === folder.id) {
-					return {
-						...item,
-						status: UploadStatus.FAILED,
-						percentage: 0
-					};
-				}
-				return item;
-			});
-			uploadVar(newState);
+			const state = uploadVar();
+			state[folder.id] = {
+				...state[folder.id],
+				status: UploadStatus.FAILED,
+				percentage: 0
+			};
+			uploadVar({ ...state });
 			return noop;
 		},
 		[createSnackbarForUploadError, t]
@@ -314,40 +336,44 @@ export const useUpload: UseUploadHook = () => {
 		(files, parentId, checkForFolders) => {
 			// Upload only valid files
 
-			const { filesEnriched, uploadFunctions, validFilesCount } = reduce<
-				File,
-				{
-					filesEnriched: UploadType[];
-					uploadFunctions: { [id: string]: UploadFunctions };
-					validFilesCount: number;
+			const filesEnriched: { [id: string]: UploadType } = {};
+			const uploadFunctions: { [id: string]: UploadFunctions } = {};
+			let validFilesCount = 0;
+
+			forEach(files, (file: File, index) => {
+				const isItemMaybeFolder = checkForFolders && isMaybeFolder(file);
+				const canBeLoaded = !isItemMaybeFolder && size(loadingQueue) < UPLOAD_QUEUE_LIMIT;
+
+				const fileEnriched = {
+					file,
+					parentId,
+					percentage: 0,
+					// eslint-disable-next-line no-nested-ternary
+					status: isItemMaybeFolder
+						? UploadStatus.FAILED
+						: size(loadingQueue) < UPLOAD_QUEUE_LIMIT
+						? UploadStatus.LOADING
+						: UploadStatus.QUEUED,
+					id: `${index}-${new Date().getTime()}`
+				};
+				const abortFunction: UploadFunctions['abort'] = canBeLoaded
+					? upload(fileEnriched, apolloClient, nodeSortVar(), addNodeToFolder)
+					: noop;
+				const retryFunction: UploadFunctions['retry'] = (newFile: UploadType) =>
+					isItemMaybeFolder
+						? uploadFolder(newFile)
+						: upload(newFile, apolloClient, nodeSortVar(), addNodeToFolder);
+				filesEnriched[fileEnriched.id] = fileEnriched;
+				uploadFunctions[fileEnriched.id] = { abort: abortFunction, retry: retryFunction };
+				if (!isItemMaybeFolder) {
+					validFilesCount += 1;
 				}
-			>(
-				files,
-				(acc, file: File, index) => {
-					const isItemMaybeFolder = checkForFolders && isMaybeFolder(file);
-					const fileEnriched = {
-						file,
-						parentId,
-						percentage: 0,
-						status: isItemMaybeFolder ? UploadStatus.FAILED : UploadStatus.LOADING,
-						id: `${(uploadCounterVar() + index).toString()}-${new Date().getTime()}`
-					};
-					const abortFunction: UploadFunctions['abort'] = isItemMaybeFolder
-						? noop
-						: upload(fileEnriched, apolloClient, nodeSortVar(), addNodeToFolder);
-					const retryFunction: UploadFunctions['retry'] = (newFile: UploadType) =>
-						isItemMaybeFolder
-							? uploadFolder(newFile)
-							: upload(newFile, apolloClient, nodeSortVar(), addNodeToFolder);
-					acc.filesEnriched.push(fileEnriched);
-					acc.uploadFunctions[fileEnriched.id] = { abort: abortFunction, retry: retryFunction };
-					if (!isItemMaybeFolder) {
-						acc.validFilesCount += 1;
-					}
-					return acc;
-				},
-				{ filesEnriched: [], uploadFunctions: {}, validFilesCount: 0 }
-			);
+				if (canBeLoaded) {
+					loadingQueue.push(fileEnriched.id);
+				} else if (!isItemMaybeFolder) {
+					waitingQueue.push(fileEnriched.id);
+				}
+			});
 
 			if (validFilesCount < files.length) {
 				createSnackbarForUploadError(
@@ -357,11 +383,10 @@ export const useUpload: UseUploadHook = () => {
 				);
 			}
 
-			uploadVar([...uploadVar(), ...filesEnriched]);
-			uploadCounterVar(uploadCounterVar() + files.length);
+			uploadVar({ ...uploadVar(), ...filesEnriched });
 			uploadFunctionsVar({ ...uploadFunctionsVar(), ...uploadFunctions });
 		},
-		[apolloClient, addNodeToFolder, uploadFolder, createSnackbarForUploadError, t]
+		[addNodeToFolder, apolloClient, createSnackbarForUploadError, t, uploadFolder]
 	);
 
 	const update = useCallback<ReturnType<UseUploadHook>['update']>(
@@ -374,8 +399,7 @@ export const useUpload: UseUploadHook = () => {
 				nodeId: node.id,
 				parentId: (node.parent as Folder).id
 			};
-			uploadVar([...uploadVar(), fileEnriched]);
-			uploadCounterVar(uploadCounterVar() + 1);
+			uploadVar({ ...uploadVar(), ...{ [fileEnriched.id]: fileEnriched } });
 			const abortFunction: UploadFunctions['abort'] = uploadVersion(
 				fileEnriched,
 				apolloClient,
@@ -410,14 +434,14 @@ export const useUpload: UseUploadHook = () => {
 
 	const removeById = useCallback(
 		(ids: Array<string>) => {
-			const oldState = uploadVar();
-			const newState = remove(oldState, (item) => !includes(ids, item.id));
-			forEach(oldState, (item) => {
-				if (item.status === UploadStatus.LOADING) {
-					abort(item.id);
+			const state = uploadVar();
+			forEach(ids, (id) => {
+				if (state[id].status === UploadStatus.LOADING) {
+					abort(id);
 				}
+				delete state[id];
 			});
-			uploadVar(newState);
+			uploadVar({ ...state });
 		},
 		[abort]
 	);
@@ -429,57 +453,24 @@ export const useUpload: UseUploadHook = () => {
 		const notRemovedNodes = partitions[1];
 		// update reactive var only if there are removed nodes
 		if (removedNodes.length > 0) {
-			uploadVar(notRemovedNodes);
+			uploadVar(keyBy(notRemovedNodes, 'id'));
 		}
 	}, []);
 
 	const removeAllCompleted = useCallback(() => {
-		const newState = remove(uploadVar(), (item) => item.status !== UploadStatus.COMPLETED);
-		uploadVar(newState);
-	}, []);
-
-	const singleRetry = useCallback((id: string) => {
-		const oldState = uploadVar();
-		const retryFile = find(oldState, (item) => item.id === id);
-		if (retryFile == null) {
-			throw new Error('unable to retry missing file');
-		}
-		if (retryFile.status !== UploadStatus.FAILED) {
-			throw new Error('unable to retry, upload must be Failed');
-		}
-
-		const newState = map(oldState, (item) => {
-			if (item.id === id) {
-				return {
-					...item,
-					status: UploadStatus.LOADING,
-					percentage: 0
-				};
-			}
-			return item;
+		const state = uploadVar();
+		const completedItems = filter(state, (item) => item.status === UploadStatus.COMPLETED);
+		forEach(completedItems, (item) => {
+			delete state[item.id];
 		});
-		uploadVar(newState);
-		const newRetryFile = find(newState, (item) => item.id === id);
-		if (newRetryFile) {
-			const prevState = uploadFunctionsVar();
-			const itemFunctions = prevState[newRetryFile.id];
-
-			const abortFunction = itemFunctions.retry(newRetryFile);
-			uploadFunctionsVar({
-				...prevState,
-				[newRetryFile.id]: { ...itemFunctions, abort: abortFunction }
-			});
-		}
+		uploadVar({ ...state });
 	}, []);
 
-	const retryById = useCallback(
-		(ids: Array<string>) => {
-			forEach(ids, (id) => {
-				singleRetry(id);
-			});
-		},
-		[singleRetry]
-	);
+	const retryById = useCallback((ids: Array<string>) => {
+		forEach(ids, (id) => {
+			singleRetry(id);
+		});
+	}, []);
 
 	return { add, update, removeById, removeAllCompleted, retryById, removeByNodeId };
 };

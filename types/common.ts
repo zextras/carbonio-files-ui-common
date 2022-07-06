@@ -101,7 +101,8 @@ export type SortableNode = Pick<Node, 'id' | 'name' | 'updated_at' | 'type'> &
 export enum UploadStatus {
 	COMPLETED = 'Completed',
 	LOADING = 'Loading',
-	FAILED = 'Failed'
+	FAILED = 'Failed',
+	QUEUED = 'Queued'
 	// PAUSED: 'Paused'(tentative)
 }
 

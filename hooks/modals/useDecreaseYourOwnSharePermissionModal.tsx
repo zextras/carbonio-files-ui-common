@@ -18,7 +18,7 @@ export function useDecreaseYourOwnSharePermissionModal(
 	updateShareAction: UpdateShareAction,
 	updateShareActionCallback?: () => void
 ): {
-	openDeletePermanentlyModal: () => void;
+	openDecreaseYourOwnSharePermissionModal: () => void;
 } {
 	const createModal = useModal();
 	const [t] = useTranslation();
@@ -50,5 +50,5 @@ export function useDecreaseYourOwnSharePermissionModal(
 		});
 	}, [createModal, t, updateShareAction, updateShareActionCallback]);
 
-	return { openDeletePermanentlyModal: openDecreaseYourOwnSharePermissionModal };
+	return { openDecreaseYourOwnSharePermissionModal };
 }
