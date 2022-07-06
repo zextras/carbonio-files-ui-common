@@ -6,7 +6,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Button, Container, Divider, Padding, Tooltip } from '@zextras/carbonio-design-system';
+import { Button, Container, Padding, Tooltip } from '@zextras/carbonio-design-system';
 import { useTranslation } from 'react-i18next';
 
 import { FlexContainer } from './StyledComponents';
@@ -49,7 +49,7 @@ export const ModalFooter: React.VFC<ModalFooterProps> = ({
 			$flexShrink={0}
 			$flexBasis="auto"
 		>
-			<Divider />
+			{/* <Divider /> */}
 			<Container
 				orientation="horizontal"
 				mainAlignment="flex-end"
