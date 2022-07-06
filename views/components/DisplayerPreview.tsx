@@ -35,6 +35,7 @@ const ImgContainer = styled(Container)`
 const Img = styled.img`
 	cursor: pointer;
 	border-radius: 2px;
+	align-self: center;
 `;
 
 interface DisplayerPreviewProps {
@@ -229,7 +230,15 @@ export const DisplayerPreview: React.VFC<DisplayerPreviewProps> = ({
 	}, [buildPreviewSrc]);
 
 	return (
-		<ImgContainer ref={previewContainerRef} maxWidth="100%" height={`${previewHeight}px`}>
+		<ImgContainer
+			ref={previewContainerRef}
+			maxWidth="100%"
+			height={`${previewHeight}px`}
+			mainAlignment="flex-start"
+		>
+			{previewSrc && (!error || loading) && (
+				<Img ref={imgRef} src={previewSrc} alt="" onDoubleClick={openPreview} />
+			)}
 			{loading && !error && (
 				<FlexContainer orientation="vertical" gap="8px">
 					<Icon icon="AnimatedLoader" size="large" />
@@ -237,9 +246,6 @@ export const DisplayerPreview: React.VFC<DisplayerPreviewProps> = ({
 						{t('preview.loading.file', 'Loading file preview, please wait...')}
 					</Text>
 				</FlexContainer>
-			)}
-			{previewSrc && (!error || loading) && (
-				<Img ref={imgRef} src={previewSrc} alt="" onDoubleClick={openPreview} />
 			)}
 			{error && (
 				<FlexContainer orientation="vertical" gap="8px">
