@@ -128,4 +128,37 @@ describe('Upload List Item Wrapper', () => {
 			''
 		);
 	});
+
+	test('File name, destination folder, queued label and size are visible', async () => {
+		const destinationFolder = populateFolder();
+		const file = {
+			file: new File(['uploading file'], 'file1.txt', { type: 'text/plain' }),
+			percentage: 0,
+			parentId: destinationFolder.id,
+			id: 'fileToUploadId',
+			status: UploadStatus.QUEUED
+		};
+		const mockSelectId = jest.fn();
+
+		const mocks = [mockGetBaseNode({ node_id: destinationFolder.id }, destinationFolder)];
+
+		const { findByTextWithMarkup } = render(
+			<UploadListItemWrapper
+				node={file}
+				isSelected={false}
+				isSelectionModeActive={false}
+				selectId={mockSelectId}
+			/>,
+			{ mocks }
+		);
+
+		expect(screen.getByText(file.file.name)).toBeVisible();
+		const destinationFolderItem = await findByTextWithMarkup(
+			buildBreadCrumbRegExp(destinationFolder.name)
+		);
+		expect(destinationFolderItem).toBeVisible();
+		expect(screen.getByText(humanFileSize(file.file.size))).toBeVisible();
+		expect(screen.getByText('Queued')).toBeVisible();
+		expect(screen.getByTestId('icon: AnimatedLoader')).toBeVisible();
+	});
 });

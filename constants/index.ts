@@ -69,3 +69,4 @@ export const PREVIEW_TYPE = {
 
 export const FILES_ROUTE = 'files';
 export const FILES_APP_ID = 'carbonio-files-ui';
+export const UPLOAD_QUEUE_LIMIT = 3;

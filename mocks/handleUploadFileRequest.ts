@@ -7,17 +7,17 @@
 import { faker } from '@faker-js/faker';
 import { PathParams, ResponseResolver, RestContext, RestRequest } from 'msw';
 
-interface UploadResponse {
+export interface UploadResponse {
 	nodeId: string;
 }
 
-interface UploadRequestParams extends PathParams {
+export interface UploadRequestParams extends PathParams {
 	Filename: string;
 	Description: string | '';
 	ParentId: string | '';
 }
 
-interface UploadRequestBody {
+export interface UploadRequestBody {
 	file: File;
 }
 
