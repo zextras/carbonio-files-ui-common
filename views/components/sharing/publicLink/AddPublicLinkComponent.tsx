@@ -97,10 +97,12 @@ export const AddPublicLinkComponent: React.FC<AddPublicLinkComponentProps> = ({
 				onSave={onGenerateCallback}
 				dataHasError={moreThan300Characters}
 			>
-				<Text overflow="">
+				<Text overflow="break-word">
 					{t('modal.unsaved_changes.body.line1', 'Do you want to leave the page without saving?')}
 				</Text>
-				<Text>{t('modal.unsaved_changes.body.line2', 'All unsaved changes will be lost')}</Text>
+				<Text overflow="break-word">
+					{t('modal.unsaved_changes.body.line2', 'All unsaved changes will be lost')}
+				</Text>
 			</RouteLeavingGuard>
 			<Container orientation="horizontal" mainAlignment="space-between">
 				<Text size="medium">{t('publicLink.addLink.title', 'Public Link')}</Text>

@@ -97,10 +97,12 @@ export const NodeDetailsDescription: React.VFC<NodeDetailsDescriptionProps> = ({
 				onSave={save}
 				dataHasError={moreThan4096Characters}
 			>
-				<Text overflow="">
+				<Text overflow="break-word">
 					{t('modal.unsaved_changes.body.line1', 'Do you want to leave the page without saving?')}
 				</Text>
-				<Text>{t('modal.unsaved_changes.body.line2', 'All unsaved changes will be lost')}</Text>
+				<Text overflow="break-word">
+					{t('modal.unsaved_changes.body.line2', 'All unsaved changes will be lost')}
+				</Text>
 			</RouteLeavingGuard>
 			{editingDescription && (
 				<Row

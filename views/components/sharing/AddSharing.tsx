@@ -234,7 +234,10 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 
 	const [searchResult, setSearchResult] = useState<Match[]>([]);
 	const [chips, setChips] = useState<ShareChip[]>([]);
-	const isDirty = useMemo(() => size(chips) > 0, [chips]);
+	const isDirty = useMemo(
+		() => size(chips) > 0 || mailTextValue.length > 0,
+		[chips, mailTextValue.length]
+	);
 	const thereAreInvalidChips = useMemo(() => some(chips, (chip) => chip.id === undefined), [chips]);
 
 	const [forceOpen, setForceOpen] = useState(false);
@@ -453,12 +456,14 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 			<RouteLeavingGuard
 				when={isDirty}
 				onSave={createShareCallback}
-				dataHasError={thereAreInvalidChips}
+				dataHasError={thereAreInvalidChips || (isDirty && chips.length === 0)}
 			>
-				<Text overflow="">
+				<Text overflow="break-word">
 					{t('modal.unsaved_changes.body.line1', 'Do you want to leave the page without saving?')}
 				</Text>
-				<Text>{t('modal.unsaved_changes.body.line2', 'All unsaved changes will be lost')}</Text>
+				<Text overflow="break-word">
+					{t('modal.unsaved_changes.body.line2', 'All unsaved changes will be lost')}
+				</Text>
 			</RouteLeavingGuard>
 			<Container>
 				<ShareChipInput

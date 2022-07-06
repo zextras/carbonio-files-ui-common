@@ -164,10 +164,12 @@ export const PublicLinkComponent: React.FC<PublicLinkComponentProps> = ({
 				onSave={onEditConfirmCallback}
 				dataHasError={moreThan300Characters}
 			>
-				<Text overflow="">
+				<Text overflow="break-word">
 					{t('modal.unsaved_changes.body.line1', 'Do you want to leave the page without saving?')}
 				</Text>
-				<Text>{t('modal.unsaved_changes.body.line2', 'All unsaved changes will be lost')}</Text>
+				<Text overflow="break-word">
+					{t('modal.unsaved_changes.body.line2', 'All unsaved changes will be lost')}
+				</Text>
 			</RouteLeavingGuard>
 			<Padding vertical="small" />
 			<Container orientation="horizontal" mainAlignment="space-between">

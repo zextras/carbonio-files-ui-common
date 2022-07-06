@@ -282,10 +282,12 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 				when={initialActiveRow !== activeRow || initialCheckboxValue !== checkboxValue}
 				onSave={updateShareCallback}
 			>
-				<Text overflow="">
+				<Text overflow="break-word">
 					{t('modal.unsaved_changes.body.line1', 'Do you want to leave the page without saving?')}
 				</Text>
-				<Text>{t('modal.unsaved_changes.body.line2', 'All unsaved changes will be lost')}</Text>
+				<Text overflow="break-word">
+					{t('modal.unsaved_changes.body.line2', 'All unsaved changes will be lost')}
+				</Text>
 			</RouteLeavingGuard>
 			<ChipWithPopover
 				size={SHARE_CHIP_SIZE}
