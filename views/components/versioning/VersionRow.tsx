@@ -14,9 +14,11 @@ import {
 	Tooltip,
 	Container
 } from '@zextras/carbonio-design-system';
+import forEach from 'lodash/forEach';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 
+import { DropdownListItemContent } from '../../../design_system_fork/DropdownListItemComponent';
 import { CloneVersionType } from '../../../hooks/graphql/mutations/useCloneVersionMutation';
 import { DeleteVersionsType } from '../../../hooks/graphql/mutations/useDeleteVersionsMutation';
 import { KeepVersionsType } from '../../../hooks/graphql/mutations/useKeepVersionsMutation';
@@ -28,12 +30,50 @@ const CustomText = styled(Text).attrs({ weight: 'light', size: 'small' })`
 	line-height: 21px;
 `;
 
+interface DropdownItemComponentProps {
+	label: string;
+	icon?: string;
+	disabled?: boolean;
+	selected?: boolean;
+	tooltipLabel?: string;
+}
+
+type DropdownItem = {
+	type?: 'divider';
+	id: string;
+	label: string;
+	icon?: string;
+	click?: (e: React.SyntheticEvent<HTMLElement> | KeyboardEvent) => void;
+	selected?: boolean;
+	customComponent?: React.ReactNode;
+	disabled?: boolean;
+	items?: Array<DropdownItem>;
+	keepOpen?: boolean;
+	tooltipLabel?: string;
+};
+
+const DropdownItemComponent = ({
+	label,
+	icon,
+	disabled,
+	selected,
+	tooltipLabel
+}: DropdownItemComponentProps): JSX.Element => (
+	<Tooltip disabled={!disabled || !tooltipLabel} label={tooltipLabel} placement="bottom-end">
+		<DropdownListItemContent label={label} selected={selected} disabled={disabled} icon={icon} />
+	</Tooltip>
+);
+
 export const VersionRow: React.VFC<{
 	background?: string;
 	canCloneVersion: boolean;
+	cloneVersionTooltip?: string;
 	canDelete: boolean;
+	deleteTooltip?: string;
 	canKeepVersion: boolean;
+	keepVersionTooltip?: string;
 	canOpenWithDocs: boolean;
+	openWithDocsTooltip?: string;
 	clonedFromVersion?: number;
 	cloneUpdatedAt?: number;
 	cloneVersion: CloneVersionType;
@@ -50,9 +90,13 @@ export const VersionRow: React.VFC<{
 }> = ({
 	background,
 	canCloneVersion,
+	cloneVersionTooltip,
 	canDelete,
+	deleteTooltip,
 	canKeepVersion,
+	keepVersionTooltip,
 	canOpenWithDocs,
+	openWithDocsTooltip,
 	clonedFromVersion,
 	cloneUpdatedAt,
 	cloneVersion,
@@ -120,14 +164,15 @@ export const VersionRow: React.VFC<{
 		openNodeWithDocs(nodeId, version);
 	}, [nodeId, version]);
 
-	const items = useMemo(
-		() => [
+	const items = useMemo<DropdownItem[]>(() => {
+		const actions: DropdownItem[] = [
 			{
 				id: 'openDocumentVersion',
 				label: t('displayer.version.actions.openDocumentVersion', 'Open document version'),
 				click: openVersionWithDocsCallback,
 				icon: 'BookOpenOutline',
-				disabled: !canOpenWithDocs
+				disabled: !canOpenWithDocs,
+				tooltipLabel: openWithDocsTooltip
 			},
 			{
 				id: 'downloadVersion',
@@ -142,37 +187,57 @@ export const VersionRow: React.VFC<{
 					: t('displayer.version.actions.removeKeepVersion', 'Remove keep forever'),
 				click: keepVersionCallback,
 				icon: 'InfinityOutline',
-				disabled: !canKeepVersion
+				disabled: !canKeepVersion,
+				tooltipLabel: keepVersionTooltip
 			},
 			{
 				id: 'cloneAsCurrent',
 				label: t('displayer.version.actions.cloneAsCurrent', 'Clone as current'),
 				click: cloneVersionCallback,
 				icon: 'Copy',
-				disabled: !canCloneVersion
+				disabled: !canCloneVersion,
+				tooltipLabel: cloneVersionTooltip
 			},
 			{
 				id: 'deleteVersion',
 				label: t('displayer.version.actions.deleteVersion', 'Delete version'),
 				click: deleteVersionCallback,
 				icon: 'Trash2Outline',
-				disabled: !canDelete
+				disabled: !canDelete,
+				tooltipLabel: deleteTooltip
 			}
-		],
-		[
-			canCloneVersion,
-			canDelete,
-			canKeepVersion,
-			canOpenWithDocs,
-			cloneVersionCallback,
-			deleteVersionCallback,
-			downloadVersionCallback,
-			keepVersionCallback,
-			keepVersionValue,
-			openVersionWithDocsCallback,
-			t
-		]
-	);
+		];
+
+		forEach(actions, (action) => {
+			action.customComponent = (
+				<DropdownItemComponent
+					label={action.label}
+					disabled={action.disabled}
+					icon={action.icon}
+					selected={action.selected}
+					tooltipLabel={action.tooltipLabel}
+				/>
+			);
+		});
+
+		return actions;
+	}, [
+		canCloneVersion,
+		canDelete,
+		canKeepVersion,
+		canOpenWithDocs,
+		cloneVersionCallback,
+		cloneVersionTooltip,
+		deleteTooltip,
+		deleteVersionCallback,
+		downloadVersionCallback,
+		keepVersionCallback,
+		keepVersionTooltip,
+		keepVersionValue,
+		openVersionWithDocsCallback,
+		openWithDocsTooltip,
+		t
+	]);
 
 	return (
 		<>

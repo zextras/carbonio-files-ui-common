@@ -27,7 +27,8 @@ import {
 import {
 	File as FilesFile,
 	GetVersionsQuery,
-	GetVersionsQueryVariables
+	GetVersionsQueryVariables,
+	NodeType
 } from '../../../types/graphql/types';
 import {
 	mockCloneVersion,
@@ -37,8 +38,8 @@ import {
 	mockKeepVersions
 } from '../../../utils/mockUtils';
 import { render, waitForNetworkResponse } from '../../../utils/testUtils';
-import { getChipLabel } from '../../../utils/utils';
 import * as moduleUtils from '../../../utils/utils';
+import { getChipLabel } from '../../../utils/utils';
 import { Versioning } from './Versioning';
 
 describe('Versioning', () => {
@@ -513,13 +514,22 @@ describe('Versioning', () => {
 		userEvent.click(versions1MoreButton);
 
 		const cloneAsCurrentItem = await screen.findByText(/clone as current/i);
-		expect(cloneAsCurrentItem.parentElement).toHaveAttribute('disabled', '');
+		expect(cloneAsCurrentItem).toHaveAttribute('disabled', '');
 		userEvent.click(cloneAsCurrentItem);
 
 		await waitForNetworkResponse();
 		expect(screen.queryByText(/Version cloned as the current one/i)).not.toBeInTheDocument();
 		// number of version is not changed
 		expect(screen.getAllByText(/Version \d+/)).toHaveLength(maxVersions);
+
+		// hover on action shows a tooltip
+		userEvent.hover(cloneAsCurrentItem);
+		const tooltip = await screen.findByText(/you have reached the maximum number of versions/i);
+		expect(tooltip).toBeVisible();
+		act(() => {
+			userEvent.unhover(cloneAsCurrentItem);
+		});
+		expect(tooltip).not.toBeInTheDocument();
 	});
 
 	test('keep forever action is disabled if max number of keep is reached', async () => {
@@ -567,16 +577,29 @@ describe('Versioning', () => {
 		userEvent.click(versionWithoutKeepMoreButton);
 
 		const keepVersionItem = await screen.findByText(/keep this version forever/i);
-		expect(keepVersionItem.parentElement).toHaveAttribute('disabled', '');
+		expect(keepVersionItem).toHaveAttribute('disabled', '');
 		userEvent.click(keepVersionItem);
 
 		await waitForNetworkResponse();
+
+		expect(screen.queryByText(/Version marked as to be kept forever/i)).not.toBeInTheDocument();
+
+		// hover on action shows a tooltip
+		userEvent.hover(keepVersionItem);
+		const tooltip = await screen.findByText(
+			/You have reached the maximum number of versions to keep forever/i
+		);
+		expect(tooltip).toBeVisible();
+		act(() => {
+			userEvent.unhover(keepVersionItem);
+		});
+		expect(tooltip).not.toBeInTheDocument();
+
 		// click outside to close context menu
 		act(() => {
 			userEvent.click(screen.getByText(RegExp(`version ${versionWithoutKeep.version}`, 'i')));
 		});
 		expect(screen.queryByText(/keep this version forever/i)).not.toBeInTheDocument();
-		expect(screen.queryByText(/Version marked as to be kept forever/i)).not.toBeInTheDocument();
 		expect(screen.getAllByTestId('icon: InfinityOutline')).toHaveLength(maxKeepVersions);
 	});
 
@@ -727,7 +750,7 @@ describe('Versioning', () => {
 		userEvent.click(version2MoreButton);
 
 		const deleteVersionItem = await screen.findByText(/delete version/i);
-		expect(deleteVersionItem.parentElement).not.toHaveAttribute('disabled', '');
+		expect(deleteVersionItem).not.toHaveAttribute('disabled', '');
 		userEvent.click(deleteVersionItem);
 		await waitForNetworkResponse();
 		await waitFor(() => expect(screen.getAllByText(/version \d+/i)).toHaveLength(maxVersions - 1));
@@ -780,5 +803,186 @@ describe('Versioning', () => {
 		// only version 1 is visible
 		expect(screen.getByText(/version \d+/i)).toBeVisible();
 		expect(screen.getByText(RegExp(`version ${maxVersions}`, 'i'))).toBeVisible();
+	});
+
+	test('clone version is disabled and shows a tooltip if user does not have write permissions', async () => {
+		const fileVersions = [];
+		const versions = [];
+		const baseFile = populateFile();
+		baseFile.permissions.can_write_file = false;
+		const maxVersions = 10;
+		for (let i = 0; i < maxVersions - 2; i += 1) {
+			const fileVersion = { ...baseFile };
+			fileVersion.version = i + 1;
+			const version = getVersionFromFile(fileVersion);
+			fileVersions.unshift(fileVersion);
+			versions.unshift(version);
+		}
+
+		const mocks = [
+			mockGetConfigs(
+				populateConfigs({
+					[CONFIGS.MAX_VERSIONS]: `${maxVersions}`
+				})
+			),
+			mockGetVersions({ node_id: baseFile.id }, versions as FilesFile[])
+		];
+
+		render(<Versioning node={baseFile} />, { mocks });
+		await screen.findByText(/Version 1/i);
+
+		expect(screen.getAllByText(/Version \d+/)).toHaveLength(versions.length);
+
+		const versions1Icons = screen.getByTestId('version1-icons');
+		const versions1MoreButton = within(versions1Icons).getByTestId('icon: MoreVerticalOutline');
+		userEvent.click(versions1MoreButton);
+
+		const cloneAsCurrentItem = await screen.findByText(/clone as current/i);
+		expect(cloneAsCurrentItem).toHaveAttribute('disabled', '');
+		userEvent.click(cloneAsCurrentItem);
+
+		await waitForNetworkResponse();
+		expect(screen.queryByText(/Version cloned as the current one/i)).not.toBeInTheDocument();
+		// number of version is not changed
+		expect(screen.getAllByText(/Version \d+/)).toHaveLength(versions.length);
+
+		// hover on action shows a tooltip
+		userEvent.hover(cloneAsCurrentItem);
+		const tooltip = await screen.findByText(/you don't have the correct permissions/i);
+		expect(tooltip).toBeVisible();
+		act(() => {
+			userEvent.unhover(cloneAsCurrentItem);
+		});
+		expect(tooltip).not.toBeInTheDocument();
+	});
+
+	test('delete version is disabled and shows a tooltip if user does not have write permissions', async () => {
+		const fileVersions = [];
+		const versions = [];
+		const baseFile = populateFile();
+		baseFile.permissions.can_write_file = false;
+		const maxVersions = 10;
+		for (let i = 0; i < maxVersions - 2; i += 1) {
+			const fileVersion = { ...baseFile };
+			fileVersion.version = i + 1;
+			const version = getVersionFromFile(fileVersion);
+			fileVersions.unshift(fileVersion);
+			versions.unshift(version);
+		}
+
+		const mocks = [
+			mockGetConfigs(
+				populateConfigs({
+					[CONFIGS.MAX_VERSIONS]: `${maxVersions}`
+				})
+			),
+			mockGetVersions({ node_id: baseFile.id }, versions as FilesFile[])
+		];
+
+		render(<Versioning node={baseFile} />, { mocks });
+		await screen.findByText(/Version 1/i);
+
+		expect(screen.getAllByText(/Version \d+/)).toHaveLength(versions.length);
+
+		const versions1Icons = screen.getByTestId('version1-icons');
+		const versions1MoreButton = within(versions1Icons).getByTestId('icon: MoreVerticalOutline');
+		userEvent.click(versions1MoreButton);
+
+		const deleteVersion = await screen.findByText(/delete version/i);
+		expect(deleteVersion).toHaveAttribute('disabled', '');
+		userEvent.click(deleteVersion);
+
+		await waitForNetworkResponse();
+		expect(screen.getByText(/version 1/i)).toBeVisible();
+		// number of version is not changed
+		expect(screen.getAllByText(/Version \d+/)).toHaveLength(versions.length);
+
+		// hover on action shows a tooltip
+		userEvent.hover(deleteVersion);
+		const tooltip = await screen.findByText(/you don't have the correct permissions/i);
+		expect(tooltip).toBeVisible();
+		act(() => {
+			userEvent.unhover(deleteVersion);
+		});
+		expect(tooltip).not.toBeInTheDocument();
+	});
+
+	test('open with docs is disabled and shows a tooltip if file cannot be opened with docs', async () => {
+		const baseFile = populateFile();
+		baseFile.mime_type = 'image/png';
+		baseFile.type = NodeType.Image;
+		baseFile.extension = 'png';
+		baseFile.permissions.can_write_file = true;
+		const version = getVersionFromFile(baseFile);
+		const versions = [version];
+
+		const openNodeWithDocsSpy = jest.fn();
+		jest.spyOn(moduleUtils, 'openNodeWithDocs').mockImplementation(openNodeWithDocsSpy);
+
+		const mocks = [
+			mockGetConfigs(),
+			mockGetVersions({ node_id: baseFile.id }, versions as FilesFile[])
+		];
+
+		render(<Versioning node={baseFile} />, { mocks });
+		await screen.findByText(/Version 1/i);
+
+		expect(screen.getAllByText(/Version \d+/)).toHaveLength(versions.length);
+
+		const versions1Icons = screen.getByTestId('version1-icons');
+		const versions1MoreButton = within(versions1Icons).getByTestId('icon: MoreVerticalOutline');
+		userEvent.click(versions1MoreButton);
+
+		const openDocumentVersion = await screen.findByText(/open document version/i);
+		expect(openDocumentVersion).toHaveAttribute('disabled', '');
+		userEvent.click(openDocumentVersion);
+		await waitForNetworkResponse();
+		expect(openNodeWithDocsSpy).not.toHaveBeenCalled();
+
+		// hover on action shows a tooltip
+		userEvent.hover(openDocumentVersion);
+		const tooltip = await screen.findByText(/This version cannot be opened by the online editor/i);
+		expect(tooltip).toBeVisible();
+		act(() => {
+			userEvent.unhover(openDocumentVersion);
+		});
+		expect(tooltip).not.toBeInTheDocument();
+	});
+
+	test('keep version forever is disabled and shows a tooltip if user does not have permissions', async () => {
+		const baseFile = populateFile();
+		baseFile.permissions.can_write_file = false;
+		const version = getVersionFromFile(baseFile);
+		const versions = [version];
+
+		const mocks = [
+			mockGetConfigs(),
+			mockGetVersions({ node_id: baseFile.id }, versions as FilesFile[])
+		];
+
+		render(<Versioning node={baseFile} />, { mocks });
+		await screen.findByText(/Version 1/i);
+
+		expect(screen.getAllByText(/Version \d+/)).toHaveLength(versions.length);
+
+		const versions1Icons = screen.getByTestId('version1-icons');
+		const versions1MoreButton = within(versions1Icons).getByTestId('icon: MoreVerticalOutline');
+		userEvent.click(versions1MoreButton);
+
+		const keepVersion = await screen.findByText(/(keep this version forever|remove keep forever)/i);
+		expect(keepVersion).toHaveAttribute('disabled', '');
+		userEvent.click(keepVersion);
+
+		await waitForNetworkResponse();
+		expect(screen.queryByText(/version marked as to be kept forever/i)).not.toBeInTheDocument();
+
+		// hover on action shows a tooltip
+		userEvent.hover(keepVersion);
+		const tooltip = await screen.findByText(/you don't have the correct permissions/i);
+		expect(tooltip).toBeVisible();
+		act(() => {
+			userEvent.unhover(keepVersion);
+		});
+		expect(tooltip).not.toBeInTheDocument();
 	});
 });
