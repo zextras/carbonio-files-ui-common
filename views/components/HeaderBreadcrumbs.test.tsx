@@ -23,7 +23,7 @@ import {
 } from '../../mocks/mockUtils';
 import { Node } from '../../types/graphql/types';
 import { mockGetParent, mockGetPath, mockMoveNodes } from '../../utils/mockUtils';
-import { buildBreadCrumbRegExp, render } from '../../utils/testUtils';
+import { buildBreadCrumbRegExp, render, waitForNetworkResponse } from '../../utils/testUtils';
 import { HeaderBreadcrumbs } from './HeaderBreadcrumbs';
 
 let mockedUseNavigationHook: ReturnType<UseNavigationHook>;
@@ -486,10 +486,9 @@ describe('Header Breadcrumbs', () => {
 			expect(screen.queryByText(path[0].name)).not.toBeInTheDocument();
 			expect(screen.getByTestId('icon: ChevronRight')).toBeVisible();
 			expect(screen.queryByTestId('icon: ChevronLeft')).not.toBeInTheDocument();
-			act(() => {
-				userEvent.click(screen.getByTestId('icon: FolderOutline'));
-			});
+			userEvent.click(screen.getByTestId('icon: FolderOutline'));
 			await waitForElementToBeRemoved(screen.queryByTestId('icon: ChevronRight'));
+			await screen.findByText(/hide previous folders/i);
 			expect(screen.getByTestId('icon: ChevronLeft')).toBeVisible();
 			const destinationCrumbItem = await screen.findByText(path[0].name);
 			expect(
@@ -530,12 +529,7 @@ describe('Header Breadcrumbs', () => {
 			});
 			fireEvent.dragEnd(mockDraggedItem, { dataTransfer: dataTransfer() });
 			// wait a tick to allow mutation to eventually be executed
-			await waitFor(
-				() =>
-					new Promise((resolve) => {
-						setTimeout(resolve, 1);
-					})
-			);
+			await waitForNetworkResponse();
 			expect(moveMutationFn).not.toHaveBeenCalled();
 		});
 
@@ -855,10 +849,9 @@ describe('Header Breadcrumbs', () => {
 			expect(screen.getByTestId('icon: ChevronRight')).toBeVisible();
 			expect(screen.queryByTestId('icon: ChevronLeft')).not.toBeInTheDocument();
 			// simulate a drag of a node of the list
-			act(() => {
-				userEvent.click(screen.getByTestId('icon: FolderOutline'));
-			});
+			userEvent.click(screen.getByTestId('icon: FolderOutline'));
 			await waitForElementToBeRemoved(screen.queryByTestId('icon: ChevronRight'));
+			await screen.findByText(/hide previous folders/i);
 			expect(screen.getByTestId('icon: ChevronLeft')).toBeVisible();
 			expect(
 				getByTextWithMarkup(buildBreadCrumbRegExp(...map(path, (parent) => parent.name)))
@@ -909,12 +902,7 @@ describe('Header Breadcrumbs', () => {
 			fireEvent.drop(destinationItem, { dataTransfer: dataTransfer() });
 			expect(destinationItem.parentElement).toHaveStyle({ 'background-color': '' });
 			// wait a tick to allow mutation to eventually be executed
-			await waitFor(
-				() =>
-					new Promise((resolve) => {
-						setTimeout(resolve, 1);
-					})
-			);
+			await waitForNetworkResponse();
 			expect(moveMutationFn).not.toHaveBeenCalled();
 		});
 	});
