@@ -9,12 +9,12 @@ import React, { useCallback } from 'react';
 import { useModal } from '@zextras/carbonio-design-system';
 import { useTranslation } from 'react-i18next';
 
-import { GetNodeParentType, Node } from '../../types/common';
+import { NodeParent, Node } from '../../types/common';
 import { MoveNodesModalContent } from '../../views/components/MoveNodesModalContent';
 import { useCreateSnackbar } from '../useCreateSnackbar';
 
 export type OpenMoveModal = (
-	nodes: Array<Pick<Node, '__typename' | 'id' | 'owner'> & GetNodeParentType>,
+	nodes: Array<Pick<Node, '__typename' | 'id' | 'owner'> & NodeParent>,
 	fromFolder?: string
 ) => void;
 

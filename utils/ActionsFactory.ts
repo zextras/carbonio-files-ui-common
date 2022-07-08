@@ -18,7 +18,7 @@ import some from 'lodash/some';
 
 import { ACTIONS_TO_REMOVE_DUE_TO_PRODUCT_CONTEXT } from '../../constants';
 import { ROOTS } from '../constants';
-import { Action, GetNodeParentType, Node, UploadStatus, UploadType } from '../types/common';
+import { Action, NodeParent, Node, UploadStatus, UploadType } from '../types/common';
 import { File as FilesFile, File, Folder, MakeOptional, Root } from '../types/graphql/types';
 import { OneOrMany } from '../types/utils';
 import { docsHandledMimeTypes, isSupportedByPreview } from './utils';
@@ -37,7 +37,7 @@ export type ActionsFactoryNodeType = Pick<
 	Node,
 	'permissions' | 'flagged' | 'type' | 'owner' | 'id' | 'rootId'
 > &
-	GetNodeParentType &
+	NodeParent &
 	(Pick<FilesFile, '__typename'> | Pick<Folder, '__typename'>) &
 	MakeOptional<Pick<FilesFile, 'mime_type'>, 'mime_type'>;
 

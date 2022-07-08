@@ -19,11 +19,6 @@ fragment Child on Node {
 		full_name
 		email
 	}
-	parent {
-		id
-		name
-		...Permissions
-	}
 	shares(limit: $shares_limit) {
 		...Share
 	}

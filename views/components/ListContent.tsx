@@ -16,7 +16,7 @@ import useUserInfo from '../../../hooks/useUserInfo';
 import { draggedItemsVar } from '../../apollo/dragAndDropVar';
 import { DRAG_TYPES } from '../../constants';
 import { DeleteNodesType } from '../../hooks/graphql/mutations/useDeleteNodesMutation';
-import { Action, GetNodeParentType, NodeListItemType, PickIdNodeType } from '../../types/common';
+import { Action, NodeParent, NodeListItemType, PickIdNodeType } from '../../types/common';
 import { Node } from '../../types/graphql/types';
 import { DeepPick, OneOrMany } from '../../types/utils';
 import {
@@ -49,9 +49,7 @@ interface ListContentProps {
 	markNodesForDeletion?: (
 		...nodes: Array<Pick<NodeListItemType, 'id'> & DeepPick<NodeListItemType, 'owner', 'id'>>
 	) => void;
-	restore?: (
-		...nodes: Array<Pick<NodeListItemType, '__typename' | 'id'> & GetNodeParentType>
-	) => void;
+	restore?: (...nodes: Array<Pick<NodeListItemType, '__typename' | 'id'> & NodeParent>) => void;
 	deletePermanently?: DeleteNodesType;
 	moveNodes?: (...nodes: Array<Pick<NodeListItemType, '__typename' | 'id' | 'owner'>>) => void;
 	copyNodes?: (...nodes: Array<Pick<NodeListItemType, '__typename' | 'id'>>) => void;

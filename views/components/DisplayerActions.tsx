@@ -29,7 +29,7 @@ import { useCopyModal } from '../../hooks/modals/useCopyModal';
 import { useDeletePermanentlyModal } from '../../hooks/modals/useDeletePermanentlyModal';
 import { useMoveModal } from '../../hooks/modals/useMoveModal';
 import { useRenameModal } from '../../hooks/modals/useRenameModal';
-import { Action, GetNodeParentType } from '../../types/common';
+import { Action, NodeParent } from '../../types/common';
 import { File, MakeOptional, Node } from '../../types/graphql/types';
 import {
 	ActionItem,
@@ -51,7 +51,7 @@ import {
 interface DisplayerActionsParams {
 	node: ActionsFactoryNodeType &
 		Pick<Node, 'rootId' | 'id' | 'name'> &
-		GetNodeParentType &
+		NodeParent &
 		MakeOptional<Pick<File, 'version'>, 'version'>;
 }
 

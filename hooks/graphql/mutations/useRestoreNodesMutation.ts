@@ -21,7 +21,7 @@ import { useNavigation } from '../../../../hooks/useNavigation';
 import { ROOTS } from '../../../constants';
 import RESTORE_NODES from '../../../graphql/mutations/restoreNodes.graphql';
 import FIND_NODES from '../../../graphql/queries/findNodes.graphql';
-import { GetNodeParentType, Node } from '../../../types/common';
+import { NodeParent, Node } from '../../../types/common';
 import {
 	FindNodesQuery,
 	QueryGetPathArgs,
@@ -34,7 +34,7 @@ import { useErrorHandler } from '../../useErrorHandler';
 import { useUpdateFilterContent } from '../useUpdateFilterContent';
 import { isQueryResult } from '../utils';
 
-type UseRestoreRequiredNodeType = Pick<Node, 'id' | '__typename'> & GetNodeParentType;
+type UseRestoreRequiredNodeType = Pick<Node, 'id' | '__typename'> & NodeParent;
 
 export type RestoreType = (
 	...nodes: UseRestoreRequiredNodeType[]

@@ -12,7 +12,6 @@ import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
 
 import { useActiveNode } from '../../../../hooks/useActiveNode';
 import { useNavigation } from '../../../../hooks/useNavigation';
@@ -32,7 +31,6 @@ import {
 import { isFolder } from '../../../utils/ActionsFactory';
 import { useCreateSnackbar } from '../../useCreateSnackbar';
 import { useErrorHandler } from '../../useErrorHandler';
-import useQueryParam from '../../useQueryParam';
 import { useUpdateFolderContent } from '../useUpdateFolderContent';
 import { isOperationVariables, isQueryResult } from '../utils';
 
@@ -47,8 +45,6 @@ export type MoveNodesType = (
 export function useMoveNodesMutation(): { moveNodes: MoveNodesType; loading: boolean } {
 	const [t] = useTranslation();
 	const createSnackbar = useCreateSnackbar();
-	const { rootId } = useParams<{ rootId: string }>();
-	const folderId = useQueryParam('folder');
 	const { activeNodeId, removeActiveNode } = useActiveNode();
 	const { removeNodesFromFolder } = useUpdateFolderContent();
 	const { navigateToFolder } = useNavigation();

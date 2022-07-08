@@ -10,5 +10,10 @@ query getChild(
 ) {
 	getNode(node_id: $node_id) {
 		...Child
+		parent {
+			id
+			name
+			...Permissions
+		}
 	}
 }

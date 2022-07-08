@@ -7,16 +7,19 @@
 import {
 	ApolloClient,
 	FieldFunctionOptions,
+	gql,
 	InMemoryCache,
 	NormalizedCacheObject,
 	Reference
 } from '@apollo/client';
 import find from 'lodash/find';
+import forEach from 'lodash/forEach';
 import keyBy from 'lodash/keyBy';
 import last from 'lodash/last';
 
 import { GRAPHQL_ENDPOINT } from '../constants';
 import { FindNodesCachedObject, FindNodesObject, NodesListCachedObject } from '../types/apollo';
+import { NodeParent } from '../types/common';
 import introspection from '../types/graphql/possible-types';
 import {
 	File,
@@ -30,6 +33,46 @@ import {
 	Share
 } from '../types/graphql/types';
 import { nodeListCursorVar } from './nodeListCursorVar';
+
+const ParentFragment = gql`
+	fragment ParentFragment on Node {
+		id
+		name
+		permissions {
+			can_read
+			can_write_file
+			can_write_folder
+			can_delete
+			can_add_version
+			can_read_link
+			can_change_link
+			can_share
+			can_read_share
+			can_change_share
+		}
+	}
+`;
+
+const NodeParentFragment = gql`
+	fragment NodeParent on Node {
+		parent {
+			id
+			name
+			permissions {
+				can_read
+				can_write_file
+				can_write_folder
+				can_delete
+				can_add_version
+				can_read_link
+				can_change_link
+				can_share
+				can_read_share
+				can_change_share
+			}
+		}
+	}
+`;
 
 function mergeNodesList(
 	existing: NodesListCachedObject | undefined,
@@ -81,7 +124,7 @@ function readNodesList(existing: NodesListCachedObject): Reference[] {
 	return [...ordered, ...unOrdered];
 }
 
-const cache = new InMemoryCache({
+const apolloCache = new InMemoryCache({
 	possibleTypes: introspection.possibleTypes,
 	typePolicies: {
 		Node: {
@@ -116,6 +159,33 @@ const cache = new InMemoryCache({
 						>
 					): NodesListCachedObject {
 						const merged = mergeNodesList(existing, incoming, fieldFunctions);
+
+						// update children to set parent field
+						const { variables, toReference, canRead, cache } = fieldFunctions;
+
+						if (variables?.node_id) {
+							const parentFolderRef = toReference({
+								__typename: 'Folder',
+								id: variables.node_id
+							});
+							if (parentFolderRef && canRead(parentFolderRef)) {
+								const parentNode = cache.readFragment<NodeParent['parent']>({
+									fragment: ParentFragment,
+									id: cache.identify(parentFolderRef)
+								});
+								// write parent data on each child
+								forEach([...merged.ordered, ...merged.unOrdered], (child) => {
+									cache.writeFragment<NodeParent>({
+										id: cache.identify(child),
+										fragment: NodeParentFragment,
+										data: {
+											parent: parentNode
+										}
+									});
+								});
+							}
+						}
+
 						const nodeListCursorKey = fieldFunctions.variables?.node_id;
 						const pageSize = fieldFunctions.variables?.children_limit;
 						// By putting this logic here cursor is updated only when new data are received by network requests.
@@ -264,7 +334,7 @@ const buildClient: () => ApolloClient<NormalizedCacheObject> = () => {
 	if (apolloClient == null) {
 		apolloClient = new ApolloClient<NormalizedCacheObject>({
 			uri: `${uri}${GRAPHQL_ENDPOINT}`,
-			cache,
+			cache: apolloCache,
 			credentials: 'same-origin',
 			connectToDevTools: true
 		});

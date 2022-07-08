@@ -653,44 +653,6 @@ type Child_File_Fragment = {
 	rootId?: string | null;
 	owner: { __typename?: 'User'; id: string; full_name: string; email: string };
 	last_editor?: { __typename?: 'User'; id: string; full_name: string; email: string } | null;
-	parent?:
-		| {
-				__typename?: 'File';
-				id: string;
-				name: string;
-				permissions: {
-					__typename?: 'Permissions';
-					can_read: boolean;
-					can_write_file: boolean;
-					can_write_folder: boolean;
-					can_delete: boolean;
-					can_add_version: boolean;
-					can_read_link: boolean;
-					can_change_link: boolean;
-					can_share: boolean;
-					can_read_share: boolean;
-					can_change_share: boolean;
-				};
-		  }
-		| {
-				__typename?: 'Folder';
-				id: string;
-				name: string;
-				permissions: {
-					__typename?: 'Permissions';
-					can_read: boolean;
-					can_write_file: boolean;
-					can_write_folder: boolean;
-					can_delete: boolean;
-					can_add_version: boolean;
-					can_read_link: boolean;
-					can_change_link: boolean;
-					can_share: boolean;
-					can_read_share: boolean;
-					can_change_share: boolean;
-				};
-		  }
-		| null;
 	shares: Array<{
 		__typename?: 'Share';
 		permission: SharePermission;
@@ -728,44 +690,6 @@ type Child_Folder_Fragment = {
 	rootId?: string | null;
 	owner: { __typename?: 'User'; id: string; full_name: string; email: string };
 	last_editor?: { __typename?: 'User'; id: string; full_name: string; email: string } | null;
-	parent?:
-		| {
-				__typename?: 'File';
-				id: string;
-				name: string;
-				permissions: {
-					__typename?: 'Permissions';
-					can_read: boolean;
-					can_write_file: boolean;
-					can_write_folder: boolean;
-					can_delete: boolean;
-					can_add_version: boolean;
-					can_read_link: boolean;
-					can_change_link: boolean;
-					can_share: boolean;
-					can_read_share: boolean;
-					can_change_share: boolean;
-				};
-		  }
-		| {
-				__typename?: 'Folder';
-				id: string;
-				name: string;
-				permissions: {
-					__typename?: 'Permissions';
-					can_read: boolean;
-					can_write_file: boolean;
-					can_write_folder: boolean;
-					can_delete: boolean;
-					can_add_version: boolean;
-					can_read_link: boolean;
-					can_change_link: boolean;
-					can_share: boolean;
-					can_read_share: boolean;
-					can_change_share: boolean;
-				};
-		  }
-		| null;
 	shares: Array<{
 		__typename?: 'Share';
 		permission: SharePermission;
@@ -911,46 +835,12 @@ export type CopyNodesMutation = {
 				type: NodeType;
 				flagged: boolean;
 				rootId?: string | null;
+				parent?:
+					| { __typename?: 'File'; id: string; name: string }
+					| { __typename?: 'Folder'; id: string; name: string }
+					| null;
 				owner: { __typename?: 'User'; id: string; full_name: string; email: string };
 				last_editor?: { __typename?: 'User'; id: string; full_name: string; email: string } | null;
-				parent?:
-					| {
-							__typename?: 'File';
-							id: string;
-							name: string;
-							permissions: {
-								__typename?: 'Permissions';
-								can_read: boolean;
-								can_write_file: boolean;
-								can_write_folder: boolean;
-								can_delete: boolean;
-								can_add_version: boolean;
-								can_read_link: boolean;
-								can_change_link: boolean;
-								can_share: boolean;
-								can_read_share: boolean;
-								can_change_share: boolean;
-							};
-					  }
-					| {
-							__typename?: 'Folder';
-							id: string;
-							name: string;
-							permissions: {
-								__typename?: 'Permissions';
-								can_read: boolean;
-								can_write_file: boolean;
-								can_write_folder: boolean;
-								can_delete: boolean;
-								can_add_version: boolean;
-								can_read_link: boolean;
-								can_change_link: boolean;
-								can_share: boolean;
-								can_read_share: boolean;
-								can_change_share: boolean;
-							};
-					  }
-					| null;
 				shares: Array<{
 					__typename?: 'Share';
 					permission: SharePermission;
@@ -985,46 +875,12 @@ export type CopyNodesMutation = {
 				type: NodeType;
 				flagged: boolean;
 				rootId?: string | null;
+				parent?:
+					| { __typename?: 'File'; id: string; name: string }
+					| { __typename?: 'Folder'; id: string; name: string }
+					| null;
 				owner: { __typename?: 'User'; id: string; full_name: string; email: string };
 				last_editor?: { __typename?: 'User'; id: string; full_name: string; email: string } | null;
-				parent?:
-					| {
-							__typename?: 'File';
-							id: string;
-							name: string;
-							permissions: {
-								__typename?: 'Permissions';
-								can_read: boolean;
-								can_write_file: boolean;
-								can_write_folder: boolean;
-								can_delete: boolean;
-								can_add_version: boolean;
-								can_read_link: boolean;
-								can_change_link: boolean;
-								can_share: boolean;
-								can_read_share: boolean;
-								can_change_share: boolean;
-							};
-					  }
-					| {
-							__typename?: 'Folder';
-							id: string;
-							name: string;
-							permissions: {
-								__typename?: 'Permissions';
-								can_read: boolean;
-								can_write_file: boolean;
-								can_write_folder: boolean;
-								can_delete: boolean;
-								can_add_version: boolean;
-								can_read_link: boolean;
-								can_change_link: boolean;
-								can_share: boolean;
-								can_read_share: boolean;
-								can_change_share: boolean;
-							};
-					  }
-					| null;
 				shares: Array<{
 					__typename?: 'Share';
 					permission: SharePermission;
@@ -1075,46 +931,12 @@ export type CreateFolderMutation = {
 				type: NodeType;
 				flagged: boolean;
 				rootId?: string | null;
+				parent?:
+					| { __typename?: 'File'; id: string; name: string }
+					| { __typename?: 'Folder'; id: string; name: string }
+					| null;
 				owner: { __typename?: 'User'; id: string; full_name: string; email: string };
 				last_editor?: { __typename?: 'User'; id: string; full_name: string; email: string } | null;
-				parent?:
-					| {
-							__typename?: 'File';
-							id: string;
-							name: string;
-							permissions: {
-								__typename?: 'Permissions';
-								can_read: boolean;
-								can_write_file: boolean;
-								can_write_folder: boolean;
-								can_delete: boolean;
-								can_add_version: boolean;
-								can_read_link: boolean;
-								can_change_link: boolean;
-								can_share: boolean;
-								can_read_share: boolean;
-								can_change_share: boolean;
-							};
-					  }
-					| {
-							__typename?: 'Folder';
-							id: string;
-							name: string;
-							permissions: {
-								__typename?: 'Permissions';
-								can_read: boolean;
-								can_write_file: boolean;
-								can_write_folder: boolean;
-								can_delete: boolean;
-								can_add_version: boolean;
-								can_read_link: boolean;
-								can_change_link: boolean;
-								can_share: boolean;
-								can_read_share: boolean;
-								can_change_share: boolean;
-							};
-					  }
-					| null;
 				shares: Array<{
 					__typename?: 'Share';
 					permission: SharePermission;
@@ -1149,46 +971,12 @@ export type CreateFolderMutation = {
 				type: NodeType;
 				flagged: boolean;
 				rootId?: string | null;
+				parent?:
+					| { __typename?: 'File'; id: string; name: string }
+					| { __typename?: 'Folder'; id: string; name: string }
+					| null;
 				owner: { __typename?: 'User'; id: string; full_name: string; email: string };
 				last_editor?: { __typename?: 'User'; id: string; full_name: string; email: string } | null;
-				parent?:
-					| {
-							__typename?: 'File';
-							id: string;
-							name: string;
-							permissions: {
-								__typename?: 'Permissions';
-								can_read: boolean;
-								can_write_file: boolean;
-								can_write_folder: boolean;
-								can_delete: boolean;
-								can_add_version: boolean;
-								can_read_link: boolean;
-								can_change_link: boolean;
-								can_share: boolean;
-								can_read_share: boolean;
-								can_change_share: boolean;
-							};
-					  }
-					| {
-							__typename?: 'Folder';
-							id: string;
-							name: string;
-							permissions: {
-								__typename?: 'Permissions';
-								can_read: boolean;
-								can_write_file: boolean;
-								can_write_folder: boolean;
-								can_delete: boolean;
-								can_add_version: boolean;
-								can_read_link: boolean;
-								can_change_link: boolean;
-								can_share: boolean;
-								can_read_share: boolean;
-								can_change_share: boolean;
-							};
-					  }
-					| null;
 				shares: Array<{
 					__typename?: 'Share';
 					permission: SharePermission;
@@ -1391,46 +1179,12 @@ export type UpdateNodeMutation = {
 				type: NodeType;
 				flagged: boolean;
 				rootId?: string | null;
+				parent?:
+					| { __typename?: 'File'; id: string; name: string }
+					| { __typename?: 'Folder'; id: string; name: string }
+					| null;
 				owner: { __typename?: 'User'; id: string; full_name: string; email: string };
 				last_editor?: { __typename?: 'User'; id: string; full_name: string; email: string } | null;
-				parent?:
-					| {
-							__typename?: 'File';
-							id: string;
-							name: string;
-							permissions: {
-								__typename?: 'Permissions';
-								can_read: boolean;
-								can_write_file: boolean;
-								can_write_folder: boolean;
-								can_delete: boolean;
-								can_add_version: boolean;
-								can_read_link: boolean;
-								can_change_link: boolean;
-								can_share: boolean;
-								can_read_share: boolean;
-								can_change_share: boolean;
-							};
-					  }
-					| {
-							__typename?: 'Folder';
-							id: string;
-							name: string;
-							permissions: {
-								__typename?: 'Permissions';
-								can_read: boolean;
-								can_write_file: boolean;
-								can_write_folder: boolean;
-								can_delete: boolean;
-								can_add_version: boolean;
-								can_read_link: boolean;
-								can_change_link: boolean;
-								can_share: boolean;
-								can_read_share: boolean;
-								can_change_share: boolean;
-							};
-					  }
-					| null;
 				shares: Array<{
 					__typename?: 'Share';
 					permission: SharePermission;
@@ -1465,46 +1219,12 @@ export type UpdateNodeMutation = {
 				type: NodeType;
 				flagged: boolean;
 				rootId?: string | null;
+				parent?:
+					| { __typename?: 'File'; id: string; name: string }
+					| { __typename?: 'Folder'; id: string; name: string }
+					| null;
 				owner: { __typename?: 'User'; id: string; full_name: string; email: string };
 				last_editor?: { __typename?: 'User'; id: string; full_name: string; email: string } | null;
-				parent?:
-					| {
-							__typename?: 'File';
-							id: string;
-							name: string;
-							permissions: {
-								__typename?: 'Permissions';
-								can_read: boolean;
-								can_write_file: boolean;
-								can_write_folder: boolean;
-								can_delete: boolean;
-								can_add_version: boolean;
-								can_read_link: boolean;
-								can_change_link: boolean;
-								can_share: boolean;
-								can_read_share: boolean;
-								can_change_share: boolean;
-							};
-					  }
-					| {
-							__typename?: 'Folder';
-							id: string;
-							name: string;
-							permissions: {
-								__typename?: 'Permissions';
-								can_read: boolean;
-								can_write_file: boolean;
-								can_write_folder: boolean;
-								can_delete: boolean;
-								can_add_version: boolean;
-								can_read_link: boolean;
-								can_change_link: boolean;
-								can_share: boolean;
-								can_read_share: boolean;
-								can_change_share: boolean;
-							};
-					  }
-					| null;
 				shares: Array<{
 					__typename?: 'Share';
 					permission: SharePermission;
@@ -1597,13 +1317,6 @@ export type FindNodesQuery = {
 					type: NodeType;
 					flagged: boolean;
 					rootId?: string | null;
-					owner: { __typename?: 'User'; id: string; full_name: string; email: string };
-					last_editor?: {
-						__typename?: 'User';
-						id: string;
-						full_name: string;
-						email: string;
-					} | null;
 					parent?:
 						| {
 								__typename?: 'File';
@@ -1642,6 +1355,13 @@ export type FindNodesQuery = {
 								};
 						  }
 						| null;
+					owner: { __typename?: 'User'; id: string; full_name: string; email: string };
+					last_editor?: {
+						__typename?: 'User';
+						id: string;
+						full_name: string;
+						email: string;
+					} | null;
 					shares: Array<{
 						__typename?: 'Share';
 						permission: SharePermission;
@@ -1676,13 +1396,6 @@ export type FindNodesQuery = {
 					type: NodeType;
 					flagged: boolean;
 					rootId?: string | null;
-					owner: { __typename?: 'User'; id: string; full_name: string; email: string };
-					last_editor?: {
-						__typename?: 'User';
-						id: string;
-						full_name: string;
-						email: string;
-					} | null;
 					parent?:
 						| {
 								__typename?: 'File';
@@ -1721,6 +1434,13 @@ export type FindNodesQuery = {
 								};
 						  }
 						| null;
+					owner: { __typename?: 'User'; id: string; full_name: string; email: string };
+					last_editor?: {
+						__typename?: 'User';
+						id: string;
+						full_name: string;
+						email: string;
+					} | null;
 					shares: Array<{
 						__typename?: 'Share';
 						permission: SharePermission;
@@ -1853,8 +1573,6 @@ export type GetChildQuery = {
 				type: NodeType;
 				flagged: boolean;
 				rootId?: string | null;
-				owner: { __typename?: 'User'; id: string; full_name: string; email: string };
-				last_editor?: { __typename?: 'User'; id: string; full_name: string; email: string } | null;
 				parent?:
 					| {
 							__typename?: 'File';
@@ -1893,6 +1611,8 @@ export type GetChildQuery = {
 							};
 					  }
 					| null;
+				owner: { __typename?: 'User'; id: string; full_name: string; email: string };
+				last_editor?: { __typename?: 'User'; id: string; full_name: string; email: string } | null;
 				shares: Array<{
 					__typename?: 'Share';
 					permission: SharePermission;
@@ -1927,8 +1647,6 @@ export type GetChildQuery = {
 				type: NodeType;
 				flagged: boolean;
 				rootId?: string | null;
-				owner: { __typename?: 'User'; id: string; full_name: string; email: string };
-				last_editor?: { __typename?: 'User'; id: string; full_name: string; email: string } | null;
 				parent?:
 					| {
 							__typename?: 'File';
@@ -1967,6 +1685,8 @@ export type GetChildQuery = {
 							};
 					  }
 					| null;
+				owner: { __typename?: 'User'; id: string; full_name: string; email: string };
+				last_editor?: { __typename?: 'User'; id: string; full_name: string; email: string } | null;
 				shares: Array<{
 					__typename?: 'Share';
 					permission: SharePermission;
@@ -2007,7 +1727,24 @@ export type GetChildrenQueryVariables = Exact<{
 export type GetChildrenQuery = {
 	__typename?: 'Query';
 	getNode?:
-		| { __typename?: 'File'; id: string; name: string }
+		| {
+				__typename?: 'File';
+				id: string;
+				name: string;
+				permissions: {
+					__typename?: 'Permissions';
+					can_read: boolean;
+					can_write_file: boolean;
+					can_write_folder: boolean;
+					can_delete: boolean;
+					can_add_version: boolean;
+					can_read_link: boolean;
+					can_change_link: boolean;
+					can_share: boolean;
+					can_read_share: boolean;
+					can_change_share: boolean;
+				};
+		  }
 		| {
 				__typename?: 'Folder';
 				cursor?: string | null;
@@ -2033,44 +1770,6 @@ export type GetChildrenQuery = {
 								full_name: string;
 								email: string;
 							} | null;
-							parent?:
-								| {
-										__typename?: 'File';
-										id: string;
-										name: string;
-										permissions: {
-											__typename?: 'Permissions';
-											can_read: boolean;
-											can_write_file: boolean;
-											can_write_folder: boolean;
-											can_delete: boolean;
-											can_add_version: boolean;
-											can_read_link: boolean;
-											can_change_link: boolean;
-											can_share: boolean;
-											can_read_share: boolean;
-											can_change_share: boolean;
-										};
-								  }
-								| {
-										__typename?: 'Folder';
-										id: string;
-										name: string;
-										permissions: {
-											__typename?: 'Permissions';
-											can_read: boolean;
-											can_write_file: boolean;
-											can_write_folder: boolean;
-											can_delete: boolean;
-											can_add_version: boolean;
-											can_read_link: boolean;
-											can_change_link: boolean;
-											can_share: boolean;
-											can_read_share: boolean;
-											can_change_share: boolean;
-										};
-								  }
-								| null;
 							shares: Array<{
 								__typename?: 'Share';
 								permission: SharePermission;
@@ -2112,44 +1811,6 @@ export type GetChildrenQuery = {
 								full_name: string;
 								email: string;
 							} | null;
-							parent?:
-								| {
-										__typename?: 'File';
-										id: string;
-										name: string;
-										permissions: {
-											__typename?: 'Permissions';
-											can_read: boolean;
-											can_write_file: boolean;
-											can_write_folder: boolean;
-											can_delete: boolean;
-											can_add_version: boolean;
-											can_read_link: boolean;
-											can_change_link: boolean;
-											can_share: boolean;
-											can_read_share: boolean;
-											can_change_share: boolean;
-										};
-								  }
-								| {
-										__typename?: 'Folder';
-										id: string;
-										name: string;
-										permissions: {
-											__typename?: 'Permissions';
-											can_read: boolean;
-											can_write_file: boolean;
-											can_write_folder: boolean;
-											can_delete: boolean;
-											can_add_version: boolean;
-											can_read_link: boolean;
-											can_change_link: boolean;
-											can_share: boolean;
-											can_read_share: boolean;
-											can_change_share: boolean;
-										};
-								  }
-								| null;
 							shares: Array<{
 								__typename?: 'Share';
 								permission: SharePermission;
@@ -2178,6 +1839,19 @@ export type GetChildrenQuery = {
 					  }
 					| null
 				>;
+				permissions: {
+					__typename?: 'Permissions';
+					can_read: boolean;
+					can_write_file: boolean;
+					can_write_folder: boolean;
+					can_delete: boolean;
+					can_add_version: boolean;
+					can_read_link: boolean;
+					can_change_link: boolean;
+					can_share: boolean;
+					can_read_share: boolean;
+					can_change_share: boolean;
+				};
 		  }
 		| null;
 };
@@ -2314,44 +1988,6 @@ export type GetNodeQuery = {
 								full_name: string;
 								email: string;
 							} | null;
-							parent?:
-								| {
-										__typename?: 'File';
-										id: string;
-										name: string;
-										permissions: {
-											__typename?: 'Permissions';
-											can_read: boolean;
-											can_write_file: boolean;
-											can_write_folder: boolean;
-											can_delete: boolean;
-											can_add_version: boolean;
-											can_read_link: boolean;
-											can_change_link: boolean;
-											can_share: boolean;
-											can_read_share: boolean;
-											can_change_share: boolean;
-										};
-								  }
-								| {
-										__typename?: 'Folder';
-										id: string;
-										name: string;
-										permissions: {
-											__typename?: 'Permissions';
-											can_read: boolean;
-											can_write_file: boolean;
-											can_write_folder: boolean;
-											can_delete: boolean;
-											can_add_version: boolean;
-											can_read_link: boolean;
-											can_change_link: boolean;
-											can_share: boolean;
-											can_read_share: boolean;
-											can_change_share: boolean;
-										};
-								  }
-								| null;
 							shares: Array<{
 								__typename?: 'Share';
 								permission: SharePermission;
@@ -2393,44 +2029,6 @@ export type GetNodeQuery = {
 								full_name: string;
 								email: string;
 							} | null;
-							parent?:
-								| {
-										__typename?: 'File';
-										id: string;
-										name: string;
-										permissions: {
-											__typename?: 'Permissions';
-											can_read: boolean;
-											can_write_file: boolean;
-											can_write_folder: boolean;
-											can_delete: boolean;
-											can_add_version: boolean;
-											can_read_link: boolean;
-											can_change_link: boolean;
-											can_share: boolean;
-											can_read_share: boolean;
-											can_change_share: boolean;
-										};
-								  }
-								| {
-										__typename?: 'Folder';
-										id: string;
-										name: string;
-										permissions: {
-											__typename?: 'Permissions';
-											can_read: boolean;
-											can_write_file: boolean;
-											can_write_folder: boolean;
-											can_delete: boolean;
-											can_add_version: boolean;
-											can_read_link: boolean;
-											can_change_link: boolean;
-											can_share: boolean;
-											can_read_share: boolean;
-											can_change_share: boolean;
-										};
-								  }
-								| null;
 							shares: Array<{
 								__typename?: 'Share';
 								permission: SharePermission;

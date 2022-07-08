@@ -8,11 +8,11 @@ import React, { useCallback } from 'react';
 
 import { useModal } from '@zextras/carbonio-design-system';
 
-import { GetNodeParentType, Node } from '../../types/common';
+import { NodeParent, Node } from '../../types/common';
 import { CopyNodesModalContent } from '../../views/components/CopyNodesModalContent';
 
 export type OpenCopyModal = (
-	nodes: Array<Pick<Node, '__typename' | 'id'> & GetNodeParentType>,
+	nodes: Array<Pick<Node, '__typename' | 'id'> & NodeParent>,
 	fromFolder?: string
 ) => void;
 

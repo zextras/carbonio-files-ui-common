@@ -7,5 +7,9 @@
 mutation updateNode($node_id: String!, $name: String, $description: String, $shares_limit: Int = 1) {
 	updateNode(node_id: $node_id, name: $name, description: $description) {
 		...Child
+		parent {
+			id
+			name
+		}
 	}
 }

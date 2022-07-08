@@ -18,7 +18,7 @@ import { NODES_LOAD_LIMIT } from '../../constants';
 import GET_CHILDREN from '../../graphql/queries/getChildren.graphql';
 import { useCopyNodesMutation } from '../../hooks/graphql/mutations/useCopyNodesMutation';
 import { useGetChildrenQuery } from '../../hooks/graphql/queries/useGetChildrenQuery';
-import { GetNodeParentType, Node, NodeListItemType, RootListItemType } from '../../types/common';
+import { NodeParent, Node, NodeListItemType, RootListItemType } from '../../types/common';
 import { Folder, GetChildrenQuery, GetChildrenQueryVariables } from '../../types/graphql/types';
 import { canBeCopyDestination, isFile, isFolder, isRoot } from '../../utils/ActionsFactory';
 import { ModalFooter } from './ModalFooter';
@@ -27,7 +27,7 @@ import { ModalList } from './ModalList';
 import { ModalRootsList } from './ModalRootsList';
 
 interface CopyNodesModalContentProps {
-	nodesToCopy: Array<Pick<Node, '__typename' | 'id'> & GetNodeParentType>;
+	nodesToCopy: Array<Pick<Node, '__typename' | 'id'> & NodeParent>;
 	folderId?: string;
 	closeAction?: () => void;
 }
@@ -40,13 +40,7 @@ export const CopyNodesModalContent: React.VFC<CopyNodesModalContentProps> = ({
 	const [t] = useTranslation();
 	const [destinationFolder, setDestinationFolder] = useState<string>();
 	const [openedFolder, setOpenedFolder] = useState<string>(folderId || '');
-	const {
-		data: currentFolder,
-		loading,
-		error,
-		hasMore,
-		loadMore
-	} = useGetChildrenQuery(openedFolder);
+	const { data: currentFolder, loading, hasMore, loadMore } = useGetChildrenQuery(openedFolder);
 
 	/** Mutation to copy nodes */
 	const { copyNodes, loading: copyNodesMutationLoading } = useCopyNodesMutation();

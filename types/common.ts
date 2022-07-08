@@ -25,7 +25,7 @@ export type Node = FilesFile | Folder;
 
 export type PickIdNodeType = Pick<Node, 'id'>;
 
-export type GetNodeParentType = {
+export type NodeParent = {
 	parent?: Maybe<
 		| ({ __typename?: 'File' } & Pick<FilesFile, 'id' | 'name'> & {
 					permissions: { __typename?: 'Permissions' } & Pick<
@@ -88,7 +88,7 @@ export type NodeListItemType = ChildFragment & {
 	disabled?: boolean;
 	selectable?: boolean;
 	shares?: Array<Pick<Share, '__typename' | 'created_at'> | null | undefined>;
-};
+} & NodeParent;
 
 export type RootListItemType = Pick<
 	NodeListItemType,
