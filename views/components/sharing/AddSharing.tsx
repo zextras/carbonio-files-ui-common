@@ -323,7 +323,12 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 						inlineAndContactMemberEmails.push(member.value);
 					} else if (member.type === 'C' && isDerefMember(member)) {
 						inlineAndContactMemberEmails.push(member.cn[0]._attrs.email);
-					} else if (member.type === 'G' && isDerefMember(member)) {
+					} else if (
+						member.type === 'G' &&
+						isDerefMember(member) &&
+						// TODO: handle distribution lists. For now, exclude them from members
+						member.cn[0]._attrs.type !== 'group'
+					) {
 						galMembers.push({
 							...member.cn[0]._attrs,
 							role: Role.Viewer,
