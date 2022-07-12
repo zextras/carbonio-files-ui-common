@@ -44,6 +44,7 @@ import {
 	AutocompleteRequest,
 	AutocompleteResponse,
 	ContactGroupMatch,
+	DerefContactInformation,
 	GetContactsRequest,
 	GetContactsResponse,
 	isAnAccount,
@@ -54,6 +55,7 @@ import {
 } from '../../../types/network';
 import { getChipLabel, sharePermissionsGetter } from '../../../utils/utils';
 import { RouteLeavingGuard } from '../RouteLeavingGuard';
+import { ShareChipLabel } from './ShareChipLabel';
 
 const Gray5Input = styled(Input)`
 	background-color: ${({ theme }): string => theme.palette.gray5.regular};
@@ -154,6 +156,10 @@ function matchToContact(match: Match): Contact {
 		company: match.company,
 		fullName: match.full
 	};
+}
+
+function derefContactInfoToContact({ _attrs: derefAttrs }: DerefContactInformation): Contact {
+	return derefAttrs;
 }
 
 const removeDL: (autocompleteResponse: AutocompleteResponse) => Match[] = ({ match }) =>
@@ -319,7 +325,7 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 						inlineAndContactMemberEmails.push(member.cn[0]._attrs.email);
 					} else if (member.type === 'G' && isDerefMember(member)) {
 						galMembers.push({
-							email: member.cn[0]._attrs.email,
+							...member.cn[0]._attrs,
 							role: Role.Viewer,
 							sharingAllowed: false,
 							id: member.cn[0]._attrs.zimbraId
@@ -451,6 +457,11 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 		}
 	}, [dropdownItems]);
 
+	const chipLabelComponent = useCallback(
+		(item: Contact) => <ShareChipLabel contact={item} showTooltip={item.id !== undefined} />,
+		[]
+	);
+
 	return (
 		<Container padding={{ top: 'large' }}>
 			<RouteLeavingGuard
@@ -474,7 +485,7 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 					onChange={onChipsChange}
 					value={chips}
 					valueKey="email"
-					getChipLabel={getChipLabel}
+					getChipLabel={chipLabelComponent}
 					dividerColor="gray2"
 				/>
 				<Dropdown

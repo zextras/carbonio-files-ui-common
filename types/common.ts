@@ -142,7 +142,7 @@ export interface ChipProps {
 	error?: boolean;
 	avatarPicture?: string;
 	closable?: boolean;
-	onClose?: (event: React.SyntheticEvent) => void;
+	onClose?: (event?: React.SyntheticEvent) => void;
 	avatarIcon?: string;
 	avatarBackground?: string;
 	avatarColor?: string;
