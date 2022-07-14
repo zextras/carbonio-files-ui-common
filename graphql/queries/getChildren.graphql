@@ -17,9 +17,6 @@ query getChildren(
 		... on Folder {
 			children(limit: $children_limit, cursor: $cursor, sort: $sort) {
 				...Child
-				shares(limit: $shares_limit) {
-					created_at
-				}
 			}
 			cursor @client
 		}

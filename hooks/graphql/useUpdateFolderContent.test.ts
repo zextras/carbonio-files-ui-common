@@ -85,7 +85,7 @@ describe('useUpdateFolderContent', () => {
 				query: GET_CHILDREN,
 				variables: getChildrenVariables(folder.id, NODES_LOAD_LIMIT)
 			});
-			expect(queryResult?.getNode as Maybe<Folder> | undefined).not.toBeNull();
+			expect((queryResult?.getNode || null) as Maybe<Folder>).not.toBeNull();
 			expect((queryResult?.getNode as Folder).children).toHaveLength(1);
 			// created element has to be the first and only element
 			expect((queryResult?.getNode as Folder).children[0]?.id).toBe(element.id);

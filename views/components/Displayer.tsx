@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-/* eslint-disable camelcase */
 import React, { useMemo } from 'react';
 
 import { Container } from '@zextras/carbonio-design-system';
@@ -21,7 +20,12 @@ export interface DisplayerProps {
 
 export const Displayer: React.VFC<DisplayerProps> = ({ translationKey, icons = [] }) => {
 	const { activeNodeId } = useActiveNode();
-	const { data: nodeData, loading, loadMore, hasMore } = useGetNodeQuery(activeNodeId);
+	const {
+		data: nodeData,
+		loading,
+		loadMore,
+		hasMore
+	} = useGetNodeQuery(activeNodeId, undefined, { returnPartialData: true });
 
 	const node = useMemo(() => nodeData?.getNode || null, [nodeData]);
 

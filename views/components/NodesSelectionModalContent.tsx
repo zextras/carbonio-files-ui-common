@@ -189,7 +189,7 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 	);
 
 	const nodes = useMemo<Array<NodeListItemType>>(() => {
-		if (currentFolderNode && currentFolderNode.children.length > 0) {
+		if (currentFolderNode?.children && currentFolderNode.children.length > 0) {
 			return reduce<typeof currentFolderNode.children[number], NodeListItemType[]>(
 				currentFolderNode.children,
 				(result, node) => {

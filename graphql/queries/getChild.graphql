@@ -10,8 +10,5 @@ query getChild(
 ) {
 	getNode(node_id: $node_id) {
 		...Child
-		shares(limit: $shares_limit) {
-			created_at
-		}
 	}
 }

@@ -31,9 +31,6 @@ query findNodes(
     ) {
         nodes {
             ...Child
-            shares(limit: $shares_limit) {
-                created_at
-            }
         }
         page_token
     }

@@ -4,6 +4,7 @@
 
 #import "./baseNode.graphql"
 #import "./permissions.graphql"
+#import "./share.graphql"
 
 fragment Child on Node {
 	...BaseNode
@@ -22,5 +23,8 @@ fragment Child on Node {
 		id
 		name
 		...Permissions
+	}
+	shares(limit: $shares_limit) {
+		...Share
 	}
 }

@@ -65,7 +65,7 @@ export const NodeSharing: React.VFC<NodeSharingProps> = ({ node }) => {
 	const [t] = useTranslation();
 	const { me } = useUserInfo();
 
-	const { data, error } = useGetSharesQuery(node.id);
+	const { data } = useGetSharesQuery(node.id);
 
 	const deleteShare = useDeleteShareMutation();
 
@@ -135,7 +135,6 @@ export const NodeSharing: React.VFC<NodeSharingProps> = ({ node }) => {
 				padding={{ all: 'large' }}
 				background="gray6"
 			>
-				{error && <Text color="error">{error}</Text>}
 				{!node.permissions.can_share && (
 					<Padding bottom="large" width="100%">
 						<Container

@@ -112,7 +112,7 @@ describe('Rename', () => {
 			userEvent.click(screen.getByTestId('icon: MoreVertical'));
 			// check that the rename action becomes visible
 			await renameNode(newName);
-			const error = await screen.findByText(/Error! Name already assigned/);
+			const error = await screen.findByText(/Error! Name already assigned/i);
 			const inputFieldDiv = screen.getByTestId('input-name');
 			const inputField = within(inputFieldDiv).getByRole('textbox');
 			expect(error).toBeVisible();

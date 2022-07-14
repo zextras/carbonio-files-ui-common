@@ -225,15 +225,11 @@ describe('Folder View', () => {
 					getNode: currentFolder
 				}
 			});
-			const { getByTextWithMarkup, findByTextWithMarkup } = render(<FolderView />, {
+			const { findByTextWithMarkup } = render(<FolderView />, {
 				initialRouterEntries: [`/?folder=${currentFolder.id}&node=${node.id}`]
 			});
 			const displayer = await screen.findByTestId('displayer');
 			expect(within(displayer).getAllByText(node.name)).toHaveLength(2);
-			expect(getByTextWithMarkup(buildBreadCrumbRegExp(node.name))).toBeVisible();
-			const showPathButton = screen.getByRole('button', { name: /show path/i });
-			expect(showPathButton).toBeVisible();
-			userEvent.click(showPathButton);
 			const breadcrumbItem = await findByTextWithMarkup(
 				buildBreadCrumbRegExp(...map(path, (parent) => parent.name))
 			);
@@ -256,7 +252,6 @@ describe('Folder View', () => {
 			expect(
 				screen.getByText(/View files and folders, share them with your contacts/i)
 			).toBeVisible();
-			expect.assertions(13);
 		});
 	});
 

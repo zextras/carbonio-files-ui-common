@@ -23,7 +23,9 @@ export function useGetBaseNodeQuery(nodeId?: string): GetBaseNodeQueryHook {
 				node_id: nodeId || ''
 			},
 			skip: !nodeId,
-			notifyOnNetworkStatusChange: true
+			notifyOnNetworkStatusChange: true,
+			returnPartialData: true,
+			errorPolicy: 'all'
 		}
 	);
 	useErrorHandler(error, 'GET_BASE_NODE');

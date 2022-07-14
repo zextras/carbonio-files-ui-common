@@ -257,7 +257,7 @@ export function mockUpdateNode(
 	return {
 		request: {
 			query: UPDATE_NODE,
-			variables
+			variables: { ...variables, shares_limit: 1 }
 		},
 		result: {
 			data: {
@@ -274,7 +274,7 @@ export function mockUpdateNodeError(
 	return {
 		request: {
 			query: UPDATE_NODE,
-			variables
+			variables: { ...variables, shares_limit: 1 }
 		},
 		error
 	};
@@ -401,7 +401,7 @@ export function mockCopyNodes(
 	return {
 		request: {
 			query: COPY_NODES,
-			variables
+			variables: { ...variables, shares_limit: 1 }
 		},
 		result: {
 			data: {
@@ -421,7 +421,7 @@ export function mockCreateFolder(
 	return {
 		request: {
 			query: CREATE_FOLDER,
-			variables
+			variables: { ...variables, shares_limit: 1 }
 		},
 		result: {
 			data: {
@@ -438,7 +438,7 @@ export function mockCreateFolderError(
 	return {
 		request: {
 			query: CREATE_FOLDER,
-			variables
+			variables: { ...variables, shares_limit: 1 }
 		},
 		error
 	};
