@@ -75,7 +75,10 @@ export function useUpdateNodeMutation(): [
 								const newPosition = addNodeToFolder(parentNode, updatedNode);
 								const currentFolder = folderId || rootId;
 								if (parentNode.id === currentFolder) {
-									scrollToNodeItem(updatedNode.id, newPosition === parentNode.children.length);
+									scrollToNodeItem(
+										updatedNode.id,
+										newPosition === parentNode.children.nodes.length
+									);
 								}
 							}
 						}

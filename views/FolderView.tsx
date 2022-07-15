@@ -322,13 +322,13 @@ const FolderView: React.VFC = () => {
 		if (
 			currentFolder?.getNode &&
 			isFolder(currentFolder.getNode) &&
-			currentFolder.getNode.children &&
-			currentFolder.getNode.children.length > 0
+			currentFolder.getNode.children?.nodes &&
+			currentFolder.getNode.children.nodes.length > 0
 		) {
-			const { children } = currentFolder.getNode;
-			return filter<Unwrap<typeof children>, NonNullableListItem<typeof children>>(
-				children,
-				(child): child is NonNullableListItem<typeof children> => child != null
+			const { nodes: childrenNodes } = currentFolder.getNode.children;
+			return filter<Unwrap<typeof childrenNodes>, NonNullableListItem<typeof childrenNodes>>(
+				childrenNodes,
+				(child): child is NonNullableListItem<typeof childrenNodes> => child != null
 			);
 		}
 		return [];

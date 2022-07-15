@@ -52,6 +52,17 @@ export function sortNodes(
 	return nodes.sort((a, b) => nodeSortComparator(a, b, sortsList));
 }
 
+export function populateNodePage(
+	nodes: Maybe<Node>[],
+	pageSize: number = NODES_LOAD_LIMIT
+): NodePage {
+	return {
+		__typename: 'NodePage',
+		nodes,
+		page_token: nodes.length === pageSize ? 'next_page_token' : null
+	};
+}
+
 export function populateUser(id?: string, name?: string, email?: string): User {
 	return {
 		id: id || faker.datatype.uuid(),
@@ -221,7 +232,7 @@ export function populateFolder(
 	}
 	const folder: Folder = {
 		...populateNodeFields(type, id, folderName),
-		children,
+		children: populateNodePage(children),
 		__typename: 'Folder'
 	};
 	if (!folder.id.includes('LOCAL')) {
@@ -229,11 +240,12 @@ export function populateFolder(
 	}
 	for (let i = 0; i < childrenLimit; i += 1) {
 		const child = populateNode();
-		child.parent = { ...folder, children: [] } as Folder;
+		child.parent = { ...folder, children: populateNodePage([]) } as Folder;
 		child.name = `child-${i} - ${child.name}`;
 		children.push(child);
 	}
-	sortNodes(folder.children, sort);
+	sortNodes(folder.children.nodes, sort);
+	folder.children = populateNodePage(children);
 	return folder;
 }
 
@@ -314,14 +326,6 @@ export function populateFile(id?: string, name?: string): FilesFile {
 	};
 	file.shares = populateShares(file, faker.datatype.number(10));
 	return file;
-}
-
-export function populateNodePage(nodes: Node[], pageSize: number = NODES_LOAD_LIMIT): NodePage {
-	return {
-		__typename: 'NodePage',
-		nodes,
-		page_token: nodes.length === pageSize ? 'next_page_token' : null
-	};
 }
 
 export function populateContact(

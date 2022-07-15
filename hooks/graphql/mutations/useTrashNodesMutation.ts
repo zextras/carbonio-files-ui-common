@@ -151,7 +151,7 @@ export function useTrashNodesMutation(): TrashNodesType {
 						result.getNode &&
 						isFolder(result.getNode)
 					) {
-						listNodes = result.getNode.children;
+						listNodes = result.getNode.children?.nodes;
 					}
 
 					if (

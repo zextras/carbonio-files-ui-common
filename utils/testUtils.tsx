@@ -206,6 +206,7 @@ export const render = (
 };
 
 export async function triggerLoadMore(): Promise<void> {
+	expect(screen.getByTestId('icon: Refresh')).toBeVisible();
 	const { calls } = (window.IntersectionObserver as jest.Mock<IntersectionObserver>).mock;
 	const [onChange] = calls[calls.length - 1];
 	// trigger the intersection on the observed element

@@ -213,7 +213,7 @@ describe('Search view', () => {
 			const destinationFolder = populateFolder();
 			destinationFolder.permissions.can_write_folder = true;
 			destinationFolder.permissions.can_write_file = true;
-			(node.parent as Folder).children.push(destinationFolder);
+			(node.parent as Folder).children.nodes.push(destinationFolder);
 			(node.parent as Folder).permissions.can_write_folder = true;
 			(node.parent as Folder).permissions.can_write_file = true;
 			node.permissions.can_write_folder = true;

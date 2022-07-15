@@ -34,7 +34,7 @@ const handleGetChildrenRequest: ResponseResolver<
 
 	const folder = populateFolder(childrenNum, parentNode, parentNodeName);
 
-	forEach(folder.children, (mockedNode) => {
+	forEach(folder.children.nodes, (mockedNode) => {
 		if (mockedNode) {
 			const sharesNum = faker.datatype.number({ min: 0, max: sharesLimit || 1 });
 			mockedNode.shares = take(mockedNode.shares, sharesNum);
@@ -42,7 +42,7 @@ const handleGetChildrenRequest: ResponseResolver<
 	});
 
 	if (sort) {
-		sortNodes(folder.children, sort);
+		sortNodes(folder.children.nodes, sort);
 	}
 
 	return res(

@@ -24,17 +24,23 @@ describe('Mark for deletion - trash', () => {
 				node.permissions.can_write_file = true;
 				node.permissions.can_write_folder = true;
 				node.flagged = false;
-				currentFolder.children.push(node);
+				currentFolder.children.nodes.push(node);
 			}
 
 			render(
-				<List nodes={currentFolder.children as Array<Node>} mainList emptyListMessage={'hint'} />
+				<List
+					nodes={currentFolder.children.nodes as Array<Node>}
+					mainList
+					emptyListMessage={'hint'}
+				/>
 			);
 
 			// activate selection mode by selecting items
-			selectNodes(map(currentFolder.children, (node) => (node as Node).id));
+			selectNodes(map(currentFolder.children.nodes, (node) => (node as Node).id));
 			// check that all wanted items are selected
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(currentFolder.children.length);
+			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(
+				currentFolder.children.nodes.length
+			);
 
 			const selectionModeActiveListHeader = screen.getByTestId('list-header-selectionModeActive');
 
@@ -43,7 +49,7 @@ describe('Mark for deletion - trash', () => {
 			expect(trashIcon).toBeVisible();
 			expect(trashIcon.parentElement).not.toHaveAttribute('disable');
 
-			selectNodes(map(currentFolder.children, (node) => (node as Node).id));
+			selectNodes(map(currentFolder.children.nodes, (node) => (node as Node).id));
 
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 			expect.assertions(4);
@@ -55,22 +61,28 @@ describe('Mark for deletion - trash', () => {
 			const filename1 = 'test-fileName1';
 			const file = populateFile(fileId1, filename1);
 			file.permissions.can_write_file = false;
-			currentFolder.children.push(file);
+			currentFolder.children.nodes.push(file);
 
 			const folder = populateFolder();
 			folder.permissions.can_write_folder = true;
-			currentFolder.children.push(folder);
+			currentFolder.children.nodes.push(folder);
 
 			render(
-				<List nodes={currentFolder.children as Array<Node>} mainList emptyListMessage={'hint'} />
+				<List
+					nodes={currentFolder.children.nodes as Array<Node>}
+					mainList
+					emptyListMessage={'hint'}
+				/>
 			);
 
 			await screen.findByText(filename1);
 
 			// activate selection mode by selecting items
-			selectNodes(map(currentFolder.children, (node) => (node as Node).id));
+			selectNodes(map(currentFolder.children.nodes, (node) => (node as Node).id));
 			// check that all wanted items are selected
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(currentFolder.children.length);
+			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(
+				currentFolder.children.nodes.length
+			);
 
 			const selectionModeActiveListHeader = screen.getByTestId('list-header-selectionModeActive');
 
@@ -78,7 +90,7 @@ describe('Mark for deletion - trash', () => {
 
 			expect(trashIcon).not.toBeInTheDocument();
 
-			selectNodes(map(currentFolder.children, (node) => (node as Node).id));
+			selectNodes(map(currentFolder.children.nodes, (node) => (node as Node).id));
 
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 			expect.assertions(3);
@@ -91,10 +103,14 @@ describe('Mark for deletion - trash', () => {
 			const node = populateNode();
 			node.permissions.can_write_file = false;
 			node.permissions.can_write_folder = false;
-			currentFolder.children.push(node);
+			currentFolder.children.nodes.push(node);
 
 			render(
-				<List nodes={currentFolder.children as Array<Node>} mainList emptyListMessage={'hint'} />
+				<List
+					nodes={currentFolder.children.nodes as Array<Node>}
+					mainList
+					emptyListMessage={'hint'}
+				/>
 			);
 
 			// right click to open contextual menu

@@ -118,7 +118,7 @@ describe('Upload list', () => {
 					GetChildrenQueryVariables
 				>(getChildrenMockedQuery.request);
 				return expect(
-					(localRootCachedData?.getNode as Maybe<Folder> | undefined)?.children || []
+					(localRootCachedData?.getNode as Maybe<Folder> | undefined)?.children.nodes || []
 				).toHaveLength(uploadedFiles.length);
 			});
 		});
@@ -277,7 +277,7 @@ describe('Upload list', () => {
 					GetChildrenQueryVariables
 				>(getChildrenMockedQuery.request);
 				return expect(
-					(localRootCachedData?.getNode as Maybe<Folder> | undefined)?.children || []
+					(localRootCachedData?.getNode as Maybe<Folder> | undefined)?.children.nodes || []
 				).toHaveLength(1);
 			});
 
@@ -405,7 +405,7 @@ describe('Upload list', () => {
 					GetChildrenQueryVariables
 				>(getChildrenMockedQuery.request);
 				return expect(
-					(localRootCachedData?.getNode as Maybe<Folder> | undefined)?.children || []
+					(localRootCachedData?.getNode as Maybe<Folder> | undefined)?.children.nodes || []
 				).toHaveLength(uploadedFiles.length);
 			});
 		});
