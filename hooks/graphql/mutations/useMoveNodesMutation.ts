@@ -143,8 +143,8 @@ export function useMoveNodesMutation(): { moveNodes: MoveNodesType; loading: boo
 						isFolder(result.getNode) &&
 						isFolder(lastResult.getNode)
 					) {
-						const listNodes = result.getNode.children;
-						const lastListNodes = lastResult.getNode.children;
+						const listNodes = result.getNode.children?.nodes;
+						const lastListNodes = lastResult.getNode.children?.nodes;
 						if (
 							activeNodeId &&
 							some(lastListNodes, (lastResultNode) => lastResultNode?.id === activeNodeId) &&

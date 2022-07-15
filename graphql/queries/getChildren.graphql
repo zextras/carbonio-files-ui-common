@@ -7,7 +7,7 @@
 query getChildren(
 	$node_id: ID!,
 	$children_limit: Int!,
-	$cursor: String,
+	$page_token: String,
 	$sort: NodeSort!,
 	$shares_limit: Int = 1
 ) {
@@ -16,10 +16,12 @@ query getChildren(
 		name
 		...Permissions
 		... on Folder {
-			children(limit: $children_limit, cursor: $cursor, sort: $sort) {
-				...Child
+			children(limit: $children_limit, page_token: $page_token, sort: $sort) {
+				nodes {
+					...Child
+				}
+				page_token
 			}
-			cursor @client
 		}
 	}
 }

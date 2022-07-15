@@ -102,16 +102,15 @@ type File implements Node {
 type Folder implements Node {
   """ List of all child nodes of a folder."""
   children(
-    """ Cursor: a string of the last node id fetched in the previous page (optional)
-    """
-    cursor: String
-
     """ Limit: an integer of how many elements to fetch (mandatory)"""
     limit: Int!
 
+    " String representing a the page token. This token contains all the parameter values\n necessary to request the next page of a node list.\n If this parameter is initialized, then ALL OTHER parameters will be ignored."
+    page_token: String
+
     " Sort: a list of NodeSort containing all the sort order desired (optional).\n If it is not specified, a NAME_ASC sort is applied by default."
     sort: NodeSort!
-  ): [Node]!
+  ): NodePage!
 
   """ Folder creation timestamp"""
   created_at: DateTime!

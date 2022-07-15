@@ -15,17 +15,16 @@ import {
 } from '@apollo/client';
 import filter from 'lodash/filter';
 import findIndex from 'lodash/findIndex';
-import last from 'lodash/last';
+import size from 'lodash/size';
 
-import { nodeListCursorVar } from '../../apollo/nodeListCursorVar';
 import { nodeSortVar } from '../../apollo/nodeSortVar';
 import CHILD from '../../graphql/fragments/child.graphql';
-import { NodesListCachedObject } from '../../types/apollo';
+import { NodesPageCachedObject } from '../../types/apollo';
 import { ChildFragment, Folder, Maybe, NodeSort } from '../../types/graphql/types';
 import { addNodeInSortedList } from '../../utils/utils';
 
 type CachedFolder = Pick<Folder, 'id' | '__typename'> & {
-	children: Array<Maybe<Partial<File | Folder> & ChildFragment> | undefined>;
+	children: { nodes: Array<Maybe<Partial<File | Folder> & ChildFragment> | undefined> };
 };
 
 export type UpdateFolderContentType = {
@@ -65,9 +64,9 @@ export const useUpdateFolderContent = (
 				fields: {
 					// existingChildrenRefs is the data of the cache (array of references)
 					children(
-						existingChildrenRefs: NodesListCachedObject,
+						existingChildrenRefs: NodesPageCachedObject,
 						{ readField, storeFieldName, DELETE }
-					): NodesListCachedObject {
+					): NodesPageCachedObject {
 						const children = JSON.parse(storeFieldName.replace(`children:`, ''));
 						const sortArg = children.sort;
 						if (currentNodeSort !== sortArg) {
@@ -80,8 +79,10 @@ export const useUpdateFolderContent = (
 							data: newNode
 						});
 
-						const newOrdered = [...existingChildrenRefs.ordered];
-						const newUnOrdered = [...existingChildrenRefs.unOrdered];
+						const newOrdered =
+							(existingChildrenRefs.nodes && [...existingChildrenRefs.nodes.ordered]) || [];
+						const newUnOrdered =
+							(existingChildrenRefs.nodes && [...existingChildrenRefs.nodes.unOrdered]) || [];
 
 						let newIndex = index;
 
@@ -127,20 +128,12 @@ export const useUpdateFolderContent = (
 							}
 						}
 
-						// update cursor if last ordered node changes
-						const currentCursor = nodeListCursorVar()[folder.id];
-						const newCursor = last(newOrdered);
-						if (currentCursor && currentCursor !== newCursor) {
-							// if there is a new last ordered item, use this as new cursor
-							nodeListCursorVar({
-								...nodeListCursorVar(),
-								[folder.id]: newCursor
-							});
-						}
-
 						return {
-							ordered: newOrdered,
-							unOrdered: newUnOrdered
+							...existingChildrenRefs,
+							nodes: {
+								ordered: newOrdered,
+								unOrdered: newUnOrdered
+							}
 						};
 					}
 				}
@@ -151,16 +144,16 @@ export const useUpdateFolderContent = (
 	const addNodeToFolder = useCallback<UpdateFolderContentType['addNodeToFolder']>(
 		(folder, newNode) => {
 			// if folder is empty, just write cache
-			if (folder.children.length === 0) {
+			if (folder.children.nodes.length === 0) {
 				addNodeInCachedChildren(apolloClient.cache, newNode, folder, 0, nodeSort);
 				return 0;
 			}
 			// else find the position of the node in the loaded list to check
 			// if the updated node is an ordered or an unordered node
-			const newIndex = addNodeInSortedList(folder.children, newNode, nodeSort);
+			const newIndex = addNodeInSortedList(folder.children.nodes, newNode, nodeSort);
 			addNodeInCachedChildren(apolloClient.cache, newNode, folder, newIndex, nodeSort);
 
-			return newIndex > -1 ? newIndex : folder.children.length;
+			return newIndex > -1 ? newIndex : folder.children.nodes.length;
 		},
 		[addNodeInCachedChildren, apolloClient, nodeSort]
 	);
@@ -172,37 +165,33 @@ export const useUpdateFolderContent = (
 				id: cache.identify(folder),
 				fields: {
 					children(
-						existingChildrenRefs: NodesListCachedObject,
-						{ readField }
-					): NodesListCachedObject {
-						const newOrdered = filter(existingChildrenRefs.ordered, (ref) => {
+						existingNodesRefs: NodesPageCachedObject,
+						{ readField, DELETE }
+					): NodesPageCachedObject {
+						const newOrdered = filter(existingNodesRefs.nodes?.ordered, (ref) => {
 							const id = readField<string>('id', ref);
 							return !!id && !nodeIdsToRemove.includes(id);
 						});
 
-						const newUnOrdered = filter(existingChildrenRefs.unOrdered, (ref) => {
+						const newUnOrdered = filter(existingNodesRefs.nodes?.unOrdered, (ref) => {
 							const id = readField<string>('id', ref);
 							return !!id && !nodeIdsToRemove.includes(id);
 						});
 
-						const currentCursor = nodeListCursorVar()[folder.id];
-						if (currentCursor) {
-							// if there is a new page update cursor to fetch next page starting from new last ordered
-							// undefined cursor means that there are new pages to load but not a valid cursor to use
-							// (so force refetch of first page)
-							const newCursor = last(newOrdered);
-							if (currentCursor !== newCursor) {
-								// if there is a new last ordered item, use this as new cursor
-								nodeListCursorVar({
-									...nodeListCursorVar(),
-									[folder.id]: newCursor
-								});
-							}
+						if (
+							existingNodesRefs.page_token &&
+							size(newOrdered) === 0 &&
+							size(newUnOrdered) === 0
+						) {
+							return DELETE;
 						}
 
 						return {
-							ordered: newOrdered,
-							unOrdered: newUnOrdered
+							...existingNodesRefs,
+							nodes: {
+								ordered: newOrdered,
+								unOrdered: newUnOrdered
+							}
 						};
 					}
 				}

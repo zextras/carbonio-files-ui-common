@@ -66,11 +66,11 @@ export const MoveNodesModalContent: React.VFC<MoveNodesModalContentProps> = ({
 		if (
 			currentFolder?.getNode &&
 			isFolder(currentFolder.getNode) &&
-			currentFolder.getNode.children &&
-			currentFolder.getNode.children.length > 0
+			currentFolder.getNode.children?.nodes &&
+			currentFolder.getNode.children.nodes.length > 0
 		) {
 			return reduce(
-				currentFolder.getNode.children,
+				currentFolder.getNode.children.nodes,
 				(result: NodeListItemType[], node) => {
 					if (node) {
 						// in move modal, if a node cannot be a move destination, then it is fully disabled

@@ -41,16 +41,16 @@ describe('Sorting', () => {
 		const filename1 = 'a';
 		const file1 = populateFile(fileId1, filename1);
 		file1.permissions.can_write_file = false;
-		currentFolder.children.push(file1);
+		currentFolder.children.nodes.push(file1);
 
 		const fileId2 = 'fileId2';
 		const filename2 = 'b';
 		const file2 = populateFile(fileId2, filename2);
 		file2.permissions.can_write_file = false;
-		currentFolder.children.push(file2);
+		currentFolder.children.nodes.push(file2);
 
-		currentFolder2.children.push(file2);
-		currentFolder2.children.push(file1);
+		currentFolder2.children.nodes.push(file2);
+		currentFolder2.children.nodes.push(file1);
 
 		const mocks = [
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),

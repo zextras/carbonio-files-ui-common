@@ -11,7 +11,12 @@ import userEvent from '@testing-library/user-event';
 import { act } from 'react-dom/test-utils';
 
 import GET_CHILDREN from '../../graphql/queries/getChildren.graphql';
-import { populateFolder, populateNode, populateShares } from '../../mocks/mockUtils';
+import {
+	populateFolder,
+	populateNode,
+	populateNodePage,
+	populateShares
+} from '../../mocks/mockUtils';
 import {
 	File,
 	Folder,
@@ -47,7 +52,7 @@ describe('Displayer', () => {
 		const parent = populateFolder(1);
 		parent.permissions.can_write_file = true;
 		parent.permissions.can_write_folder = true;
-		parent.children.push(node);
+		parent.children.nodes.push(node);
 		node.parent = parent;
 		const copyNode = {
 			...node,
@@ -61,7 +66,7 @@ describe('Displayer', () => {
 			mockCopyNodes({ node_ids: [node.id], destination_id: parent.id }, [copyNode]),
 			mockGetChildren(getChildrenVariables(parent.id), {
 				...parent,
-				children: [...parent.children, copyNode]
+				children: populateNodePage([...parent.children.nodes, copyNode])
 			} as Folder),
 			mockGetNode(getNodeVariables(node.id), node),
 			mockGetNode(getNodeVariables(node.id), node)
@@ -96,7 +101,7 @@ describe('Displayer', () => {
 		// breadcrumb loading
 		await findByTextWithMarkup(buildBreadCrumbRegExp(parent.name));
 		// folder loading
-		await screen.findByText((parent.children[0] as File | Folder).name);
+		await screen.findByText((parent.children.nodes[0] as File | Folder).name);
 		expect(copyButton).not.toHaveAttribute('disabled');
 		act(() => {
 			userEvent.click(copyButton);
@@ -108,7 +113,9 @@ describe('Displayer', () => {
 			query: GET_CHILDREN,
 			variables: getChildrenVariables(parent.id)
 		});
-		expect((queryResult?.getNode as Maybe<Folder> | undefined)?.children || []).toHaveLength(3);
+		expect((queryResult?.getNode as Maybe<Folder> | undefined)?.children.nodes || []).toHaveLength(
+			3
+		);
 	});
 
 	test('Move action open move modal', async () => {
@@ -121,13 +128,13 @@ describe('Displayer', () => {
 		const parent = populateFolder();
 		parent.permissions.can_write_folder = true;
 		parent.permissions.can_write_file = true;
-		parent.children.push(destinationFolder);
+		parent.children.nodes.push(destinationFolder);
 		node.parent = parent;
 		const mocks = [
 			mockGetNode(getNodeVariables(node.id), node),
 			mockGetChildren(getChildrenVariables(parent.id), {
 				...parent,
-				children: [...parent.children, node]
+				children: populateNodePage([...parent.children.nodes, node])
 			} as Folder),
 			mockGetPath({ node_id: parent.id }, [parent]),
 			mockMoveNodes({ node_ids: [node.id], destination_id: destinationFolder.id }, [
@@ -152,7 +159,7 @@ describe('Displayer', () => {
 		const moveButton = await screen.findByRole('button', { name: actionRegexp.move });
 		// folder loading
 		const destinationFolderItem = await screen.findByText(
-			(parent.children[0] as File | Folder).name
+			(parent.children.nodes[0] as File | Folder).name
 		);
 		// breadcrumb loading
 		await findByTextWithMarkup(buildBreadCrumbRegExp(parent.name));
@@ -170,7 +177,9 @@ describe('Displayer', () => {
 			query: GET_CHILDREN,
 			variables: getChildrenVariables(parent.id)
 		});
-		expect((queryResult?.getNode as Maybe<Folder> | undefined)?.children || []).toHaveLength(1);
+		expect((queryResult?.getNode as Maybe<Folder> | undefined)?.children.nodes || []).toHaveLength(
+			1
+		);
 	});
 
 	test('Rename action open rename modal', async () => {
@@ -178,7 +187,7 @@ describe('Displayer', () => {
 		node.permissions.can_write_file = true;
 		node.permissions.can_write_folder = true;
 		const parent = populateFolder(1);
-		parent.children.push(node);
+		parent.children.nodes.push(node);
 		node.parent = parent;
 		const newName = 'new name';
 		const mocks = [
