@@ -13,15 +13,18 @@ export interface NodesListCachedObject {
 	unOrdered: Reference[];
 }
 
-export interface FindNodesCachedObject {
-	args: QueryFindNodesArgs | null;
+export interface NodesPage {
+	// eslint-disable-next-line camelcase
+	page_token: string;
+	nodes: Reference[];
+}
+
+export interface NodesPageCachedObject {
 	// eslint-disable-next-line camelcase
 	page_token: string;
 	nodes: NodesListCachedObject | undefined;
 }
 
-export interface FindNodesObject {
-	// eslint-disable-next-line camelcase
-	page_token: string;
-	nodes: Reference[];
+export interface FindNodesCachedObject extends NodesPageCachedObject {
+	args: QueryFindNodesArgs | null;
 }

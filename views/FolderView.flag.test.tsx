@@ -50,12 +50,12 @@ describe('Flag', () => {
 	describe('Selection mode', () => {
 		test('Flag/Unflag action marks all and only selected items as flagged/unflagged', async () => {
 			const currentFolder = populateFolder(4);
-			forEach(currentFolder.children, (mockedNode) => {
+			forEach(currentFolder.children.nodes, (mockedNode) => {
 				(mockedNode as Node).flagged = false;
 			});
 
 			const nodesIdsToFlag = map(
-				currentFolder.children.slice(0, currentFolder.children.length / 2),
+				currentFolder.children.nodes.slice(0, currentFolder.children.nodes.length / 2),
 				(child) => (child as Node).id
 			);
 
@@ -123,7 +123,7 @@ describe('Flag', () => {
 			const node = populateNode();
 			// set the node not flagged so that we can search by flag action in the contextual menu of first node
 			node.flagged = false;
-			currentFolder.children.push(node);
+			currentFolder.children.nodes.push(node);
 
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),

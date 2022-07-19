@@ -78,16 +78,16 @@ describe('Rename', () => {
 		test('Rename operation fail shows an error in the modal and does not close it', async () => {
 			const currentFolder = populateFolder(2);
 			// enable permission to rename
-			forEach(currentFolder.children, (mockedNode) => {
+			forEach(currentFolder.children.nodes, (mockedNode) => {
 				(mockedNode as Node).permissions.can_write_file = true;
 				(mockedNode as Node).permissions.can_write_folder = true;
 			});
 			const sort = NodeSort.NameAsc; // sort only by name
-			sortNodes(currentFolder.children, sort);
+			sortNodes(currentFolder.children.nodes, sort);
 
 			// rename first element with name of the second one
-			const element = currentFolder.children[0] as Node;
-			const newName = (currentFolder.children[1] as Node).name;
+			const element = currentFolder.children.nodes[0] as Node;
+			const newName = (currentFolder.children.nodes[1] as Node).name;
 
 			const mocks = [
 				mockUpdateNodeError(
@@ -100,7 +100,11 @@ describe('Rename', () => {
 			];
 
 			render(
-				<List nodes={currentFolder.children as Array<Node>} mainList emptyListMessage={'hint'} />,
+				<List
+					nodes={currentFolder.children.nodes as Array<Node>}
+					mainList
+					emptyListMessage={'hint'}
+				/>,
 				{ mocks }
 			);
 
@@ -127,10 +131,14 @@ describe('Rename', () => {
 			const node = populateNode();
 			node.permissions.can_write_file = false;
 			node.permissions.can_write_folder = false;
-			currentFolder.children.push(node);
+			currentFolder.children.nodes.push(node);
 
 			render(
-				<List nodes={currentFolder.children as Array<Node>} mainList emptyListMessage={'hint'} />
+				<List
+					nodes={currentFolder.children.nodes as Array<Node>}
+					mainList
+					emptyListMessage={'hint'}
+				/>
 			);
 
 			// right click to open contextual menu
@@ -143,16 +151,20 @@ describe('Rename', () => {
 		test('Rename is disabled if select more than 1 node in selection mode', async () => {
 			const currentFolder = populateFolder(5);
 			// enable permission to Mfd
-			forEach(currentFolder.children, (mockedNode) => {
+			forEach(currentFolder.children.nodes, (mockedNode) => {
 				(mockedNode as Node).permissions.can_write_file = true;
 				(mockedNode as Node).permissions.can_write_folder = true;
 				(mockedNode as Node).parent = populateFolder(0, currentFolder.id, currentFolder.name);
 			});
-			const element0 = currentFolder.children[0] as Node;
-			const element1 = currentFolder.children[1] as Node;
+			const element0 = currentFolder.children.nodes[0] as Node;
+			const element1 = currentFolder.children.nodes[1] as Node;
 
 			render(
-				<List nodes={currentFolder.children as Array<Node>} mainList emptyListMessage={'hint'} />
+				<List
+					nodes={currentFolder.children.nodes as Array<Node>}
+					mainList
+					emptyListMessage={'hint'}
+				/>
 			);
 
 			selectNodes([element0.id, element1.id]);

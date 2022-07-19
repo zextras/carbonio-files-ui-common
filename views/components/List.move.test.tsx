@@ -29,10 +29,14 @@ describe('Move', () => {
 			node.permissions.can_write_folder = true;
 			node.permissions.can_write_file = true;
 			node.parent = currentFolder;
-			currentFolder.children.push(file, folder, node);
+			currentFolder.children.nodes.push(file, folder, node);
 
 			render(
-				<List nodes={currentFolder.children as Array<Node>} mainList emptyListMessage={'hint'} />
+				<List
+					nodes={currentFolder.children.nodes as Array<Node>}
+					mainList
+					emptyListMessage={'hint'}
+				/>
 			);
 
 			await screen.findByText(file.name);
@@ -74,11 +78,11 @@ describe('Move', () => {
 			const folder = populateFolder();
 			folder.permissions.can_write_folder = true;
 			folder.parent = currentFolder;
-			currentFolder.children.push(file, folder);
+			currentFolder.children.nodes.push(file, folder);
 
 			render(
 				<List
-					nodes={currentFolder.children as Array<Node>}
+					nodes={currentFolder.children.nodes as Array<Node>}
 					mainList
 					emptyListMessage={'hint'}
 					folderId={currentFolder.id}
@@ -115,10 +119,14 @@ describe('Move', () => {
 			node.permissions.can_write_folder = true;
 			node.permissions.can_write_file = true;
 			node.parent = currentFolder;
-			currentFolder.children.push(file, folder, node);
+			currentFolder.children.nodes.push(file, folder, node);
 
 			render(
-				<List nodes={currentFolder.children as Array<Node>} mainList emptyListMessage={'hint'} />
+				<List
+					nodes={currentFolder.children.nodes as Array<Node>}
+					mainList
+					emptyListMessage={'hint'}
+				/>
 			);
 
 			// right click to open contextual menu on file without permission

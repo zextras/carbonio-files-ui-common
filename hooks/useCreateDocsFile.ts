@@ -79,7 +79,7 @@ const createFileCompleted = (
 							const newPosition = addNodeToFolder(parentNode, result.data.getNode);
 							scrollToNodeItem(
 								result.data.getNode.id,
-								newPosition === parentFolder.getNode.children.length
+								newPosition === parentFolder.getNode.children.nodes.length
 							);
 						}
 					}

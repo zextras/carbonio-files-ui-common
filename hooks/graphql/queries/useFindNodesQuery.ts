@@ -21,7 +21,7 @@ export interface FindNodesQueryHookReturnType
 	extends QueryResult<FindNodesQuery, FindNodesQueryVariables> {
 	hasMore: boolean;
 	loadMore: () => Promise<ApolloQueryResult<FindNodesQuery>>;
-	pageToken?: string | null;
+	pageToken: string | null | undefined;
 }
 
 export function useFindNodesQuery({
@@ -69,7 +69,7 @@ export function useFindNodesQuery({
 
 	const loadMore = useCallback(
 		() =>
-			fetchMore({
+			fetchMore<FindNodesQuery, FindNodesQueryVariables>({
 				variables: {
 					page_token: data?.findNodes?.page_token
 				}

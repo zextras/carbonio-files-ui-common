@@ -52,7 +52,7 @@ describe('Copy', () => {
 			file.parent = currentFolder;
 			const folder = populateFolder();
 			folder.parent = currentFolder;
-			currentFolder.children.push(file, folder);
+			currentFolder.children.nodes.push(file, folder);
 
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
@@ -76,8 +76,8 @@ describe('Copy', () => {
 			const destinationFolder = populateFolder();
 			destinationFolder.permissions.can_write_folder = true;
 			destinationFolder.permissions.can_write_file = true;
-			currentFolder.children.push(destinationFolder);
-			const nodeToCopy = currentFolder.children[0] as Node;
+			currentFolder.children.nodes.push(destinationFolder);
+			const nodeToCopy = currentFolder.children.nodes[0] as Node;
 
 			// write destination folder in cache as if it was already loaded
 			global.apolloClient.writeQuery<GetChildrenQuery, GetChildrenQueryVariables>({
@@ -156,7 +156,10 @@ describe('Copy', () => {
 			const currentFolder = populateFolder(5);
 			currentFolder.permissions.can_write_folder = true;
 			currentFolder.permissions.can_write_file = true;
-			const nodesToCopy = [currentFolder.children[0], currentFolder.children[1]] as Node[];
+			const nodesToCopy = [
+				currentFolder.children.nodes[0],
+				currentFolder.children.nodes[1]
+			] as Node[];
 			const copiedNodes = map(nodesToCopy, (node) => ({
 				...node,
 				id: faker.datatype.uuid(),
@@ -181,7 +184,7 @@ describe('Copy', () => {
 			await screen.findByText(nodesToCopy[0].name);
 
 			expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
-				currentFolder.children.length
+				currentFolder.children.nodes.length
 			);
 			// activate selection mode by selecting items
 			selectNodes(map(nodesToCopy, (node) => node.id));
@@ -199,7 +202,7 @@ describe('Copy', () => {
 
 			const modalList = await screen.findByTestId(`modal-list-${currentFolder.id}`);
 			expect(within(modalList).getAllByTestId('node-item', { exact: false })).toHaveLength(
-				currentFolder.children.length
+				currentFolder.children.nodes.length
 			);
 			expect(screen.getByRole('button', { name: actionRegexp.copy })).not.toHaveAttribute(
 				'disabled',
@@ -214,7 +217,7 @@ describe('Copy', () => {
 			const nodeItems = screen.getAllByTestId('node-item', { exact: false });
 			expect(screen.getByText(copiedNodes[0].name)).toBeVisible();
 			expect(screen.getByText(copiedNodes[1].name)).toBeVisible();
-			expect(nodeItems).toHaveLength(currentFolder.children.length + copiedNodes.length);
+			expect(nodeItems).toHaveLength(currentFolder.children.nodes.length + copiedNodes.length);
 			// each node is positioned after its original
 			expect(screen.getByTestId(`node-item-${copiedNodes[0].id}`)).toBe(nodeItems[1]);
 			expect(screen.getByTestId(`node-item-${copiedNodes[1].id}`)).toBe(nodeItems[3]);
@@ -227,8 +230,8 @@ describe('Copy', () => {
 			const destinationFolder = populateFolder();
 			destinationFolder.permissions.can_write_folder = true;
 			destinationFolder.permissions.can_write_file = true;
-			currentFolder.children.push(destinationFolder);
-			const nodeToCopy = currentFolder.children[0] as Node;
+			currentFolder.children.nodes.push(destinationFolder);
+			const nodeToCopy = currentFolder.children.nodes[0] as Node;
 
 			// write destination folder in cache as if it was already loaded
 			global.apolloClient.writeQuery<GetChildrenQuery, GetChildrenQueryVariables>({

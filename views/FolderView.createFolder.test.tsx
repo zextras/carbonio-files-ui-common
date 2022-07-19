@@ -12,10 +12,8 @@ import userEvent from '@testing-library/user-event';
 import find from 'lodash/find';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
-import { nodeListCursorVar } from '../apollo/nodeListCursorVar';
 import { NODES_LOAD_LIMIT, NODES_SORT_DEFAULT } from '../constants';
-import { populateFolder, populateNodes, sortNodes } from '../mocks/mockUtils';
-import { Node } from '../types/common';
+import { populateFolder, populateNodePage, populateNodes, sortNodes } from '../mocks/mockUtils';
 import { Folder } from '../types/graphql/types';
 import {
 	getChildrenVariables,
@@ -68,14 +66,6 @@ jest.mock('./components/Displayer', () => ({
 }));
 
 describe('Create folder', () => {
-	function getCachedCursor(folder: { id: string }): string | null | undefined {
-		const cursor = nodeListCursorVar()[folder.id];
-		if (cursor) {
-			return cursor.__ref.split(':')[1];
-		}
-		return cursor;
-	}
-
 	async function createNode(newNode: { name: string }): Promise<void> {
 		// wait for the creation modal to be opened
 		const inputFieldDiv = await screen.findByTestId('input-name');
@@ -93,7 +83,7 @@ describe('Create folder', () => {
 		const node1 = populateFolder(0, 'n1', 'first');
 		const node2 = populateFolder(0, 'n2', 'second');
 		const node3 = populateFolder(0, 'n3', 'third');
-		currentFolder.children.push(node1, node2, node3);
+		currentFolder.children.nodes.push(node1, node2, node3);
 
 		const newName = node2.name;
 
@@ -114,7 +104,7 @@ describe('Create folder', () => {
 		// wait for the load to be completed
 		await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 		expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
-			currentFolder.children.length
+			currentFolder.children.nodes.length
 		);
 
 		const createFolder = find(mockedCreateOptions, (option) => option.id === 'create-folder');
@@ -143,7 +133,7 @@ describe('Create folder', () => {
 		expect(inputField).toBeVisible();
 		expect(inputField).toHaveValue(newName);
 		expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
-			currentFolder.children.length
+			currentFolder.children.nodes.length
 		);
 	});
 
@@ -154,7 +144,7 @@ describe('Create folder', () => {
 		const node2 = populateFolder(0, 'n2', 'second');
 		const node3 = populateFolder(0, 'n3', 'third');
 		// add node 1 and 3 as children, node 2 is the new folder
-		currentFolder.children.push(node1, node3);
+		currentFolder.children.nodes.push(node1, node3);
 
 		const mocks = [
 			mockGetParent({ node_id: currentFolder.id }, currentFolder),
@@ -174,7 +164,7 @@ describe('Create folder', () => {
 		// wait for the load to be completed
 		await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 		expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
-			currentFolder.children.length
+			currentFolder.children.nodes.length
 		);
 
 		const createFolder = find(mockedCreateOptions, (option) => option.id === 'create-folder');
@@ -197,14 +187,14 @@ describe('Create folder', () => {
 		expect(nodeItem).toBeVisible();
 		expect(within(nodeItem).getByText(node2.name)).toBeVisible();
 		const nodes = screen.getAllByTestId('node-item', { exact: false });
-		expect(nodes).toHaveLength(currentFolder.children.length + 1);
+		expect(nodes).toHaveLength(currentFolder.children.nodes.length + 1);
 		expect(nodes[1]).toBe(nodeItem);
 	});
 
 	test('Create folder add folder node as last element of the list if neighbor is already loaded but unordered', async () => {
 		const currentFolder = populateFolder();
-		currentFolder.children = populateNodes(NODES_LOAD_LIMIT, 'Folder');
-		sortNodes(currentFolder.children, NODES_SORT_DEFAULT);
+		currentFolder.children = populateNodePage(populateNodes(NODES_LOAD_LIMIT, 'Folder'));
+		sortNodes(currentFolder.children.nodes, NODES_SORT_DEFAULT);
 		currentFolder.permissions.can_write_folder = true;
 		const node1 = populateFolder(0, 'n1', `zzzz-new-folder-n1`);
 		const node2 = populateFolder(0, 'n2', `zzzz-new-folder-n2`);
@@ -236,14 +226,11 @@ describe('Create folder', () => {
 			),
 			// fetchMore request, cursor is still last ordered node (last child of initial folder)
 			mockGetChildren(
-				{
-					...getChildrenVariables(currentFolder.id),
-					cursor: (currentFolder.children[currentFolder.children.length - 1] as Node).id
-				},
+				getChildrenVariables(currentFolder.id, undefined, undefined, undefined, true),
 				{
 					...currentFolder,
 					// second page contains the new created nodes and node3, not loaded before
-					children: [node1, node2, node3]
+					children: populateNodePage([node1, node2, node3])
 				} as Folder
 			)
 		];
@@ -253,7 +240,7 @@ describe('Create folder', () => {
 		// wait for the load to be completed
 		await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 		let nodes = screen.getAllByTestId('node-item', { exact: false });
-		expect(nodes).toHaveLength(currentFolder.children.length);
+		expect(nodes).toHaveLength(currentFolder.children.nodes.length);
 
 		const createFolder = find(mockedCreateOptions, (option) => option.id === 'create-folder');
 		expect(createFolder).toBeDefined();
@@ -276,7 +263,7 @@ describe('Create folder', () => {
 		expect(node2Item).toBeVisible();
 		expect(within(node2Item).getByText(node2.name)).toBeVisible();
 		nodes = screen.getAllByTestId('node-item', { exact: false });
-		expect(nodes).toHaveLength(currentFolder.children.length + 1);
+		expect(nodes).toHaveLength(currentFolder.children.nodes.length + 1);
 		// node2 is last element of the list
 		expect(nodes[nodes.length - 1]).toBe(node2Item);
 
@@ -295,7 +282,7 @@ describe('Create folder', () => {
 		expect(node1Item).toBeVisible();
 		expect(within(node1Item).getByText(node1.name)).toBeVisible();
 		nodes = screen.getAllByTestId('node-item', { exact: false });
-		expect(nodes).toHaveLength(currentFolder.children.length + 2);
+		expect(nodes).toHaveLength(currentFolder.children.nodes.length + 2);
 		// node1 is before node2 of the list
 		expect(nodes[nodes.length - 2]).toBe(node1Item);
 		// node2 is last element of the list
@@ -305,7 +292,7 @@ describe('Create folder', () => {
 		// wait for the load to be completed (node3 is now loaded)
 		await screen.findByTestId(`node-item-${node3.id}`);
 		nodes = screen.getAllByTestId('node-item', { exact: false });
-		expect(nodes).toHaveLength(currentFolder.children.length + 3);
+		expect(nodes).toHaveLength(currentFolder.children.nodes.length + 3);
 		// node1, node2 and node3 should have the correct order
 		expect(screen.getByTestId(`node-item-${node1.id}`)).toBe(nodes[nodes.length - 3]);
 		expect(screen.getByTestId(`node-item-${node2.id}`)).toBe(nodes[nodes.length - 2]);
@@ -318,8 +305,8 @@ describe('Create folder', () => {
 
 		const newNode = populateFolder();
 
-		let newPos = addNodeInSortedList(currentFolder.children, newNode, NODES_SORT_DEFAULT);
-		newPos = newPos > -1 ? newPos : currentFolder.children.length;
+		let newPos = addNodeInSortedList(currentFolder.children.nodes, newNode, NODES_SORT_DEFAULT);
+		newPos = newPos > -1 ? newPos : currentFolder.children.nodes.length;
 
 		const mocks = [
 			mockGetParent({ node_id: currentFolder.id }, currentFolder),
@@ -339,10 +326,8 @@ describe('Create folder', () => {
 		// wait for the load to be completed
 		await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 		expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
-			currentFolder.children.length
+			currentFolder.children.nodes.length
 		);
-		// cursor is null
-		expect(getCachedCursor(currentFolder)).toBe(null);
 
 		const createFolder = find(mockedCreateOptions, (option) => option.id === 'create-folder');
 		expect(createFolder).toBeDefined();
@@ -366,7 +351,6 @@ describe('Create folder', () => {
 		const nodes = screen.getAllByTestId('node-item', { exact: false });
 		expect(nodes).toHaveLength(NODES_LOAD_LIMIT);
 		expect(nodes[newPos]).toBe(nodeItem);
-		expect(getCachedCursor(currentFolder)).toBe(null);
 		expect(screen.queryByTestId('icon: Refresh')).not.toBeInTheDocument();
 	});
 });
