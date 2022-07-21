@@ -252,7 +252,7 @@ export const DisplayerPreview: React.VFC<DisplayerPreviewProps> = ({
 					<Icon icon={getIconByFileType(type, mimeType)} size="large" color="secondary" />
 					<Text size="extrasmall" overflow="break-word">
 						{loading
-							? t('preview.loading.retrying', 'Trying loading of preview...')
+							? t('preview.loading.retrying', 'Trying to load the preview...')
 							: t(
 									'preview.loading.error',
 									'An error occurred while loading the preview. Try again.'
