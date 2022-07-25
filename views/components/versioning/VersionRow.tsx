@@ -59,7 +59,12 @@ const DropdownItemComponent = ({
 	selected,
 	tooltipLabel
 }: DropdownItemComponentProps): JSX.Element => (
-	<Tooltip disabled={!disabled || !tooltipLabel} label={tooltipLabel} placement="bottom-end">
+	<Tooltip
+		disabled={!disabled || !tooltipLabel}
+		label={tooltipLabel}
+		placement="bottom-end"
+		maxWidth="100%"
+	>
 		<DropdownListItemContent label={label} selected={selected} disabled={disabled} icon={icon} />
 	</Tooltip>
 );
