@@ -11,22 +11,28 @@ import {
 	NormalizedCacheObject,
 	Reference
 } from '@apollo/client';
+import find from 'lodash/find';
 import keyBy from 'lodash/keyBy';
-import last from 'lodash/last';
 
 import { GRAPHQL_ENDPOINT } from '../constants';
-import { FindNodesCachedObject, FindNodesObject, NodesListCachedObject } from '../types/apollo';
+import {
+	FindNodesCachedObject,
+	NodesListCachedObject,
+	NodesPage,
+	NodesPageCachedObject
+} from '../types/apollo';
 import introspection from '../types/graphql/possible-types';
 import {
 	File,
 	FindNodesQueryVariables,
 	FolderChildrenArgs,
 	GetChildrenQueryVariables,
+	GetNodeQueryVariables,
 	NodeSharesArgs,
 	QueryFindNodesArgs,
+	QueryGetNodeArgs,
 	Share
 } from '../types/graphql/types';
-import { nodeListCursorVar } from './nodeListCursorVar';
 
 function mergeNodesList(
 	existing: NodesListCachedObject | undefined,
@@ -96,9 +102,6 @@ const cache = new InMemoryCache({
 							return [...newExisting, ...incoming];
 						}
 						return [...incoming];
-					},
-					read(existing: Share[] | undefined): Share[] {
-						return existing || [];
 					}
 				}
 			}
@@ -108,68 +111,36 @@ const cache = new InMemoryCache({
 				children: {
 					keyArgs: ['sort'],
 					merge(
-						existing: NodesListCachedObject | undefined,
-						incoming: Reference[],
+						existing: NodesPageCachedObject,
+						incoming: NodesPage,
 						fieldFunctions: FieldFunctionOptions<
 							Partial<FolderChildrenArgs>,
 							Partial<GetChildrenQueryVariables>
 						>
-					): NodesListCachedObject {
-						const merged = mergeNodesList(existing, incoming, fieldFunctions);
-						const nodeListCursorKey = fieldFunctions.variables?.node_id;
-						const pageSize = fieldFunctions.variables?.children_limit;
-						// By putting this logic here cursor is updated only when new data are received by network requests.
-						// If an update to ordered nodes is done from client, the cursor does not change.
-						// The only case where the cursor might have to be updated is when client add a node as last ordered
-						// element, but this happens only when all pages are loaded, so cursor is null and has to remain
-						// null to tell all nodes are already loaded
-						if (nodeListCursorKey && pageSize) {
-							const cursor = last(merged.ordered);
-
-							if (incoming.length > 0 && incoming.length % pageSize === 0) {
-								nodeListCursorVar({
-									...nodeListCursorVar(),
-									[nodeListCursorKey]: cursor
-								});
-							} else {
-								nodeListCursorVar({
-									...nodeListCursorVar(),
-									[nodeListCursorKey]: null
-								});
-							}
-						}
-						return merged;
+					): NodesPageCachedObject {
+						return {
+							page_token: incoming.page_token,
+							nodes: mergeNodesList(
+								// for filters, if first page is requested, clear cached data emptying existing data
+								fieldFunctions.variables?.page_token
+									? existing.nodes
+									: { ordered: [], unOrdered: [] },
+								incoming.nodes,
+								fieldFunctions
+							)
+						};
 					},
 					// Return all items stored so far, to avoid ambiguities
 					// about the order of the items.
-					read(existing: NodesListCachedObject | undefined): Reference[] | undefined {
+					read(existing: FindNodesCachedObject | undefined): NodesPage | undefined {
 						if (existing) {
-							return readNodesList(existing);
+							return {
+								nodes: existing?.nodes ? readNodesList(existing.nodes) : [],
+								page_token: existing.page_token
+							};
 						}
 						return existing;
 					}
-				},
-				cursor(
-					_existing: string,
-					{
-						variables,
-						readField
-					}: FieldFunctionOptions<unknown, Partial<GetChildrenQueryVariables>>
-				): string | null | undefined {
-					// cursor can have 3 state:
-					// 1) non-empty string: it's a cursor to load pages after first one
-					// 2) null: there are no more pages to load
-					// 3) undefined: indicates that there might be a new first page.
-					// Useful state to force refetch when all ordered nodes are removed from the list
-					// but there are some pages not loaded yet.
-					if (variables?.node_id) {
-						const cursor = nodeListCursorVar()[variables.node_id];
-						if (cursor) {
-							return readField('id', cursor);
-						}
-						return cursor;
-					}
-					return undefined;
 				}
 			}
 		},
@@ -187,8 +158,7 @@ const cache = new InMemoryCache({
 					],
 					merge(
 						existing: FindNodesCachedObject,
-						// eslint-disable-next-line camelcase
-						incoming: { nodes: Reference[]; page_token: string },
+						incoming: NodesPage,
 						fieldFunctions: FieldFunctionOptions<
 							QueryFindNodesArgs,
 							Partial<FindNodesQueryVariables>
@@ -210,7 +180,7 @@ const cache = new InMemoryCache({
 					},
 					// Return all items stored so far, to avoid ambiguities
 					// about the order of the items.
-					read(existing: FindNodesCachedObject | undefined): FindNodesObject | undefined {
+					read(existing: FindNodesCachedObject | undefined): NodesPage | undefined {
 						if (existing) {
 							return {
 								nodes: existing?.nodes ? readNodesList(existing.nodes) : [],
@@ -227,6 +197,29 @@ const cache = new InMemoryCache({
 					): File[] | null | undefined {
 						// always overwrite existing data with incoming one
 						return incoming;
+					}
+				},
+				getNode: {
+					read(_, fieldFunctionOptions): Reference | undefined {
+						const { args, toReference, canRead } = fieldFunctionOptions as FieldFunctionOptions<
+							QueryGetNodeArgs,
+							GetNodeQueryVariables
+						>;
+						if (args?.node_id) {
+							const typename = find(introspection.possibleTypes.Node, (nodePossibleType) => {
+								const nodeRef = toReference({
+									__typename: nodePossibleType,
+									id: args.node_id
+								});
+								return canRead(nodeRef);
+							});
+
+							return toReference({
+								__typename: typename,
+								id: args.node_id
+							});
+						}
+						return undefined;
 					}
 				}
 			}

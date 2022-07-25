@@ -114,7 +114,7 @@ describe('Filter List', () => {
 					GetChildrenQueryVariables
 				>(getChildrenMockedQuery.request);
 				return expect(
-					(localRootCachedData?.getNode as Maybe<Folder> | undefined)?.children || []
+					(localRootCachedData?.getNode as Maybe<Folder> | undefined)?.children.nodes || []
 				).toHaveLength(uploadedFiles.length);
 			});
 		});
@@ -199,7 +199,7 @@ describe('Filter List', () => {
 				GetChildrenQueryVariables
 			>(getChildrenMockedQuery.request);
 			expect(localRootCachedData?.getNode || null).not.toBeNull();
-			expect((localRootCachedData?.getNode as Folder).children).toHaveLength(0);
+			expect((localRootCachedData?.getNode as Folder).children.nodes).toHaveLength(0);
 		});
 
 		test('Drag of files in a folder node with right permissions inside a filter shows upload dropzone of the list item. Drop triggers upload in list item folder', async () => {

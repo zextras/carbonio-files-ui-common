@@ -12,6 +12,7 @@ import styled from 'styled-components';
 import useUserInfo from '../../../hooks/useUserInfo';
 import { User } from '../../types/graphql/types';
 import { formatDate, formatTime } from '../../utils/utils';
+import { ShimmerText } from './StyledComponents';
 
 const MainText = styled(Text)`
 	flex: 0 0 auto;
@@ -41,11 +42,12 @@ const Label: React.FC = ({ children }) => (
 );
 
 export interface NodeDetailsUserRowProps {
-	user: Partial<User>;
+	user: Partial<User> | null | undefined;
 	label: string;
 	tooltip: string;
 	dateTime?: number;
 	clickAction?: React.MouseEventHandler;
+	loading?: boolean | undefined;
 }
 
 export const NodeDetailsUserRow: React.VFC<NodeDetailsUserRowProps> = ({
@@ -53,49 +55,58 @@ export const NodeDetailsUserRow: React.VFC<NodeDetailsUserRowProps> = ({
 	label,
 	tooltip,
 	dateTime,
-	clickAction
+	clickAction,
+	loading
 }) => {
 	const { zimbraPrefTimeZoneId } = useUserInfo();
 
 	return (
-		<Row
-			orientation="vertical"
-			crossAlignment="flex-start"
-			padding={{ vertical: 'small' }}
-			width="fill"
-		>
-			<Label>{label}</Label>
-			<Row mainAlignment="flex-start" wrap="nowrap" width="fill" crossAlignment="baseline">
-				<Row
-					mainAlignment="flex-start"
-					flexBasis={`${(user.full_name?.length || 0) + 10}ex`}
-					flexShrink={1}
-					flexGrow={1}
-					minWidth="0"
-				>
-					{user.full_name && (
+		((loading || user) && (
+			<Row
+				orientation="vertical"
+				crossAlignment="flex-start"
+				padding={{ vertical: 'small' }}
+				width="fill"
+			>
+				<Label>{label}</Label>
+				<Row mainAlignment="flex-start" wrap="nowrap" width="fill" crossAlignment="baseline">
+					{loading && <ShimmerText $size="medium" width="100%" />}
+					{!loading && user && (
 						<>
-							<MainText>{user.full_name || ''}</MainText>
-							<Padding horizontal="extrasmall">
-								<Text color="secondary">|</Text>
-							</Padding>
+							<Row
+								mainAlignment="flex-start"
+								flexBasis={`${(user.full_name?.length || 0) + 10}ex`}
+								flexShrink={1}
+								flexGrow={1}
+								minWidth="0"
+							>
+								{user.full_name && (
+									<>
+										<MainText>{user.full_name || ''}</MainText>
+										<Padding horizontal="extrasmall">
+											<Text color="secondary">|</Text>
+										</Padding>
+									</>
+								)}
+								<Tooltip label={tooltip} placement="bottom-start">
+									<SecondaryText color="secondary" onClick={clickAction}>
+										{user.email || ''}
+									</SecondaryText>
+								</Tooltip>
+							</Row>
+							{dateTime && (
+								<DateText size="small">
+									{`${formatDate(dateTime, undefined, zimbraPrefTimeZoneId)} - ${formatTime(
+										dateTime,
+										zimbraPrefTimeZoneId
+									)}`}
+								</DateText>
+							)}
 						</>
 					)}
-					<Tooltip label={tooltip} placement="bottom-start">
-						<SecondaryText color="secondary" onClick={clickAction}>
-							{user.email || ''}
-						</SecondaryText>
-					</Tooltip>
 				</Row>
-				{dateTime && (
-					<DateText size="small">
-						{`${formatDate(dateTime, undefined, zimbraPrefTimeZoneId)} - ${formatTime(
-							dateTime,
-							zimbraPrefTimeZoneId
-						)}`}
-					</DateText>
-				)}
 			</Row>
-		</Row>
+		)) ||
+		null
 	);
 };

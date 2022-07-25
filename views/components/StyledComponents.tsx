@@ -8,10 +8,11 @@ import {
 	Avatar,
 	Button,
 	Container,
+	getColor,
 	IconButton,
 	Row,
-	Text,
-	getColor
+	Shimmer,
+	Text
 } from '@zextras/carbonio-design-system';
 import styled, { css, SimpleInterpolation } from 'styled-components';
 
@@ -171,6 +172,7 @@ export const FlexContainer = styled(Container)<{
 	$flexShrink?: number | string;
 	$flexBasis?: string;
 	$margin?: { left?: string; right?: string };
+	gap?: string;
 }>`
 	flex-grow: ${({ $flexGrow }): SimpleInterpolation => $flexGrow};
 	flex-shrink: ${({ $flexShrink }): SimpleInterpolation => $flexShrink};
@@ -191,4 +193,12 @@ export const FlexContainer = styled(Container)<{
 			`
 		}
 	`}
+	gap: ${({ gap }): SimpleInterpolation => gap}
 `;
+
+export const ShimmerText = styled(Shimmer.Text).attrs<{
+	$size: 'extrasmall' | 'small' | 'medium' | 'large' | 'extralarge';
+}>(({ $size, theme }) => ({
+	height: css`calc(${theme.sizes.font[$size]} * 1.2)`,
+	'data-testid': 'shimmer-text'
+}))``;

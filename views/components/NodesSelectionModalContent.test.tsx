@@ -18,6 +18,7 @@ import {
 	populateFile,
 	populateFolder,
 	populateLocalRoot,
+	populateNodePage,
 	populateNodes
 } from '../../mocks/mockUtils';
 import { Node } from '../../types/common';
@@ -87,7 +88,7 @@ describe('Nodes Selection Modal Content', () => {
 		const localRoot = populateLocalRoot();
 		const folder = populateFolder();
 		const file = populateFile();
-		localRoot.children = [folder, file];
+		localRoot.children = populateNodePage([folder, file]);
 		folder.parent = localRoot;
 		file.parent = localRoot;
 
@@ -153,7 +154,7 @@ describe('Nodes Selection Modal Content', () => {
 		const localRoot = populateLocalRoot();
 		const folder = populateFolder();
 		const file = populateFile();
-		localRoot.children = [folder, file];
+		localRoot.children = populateNodePage([folder, file]);
 		folder.parent = localRoot;
 		file.parent = localRoot;
 
@@ -227,7 +228,7 @@ describe('Nodes Selection Modal Content', () => {
 		const localRoot = populateLocalRoot();
 		const folder = populateFolder();
 		const file = populateFile();
-		localRoot.children = [folder, file];
+		localRoot.children = populateNodePage([folder, file]);
 		folder.parent = localRoot;
 		file.parent = localRoot;
 
@@ -429,7 +430,7 @@ describe('Nodes Selection Modal Content', () => {
 				const localRoot = populateLocalRoot();
 				const folder = populateFolder();
 				const file = populateFile();
-				localRoot.children = [folder, file];
+				localRoot.children = populateNodePage([folder, file]);
 				folder.parent = localRoot;
 				file.parent = localRoot;
 
@@ -489,7 +490,7 @@ describe('Nodes Selection Modal Content', () => {
 				const localRoot = populateLocalRoot();
 				const folder = populateFolder();
 				const file = populateFile();
-				localRoot.children = [folder, file];
+				localRoot.children = populateNodePage([folder, file]);
 				folder.parent = localRoot;
 				file.parent = localRoot;
 
@@ -551,7 +552,7 @@ describe('Nodes Selection Modal Content', () => {
 				const localRoot = populateLocalRoot();
 				const folder = populateFolder();
 				const file = populateFile();
-				localRoot.children = [folder, file];
+				localRoot.children = populateNodePage([folder, file]);
 				folder.parent = localRoot;
 				file.parent = localRoot;
 
@@ -620,7 +621,7 @@ describe('Nodes Selection Modal Content', () => {
 				const localRoot = populateLocalRoot();
 				const folder = populateFolder();
 				const file = populateFile();
-				localRoot.children = [folder, file];
+				localRoot.children = populateNodePage([folder, file]);
 				folder.parent = localRoot;
 				file.parent = localRoot;
 
@@ -742,7 +743,7 @@ describe('Nodes Selection Modal Content', () => {
 			test('navigation through breadcrumb reset active folder and set opened folder if is selectable by param', async () => {
 				const localRoot = populateFolder(2, ROOTS.LOCAL_ROOT);
 				const folder = populateFolder();
-				localRoot.children.push(folder);
+				localRoot.children.nodes.push(folder);
 				folder.parent = localRoot;
 
 				const mocks = [
@@ -792,7 +793,7 @@ describe('Nodes Selection Modal Content', () => {
 				userEvent.dblClick(screen.getByText(/home/i));
 				await screen.findByText(folder.name);
 				expect(screen.getByText(folder.name)).toBeVisible();
-				expect(screen.getByText((localRoot.children[0] as Node).name)).toBeVisible();
+				expect(screen.getByText((localRoot.children.nodes[0] as Node).name)).toBeVisible();
 				breadcrumbItem = await findByTextWithMarkup(
 					buildBreadCrumbRegExp('Files', folder.parent.name)
 				);
@@ -824,7 +825,7 @@ describe('Nodes Selection Modal Content', () => {
 				userEvent.dblClick(screen.getByText(/home/i));
 				await screen.findByText(folder.name);
 				expect(screen.getByText(folder.name)).toBeVisible();
-				expect(screen.getByText((localRoot.children[0] as Node).name)).toBeVisible();
+				expect(screen.getByText((localRoot.children.nodes[0] as Node).name)).toBeVisible();
 				breadcrumbItem = await findByTextWithMarkup(
 					buildBreadCrumbRegExp('Files', folder.parent.name)
 				);
@@ -867,7 +868,7 @@ describe('Nodes Selection Modal Content', () => {
 			test('navigation through breadcrumb reset active folder and disable confirm button if opened folder is not selectable by param', async () => {
 				const localRoot = populateFolder(2, ROOTS.LOCAL_ROOT);
 				const folder = populateFolder();
-				localRoot.children.push(folder);
+				localRoot.children.nodes.push(folder);
 				folder.parent = localRoot;
 
 				const mocks = [
@@ -918,7 +919,7 @@ describe('Nodes Selection Modal Content', () => {
 				userEvent.dblClick(screen.getByText(/home/i));
 				await screen.findByText(folder.name);
 				expect(screen.getByText(folder.name)).toBeVisible();
-				expect(screen.getByText((localRoot.children[0] as Node).name)).toBeVisible();
+				expect(screen.getByText((localRoot.children.nodes[0] as Node).name)).toBeVisible();
 				breadcrumbItem = await findByTextWithMarkup(buildBreadCrumbRegExp('Files', localRoot.name));
 				expect(breadcrumbItem).toBeVisible();
 				// confirm button is disabled because of navigation
@@ -1085,7 +1086,7 @@ describe('Nodes Selection Modal Content', () => {
 				const localRoot = populateLocalRoot();
 				const file = populateFile();
 				const folder = populateFolder(1);
-				localRoot.children = [folder, file];
+				localRoot.children = populateNodePage([folder, file]);
 				folder.parent = localRoot;
 				file.parent = localRoot;
 
@@ -1168,7 +1169,7 @@ describe('Nodes Selection Modal Content', () => {
 				const localRoot = populateLocalRoot();
 				const file = populateFile();
 				const folder = populateFolder(1);
-				localRoot.children = [folder, file];
+				localRoot.children = populateNodePage([folder, file]);
 				folder.parent = localRoot;
 				file.parent = localRoot;
 
@@ -1251,7 +1252,7 @@ describe('Nodes Selection Modal Content', () => {
 				const validFolder = populateFolder(1, undefined, 'valid folder');
 				const invalidFile = populateFile(undefined, 'not valid file');
 				const invalidFolder = populateFolder(0, undefined, 'not valid folder');
-				localRoot.children.push(validFile, validFolder, invalidFile, invalidFolder);
+				localRoot.children.nodes.push(validFile, validFolder, invalidFile, invalidFolder);
 				validFolder.parent = localRoot;
 				validFile.parent = localRoot;
 				invalidFolder.parent = localRoot;
@@ -1299,7 +1300,7 @@ describe('Nodes Selection Modal Content', () => {
 				await screen.findByText(validFolder.name);
 				expect(screen.getByText(validFolder.name)).toBeVisible();
 				expect(screen.getByText(validFile.name)).toBeVisible();
-				expect(screen.getByText((localRoot.children[0] as Node).name)).toBeVisible();
+				expect(screen.getByText((localRoot.children.nodes[0] as Node).name)).toBeVisible();
 				// valid folder is not disabled
 				expect(screen.getByTestId(`node-item-${validFolder.id}`)).not.toHaveAttribute(
 					'disabled',
@@ -1382,7 +1383,7 @@ describe('Nodes Selection Modal Content', () => {
 			const localRoot = populateLocalRoot();
 			const file = populateFile();
 			const folder = populateFolder();
-			localRoot.children = [file, folder];
+			localRoot.children = populateNodePage([file, folder]);
 			file.parent = localRoot;
 			folder.parent = localRoot;
 			const mocks = [
@@ -1445,7 +1446,7 @@ describe('Nodes Selection Modal Content', () => {
 		test('if a max number of nodes is selectable, when limit is overreached confirm button becomes disabled', async () => {
 			const localRoot = populateLocalRoot();
 			const nodes = populateNodes(5);
-			localRoot.children = [...nodes];
+			localRoot.children = populateNodePage([...nodes]);
 			forEach(nodes, (mockedNode) => {
 				mockedNode.parent = localRoot;
 			});
@@ -1522,7 +1523,7 @@ describe('Nodes Selection Modal Content', () => {
 				const localRoot = populateLocalRoot();
 				const folder = populateFolder();
 				const file = populateFile();
-				localRoot.children = [folder, file];
+				localRoot.children = populateNodePage([folder, file]);
 				folder.parent = localRoot;
 				file.parent = localRoot;
 
@@ -1582,7 +1583,7 @@ describe('Nodes Selection Modal Content', () => {
 				const localRoot = populateLocalRoot();
 				const folder = populateFolder();
 				const file = populateFile();
-				localRoot.children = [folder, file];
+				localRoot.children = populateNodePage([folder, file]);
 				folder.parent = localRoot;
 				file.parent = localRoot;
 
@@ -1644,7 +1645,7 @@ describe('Nodes Selection Modal Content', () => {
 				const localRoot = populateLocalRoot();
 				const folder = populateFolder();
 				const file = populateFile();
-				localRoot.children = [folder, file];
+				localRoot.children = populateNodePage([folder, file]);
 				folder.parent = localRoot;
 				file.parent = localRoot;
 
@@ -1713,7 +1714,7 @@ describe('Nodes Selection Modal Content', () => {
 				const localRoot = populateLocalRoot();
 				const folder = populateFolder();
 				const file = populateFile();
-				localRoot.children = [folder, file];
+				localRoot.children = populateNodePage([folder, file]);
 				folder.parent = localRoot;
 				file.parent = localRoot;
 
@@ -1780,7 +1781,7 @@ describe('Nodes Selection Modal Content', () => {
 				const localRoot = populateLocalRoot();
 				const folder = populateFolder();
 				const file = populateFile();
-				localRoot.children = [folder, file];
+				localRoot.children = populateNodePage([folder, file]);
 				folder.parent = localRoot;
 				file.parent = localRoot;
 
@@ -1870,7 +1871,7 @@ describe('Nodes Selection Modal Content', () => {
 				const localRoot = populateLocalRoot();
 				const folder = populateFolder();
 				const file = populateFile();
-				localRoot.children = [folder, file];
+				localRoot.children = populateNodePage([folder, file]);
 				folder.parent = localRoot;
 				file.parent = localRoot;
 
@@ -1955,7 +1956,7 @@ describe('Nodes Selection Modal Content', () => {
 				const localRoot = populateLocalRoot();
 				const folder = populateFolder();
 				const file = populateFile();
-				localRoot.children = [folder, file];
+				localRoot.children = populateNodePage([folder, file]);
 				folder.parent = localRoot;
 				file.parent = localRoot;
 
@@ -2033,7 +2034,7 @@ describe('Nodes Selection Modal Content', () => {
 				const localRoot = populateLocalRoot();
 				const folder = populateFolder();
 				const file = populateFile();
-				localRoot.children = [folder, file];
+				localRoot.children = populateNodePage([folder, file]);
 				folder.parent = localRoot;
 				file.parent = localRoot;
 
@@ -2114,7 +2115,7 @@ describe('Nodes Selection Modal Content', () => {
 				const file1 = populateFile();
 				const file2 = populateFile();
 				const folder = populateFolder(1);
-				localRoot.children = [folder, file1, file2];
+				localRoot.children = populateNodePage([folder, file1, file2]);
 				folder.parent = localRoot;
 				file1.parent = localRoot;
 				file2.parent = localRoot;
@@ -2227,7 +2228,7 @@ describe('Nodes Selection Modal Content', () => {
 				const file = populateFile();
 				const folder1 = populateFolder(1);
 				const folder2 = populateFolder(1);
-				localRoot.children = [folder1, folder2, file];
+				localRoot.children = populateNodePage([folder1, folder2, file]);
 				folder1.parent = localRoot;
 				folder2.parent = localRoot;
 				file.parent = localRoot;
@@ -2347,7 +2348,7 @@ describe('Nodes Selection Modal Content', () => {
 				const validFolder = populateFolder(1, undefined, 'valid folder');
 				const invalidFile = populateFile(undefined, 'not valid file');
 				const invalidFolder = populateFolder(0, undefined, 'not valid folder');
-				localRoot.children.push(validFile, validFolder, invalidFile, invalidFolder);
+				localRoot.children.nodes.push(validFile, validFolder, invalidFile, invalidFolder);
 				validFolder.parent = localRoot;
 				validFile.parent = localRoot;
 				invalidFolder.parent = localRoot;
@@ -2395,7 +2396,7 @@ describe('Nodes Selection Modal Content', () => {
 				await screen.findByText(validFolder.name);
 				expect(screen.getByText(validFolder.name)).toBeVisible();
 				expect(screen.getByText(validFile.name)).toBeVisible();
-				expect(screen.getByText((localRoot.children[0] as Node).name)).toBeVisible();
+				expect(screen.getByText((localRoot.children.nodes[0] as Node).name)).toBeVisible();
 				// valid folder is not disabled
 				expect(screen.getByTestId(`node-item-${validFolder.id}`)).not.toHaveAttribute(
 					'disabled',
@@ -2508,7 +2509,7 @@ describe('Nodes Selection Modal Content', () => {
 			const localRoot = populateLocalRoot();
 			const folder = populateFolder();
 			const file = populateFile();
-			localRoot.children = [folder, file];
+			localRoot.children = populateNodePage([folder, file]);
 			folder.parent = localRoot;
 			file.parent = localRoot;
 
@@ -2556,7 +2557,7 @@ describe('Nodes Selection Modal Content', () => {
 			const localRoot = populateLocalRoot();
 			const folder = populateFolder();
 			const file = populateFile();
-			localRoot.children = [folder, file];
+			localRoot.children = populateNodePage([folder, file]);
 			folder.parent = localRoot;
 			file.parent = localRoot;
 
@@ -2605,7 +2606,7 @@ describe('Nodes Selection Modal Content', () => {
 			const sharedFolder = populateFolder();
 			const folder = populateFolder();
 			const file = populateFile();
-			sharedFolder.children = [folder, file];
+			sharedFolder.children = populateNodePage([folder, file]);
 			folder.parent = sharedFolder;
 			file.parent = sharedFolder;
 
@@ -2667,7 +2668,7 @@ describe('Nodes Selection Modal Content', () => {
 			const sharedFolder = populateFolder();
 			const folder = populateFolder();
 			const file = populateFile();
-			sharedFolder.children = [folder, file];
+			sharedFolder.children = populateNodePage([folder, file]);
 			sharedFolder.permissions.can_write_folder = false;
 			folder.parent = sharedFolder;
 			file.parent = sharedFolder;
@@ -2743,7 +2744,7 @@ describe('Nodes Selection Modal Content', () => {
 			const localRoot = populateLocalRoot();
 			const folder = populateFolder();
 			const file = populateFile();
-			localRoot.children = [folder, file];
+			localRoot.children = populateNodePage([folder, file]);
 			localRoot.permissions.can_write_folder = true;
 			folder.parent = localRoot;
 			folder.permissions.can_write_folder = true;
@@ -2824,7 +2825,7 @@ describe('Nodes Selection Modal Content', () => {
 			const localRoot = populateLocalRoot();
 			const folder = populateFolder();
 			const file = populateFile();
-			localRoot.children = [folder, file];
+			localRoot.children = populateNodePage([folder, file]);
 			localRoot.permissions.can_write_folder = true;
 			folder.parent = localRoot;
 			folder.permissions.can_write_folder = true;
@@ -2903,7 +2904,7 @@ describe('Nodes Selection Modal Content', () => {
 			const localRoot = populateLocalRoot();
 			const folder = populateFolder();
 			const file = populateFile();
-			localRoot.children = [folder, file];
+			localRoot.children = populateNodePage([folder, file]);
 			localRoot.permissions.can_write_folder = true;
 			folder.parent = localRoot;
 			file.parent = localRoot;
@@ -2981,7 +2982,7 @@ describe('Nodes Selection Modal Content', () => {
 			const localRoot = populateLocalRoot();
 			const folder = populateFolder();
 			const file = populateFile();
-			localRoot.children = [folder, file];
+			localRoot.children = populateNodePage([folder, file]);
 			localRoot.permissions.can_write_folder = true;
 			folder.parent = localRoot;
 			file.parent = localRoot;
@@ -3050,7 +3051,7 @@ describe('Nodes Selection Modal Content', () => {
 			const localRoot = populateLocalRoot();
 			const folder = populateFolder();
 			const file = populateFile();
-			localRoot.children = [folder, file];
+			localRoot.children = populateNodePage([folder, file]);
 			localRoot.permissions.can_write_folder = true;
 			folder.parent = localRoot;
 			file.parent = localRoot;
@@ -3109,7 +3110,7 @@ describe('Nodes Selection Modal Content', () => {
 			const localRoot = populateLocalRoot();
 			const folder = populateFolder();
 			const file = populateFile();
-			localRoot.children = [folder, file];
+			localRoot.children.nodes = [folder, file];
 			localRoot.permissions.can_write_folder = true;
 			folder.parent = localRoot;
 			folder.permissions.can_write_folder = true;

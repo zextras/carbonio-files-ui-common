@@ -5,7 +5,7 @@
  */
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Container } from '@zextras/carbonio-design-system';
+import { Button, Container, Icon, Text } from '@zextras/carbonio-design-system';
 import { PreviewsManagerContext } from '@zextras/carbonio-ui-preview';
 import debounce from 'lodash/debounce';
 import { useTranslation } from 'react-i18next';
@@ -19,12 +19,14 @@ import { canOpenWithDocs } from '../../utils/ActionsFactory';
 import {
 	downloadNode,
 	getDocumentPreviewSrc,
+	getIconByFileType,
 	getImgPreviewSrc,
 	getPdfPreviewSrc,
 	getPreviewThumbnailSrc,
 	humanFileSize,
 	openNodeWithDocs
 } from '../../utils/utils';
+import { FlexContainer } from './StyledComponents';
 
 const ImgContainer = styled(Container)`
 	overflow: hidden;
@@ -33,6 +35,7 @@ const ImgContainer = styled(Container)`
 const Img = styled.img`
 	cursor: pointer;
 	border-radius: 2px;
+	align-self: center;
 `;
 
 interface DisplayerPreviewProps {
@@ -58,14 +61,26 @@ export const DisplayerPreview: React.VFC<DisplayerPreviewProps> = ({
 	size,
 	previewType
 }) => {
-	const [previewSize, setPreviewSize] = useState<{
-		height: number;
-		width: number;
-	}>();
 	const previewContainerRef = useRef<HTMLDivElement>(null);
 	const { createPreview } = useContext(PreviewsManagerContext);
 	const { setActiveNode } = useActiveNode();
 	const [t] = useTranslation();
+	const previewHeight = useMemo(() => Math.ceil(window.innerHeight / 3), []);
+	const [loading, setLoading] = useState(true);
+	const imgRef = useRef<HTMLImageElement>(null);
+	const [previewSrc, setPreviewSrc] = useState<string | undefined>(undefined);
+	const lastSuccessfulSrcRef = useRef<string | undefined>(undefined);
+	const currentSrcRef = useRef<string | undefined>(undefined);
+	const [error, setError] = useState(false);
+
+	useEffect(() => {
+		// reset states on id change
+		setLoading(true);
+		setPreviewSrc(undefined);
+		setError(false);
+		currentSrcRef.current = undefined;
+		lastSuccessfulSrcRef.current = undefined;
+	}, [id]);
 
 	const openPreview = useCallback(() => {
 		const actions = [
@@ -139,26 +154,40 @@ export const DisplayerPreview: React.VFC<DisplayerPreviewProps> = ({
 		type
 	]);
 
+	const buildPreviewSrc = useCallback(() => {
+		if (previewContainerRef.current) {
+			const src = getPreviewThumbnailSrc(
+				id,
+				version,
+				type,
+				mimeType,
+				previewContainerRef.current.clientWidth,
+				previewHeight,
+				'rectangular',
+				'high',
+				'jpeg'
+			);
+			setPreviewSrc(src);
+			currentSrcRef.current = src;
+		}
+	}, [id, mimeType, previewHeight, type, version]);
+
 	const handleResize = useMemo(
 		() =>
 			debounce(
 				() => {
-					if (previewContainerRef.current) {
-						setPreviewSize({
-							width: previewContainerRef.current.clientWidth,
-							height: Math.ceil(window.innerHeight / 3)
-						});
-					}
+					setError(false);
+					buildPreviewSrc();
 				},
 				150,
 				{ leading: false, trailing: true }
 			),
-		[]
+		[buildPreviewSrc]
 	);
 
 	useEffect(() => {
 		window.addEventListener('resize', handleResize);
-		// call handler to init state
+		// init state
 		handleResize();
 
 		return () => {
@@ -167,26 +196,78 @@ export const DisplayerPreview: React.VFC<DisplayerPreviewProps> = ({
 		};
 	}, [handleResize]);
 
-	const previewSrc = useMemo(
-		() =>
-			previewSize &&
-			getPreviewThumbnailSrc(
-				id,
-				version,
-				type,
-				mimeType,
-				previewSize.width,
-				previewSize.height,
-				'rectangular',
-				'high',
-				'jpeg'
-			),
-		[id, mimeType, previewSize, type, version]
-	);
+	const onLoadHandler = useCallback(() => {
+		setLoading(false);
+		setError(false);
+		lastSuccessfulSrcRef.current = currentSrcRef.current;
+	}, []);
+
+	const onLoadErrorHandler = useCallback(() => {
+		setLoading(false);
+		// reset preview to last valid src
+		currentSrcRef.current = lastSuccessfulSrcRef.current;
+		setPreviewSrc(lastSuccessfulSrcRef.current);
+		setError(lastSuccessfulSrcRef.current === undefined);
+	}, []);
+
+	useEffect(() => {
+		const imgElement = imgRef.current;
+		if (previewSrc && imgElement) {
+			imgElement.addEventListener('load', onLoadHandler);
+			imgElement.addEventListener('error', onLoadErrorHandler);
+		}
+		return () => {
+			if (imgElement) {
+				imgElement.removeEventListener('load', onLoadHandler);
+				imgElement.removeEventListener('error', onLoadErrorHandler);
+			}
+		};
+	}, [previewSrc, onLoadHandler, onLoadErrorHandler]);
+
+	const reloadPreview = useCallback(() => {
+		setLoading(true);
+		buildPreviewSrc();
+	}, [buildPreviewSrc]);
 
 	return (
-		<ImgContainer ref={previewContainerRef} maxWidth="100%" height="auto">
-			{previewSrc && <Img src={previewSrc} alt="" onDoubleClick={openPreview} />}
+		<ImgContainer
+			ref={previewContainerRef}
+			maxWidth="100%"
+			height={`${previewHeight}px`}
+			mainAlignment="flex-start"
+		>
+			{previewSrc && (!error || loading) && (
+				<Img ref={imgRef} src={previewSrc} alt="" onDoubleClick={openPreview} />
+			)}
+			{loading && !error && (
+				<FlexContainer orientation="vertical" gap="8px">
+					<Icon icon="AnimatedLoader" size="large" />
+					<Text size="extrasmall" overflow="break-word">
+						{t('preview.loading.file', 'Loading file preview, please wait...')}
+					</Text>
+				</FlexContainer>
+			)}
+			{error && (
+				<FlexContainer orientation="vertical" gap="8px">
+					<Icon icon={getIconByFileType(type, mimeType)} size="large" color="secondary" />
+					<Text size="extrasmall" overflow="break-word">
+						{loading
+							? t('preview.loading.retrying', 'Trying to load the preview...')
+							: t(
+									'preview.loading.error',
+									'An error occurred while loading the preview. Try again.'
+							  )}
+					</Text>
+					{!loading && (
+						<Button
+							size="extrasmall"
+							label={t('preview.button.refresh', 'Refresh preview')}
+							onClick={reloadPreview}
+						/>
+					)}
+					{loading && <Icon icon="AnimatedLoader" size="large" />}
+				</FlexContainer>
+			)}
 		</ImgContainer>
 	);
 };

@@ -55,7 +55,10 @@ export function useCreateFolderMutation(
 				update(cache, { data }) {
 					if (data?.createFolder) {
 						const newPosition = addNodeToFolder(parentFolder, data.createFolder);
-						scrollToNodeItem(data.createFolder.id, newPosition === parentFolder.children.length);
+						scrollToNodeItem(
+							data.createFolder.id,
+							newPosition === parentFolder.children.nodes.length
+						);
 					}
 				}
 			});

@@ -320,6 +320,7 @@ describe('Node Sharing', () => {
 			});
 			render(<NodeSharing node={node} />, { mocks, initialRouterEntries: [`/?node=${node.id}`] });
 			await screen.findByText(getChipLabel(share.share_target as SharedTarget));
+			await screen.findByTestId('icon: EyeOutline');
 			expect(screen.getByText(/Add new people or groups/i)).toBeVisible();
 			expect(screen.getByRole('button', { name: /share/i })).toBeVisible();
 			expect(screen.getByRole('button', { name: /share/i })).toHaveAttribute('disabled', '');
@@ -472,6 +473,7 @@ describe('Node Sharing', () => {
 			});
 			render(<NodeSharing node={node} />, { mocks, initialRouterEntries: [`/?node=${node.id}`] });
 			await screen.findByText(getChipLabel(share.share_target as SharedTarget));
+			await screen.findByTestId('icon: EyeOutline');
 			expect(screen.getByText(/Add new people or groups/i)).toBeVisible();
 			expect(screen.getByRole('button', { name: /share/i })).toBeVisible();
 			expect(screen.getByRole('button', { name: /share/i })).toHaveAttribute('disabled', '');

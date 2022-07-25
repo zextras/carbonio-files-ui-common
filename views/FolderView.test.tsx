@@ -143,25 +143,25 @@ describe('Folder View', () => {
 			});
 			global.apolloClient.writeQuery<GetNodeQuery, GetNodeQueryVariables>({
 				query: GET_NODE,
-				variables: getNodeVariables((currentFolder.children[0] as Node).id),
+				variables: getNodeVariables((currentFolder.children.nodes[0] as Node).id),
 				data: {
-					getNode: currentFolder.children[0] as Node
+					getNode: currentFolder.children.nodes[0] as Node
 				}
 			});
 			const { getByTextWithMarkup } = render(<FolderView />, {
 				initialRouterEntries: [`/?folder=${currentFolder.id}`]
 			});
-			const nodeItem = screen.getByText((currentFolder.children[0] as Node).name);
+			const nodeItem = screen.getByText((currentFolder.children.nodes[0] as Node).name);
 			expect(nodeItem).toBeVisible();
 			const displayer = screen.getByTestId('displayer');
 			expect(within(displayer).queryByText(/details/i)).not.toBeInTheDocument();
 			userEvent.click(nodeItem);
 			await screen.findByText(/details/i);
-			expect(within(displayer).getAllByText((currentFolder.children[0] as Node).name)).toHaveLength(
-				2
-			);
 			expect(
-				getByTextWithMarkup(buildBreadCrumbRegExp((currentFolder.children[0] as Node).name))
+				within(displayer).getAllByText((currentFolder.children.nodes[0] as Node).name)
+			).toHaveLength(2);
+			expect(
+				getByTextWithMarkup(buildBreadCrumbRegExp((currentFolder.children.nodes[0] as Node).name))
 			).toBeVisible();
 			act(() => {
 				// run timers of displayer preview
@@ -177,13 +177,13 @@ describe('Folder View', () => {
 			const destinationFolder = populateFolder();
 			destinationFolder.permissions.can_write_folder = true;
 			destinationFolder.permissions.can_write_file = true;
-			currentFolder.children.push(destinationFolder);
+			currentFolder.children.nodes.push(destinationFolder);
 			const { path: parentPath } = populateParents(currentFolder);
 			const node = populateNode();
 			node.parent = currentFolder;
 			node.permissions.can_write_folder = true;
 			node.permissions.can_write_file = true;
-			currentFolder.children.push(node);
+			currentFolder.children.nodes.push(node);
 			const path = [...parentPath, node];
 
 			// prepare cache so that apollo client read data from the cache
@@ -225,15 +225,11 @@ describe('Folder View', () => {
 					getNode: currentFolder
 				}
 			});
-			const { getByTextWithMarkup, findByTextWithMarkup } = render(<FolderView />, {
+			const { findByTextWithMarkup } = render(<FolderView />, {
 				initialRouterEntries: [`/?folder=${currentFolder.id}&node=${node.id}`]
 			});
 			const displayer = await screen.findByTestId('displayer');
 			expect(within(displayer).getAllByText(node.name)).toHaveLength(2);
-			expect(getByTextWithMarkup(buildBreadCrumbRegExp(node.name))).toBeVisible();
-			const showPathButton = screen.getByRole('button', { name: /show path/i });
-			expect(showPathButton).toBeVisible();
-			userEvent.click(showPathButton);
 			const breadcrumbItem = await findByTextWithMarkup(
 				buildBreadCrumbRegExp(...map(path, (parent) => parent.name))
 			);
@@ -249,14 +245,13 @@ describe('Folder View', () => {
 			await screen.findByText(/view files and folders/i);
 			expect(screen.queryByTestId(`node-item-${node.id}`)).not.toBeInTheDocument();
 			expect(screen.queryAllByTestId('node-item-', { exact: false })).toHaveLength(
-				currentFolder.children.length - 1
+				currentFolder.children.nodes.length - 1
 			);
 			expect(screen.queryByText(/details/i)).not.toBeInTheDocument();
 			expect(within(displayer).queryByText(node.name)).not.toBeInTheDocument();
 			expect(
 				screen.getByText(/View files and folders, share them with your contacts/i)
 			).toBeVisible();
-			expect.assertions(13);
 		});
 	});
 

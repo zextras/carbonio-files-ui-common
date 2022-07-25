@@ -17,6 +17,7 @@ import {
 	populateFile,
 	populateFolder,
 	populateLocalRoot,
+	populateNodePage,
 	populateNodes,
 	populateParents
 } from '../../mocks/mockUtils';
@@ -49,7 +50,7 @@ import { CopyNodesModalContent } from './CopyNodesModalContent';
 describe('Copy Nodes Modal', () => {
 	test('if a folder id is provided, list shows content of the folder', async () => {
 		const currentFolder = populateFolder(5);
-		const nodesToCopy = [currentFolder.children[0] as File | Folder];
+		const nodesToCopy = [currentFolder.children.nodes[0] as File | Folder];
 		const mocks = [
 			mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder)
@@ -57,31 +58,31 @@ describe('Copy Nodes Modal', () => {
 		render(<CopyNodesModalContent folderId={currentFolder.id} nodesToCopy={nodesToCopy} />, {
 			mocks
 		});
-		await screen.findByText((currentFolder.children[0] as File | Folder).name);
+		await screen.findByText((currentFolder.children.nodes[0] as File | Folder).name);
 		expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
-			currentFolder.children.length
+			currentFolder.children.nodes.length
 		);
 	});
 
 	test('if a folder id is not provided and only one node is going to be copied, list shows content of parent of the node', async () => {
 		const parentFolder = populateFolder(5);
-		const nodesToCopy = [parentFolder.children[0] as File | Folder];
+		const nodesToCopy = [parentFolder.children.nodes[0] as File | Folder];
 		const mocks = [
 			mockGetPath({ node_id: parentFolder.id }, [parentFolder]),
 			mockGetChildren(getChildrenVariables(parentFolder.id), parentFolder)
 		];
 		render(<CopyNodesModalContent nodesToCopy={nodesToCopy} />, { mocks });
-		await screen.findByText((parentFolder.children[0] as File | Folder).name);
+		await screen.findByText((parentFolder.children.nodes[0] as File | Folder).name);
 		expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
-			parentFolder.children.length
+			parentFolder.children.nodes.length
 		);
 	});
 
 	test('if a folder id is not provided and multiple nodes with same parent are going to be copied, list shows content of parent of the nodes', async () => {
 		const parentFolder = populateFolder(5);
 		const nodesToCopy = [
-			parentFolder.children[0] as File | Folder,
-			parentFolder.children[1] as File | Folder
+			parentFolder.children.nodes[0] as File | Folder,
+			parentFolder.children.nodes[1] as File | Folder
 		];
 		const mocks = [
 			mockGetPath({ node_id: parentFolder.id }, [parentFolder]),
@@ -90,9 +91,9 @@ describe('Copy Nodes Modal', () => {
 		const { findByTextWithMarkup } = render(<CopyNodesModalContent nodesToCopy={nodesToCopy} />, {
 			mocks
 		});
-		await screen.findByText((parentFolder.children[0] as File | Folder).name);
+		await screen.findByText((parentFolder.children.nodes[0] as File | Folder).name);
 		expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
-			parentFolder.children.length
+			parentFolder.children.nodes.length
 		);
 		expect(screen.getByText(nodesToCopy[0].name)).toBeVisible();
 		expect(screen.getByText(nodesToCopy[1].name)).toBeVisible();
@@ -126,18 +127,18 @@ describe('Copy Nodes Modal', () => {
 		const folderWithWriteFile = populateFolder(1);
 		folderWithWriteFile.permissions.can_write_file = true;
 		folderWithWriteFile.permissions.can_write_folder = false;
-		currentFolder.children.push(folderWithWriteFile);
+		currentFolder.children.nodes.push(folderWithWriteFile);
 		const folderWithWriteFolder = populateFolder(1);
 		folderWithWriteFolder.permissions.can_write_file = false;
 		folderWithWriteFolder.permissions.can_write_folder = true;
-		currentFolder.children.push(folderWithWriteFolder);
+		currentFolder.children.nodes.push(folderWithWriteFolder);
 		const file = populateFile();
 		file.permissions.can_write_file = true;
-		currentFolder.children.push(file);
+		currentFolder.children.nodes.push(file);
 		const folder = populateFolder();
 		folder.permissions.can_write_folder = true;
 		folder.permissions.can_write_file = true;
-		currentFolder.children.push(folder);
+		currentFolder.children.nodes.push(folder);
 
 		// first copy file -> folderWithWriteFolder is disabled
 		let nodesToCopy: Array<File | Folder> = [file];
@@ -153,7 +154,7 @@ describe('Copy Nodes Modal', () => {
 			<CopyNodesModalContent folderId={currentFolder.id} nodesToCopy={nodesToCopy} />,
 			{ mocks }
 		);
-		await screen.findByText((currentFolder.children[0] as File | Folder).name);
+		await screen.findByText((currentFolder.children.nodes[0] as File | Folder).name);
 		let folderWithWriteFolderItem = screen.getByText(folderWithWriteFolder.name);
 		let folderWithWriteFileItem = screen.getByText(folderWithWriteFile.name);
 		let fileItem = screen.getByText(file.name);
@@ -173,13 +174,13 @@ describe('Copy Nodes Modal', () => {
 		expect(folderWithWriteFileItem).not.toHaveAttribute('disabled');
 		userEvent.dblClick(folderWithWriteFileItem);
 		// navigate to sub-folder
-		await screen.findByText((folderWithWriteFile.children[0] as File | Folder).name);
+		await screen.findByText((folderWithWriteFile.children.nodes[0] as File | Folder).name);
 		expect(folderWithWriteFileItem).not.toBeInTheDocument();
 
 		// then copy folder
 		nodesToCopy = [folder];
 		rerender(<CopyNodesModalContent folderId={currentFolder.id} nodesToCopy={nodesToCopy} />);
-		await screen.findByText((currentFolder.children[0] as File | Folder).name);
+		await screen.findByText((currentFolder.children.nodes[0] as File | Folder).name);
 		folderWithWriteFolderItem = screen.getByText(folderWithWriteFolder.name);
 		folderWithWriteFileItem = screen.getByText(folderWithWriteFile.name);
 		fileItem = screen.getByText(file.name);
@@ -199,7 +200,7 @@ describe('Copy Nodes Modal', () => {
 		expect(folderWithWriteFolderItem).not.toHaveAttribute('disabled');
 		userEvent.dblClick(folderWithWriteFolderItem);
 		// navigate to sub-folder
-		await screen.findByText((folderWithWriteFolder.children[0] as File | Folder).name);
+		await screen.findByText((folderWithWriteFolder.children.nodes[0] as File | Folder).name);
 		expect(folderWithWriteFolderItem).not.toBeInTheDocument();
 	});
 
@@ -237,9 +238,9 @@ describe('Copy Nodes Modal', () => {
 		expect(screen.getByRole('button', { name: actionRegexp.copy })).not.toHaveAttribute('disabled');
 		// navigate inside local root
 		userEvent.dblClick(filesHome);
-		await screen.findByText((localRoot.children[0] as Node).name);
-		expect(screen.getByText((localRoot.children[0] as Node).name)).toBeVisible();
-		expect(screen.getByText((localRoot.children[1] as Node).name)).toBeVisible();
+		await screen.findByText((localRoot.children.nodes[0] as Node).name);
+		expect(screen.getByText((localRoot.children.nodes[0] as Node).name)).toBeVisible();
+		expect(screen.getByText((localRoot.children.nodes[1] as Node).name)).toBeVisible();
 		let breadcrumb = await findByTextWithMarkup(buildBreadCrumbRegExp('Files', localRoot.name));
 		expect(breadcrumb).toBeVisible();
 		expect(screen.getByRole('button', { name: actionRegexp.copy })).not.toHaveAttribute('disabled');
@@ -298,7 +299,7 @@ describe('Copy Nodes Modal', () => {
 		const folder = populateFolder();
 		folder.permissions.can_write_file = true;
 		folder.flagged = false;
-		currentFolder.children.push(file, folder);
+		currentFolder.children.nodes.push(file, folder);
 
 		const nodesToCopy = [file];
 		const mocks = [
@@ -338,12 +339,12 @@ describe('Copy Nodes Modal', () => {
 		const file = populateFile();
 		file.permissions.can_write_file = true;
 		file.parent = currentFolder;
-		currentFolder.children.push(file);
+		currentFolder.children.nodes.push(file);
 		const folder = populateFolder(0);
 		folder.permissions.can_write_folder = true;
 		folder.permissions.can_write_file = true;
 		folder.parent = currentFolder;
-		currentFolder.children.push(folder);
+		currentFolder.children.nodes.push(folder);
 
 		const nodesToCopy = [file];
 		const copiedNodes = map(nodesToCopy, (node) => ({
@@ -360,7 +361,7 @@ describe('Copy Nodes Modal', () => {
 			),
 			mockGetChildren(getChildrenVariables(currentFolder.id), {
 				...currentFolder,
-				children: [...currentFolder.children, ...copiedNodes]
+				children: populateNodePage([...currentFolder.children.nodes, ...copiedNodes])
 			} as Folder)
 		];
 
@@ -389,8 +390,8 @@ describe('Copy Nodes Modal', () => {
 			GetChildrenQueryVariables
 		>(mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder).request);
 		expect(
-			(currentFolderCachedData?.getNode as Maybe<Folder> | undefined)?.children || []
-		).toHaveLength(currentFolder.children.length + nodesToCopy.length);
+			(currentFolderCachedData?.getNode as Maybe<Folder> | undefined)?.children.nodes || []
+		).toHaveLength(currentFolder.children.nodes.length + nodesToCopy.length);
 	});
 
 	test('confirm action without selecting a destination copy node in opened sub-folder', async () => {
@@ -398,12 +399,12 @@ describe('Copy Nodes Modal', () => {
 		const file = populateFile();
 		file.permissions.can_write_file = true;
 		file.parent = currentFolder;
-		currentFolder.children.push(file);
+		currentFolder.children.nodes.push(file);
 		const folder = populateFolder(0);
 		folder.permissions.can_write_folder = true;
 		folder.permissions.can_write_file = true;
 		folder.parent = currentFolder;
-		currentFolder.children.push(folder);
+		currentFolder.children.nodes.push(folder);
 
 		const nodesToCopy = [file];
 		const copiedNodes = map(nodesToCopy, (node) => ({
@@ -422,7 +423,7 @@ describe('Copy Nodes Modal', () => {
 			),
 			mockGetChildren(getChildrenVariables(folder.id), {
 				...folder,
-				children: copiedNodes
+				children: populateNodePage(copiedNodes)
 			} as Folder)
 		];
 
@@ -456,15 +457,15 @@ describe('Copy Nodes Modal', () => {
 			GetChildrenQueryVariables
 		>(mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder).request);
 		expect(
-			(currentFolderCachedData?.getNode as Maybe<Folder> | undefined)?.children || []
-		).toHaveLength(currentFolder.children.length);
+			(currentFolderCachedData?.getNode as Maybe<Folder> | undefined)?.children.nodes || []
+		).toHaveLength(currentFolder.children.nodes.length);
 		const folderCachedData = global.apolloClient.readQuery<
 			GetChildrenQuery,
 			GetChildrenQueryVariables
 		>(mockGetChildren(getChildrenVariables(folder.id), folder).request);
-		expect((folderCachedData?.getNode as Maybe<Folder> | undefined)?.children || []).toHaveLength(
-			nodesToCopy.length
-		);
+		expect(
+			(folderCachedData?.getNode as Maybe<Folder> | undefined)?.children.nodes || []
+		).toHaveLength(nodesToCopy.length);
 	});
 
 	test('confirm action after selecting a destination from the list copy node in selected destination', async () => {
@@ -472,12 +473,12 @@ describe('Copy Nodes Modal', () => {
 		const file = populateFile();
 		file.permissions.can_write_file = true;
 		file.parent = currentFolder;
-		currentFolder.children.push(file);
+		currentFolder.children.nodes.push(file);
 		const folder = populateFolder(0);
 		folder.permissions.can_write_folder = true;
 		folder.permissions.can_write_file = true;
 		folder.parent = currentFolder;
-		currentFolder.children.push(folder);
+		currentFolder.children.nodes.push(folder);
 
 		const nodesToCopy = [file];
 		const copiedNodes = map(nodesToCopy, (node) => ({
@@ -522,8 +523,8 @@ describe('Copy Nodes Modal', () => {
 				GetChildrenQueryVariables
 			>(mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder).request);
 			expect(
-				(currentFolderCachedData?.getNode as Maybe<Folder> | undefined)?.children || []
-			).toHaveLength(currentFolder.children.length);
+				(currentFolderCachedData?.getNode as Maybe<Folder> | undefined)?.children.nodes || []
+			).toHaveLength(currentFolder.children.nodes.length);
 		});
 		const folderCachedData = global.apolloClient.readQuery<
 			GetChildrenQuery,
@@ -537,7 +538,7 @@ describe('Copy Nodes Modal', () => {
 		const file = populateFile();
 		file.permissions.can_write_file = true;
 		file.parent = currentFolder;
-		currentFolder.children.push(file);
+		currentFolder.children.nodes.push(file);
 		const localRoot = populateLocalRoot(2);
 		localRoot.permissions.can_write_folder = true;
 		localRoot.permissions.can_write_file = true;
@@ -585,7 +586,9 @@ describe('Copy Nodes Modal', () => {
 		let cachedData = global.apolloClient.readQuery<GetChildrenQuery, GetChildrenQueryVariables>(
 			mockedGetChildrenQuery.request
 		);
-		expect((cachedData?.getNode as Folder).children).toHaveLength(localRoot.children.length);
+		expect((cachedData?.getNode as Folder).children.nodes).toHaveLength(
+			localRoot.children.nodes.length
+		);
 		userEvent.click(screen.getByText('Files'));
 		await screen.findByText('Home');
 		await waitForNetworkResponse();
@@ -622,7 +625,7 @@ describe('Copy Nodes Modal', () => {
 		const file = populateFile();
 		file.permissions.can_write_file = true;
 		file.parent = currentFolder;
-		currentFolder.children.push(file);
+		currentFolder.children.nodes.push(file);
 		const localRoot = populateLocalRoot(2);
 		localRoot.permissions.can_write_folder = true;
 		localRoot.permissions.can_write_file = true;
@@ -683,11 +686,11 @@ describe('Copy Nodes Modal', () => {
 		const folder = populateFolder();
 		folder.parent = currentFolder;
 		folder.permissions.can_write_file = true;
-		currentFolder.children.push(file, folder);
+		currentFolder.children.nodes.push(file, folder);
 		const nodesToCopy = [file];
 		const ancestorIndex = 1;
 		const ancestor = path[ancestorIndex] as Folder;
-		ancestor.children = [path[ancestorIndex + 1]];
+		ancestor.children.nodes = [path[ancestorIndex + 1]];
 		const mocks = [
 			mockGetPath({ node_id: currentFolder.id }, path),
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
@@ -729,37 +732,34 @@ describe('Copy Nodes Modal', () => {
 
 	test('scroll trigger pagination', async () => {
 		const currentFolder = populateFolder(NODES_LOAD_LIMIT * 2 - 1);
-		const nodesToCopy = [currentFolder.children[0] as File | Folder];
+		const nodesToCopy = [currentFolder.children.nodes[0] as File | Folder];
 		const mocks = [
 			mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 			mockGetChildren(getChildrenVariables(currentFolder.id), {
 				...currentFolder,
-				children: currentFolder.children.slice(0, NODES_LOAD_LIMIT)
+				children: populateNodePage(currentFolder.children.nodes.slice(0, NODES_LOAD_LIMIT))
 			} as Folder),
 			mockGetChildren(
-				{
-					...getChildrenVariables(currentFolder.id),
-					cursor: (currentFolder.children[NODES_LOAD_LIMIT - 1] as File | Folder).id
-				},
+				getChildrenVariables(currentFolder.id, undefined, undefined, undefined, true),
 				{
 					...currentFolder,
-					children: currentFolder.children.slice(NODES_LOAD_LIMIT)
+					children: populateNodePage(currentFolder.children.nodes.slice(NODES_LOAD_LIMIT))
 				} as Folder
 			)
 		];
 		render(<CopyNodesModalContent folderId={currentFolder.id} nodesToCopy={nodesToCopy} />, {
 			mocks
 		});
-		await screen.findByText((currentFolder.children[0] as File | Folder).name);
+		await screen.findByText((currentFolder.children.nodes[0] as File | Folder).name);
 		expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(NODES_LOAD_LIMIT);
 		expect(screen.getByTestId('icon: Refresh')).toBeInTheDocument();
 		expect(screen.getByTestId('icon: Refresh')).toBeVisible();
 		await triggerLoadMore();
 		await screen.findByText(
-			(currentFolder.children[currentFolder.children.length - 1] as File | Folder).name
+			(currentFolder.children.nodes[currentFolder.children.nodes.length - 1] as File | Folder).name
 		);
 		expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
-			currentFolder.children.length
+			currentFolder.children.nodes.length
 		);
 		expect(screen.queryByTestId('icon: Refresh')).not.toBeInTheDocument();
 	});

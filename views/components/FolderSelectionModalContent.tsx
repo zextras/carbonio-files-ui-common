@@ -18,7 +18,7 @@ import { useGetChildrenQuery } from '../../hooks/graphql/queries/useGetChildrenQ
 import { useGetPathQuery } from '../../hooks/graphql/queries/useGetPathQuery';
 import { NodeListItemType, RootListItemType } from '../../types/common';
 import { BaseNodeFragment, Folder } from '../../types/graphql/types';
-import { isFile } from '../../utils/ActionsFactory';
+import { isFile, isFolder } from '../../utils/ActionsFactory';
 import { ModalFooter } from './ModalFooter';
 import { ModalHeader } from './ModalHeader';
 import { ModalList } from './ModalList';
@@ -81,11 +81,13 @@ export const FolderSelectionModalContent: React.VFC<FolderSelectionModalContentP
 
 	const nodes = useMemo<Array<NodeListItemType>>(() => {
 		if (
-			currentFolder?.getNode?.__typename === 'Folder' &&
-			currentFolder.getNode.children.length > 0
+			currentFolder?.getNode &&
+			isFolder(currentFolder.getNode) &&
+			currentFolder.getNode.children?.nodes &&
+			currentFolder.getNode.children.nodes.length > 0
 		) {
 			return reduce(
-				currentFolder.getNode.children,
+				currentFolder.getNode.children.nodes,
 				(result: NodeListItemType[], node) => {
 					if (node) {
 						result.push({

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { QueryResult, useQuery, useReactiveVar } from '@apollo/client';
 import isEqual from 'lodash/isEqual';
@@ -13,13 +13,14 @@ import { nodeSortVar } from '../../../apollo/nodeSortVar';
 import { NODES_LOAD_LIMIT } from '../../../constants';
 import GET_CHILDREN from '../../../graphql/queries/getChildren.graphql';
 import { GetChildrenQuery, GetChildrenQueryVariables } from '../../../types/graphql/types';
+import { isFolder } from '../../../utils/ActionsFactory';
 import { useErrorHandler } from '../../useErrorHandler';
 import { useMemoCompare } from '../../useMemoCompare';
 
 interface GetChildrenQueryHookReturnType
 	extends QueryResult<GetChildrenQuery, GetChildrenQueryVariables> {
 	hasMore: boolean;
-	lastChild: string | null | undefined;
+	pageToken: string | null | undefined;
 	loadMore: () => void;
 }
 
@@ -30,8 +31,6 @@ export function useGetChildrenQuery(
 	parentNode: string,
 	displayName?: string
 ): GetChildrenQueryHookReturnType {
-	const [hasMore, setHasMore] = useState(false);
-	const [lastChild, setLastChild] = useState<string | null | undefined>(undefined);
 	const nodeSort = useReactiveVar(nodeSortVar);
 
 	const { data, fetchMore, ...queryResult } = useQuery<GetChildrenQuery, GetChildrenQueryVariables>(
@@ -44,7 +43,8 @@ export function useGetChildrenQuery(
 			},
 			skip: !parentNode,
 			displayName,
-			errorPolicy: 'all'
+			errorPolicy: 'all',
+			returnPartialData: true
 		}
 	);
 
@@ -52,32 +52,31 @@ export function useGetChildrenQuery(
 
 	useErrorHandler(error, 'GET_CHILDREN');
 
-	useEffect(() => {
-		// every time data change check if cursor is set.
-		// If so, there is a new page
-		// otherwise there are no more children to load
-		if (data?.getNode) {
-			let cursor = null;
-			if (data?.getNode?.__typename === 'Folder') {
-				cursor = data.getNode.cursor;
-			}
-			setLastChild(cursor);
-			setHasMore(cursor !== null);
-		}
-	}, [data]);
+	const { hasMore, pageToken } = useMemo(
+		() => ({
+			hasMore:
+				!!data?.getNode &&
+				isFolder(data.getNode) &&
+				data.getNode.children &&
+				data.getNode.children.page_token !== null,
+			pageToken:
+				data?.getNode && isFolder(data.getNode) && data.getNode.children
+					? data.getNode.children.page_token
+					: undefined
+		}),
+		[data?.getNode]
+	);
 
 	const loadMore = useCallback(() => {
-		if (data?.getNode?.__typename === 'Folder') {
-			fetchMore({
-				variables: {
-					cursor: data.getNode.cursor
-				}
-			}).catch((err) => {
-				console.error(err);
-				return err;
-			});
-		}
-	}, [fetchMore, data]);
+		fetchMore<GetChildrenQuery, GetChildrenQueryVariables>({
+			variables: {
+				page_token: pageToken
+			}
+		}).catch((err) => {
+			console.error(err);
+			return err;
+		});
+	}, [fetchMore, pageToken]);
 
-	return { ...queryResult, fetchMore, data, hasMore, lastChild, loadMore };
+	return { ...queryResult, fetchMore, data, hasMore, pageToken, loadMore };
 }

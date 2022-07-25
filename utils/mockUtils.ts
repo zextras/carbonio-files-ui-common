@@ -257,7 +257,7 @@ export function mockUpdateNode(
 	return {
 		request: {
 			query: UPDATE_NODE,
-			variables
+			variables: { ...variables, shares_limit: 1 }
 		},
 		result: {
 			data: {
@@ -274,7 +274,7 @@ export function mockUpdateNodeError(
 	return {
 		request: {
 			query: UPDATE_NODE,
-			variables
+			variables: { ...variables, shares_limit: 1 }
 		},
 		error
 	};
@@ -327,13 +327,15 @@ export function getChildrenVariables(
 	folderId: Id,
 	childrenLimit = NODES_LOAD_LIMIT,
 	sort = NODES_SORT_DEFAULT,
-	sharesLimit = 1
+	sharesLimit = 1,
+	withCursor = false
 ): GetChildrenQueryVariables {
 	return {
 		node_id: folderId,
 		children_limit: childrenLimit,
 		sort,
-		shares_limit: sharesLimit
+		shares_limit: sharesLimit,
+		page_token: withCursor ? 'next_page_token' : undefined
 	};
 }
 
@@ -401,7 +403,7 @@ export function mockCopyNodes(
 	return {
 		request: {
 			query: COPY_NODES,
-			variables
+			variables: { ...variables, shares_limit: 1 }
 		},
 		result: {
 			data: {
@@ -421,7 +423,7 @@ export function mockCreateFolder(
 	return {
 		request: {
 			query: CREATE_FOLDER,
-			variables
+			variables: { ...variables, shares_limit: 1 }
 		},
 		result: {
 			data: {
@@ -438,7 +440,7 @@ export function mockCreateFolderError(
 	return {
 		request: {
 			query: CREATE_FOLDER,
-			variables
+			variables: { ...variables, shares_limit: 1 }
 		},
 		error
 	};

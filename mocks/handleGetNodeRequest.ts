@@ -11,7 +11,13 @@ import { GraphQLContext, GraphQLRequest, ResponseResolver } from 'msw';
 
 import { ROOTS } from '../constants';
 import { GetNodeQuery, GetNodeQueryVariables } from '../types/graphql/types';
-import { populateLinks, populateNode, populateNodes, sortNodes } from './mockUtils';
+import {
+	populateLinks,
+	populateNode,
+	populateNodePage,
+	populateNodes,
+	sortNodes
+} from './mockUtils';
 
 const handleGetNodeRequest: ResponseResolver<
 	GraphQLRequest<GetNodeQueryVariables>,
@@ -36,15 +42,15 @@ const handleGetNodeRequest: ResponseResolver<
 
 	if (node.__typename === 'Folder') {
 		const childrenNum = faker.datatype.number({ min: 0, max: childrenLimit });
-		node.children = populateNodes(childrenNum);
-		forEach(node.children, (mockedNode) => {
+		node.children = populateNodePage(populateNodes(childrenNum));
+		forEach(node.children.nodes, (mockedNode) => {
 			if (mockedNode) {
 				mockedNode.shares = take(mockedNode.shares, sharesNum);
 			}
 		});
 
 		if (sort) {
-			sortNodes(node.children, sort);
+			sortNodes(node.children.nodes, sort);
 		}
 	}
 

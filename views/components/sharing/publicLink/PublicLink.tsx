@@ -8,8 +8,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Container, Divider, Padding, Text, useModal } from '@zextras/carbonio-design-system';
-import filter from 'lodash/filter';
-import map from 'lodash/map';
+import reduce from 'lodash/reduce';
 import size from 'lodash/size';
 import moment from 'moment-timezone';
 import { useTranslation } from 'react-i18next';
@@ -21,7 +20,7 @@ import { useUpdateLinkMutation } from '../../../../hooks/graphql/mutations/useUp
 import { useGetNodeLinksQuery } from '../../../../hooks/graphql/queries/useGetNodeLinksQuery';
 import { useCreateSnackbar } from '../../../../hooks/useCreateSnackbar';
 import { PublicLinkRowStatus } from '../../../../types/common';
-import { Link } from '../../../../types/graphql/types';
+import { NonNullableListItem } from '../../../../types/utils';
 import { copyToClipboard } from '../../../../utils/utils';
 import { AddPublicLinkComponent } from './AddPublicLinkComponent';
 import { PublicLinkComponent } from './PublicLinkComponent';
@@ -210,29 +209,35 @@ export const PublicLink: React.FC<AddPublicLinkProps> = ({
 
 	const linkComponents = useMemo(
 		() =>
-			map(
-				filter(links, (link) => link != null),
-				(link: Link) => (
-					<PublicLinkComponent
-						key={link.id}
-						id={link.id}
-						url={link.url}
-						description={link.description}
-						status={
-							openLinkId === link.id
-								? PublicLinkRowStatus.OPEN
-								: thereIsOpenRow
-								? PublicLinkRowStatus.DISABLED
-								: PublicLinkRowStatus.CLOSED
-						}
-						expiresAt={link.expires_at}
-						onEdit={onEdit}
-						onEditConfirm={onEditConfirm}
-						onUndo={onEditUndo}
-						onRevokeOrRemove={onRevokeOrRemove}
-						forceUrlCopyDisabled={thereIsOpenRow}
-					/>
-				)
+			reduce<NonNullableListItem<typeof links> | null | undefined, JSX.Element[]>(
+				links,
+				(accumulator, link) => {
+					if (link) {
+						accumulator.push(
+							<PublicLinkComponent
+								key={link.id}
+								id={link.id}
+								url={link.url}
+								description={link.description}
+								status={
+									openLinkId === link.id
+										? PublicLinkRowStatus.OPEN
+										: thereIsOpenRow
+										? PublicLinkRowStatus.DISABLED
+										: PublicLinkRowStatus.CLOSED
+								}
+								expiresAt={link.expires_at}
+								onEdit={onEdit}
+								onEditConfirm={onEditConfirm}
+								onUndo={onEditUndo}
+								onRevokeOrRemove={onRevokeOrRemove}
+								forceUrlCopyDisabled={thereIsOpenRow}
+							/>
+						);
+					}
+					return accumulator;
+				},
+				[]
 			),
 		[links, onEdit, onEditConfirm, onEditUndo, onRevokeOrRemove, openLinkId, thereIsOpenRow]
 	);

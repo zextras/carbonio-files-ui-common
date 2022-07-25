@@ -154,7 +154,7 @@ describe('Filter list', () => {
 			const currentFolder = populateFolder();
 			const node = populateNode();
 			node.flagged = false;
-			currentFolder.children.push(node);
+			currentFolder.children.nodes.push(node);
 
 			const mocks = [
 				mockFindNodes(getFindNodesVariables({ flagged: true }), nodes),

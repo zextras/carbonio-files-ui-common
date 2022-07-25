@@ -20,12 +20,13 @@ import styled from 'styled-components';
 
 import { useUpdateNodeDescriptionMutation } from '../../hooks/graphql/mutations/useUpdateNodeDescriptionMutation';
 import { RouteLeavingGuard } from './RouteLeavingGuard';
-import { ItalicText } from './StyledComponents';
+import { ItalicText, ShimmerText } from './StyledComponents';
 
 interface NodeDetailsDescriptionProps {
-	description: string;
+	description: string | undefined;
 	canUpsertDescription: boolean;
 	id: string;
+	loading?: boolean | undefined;
 }
 
 const Label: React.FC = ({ children }) => (
@@ -47,7 +48,8 @@ const CustomItalicText = styled(ItalicText)`
 export const NodeDetailsDescription: React.VFC<NodeDetailsDescriptionProps> = ({
 	description,
 	canUpsertDescription,
-	id
+	id,
+	loading
 }) => {
 	const [t] = useTranslation();
 	const [editingDescription, setEditingDescription] = useState(false);
@@ -56,8 +58,8 @@ export const NodeDetailsDescription: React.VFC<NodeDetailsDescriptionProps> = ({
 	const [descriptionValue, setDescriptionValue] = useState(description || '');
 
 	const isDescriptionChanged = useMemo(
-		() => descriptionValue !== description,
-		[description, descriptionValue]
+		() => editingDescription && descriptionValue !== description,
+		[description, descriptionValue, editingDescription]
 	);
 
 	const moreThan4096Characters = useMemo(
@@ -78,7 +80,7 @@ export const NodeDetailsDescription: React.VFC<NodeDetailsDescriptionProps> = ({
 
 	const closeEdit = useCallback(() => {
 		setEditingDescription(false);
-		setDescriptionValue(description);
+		setDescriptionValue(description || '');
 	}, [description]);
 
 	const save = useCallback(() => {
@@ -155,7 +157,7 @@ export const NodeDetailsDescription: React.VFC<NodeDetailsDescriptionProps> = ({
 					/>
 				</Row>
 			)}
-			{!editingDescription && description && (
+			{!editingDescription && (
 				<Row
 					width="fill"
 					orientation="vertical"
@@ -181,44 +183,19 @@ export const NodeDetailsDescription: React.VFC<NodeDetailsDescriptionProps> = ({
 							/>
 						</Tooltip>
 					</Row>
-					<Text size="medium" overflow="break-word">
-						{description}
-					</Text>
-				</Row>
-			)}
-			{!editingDescription && !description && (
-				<Row
-					width="fill"
-					orientation="vertical"
-					crossAlignment="flex-start"
-					padding={{ vertical: 'small' }}
-				>
-					<Row
-						mainAlignment="space-between"
-						wrap="nowrap"
-						width="fill"
-						padding={{ vertical: 'small' }}
-					>
-						<Label>{t('displayer.details.description', 'Description')}</Label>
-						<Tooltip
-							label={t('displayer.details.editDescription.editIconTooltip', 'Edit description')}
-						>
-							<IconButton
-								iconColor="secondary"
-								size="small"
-								icon="Edit2Outline"
-								onClick={openEdit}
-								disabled={!canUpsertDescription}
-							/>
-						</Tooltip>
-					</Row>
-					{canUpsertDescription && (
-						<CustomItalicText color="secondary" size="medium" overflow="break-word">
-							{t(
-								'displayer.details.missingDescription',
-								'Click the edit button to add a description'
-							)}
-						</CustomItalicText>
+					{loading && description === undefined && <ShimmerText $size="medium" width="70%" />}
+					{!loading && (
+						<Text size="medium" overflow="break-word">
+							{description ||
+								(canUpsertDescription && (
+									<CustomItalicText color="secondary" size="medium" overflow="break-word">
+										{t(
+											'displayer.details.missingDescription',
+											'Click the edit button to add a description'
+										)}
+									</CustomItalicText>
+								))}
+						</Text>
 					)}
 				</Row>
 			)}
