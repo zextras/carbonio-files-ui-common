@@ -13,7 +13,7 @@ import { captureException } from '../../utils/utils';
 import { decodeError } from '../utils/utils';
 import { SnackbarProps, useCreateSnackbar } from './useCreateSnackbar';
 
-type ErrorHandlerOptions = {
+export type ErrorHandlerOptions = {
 	type?: SnackbarProps['type'];
 	showSnackbar?: boolean;
 };
