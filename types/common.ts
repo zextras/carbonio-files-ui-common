@@ -19,7 +19,8 @@ import {
 	MakeOptional,
 	Maybe,
 	Permissions,
-	Share
+	Share,
+	User
 } from './graphql/types';
 import { SnakeToCamelCase } from './utils';
 
@@ -329,12 +330,12 @@ export enum Action {
 
 export interface ShareChip extends ChipItem {
 	value: {
-		id: string;
+		id: string | undefined;
 		sharingAllowed: boolean;
 		role: Role;
 		onUpdate: (
-			id: string,
+			id: string | undefined,
 			updatedPartialObject: Partial<Omit<ShareChip['value'], 'onUpdate'>>
 		) => void;
-	};
+	} & (Contact | User);
 }

@@ -49,7 +49,6 @@ import { ModalFooter } from './ModalFooter';
 import { ModalHeader } from './ModalHeader';
 import { ModalList } from './ModalList';
 import { ModalRootsList } from './ModalRootsList';
-import { FlexContainer } from './StyledComponents';
 
 interface NodesSelectionModalContentProps {
 	title: string;
@@ -172,6 +171,13 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 	const hideCreateFolderInputDebounced = useMemo(
 		() => debounce(hideCreateFolderInput, DOUBLE_CLICK_DELAY, { leading: false, trailing: true }),
 		[hideCreateFolderInput]
+	);
+
+	useEffect(
+		() => () => {
+			hideCreateFolderInputDebounced.cancel();
+		},
+		[hideCreateFolderInputDebounced]
 	);
 
 	const checkSelectable = useCallback(

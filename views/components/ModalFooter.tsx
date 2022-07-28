@@ -9,8 +9,6 @@ import React, { useCallback } from 'react';
 import { Button, Container, Padding, Tooltip } from '@zextras/carbonio-design-system';
 import { useTranslation } from 'react-i18next';
 
-import { FlexContainer } from './StyledComponents';
-
 interface ModalFooterProps {
 	confirmLabel: string;
 	confirmHandler: (event: React.MouseEvent<HTMLButtonElement> | KeyboardEvent) => void;
@@ -41,13 +39,13 @@ export const ModalFooter: React.VFC<ModalFooterProps> = ({
 	}, []);
 
 	return (
-		<FlexContainer
+		<Container
 			padding={{ vertical: 'small' }}
 			minHeight={0}
 			height="auto"
-			$flexGrow={0}
-			$flexShrink={0}
-			$flexBasis="auto"
+			flexGrow={0}
+			flexShrink={0}
+			flexBasis="auto"
 		>
 			{/* <Divider /> */}
 			<Container
@@ -84,6 +82,6 @@ export const ModalFooter: React.VFC<ModalFooterProps> = ({
 					</Tooltip>
 				</Padding>
 			</Container>
-		</FlexContainer>
+		</Container>
 	);
 };

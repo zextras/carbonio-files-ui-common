@@ -7,7 +7,7 @@
 import React from 'react';
 
 import { ApolloError } from '@apollo/client';
-import { screen, waitFor } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { map } from 'lodash';
 
@@ -15,7 +15,12 @@ import ListHeader from '../../../components/ListHeader';
 import { populateFolder, populateParents } from '../../mocks/mockUtils';
 import { Folder } from '../../types/graphql/types';
 import { mockGetParent, mockGetPath } from '../../utils/mockUtils';
-import { buildBreadCrumbRegExp, generateError, render } from '../../utils/testUtils';
+import {
+	buildBreadCrumbRegExp,
+	generateError,
+	render,
+	waitForNetworkResponse
+} from '../../utils/testUtils';
 import { buildCrumbs } from '../../utils/utils';
 
 describe('ListHeader', () => {
@@ -111,9 +116,9 @@ describe('ListHeader', () => {
 			expect(getByTextWithMarkup(shortBreadcrumbRegExp)).toBeVisible();
 			// user clicks on the cta
 			userEvent.click(screen.getByTestId('icon: FolderOutline'));
-			await screen.findByText(/Hide previous folders/i);
 			// wait for the full path to be loaded
 			await screen.findByTestId('icon: ChevronLeft');
+			await screen.findByText(/hide previous folders/i);
 			// all levels are now shown
 			expect(getByTextWithMarkup(fullBreadcrumbRegExp)).toBeVisible();
 			// user clicks again on the cta
@@ -124,9 +129,9 @@ describe('ListHeader', () => {
 			expect(screen.queryByText(path[0].name)).not.toBeInTheDocument();
 			// user clicks on the cta
 			userEvent.click(screen.getByTestId('icon: FolderOutline'));
-			await screen.findByText(/Hide previous folders/i);
 			// wait for the full path to be loaded
 			await screen.findByTestId('icon: ChevronLeft');
+			await screen.findByText(/hide previous folders/i);
 			// all levels are now shown immediately without a request to the API
 			expect(getByTextWithMarkup(fullBreadcrumbRegExp)).toBeVisible();
 		});
@@ -169,14 +174,9 @@ describe('ListHeader', () => {
 			expect(getByTextWithMarkup(shortBreadcrumbRegExp)).toBeVisible();
 			// user clicks on the cta
 			userEvent.click(screen.getByTestId('icon: FolderOutline'));
-			await screen.findByText(/Show previous folders/i);
 			// wait for response
-			await waitFor(
-				() =>
-					new Promise((resolve) => {
-						setTimeout(resolve, 0);
-					})
-			);
+			await waitForNetworkResponse();
+			await screen.findByText(/show previous folders/i);
 			// root element is not shown but the short breadcrumb remains visible
 			expect(getByTextWithMarkup(shortBreadcrumbRegExp)).toBeVisible();
 			expect(screen.queryByText(crumbs[0].label)).not.toBeInTheDocument();

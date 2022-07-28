@@ -32,6 +32,7 @@ import {
 	UPLOAD_TO_PATH
 } from '../constants';
 import {
+	Contact,
 	Crumb,
 	CrumbNode,
 	OrderTrend,
@@ -214,18 +215,7 @@ export const decodeError = (error: ApolloError, t: TFunction): string | null => 
 	return null;
 };
 
-export const getChipLabel = (
-	contact?: {
-		firstName?: string;
-		middleName?: string;
-		lastName?: string;
-		fullName?: string;
-		// eslint-disable-next-line camelcase
-		full_name?: string;
-		email?: string;
-		name?: string;
-	} | null
-): string => {
+export const getChipLabel = (contact: Contact | null | undefined): string => {
 	if (!contact) {
 		return '';
 	}
@@ -233,6 +223,13 @@ export const getChipLabel = (
 		return trim(`${contact.firstName ?? ''} ${contact.middleName ?? ''} ${contact.lastName ?? ''}`);
 	}
 	return contact.full_name || contact.fullName || contact.email || contact.name || '';
+};
+
+export const getChipTooltip = (contact: Contact | null | undefined): string => {
+	if (!contact) {
+		return '';
+	}
+	return contact.email || '';
 };
 
 /**

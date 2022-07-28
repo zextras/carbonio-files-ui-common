@@ -6,7 +6,7 @@
 
 import React from 'react';
 
-import { act, screen, waitFor, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
@@ -74,14 +74,13 @@ describe('Sorting', () => {
 		expect(sortIcon).toBeVisible();
 		expect(sortIcon.parentElement).not.toHaveAttribute('disabled', '');
 		userEvent.click(sortIcon);
-		await screen.findByText(/ascending order by name/i);
 		const descendingOrderOption = await screen.findByText('Descending Order');
-		act(() => {
-			userEvent.click(descendingOrderOption);
-		});
+		await screen.findByText(/ascending order by name/i);
+		userEvent.click(descendingOrderOption);
 		await waitFor(() =>
 			expect(screen.getAllByTestId('node-item-', { exact: false })[0]).toHaveTextContent('b')
 		);
+		await screen.findByText(/descending order by name/i);
 		const descItems = screen.getAllByTestId('node-item-', { exact: false });
 		expect(within(descItems[0]).getByText('b')).toBeVisible();
 		expect(within(descItems[1]).getByText('a')).toBeVisible();

@@ -9,26 +9,33 @@ import React from 'react';
 import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import { populateNode } from '../../../mocks/mockUtils';
+import { populateGalContact, populateNode } from '../../../mocks/mockUtils';
 import { Role, ShareChip } from '../../../types/common';
 import { GetNodeQuery, GetNodeQueryVariables } from '../../../types/graphql/types';
 import { getNodeVariables, mockGetNode } from '../../../utils/mockUtils';
 import { render } from '../../../utils/testUtils';
+import { getChipLabel } from '../../../utils/utils';
 import { AddShareChip } from './AddShareChip';
 
 describe('Add Share Chip', () => {
 	test('render a chip for share with read-only permissions', () => {
 		const onUpdateFn = jest.fn();
 		const onCloseFn = jest.fn();
+		const contact = populateGalContact();
 		render(
 			<AddShareChip
-				value={{ id: 'chip', role: Role.Viewer, sharingAllowed: false, onUpdate: onUpdateFn }}
-				label="Someone Name"
+				value={{
+					id: 'chip',
+					role: Role.Viewer,
+					sharingAllowed: false,
+					onUpdate: onUpdateFn,
+					...contact
+				}}
 				onClose={onCloseFn}
 			/>
 		);
 
-		expect(screen.getByText('Someone Name')).toBeVisible();
+		expect(screen.getByText(getChipLabel(contact))).toBeVisible();
 		expect(screen.getByTestId('icon: EyeOutline')).toBeVisible();
 		expect(screen.queryByTestId('icon: Edit2Outline')).not.toBeInTheDocument();
 		expect(screen.queryByTestId('icon: Share')).not.toBeInTheDocument();
@@ -44,15 +51,21 @@ describe('Add Share Chip', () => {
 	test('render a chip for share with read and write permissions', () => {
 		const onUpdateFn = jest.fn();
 		const onCloseFn = jest.fn();
+		const contact = populateGalContact();
 		render(
 			<AddShareChip
-				value={{ id: 'chip', role: Role.Editor, sharingAllowed: false, onUpdate: onUpdateFn }}
-				label="Someone Name"
+				value={{
+					id: 'chip',
+					role: Role.Editor,
+					sharingAllowed: false,
+					onUpdate: onUpdateFn,
+					...contact
+				}}
 				onClose={onCloseFn}
 			/>
 		);
 
-		expect(screen.getByText('Someone Name')).toBeVisible();
+		expect(screen.getByText(getChipLabel(contact))).toBeVisible();
 		expect(screen.queryByTestId('icon: EyeOutline')).not.toBeInTheDocument();
 		expect(screen.getByTestId('icon: Edit2Outline')).toBeVisible();
 		expect(screen.queryByTestId('icon: Share')).not.toBeInTheDocument();
@@ -68,15 +81,21 @@ describe('Add Share Chip', () => {
 	test('render a chip for share with read and share permissions', () => {
 		const onUpdateFn = jest.fn();
 		const onCloseFn = jest.fn();
+		const contact = populateGalContact();
 		render(
 			<AddShareChip
-				value={{ id: 'chip', role: Role.Viewer, sharingAllowed: true, onUpdate: onUpdateFn }}
-				label="Someone Name"
+				value={{
+					id: 'chip',
+					role: Role.Viewer,
+					sharingAllowed: true,
+					onUpdate: onUpdateFn,
+					...contact
+				}}
 				onClose={onCloseFn}
 			/>
 		);
 
-		expect(screen.getByText('Someone Name')).toBeVisible();
+		expect(screen.getByText(getChipLabel(contact))).toBeVisible();
 		expect(screen.getByTestId('icon: EyeOutline')).toBeVisible();
 		expect(screen.queryByTestId('icon: Edit2Outline')).not.toBeInTheDocument();
 		expect(screen.getByTestId('icon: Share')).toBeVisible();
@@ -92,15 +111,21 @@ describe('Add Share Chip', () => {
 	test('render a chip for share with write and share permissions', () => {
 		const onUpdateFn = jest.fn();
 		const onCloseFn = jest.fn();
+		const contact = populateGalContact();
 		render(
 			<AddShareChip
-				value={{ id: 'chip', role: Role.Editor, sharingAllowed: true, onUpdate: onUpdateFn }}
-				label="Someone Name"
+				value={{
+					id: 'chip',
+					role: Role.Editor,
+					sharingAllowed: true,
+					onUpdate: onUpdateFn,
+					...contact
+				}}
 				onClose={onCloseFn}
 			/>
 		);
 
-		expect(screen.getByText('Someone Name')).toBeVisible();
+		expect(screen.getByText(getChipLabel(contact))).toBeVisible();
 		expect(screen.queryByTestId('icon: EyeOutline')).not.toBeInTheDocument();
 		expect(screen.getByTestId('icon: Edit2Outline')).toBeVisible();
 		expect(screen.getByTestId('icon: Share')).toBeVisible();
@@ -116,18 +141,24 @@ describe('Add Share Chip', () => {
 	test('click on the chip open popover which contains roles and description of roles', () => {
 		const onUpdateFn = jest.fn();
 		const onCloseFn = jest.fn();
+		const contact = populateGalContact();
 		render(
 			<AddShareChip
-				value={{ id: 'chip', role: Role.Viewer, sharingAllowed: false, onUpdate: onUpdateFn }}
-				label="Someone Name"
+				value={{
+					id: 'chip',
+					role: Role.Viewer,
+					sharingAllowed: false,
+					onUpdate: onUpdateFn,
+					...contact
+				}}
 				onClose={onCloseFn}
 			/>
 		);
 
-		expect(screen.getByText('Someone Name')).toBeVisible();
+		expect(screen.getByText(getChipLabel(contact))).toBeVisible();
 
 		act(() => {
-			userEvent.click(screen.getByText('Someone Name'));
+			userEvent.click(screen.getByTestId('icon: EyeOutline'));
 		});
 
 		expect(screen.getByText('Viewer')).toBeVisible();
@@ -145,6 +176,7 @@ describe('Add Share Chip', () => {
 			node.permissions.can_write_folder = true;
 			const onUpdateFn = jest.fn();
 			const onCloseFn = jest.fn();
+			const contact = populateGalContact();
 
 			const mockedGetNodeQuery = mockGetNode(getNodeVariables(node.id), node);
 
@@ -159,17 +191,18 @@ describe('Add Share Chip', () => {
 				id: 'chip-id',
 				role: Role.Viewer,
 				sharingAllowed: false,
-				onUpdate: onUpdateFn
+				onUpdate: onUpdateFn,
+				...contact
 			};
 
-			render(<AddShareChip value={chip} label="Someone Name" onClose={onCloseFn} />, {
+			render(<AddShareChip value={chip} onClose={onCloseFn} />, {
 				initialRouterEntries: [`/?node=${node.id}`]
 			});
 
-			expect(screen.getByText('Someone Name')).toBeVisible();
+			expect(screen.getByText(getChipLabel(contact))).toBeVisible();
 
 			act(() => {
-				userEvent.click(screen.getByText('Someone Name'));
+				userEvent.click(screen.getByTestId('icon: EyeOutline'));
 			});
 
 			expect(screen.getByText('Editor')).toBeVisible();
@@ -187,6 +220,7 @@ describe('Add Share Chip', () => {
 			node.permissions.can_write_folder = false;
 			const onUpdateFn = jest.fn();
 			const onCloseFn = jest.fn();
+			const contact = populateGalContact();
 
 			const mockedGetNodeQuery = mockGetNode(getNodeVariables(node.id), node);
 
@@ -199,17 +233,22 @@ describe('Add Share Chip', () => {
 
 			render(
 				<AddShareChip
-					value={{ id: 'chip', role: Role.Viewer, sharingAllowed: false, onUpdate: onUpdateFn }}
-					label="Someone Name"
+					value={{
+						id: 'chip',
+						role: Role.Viewer,
+						sharingAllowed: false,
+						onUpdate: onUpdateFn,
+						...contact
+					}}
 					onClose={onCloseFn}
 				/>,
 				{ initialRouterEntries: [`/?node=${node.id}`] }
 			);
 
-			expect(screen.getByText('Someone Name')).toBeVisible();
+			expect(screen.getByText(getChipLabel(contact))).toBeVisible();
 
 			act(() => {
-				userEvent.click(screen.getByText('Someone Name'));
+				userEvent.click(screen.getByTestId('icon: EyeOutline'));
 			});
 
 			expect(screen.getByTestId('exclusive-selection-editor')).toBeInTheDocument();
@@ -227,6 +266,7 @@ describe('Add Share Chip', () => {
 			node.permissions.can_write_folder = true;
 			const onUpdateFn = jest.fn();
 			const onCloseFn = jest.fn();
+			const contact = populateGalContact();
 
 			const mockedGetNodeQuery = mockGetNode(getNodeVariables(node.id), node);
 
@@ -241,17 +281,18 @@ describe('Add Share Chip', () => {
 				id: 'chip-id',
 				role: Role.Viewer,
 				sharingAllowed: false,
-				onUpdate: onUpdateFn
+				onUpdate: onUpdateFn,
+				...contact
 			};
 
-			render(<AddShareChip value={chip} label="Someone Name" onClose={onCloseFn} />, {
+			render(<AddShareChip value={chip} onClose={onCloseFn} />, {
 				initialRouterEntries: [`/?node=${node.id}`]
 			});
 
-			expect(screen.getByText('Someone Name')).toBeVisible();
+			expect(screen.getByText(getChipLabel(contact))).toBeVisible();
 
 			act(() => {
-				userEvent.click(screen.getByText('Someone Name'));
+				userEvent.click(screen.getByTestId('icon: EyeOutline'));
 			});
 
 			expect(screen.getByText('Sharing allowed')).toBeVisible();
@@ -274,6 +315,7 @@ describe('Add Share Chip', () => {
 			node.permissions.can_write_folder = true;
 			const onUpdateFn = jest.fn();
 			const onCloseFn = jest.fn();
+			const contact = populateGalContact();
 
 			const mockedGetNodeQuery = mockGetNode(getNodeVariables(node.id), node);
 
@@ -288,17 +330,18 @@ describe('Add Share Chip', () => {
 				id: 'chip-id',
 				role: Role.Viewer,
 				sharingAllowed: true,
-				onUpdate: onUpdateFn
+				onUpdate: onUpdateFn,
+				...contact
 			};
 
-			render(<AddShareChip value={chip} label="Someone Name" onClose={onCloseFn} />, {
+			render(<AddShareChip value={chip} onClose={onCloseFn} />, {
 				initialRouterEntries: [`/?node=${node.id}`]
 			});
 
-			expect(screen.getByText('Someone Name')).toBeVisible();
+			expect(screen.getByText(getChipLabel(contact))).toBeVisible();
 
 			act(() => {
-				userEvent.click(screen.getByText('Someone Name'));
+				userEvent.click(screen.getByTestId('icon: EyeOutline'));
 			});
 
 			expect(screen.getByText('Sharing allowed')).toBeVisible();

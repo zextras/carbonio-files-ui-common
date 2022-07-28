@@ -21,13 +21,13 @@ import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 
 import useUserInfo from '../../../../hooks/useUserInfo';
-import { SHARE_CHIP_SIZE } from '../../../constants';
+import { SHARE_CHIP_MAX_WIDTH, SHARE_CHIP_SIZE } from '../../../constants';
 import { useDeleteShareMutation } from '../../../hooks/graphql/mutations/useDeleteShareMutation';
 import { useGetSharesQuery } from '../../../hooks/graphql/queries/useGetSharesQuery';
 import { Node } from '../../../types/common';
 import { Share, SharedTarget } from '../../../types/graphql/types';
 import { isFile } from '../../../utils/ActionsFactory';
-import { getChipLabel } from '../../../utils/utils';
+import { getChipLabel, getChipTooltip } from '../../../utils/utils';
 import { AddSharing } from './AddSharing';
 import { EditShareChip } from './EditShareChip';
 import { PublicLink } from './publicLink/PublicLink';
@@ -104,10 +104,10 @@ export const NodeSharing: React.VFC<NodeSharingProps> = ({ node }) => {
 			<Chip
 				size={SHARE_CHIP_SIZE}
 				avatarLabel={getChipLabel(node.owner)}
-				maxWidth="210px"
+				maxWidth={SHARE_CHIP_MAX_WIDTH}
 				label={
 					<Row wrap="nowrap">
-						<Tooltip label={label} overflowTooltip maxWidth="100%">
+						<Tooltip label={getChipTooltip(node.owner)} maxWidth="100%">
 							<Text size={SHARE_CHIP_SIZE} weight="light">
 								{label}
 							</Text>

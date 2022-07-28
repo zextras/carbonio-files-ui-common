@@ -13,7 +13,8 @@ import {
 	Container,
 	Padding,
 	Row,
-	Shimmer,Text,
+	Shimmer,
+	Text,
 	Tooltip,
 	useSnackbar
 } from '@zextras/carbonio-design-system';
@@ -144,9 +145,9 @@ const ShimmerNodeDetailsItem = (): JSX.Element => (
 		<Padding horizontal="small">
 			<ShimmerText $size="small" width="150px" />
 		</Padding>
-		<FlexContainer orientation="horizontal" mainAlignment="flex-end">
+		<Container orientation="horizontal" mainAlignment="flex-end">
 			<ShimmerText $size="small" width="60px" />
-		</FlexContainer>
+		</Container>
 	</Container>
 );
 

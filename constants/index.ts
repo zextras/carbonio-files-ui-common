@@ -42,6 +42,7 @@ export const DRAG_TYPES = {
 	markForDeletion: 'files-drag-markfordeletion'
 };
 export const SHARE_CHIP_SIZE = 'small';
+export const SHARE_CHIP_MAX_WIDTH = '300px';
 export const CONFIGS = {
 	MAX_VERSIONS: 'max-number-of-versions',
 	MAX_KEEP_VERSIONS: 'max-number-of-keep-versions'

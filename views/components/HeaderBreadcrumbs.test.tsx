@@ -23,7 +23,7 @@ import {
 } from '../../mocks/mockUtils';
 import { Node } from '../../types/graphql/types';
 import { mockGetParent, mockGetPath, mockMoveNodes } from '../../utils/mockUtils';
-import { buildBreadCrumbRegExp, render } from '../../utils/testUtils';
+import { buildBreadCrumbRegExp, render, waitForNetworkResponse } from '../../utils/testUtils';
 import { HeaderBreadcrumbs } from './HeaderBreadcrumbs';
 
 let mockedUseNavigationHook: ReturnType<UseNavigationHook>;
@@ -529,12 +529,7 @@ describe('Header Breadcrumbs', () => {
 			});
 			fireEvent.dragEnd(mockDraggedItem, { dataTransfer: dataTransfer() });
 			// wait a tick to allow mutation to eventually be executed
-			await waitFor(
-				() =>
-					new Promise((resolve) => {
-						setTimeout(resolve, 1);
-					})
-			);
+			await waitForNetworkResponse();
 			expect(moveMutationFn).not.toHaveBeenCalled();
 		});
 
@@ -912,12 +907,7 @@ describe('Header Breadcrumbs', () => {
 				'background-color': 'rgba(130, 130, 130, 0.4)'
 			});
 			// wait a tick to allow mutation to eventually be executed
-			await waitFor(
-				() =>
-					new Promise((resolve) => {
-						setTimeout(resolve, 1);
-					})
-			);
+			await waitForNetworkResponse();
 			expect(moveMutationFn).not.toHaveBeenCalled();
 		});
 	});

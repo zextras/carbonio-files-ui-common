@@ -371,7 +371,7 @@ describe('Edit Share Chip', () => {
 
 			expect(screen.getByText(user.full_name)).toBeVisible();
 			act(() => {
-				userEvent.click(screen.getByText(user.full_name));
+				userEvent.click(screen.getByTestId('icon: EyeOutline'));
 			});
 			expect(screen.getByText('Viewer')).toBeVisible();
 			expect(screen.getByText('Editor')).toBeVisible();
@@ -486,7 +486,7 @@ describe('Edit Share Chip', () => {
 
 			expect(screen.getByText(user.full_name)).toBeVisible();
 			act(() => {
-				userEvent.click(screen.getByText(user.full_name));
+				userEvent.click(screen.getByTestId('icon: EyeOutline'));
 			});
 			expect(screen.getByText('Viewer')).toBeVisible();
 			expect(screen.getByText('Editor')).toBeVisible();
@@ -501,7 +501,7 @@ describe('Edit Share Chip', () => {
 
 	test('render a chip of the logged user share. Click on close action open confirmation modal and then delete share', async () => {
 		const node = populateNode();
-		const user = populateUser();
+		const user = populateUser(mockedUserLogged.id, mockedUserLogged.name);
 		const share = populateShare(node, 'abc', user);
 		const mocks = [
 			mockDeleteShare(
@@ -629,7 +629,7 @@ describe('Edit Share Chip', () => {
 
 			expect(screen.getByText(user.full_name)).toBeVisible();
 			act(() => {
-				userEvent.click(screen.getByText(user.full_name));
+				userEvent.click(screen.getByTestId('icon: EyeOutline'));
 			});
 			await screen.findByRole('button', { name: /save/i });
 			expect(screen.getByRole('button', { name: /save/i })).toBeVisible();
@@ -681,7 +681,7 @@ describe('Edit Share Chip', () => {
 
 			expect(screen.getByText(user.full_name)).toBeVisible();
 			act(() => {
-				userEvent.click(screen.getByText(user.full_name));
+				userEvent.click(screen.getByTestId('icon: EyeOutline'));
 			});
 			await screen.findByRole('button', { name: /save/i });
 			expect(screen.getByRole('button', { name: /save/i })).toBeVisible();
@@ -729,7 +729,7 @@ describe('Edit Share Chip', () => {
 
 			expect(screen.getByText(user.full_name)).toBeVisible();
 			act(() => {
-				userEvent.click(screen.getByText(user.full_name));
+				userEvent.click(screen.getByTestId('icon: EyeOutline'));
 			});
 			await screen.findByRole('button', { name: /save/i });
 			expect(screen.getByRole('button', { name: /save/i })).toBeVisible();
@@ -790,13 +790,10 @@ describe('Edit Share Chip', () => {
 
 			expect(screen.getByText(user.full_name)).toBeVisible();
 			act(() => {
-				userEvent.click(screen.getByText(user.full_name));
+				userEvent.click(screen.getByTestId('icon: EyeOutline'));
 			});
 			await screen.findByRole('button', { name: /save/i });
 			expect(screen.getByTestId('icon: Square')).toBeVisible();
-			// FIXME: I can't understand why this click cause a
-			//   Warning: An update to EditShareChip inside a test was not wrapped in act(...).
-			//   even if there are the await statements after the click
 			act(() => {
 				userEvent.click(screen.getByTestId('icon: Square'));
 			});

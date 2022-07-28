@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 
 import {
 	Popover,
@@ -25,24 +25,42 @@ const ActiveChip = styled(Chip)<{ $active: boolean }>`
 `;
 
 export interface ChipWithPopoverProps extends ChipProps {
+	onClose?: (event?: React.SyntheticEvent | KeyboardEvent) => void;
 	openPopoverOnClick?: boolean;
+	popoverOpen?: boolean;
 	onClick?: (event: React.SyntheticEvent) => void;
 	children: (closePopover: () => void) => JSX.Element;
+	onValueChange?: (newState: boolean) => void;
 }
 
 export const ChipWithPopover = React.forwardRef<HTMLDivElement, ChipWithPopoverProps>(
 	function ChipWithPopoverFn(
-		{ onClose, background, openPopoverOnClick = true, onClick, children, ...rest },
+		{
+			onClose,
+			background,
+			openPopoverOnClick = true,
+			popoverOpen = false,
+			onClick,
+			children,
+			onValueChange,
+			...rest
+		},
 		ref
 	) {
 		const innerRef = useCombinedRefs<HTMLDivElement>(ref);
 		const [open, setOpen] = useState(false);
 
+		useEffect(() => {
+			setOpen(popoverOpen);
+		}, [popoverOpen]);
+
 		const setOpenToFalse = useCallback(() => {
-			if (open) {
+			if (onValueChange) {
+				onValueChange(false);
+			} else {
 				setOpen(false);
 			}
-		}, [open, setOpen]);
+		}, [onValueChange]);
 
 		const onCloseChip = useCallback(
 			(ev: React.MouseEvent<HTMLButtonElement> | KeyboardEvent) => {
@@ -59,14 +77,18 @@ export const ChipWithPopover = React.forwardRef<HTMLDivElement, ChipWithPopoverP
 
 		const onClickChip = useCallback<React.MouseEventHandler>(
 			(ev) => {
-				if (openPopoverOnClick && !open) {
-					setOpen(true);
+				if (openPopoverOnClick) {
+					if (onValueChange) {
+						onValueChange(true);
+					} else {
+						setOpen(true);
+					}
 				}
 				if (onClick) {
 					onClick(ev);
 				}
 			},
-			[openPopoverOnClick, open, onClick]
+			[openPopoverOnClick, onClick, onValueChange]
 		);
 
 		return (
@@ -81,7 +103,7 @@ export const ChipWithPopover = React.forwardRef<HTMLDivElement, ChipWithPopoverP
 					/>
 				</div>
 				<CustomPopover
-					open={openPopoverOnClick ? open : false}
+					open={open}
 					anchorEl={innerRef}
 					styleAsModal
 					placement="bottom-start"

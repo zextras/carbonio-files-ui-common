@@ -49,7 +49,8 @@ import {
 	buildBreadCrumbRegExp,
 	render,
 	selectNodes,
-	triggerLoadMore
+	triggerLoadMore,
+	waitForNetworkResponse
 } from '../../utils/testUtils';
 import { CopyNodesModalContent } from './CopyNodesModalContent';
 
@@ -597,24 +598,24 @@ describe('Copy Nodes Modal', () => {
 		);
 		userEvent.click(screen.getByText('Files'));
 		await screen.findByText('Home');
+		await waitForNetworkResponse();
+		const confirmButton = screen.getByRole('button', { name: actionRegexp.copy });
+		const confirmButtonLabel = within(confirmButton).getByText(actionRegexp.copy);
 		expect(screen.getByText('Home')).toBeVisible();
 		expect(screen.getByText(/shared with me/i)).toBeVisible();
-		const confirmButton = screen.getByRole('button', { name: actionRegexp.copy });
 		expect(confirmButton).toHaveAttribute('disabled');
-		const confirmButtonLabel = within(confirmButton).getByText(actionRegexp.copy);
-		act(() => {
-			userEvent.hover(confirmButtonLabel);
-		});
-		await screen.findByText(/you can't perform this action here/i);
-		expect(screen.getByText(/you can't perform this action here/i)).toBeVisible();
+		userEvent.hover(confirmButtonLabel);
+		const tooltip = await screen.findByText(/you can't perform this action here/i);
+		expect(tooltip).toBeVisible();
 		act(() => {
 			userEvent.unhover(confirmButtonLabel);
 		});
-		expect(screen.queryByText(/you can't perform this action here/i)).not.toBeInTheDocument();
+		expect(tooltip).not.toBeInTheDocument();
 		userEvent.click(screen.getByText('Home'));
-		expect(confirmButtonLabel).not.toHaveAttribute('disabled');
+		expect(confirmButton).not.toHaveAttribute('disabled');
+		userEvent.hover(confirmButtonLabel);
 		act(() => {
-			userEvent.hover(confirmButtonLabel);
+			jest.runOnlyPendingTimers();
 		});
 		expect(screen.queryByText(/you can't perform this action here/i)).not.toBeInTheDocument();
 		act(() => {

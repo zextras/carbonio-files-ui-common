@@ -32,6 +32,7 @@ import {
 } from '../../../types/network';
 import { mockGetAccountsByEmail } from '../../../utils/mockUtils';
 import { render } from '../../../utils/testUtils';
+import { getChipLabel } from '../../../utils/utils';
 import { AddSharing } from './AddSharing';
 
 const mockedSoapFetch = jest.fn<unknown, [request: RequestName, args: unknown]>();
@@ -61,11 +62,11 @@ describe('Add Sharing', () => {
 			});
 
 			render(<AddSharing node={node} />, { mocks: [] });
-			const chipInput = screen.getByText(/add new people or groups/i);
+			const chipInput = screen.getByRole('textbox', { name: /add new people or groups/i });
 			expect(chipInput).toBeVisible();
 			userEvent.type(chipInput, 'c');
 			// wait for the single character to be typed
-			await screen.findByText('c');
+			await waitFor(() => expect(chipInput).toHaveDisplayValue('c'));
 			// wait for the dropdown to be shown
 			await screen.findByText(/contact-group-1/i);
 			expect(screen.getAllByText(/gal-contact-\d$/i)).toHaveLength(2);
@@ -122,7 +123,7 @@ describe('Add Sharing', () => {
 				mockGetAccountsByEmail({ emails: contactsNoGalEmails }, contactsNoGalAccounts)
 			];
 			render(<AddSharing node={node} />, { mocks });
-			const chipInput = screen.getByText(/add new people or groups/i);
+			const chipInput = screen.getByRole('textbox', { name: /add new people or groups/i });
 			expect(chipInput).toBeVisible();
 			userEvent.type(chipInput, 'c');
 			// wait for the dropdown to be shown
@@ -139,7 +140,7 @@ describe('Add Sharing', () => {
 			expect(screen.queryByText(/contact-group-1/i)).not.toBeInTheDocument();
 			// contact group members are exploded in different chips
 			forEach(contactsNoGalAccounts, (contact) => {
-				expect(screen.getByText(contact.email)).toBeVisible();
+				expect(screen.getByText(getChipLabel(contact))).toBeVisible();
 			});
 			forEach(contactsGal, (contact) => {
 				expect(screen.getByText(contact.cn[0]._attrs.email)).toBeVisible();
@@ -179,7 +180,7 @@ describe('Add Sharing', () => {
 				)
 			];
 			render(<AddSharing node={node} />, { mocks });
-			const chipInput = screen.getByText(/add new people or groups/i);
+			const chipInput = screen.getByRole('textbox', { name: /add new people or groups/i });
 			expect(chipInput).toBeVisible();
 			userEvent.type(chipInput, 'c');
 			// wait for the dropdown to be shown
@@ -239,7 +240,7 @@ describe('Add Sharing', () => {
 			});
 
 			render(<AddSharing node={node} />, { mocks: [] });
-			const chipInput = screen.getByText(/add new people or groups/i);
+			const chipInput = screen.getByRole('textbox', { name: /add new people or groups/i });
 			expect(chipInput).toBeVisible();
 			userEvent.type(chipInput, 'c');
 			// wait for the dropdown to be shown
@@ -279,7 +280,7 @@ describe('Add Sharing', () => {
 			});
 
 			render(<AddSharing node={node} />, { mocks: [] });
-			const chipInput = screen.getByText(/add new people or groups/i);
+			const chipInput = screen.getByRole('textbox', { name: /add new people or groups/i });
 			expect(chipInput).toBeVisible();
 			userEvent.type(chipInput, 'c');
 			// wait for the dropdown to be shown

@@ -43,6 +43,7 @@ import {
 	AutocompleteRequest,
 	AutocompleteResponse,
 	ContactGroupMatch,
+	DerefContactInformation,
 	GetContactsRequest,
 	GetContactsResponse,
 	isAnAccount,
@@ -145,6 +146,10 @@ function matchToContact(match: Match): Contact {
 	};
 }
 
+function derefContactInfoToContact({ _attrs: derefAttrs }: DerefContactInformation): Contact {
+	return derefAttrs;
+}
+
 const removeDL: (autocompleteResponse: AutocompleteResponse) => Match[] = ({ match }) =>
 	filter(match, (m) => {
 		const isDL = isDistributionList(m);
@@ -177,12 +182,12 @@ function cleanEmails<T extends { email?: string | undefined }>(
 		emails,
 		(acc, result) => {
 			// exclude emails already added in dropdown
-			const localIndex = findIndex(acc, ['email', result.email]);
+			const localIndex = findIndex(acc, (item) => item.email === result.email);
 			if (localIndex >= 0) {
 				return acc;
 			}
 			// exclude emails already added as new shares
-			const alreadyInChips = findIndex(chips, ['email', result.email]) >= 0;
+			const alreadyInChips = findIndex(chips, (item) => item.value.email === result.email) >= 0;
 			if (alreadyInChips) {
 				return acc;
 			}
@@ -227,14 +232,17 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 		() => size(chips) > 0 || mailTextValue.length > 0,
 		[chips, mailTextValue.length]
 	);
-	const thereAreInvalidChips = useMemo(() => some(chips, (chip) => chip.id === undefined), [chips]);
+	const thereAreInvalidChips = useMemo(
+		() => some(chips, (chip) => chip.value.id === undefined),
+		[chips]
+	);
 
 	const inputRef = useRef<HTMLInputElement>(null);
 	const [loading, setLoading] = useState(false);
 
 	const createShareCallback = useCallback(() => {
 		forEach(chips, (chip) => {
-			if (chip.id) {
+			if (chip.value.id) {
 				createShare(
 					node,
 					chip.value.id,
@@ -250,7 +258,7 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 	const updateChip = useCallback<ShareChip['value']['onUpdate']>((id, updatedValue) => {
 		setChips((prevState) => {
 			const newState = [...prevState];
-			const idx = findIndex(newState, (item) => item.id === id);
+			const idx = findIndex(newState, (item) => item.value.id === id);
 			newState[idx] = { ...newState[idx], value: { ...newState[idx].value, ...updatedValue } };
 			return newState;
 		});
@@ -269,11 +277,8 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 					.then((result) => {
 						if (result?.data?.getAccountByEmail) {
 							const contactWithId: ShareChip = {
-								...contact,
-								id: result.data.getAccountByEmail.id,
-								label: getChipLabel(contact),
-								error: result.data.getAccountByEmail.id === undefined,
 								value: {
+									...contact,
 									id: result.data.getAccountByEmail.id,
 									role: Role.Viewer,
 									sharingAllowed: false,
@@ -303,7 +308,7 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 				derefGroupMember: true
 			}).then((result) => {
 				const members = result.cn && result.cn[0].m;
-				const galMembers: Array<ShareChip> = [];
+				const galMembers: Array<ShareChip['value']> = [];
 				const inlineAndContactMemberEmails: string[] = [];
 
 				forEach(members, (member) => {
@@ -311,12 +316,18 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 						inlineAndContactMemberEmails.push(member.value);
 					} else if (member.type === 'C' && isDerefMember(member)) {
 						inlineAndContactMemberEmails.push(member.cn[0]._attrs.email);
-					} else if (member.type === 'G' && isDerefMember(member)) {
+					} else if (
+						member.type === 'G' &&
+						isDerefMember(member) &&
+						// TODO: handle distribution lists. For now, exclude them from members
+						member.cn[0]._attrs.type !== 'group'
+					) {
 						galMembers.push({
-							email: member.cn[0]._attrs.email,
+							...member.cn[0]._attrs,
 							role: Role.Viewer,
 							sharingAllowed: false,
-							id: member.cn[0]._attrs.zimbraId
+							id: member.cn[0]._attrs.zimbraId,
+							onUpdate: updateChip
 						});
 					}
 				});
@@ -337,26 +348,37 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 								'email'
 							);
 
-							const mappedMembers = map(uniqMemberEmails, (email) => ({
+							const mappedMembers = map<string, ShareChip['value']>(uniqMemberEmails, (email) => ({
+								...validAccountsMap[email],
 								email,
 								role: Role.Viewer,
 								sharingAllowed: false,
-								id: validAccountsMap[email]?.id
+								id: validAccountsMap[email]?.id,
+								onUpdate: updateChip
 							}));
 
 							const cleanedEmails = cleanEmails([...mappedMembers, ...galMembers], chips, node);
+							const cleanedChips = map<ShareChip['value'], ShareChip>(
+								cleanedEmails,
+								(chipValue) => ({
+									id: chipValue.id,
+									value: chipValue
+								})
+							);
 
-							setChips((c) => [...c, ...cleanedEmails]);
+							setChips((c) => [...c, ...cleanedChips]);
 						}
 					});
 				} else {
 					const cleanedEmails = cleanEmails(galMembers, chips, node);
-
-					setChips((c) => [...c, ...cleanedEmails]);
+					const cleanedChips = map<ShareChip['value'], ShareChip>(cleanedEmails, (chipValue) => ({
+						value: chipValue
+					}));
+					setChips((c) => [...c, ...cleanedChips]);
 				}
 			});
 		},
-		[chips, getAccountsByEmailLazyQuery, node]
+		[chips, getAccountsByEmailLazyQuery, node, updateChip]
 	);
 
 	const search = useMemo(
@@ -415,26 +437,30 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 	);
 
 	const dropdownItems = useMemo(() => {
-		const items = map(searchResult, (m) => {
-			if (isAnAccount(m)) {
-				const contact = matchToContact(m);
-				return {
-					label: `${m.email}`,
-					id: `$${m.email}`,
-					customComponent: <Hint label={getChipLabel(contact)} email={m.email} />,
-					click: addShareContact(contact)
-				};
-			}
-			if (isContactGroup(m)) {
-				return {
-					label: `${m.display}`,
-					id: `$${m.display}`,
-					customComponent: <Hint label={m.display} />,
-					click: addShareContactGroup(m)
-				};
-			}
-			return {};
-		});
+		const items = reduce<Match, NonNullable<ChipInputProps['options']>>(
+			searchResult,
+			(accumulator, match) => {
+				if (isAnAccount(match)) {
+					const contact = matchToContact(match);
+					accumulator.push({
+						label: `${match.email}`,
+						id: `$${match.email}`,
+						customComponent: <Hint label={getChipLabel(contact)} email={match.email} />,
+						click: addShareContact(contact)
+					});
+				}
+				if (isContactGroup(match)) {
+					accumulator.push({
+						label: `${match.display}`,
+						id: `$${match.display}`,
+						customComponent: <Hint label={match.display} />,
+						click: addShareContactGroup(match)
+					});
+				}
+				return accumulator;
+			},
+			[]
+		);
 		if (loading) {
 			items.push({
 				id: 'loading',
@@ -453,11 +479,11 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 			}
 
 			if (isContact(value)) {
-				addChip(value);
+				addShareContact(value);
 			}
 			return {};
 		},
-		[addChip]
+		[addShareContact]
 	);
 
 	return (

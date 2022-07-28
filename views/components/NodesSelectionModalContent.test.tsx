@@ -7,7 +7,7 @@
 import React from 'react';
 
 import { ApolloError } from '@apollo/client';
-import { act, screen, waitFor } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import 'jest-styled-components';
 import forEach from 'lodash/forEach';
@@ -2313,6 +2313,7 @@ describe('Nodes Selection Modal Content', () => {
 				// navigate inside home
 				userEvent.dblClick(screen.getByText(/home/i));
 				await screen.findByText(folder1.name);
+				await waitForNetworkResponse();
 				expect(screen.getByText(folder1.name)).toBeVisible();
 				expect(screen.getByText(folder2.name)).toBeVisible();
 				expect(screen.getByText(file.name)).toBeVisible();
@@ -2769,18 +2770,19 @@ describe('Nodes Selection Modal Content', () => {
 			await waitForNetworkResponse();
 			// new folder button is visible inside a folder
 			const createFolderButton = screen.getByRole('button', { name: /new folder/i });
+			const createFolderButtonLabel = within(createFolderButton).getByText(/new folder/i);
 			expect(createFolderButton).toBeVisible();
 			expect(createFolderButton).toHaveAttribute('disabled', '');
-			act(() => {
-				userEvent.hover(createFolderButton);
-			});
+			userEvent.hover(createFolderButtonLabel);
 			const tooltip = await screen.findByText(/you don't have the correct permissions/i);
 			expect(tooltip).toBeVisible();
-			act(() => {
-				userEvent.click(createFolderButton);
-			});
+			userEvent.click(createFolderButton);
 			expect(screen.queryByRole('button', { name: /create/i })).not.toBeInTheDocument();
 			expect(screen.queryByRole('textbox', { name: /new folder's name/i })).not.toBeInTheDocument();
+			act(() => {
+				userEvent.unhover(createFolderButtonLabel);
+			});
+			expect(tooltip).not.toBeInTheDocument();
 		});
 
 		test('Create folder input is hidden on navigation between folders and value of input is cleared', async () => {
@@ -3143,9 +3145,8 @@ describe('Nodes Selection Modal Content', () => {
 				expect(screen.getByRole('button', { name: /select/i })).not.toHaveAttribute('disabled', '')
 			);
 			expect(screen.getByTestId(iconRegexp.close)).toBeVisible();
-			act(() => {
-				userEvent.click(screen.getByTestId(iconRegexp.close));
-			});
+			userEvent.click(screen.getByTestId(iconRegexp.close));
+			await screen.findByText(/close/i);
 			expect(closeAction).toHaveBeenCalled();
 			expect(confirmAction).not.toHaveBeenCalled();
 		});

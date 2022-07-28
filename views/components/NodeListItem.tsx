@@ -47,12 +47,7 @@ import {
 import { ContextualMenu } from './ContextualMenu';
 import { NodeAvatarIcon } from './NodeAvatarIcon';
 import { NodeHoverBar } from './NodeHoverBar';
-import {
-	FlexContainer,
-	HoverBarContainer,
-	HoverContainer,
-	ListItemContainer
-} from './StyledComponents';
+import { HoverBarContainer, HoverContainer, ListItemContainer } from './StyledComponents';
 
 const CustomText = styled(Text)`
 	text-transform: uppercase;
