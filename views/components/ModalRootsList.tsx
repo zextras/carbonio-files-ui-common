@@ -18,7 +18,6 @@ import { useFindNodesQuery } from '../../hooks/graphql/queries/useFindNodesQuery
 import { Crumb, NodeListItemType, RootListItemType } from '../../types/common';
 import { MakeOptional, NodeType } from '../../types/graphql/types';
 import { OneOrMany } from '../../types/utils';
-import { decodeError } from '../../utils/utils';
 import { InteractiveBreadcrumbs } from '../InteractiveBreadcrumbs';
 import { EmptyFolder } from './EmptyFolder';
 import { ListContent } from './ListContent';
@@ -56,13 +55,7 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 			'flagged' | 'sharedWithMe' | 'folderId' | 'cascade'
 		>
 	>({});
-	const {
-		data: findNodesData,
-		loading,
-		error,
-		loadMore,
-		hasMore
-	} = useFindNodesQuery(filterQueryParams);
+	const { data: findNodesData, loading, loadMore, hasMore } = useFindNodesQuery(filterQueryParams);
 
 	const listRef = useRef<HTMLDivElement | null>(null);
 
@@ -227,8 +220,7 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 					</Row>
 				)}
 			</Row>
-			{error && <p>Error: {decodeError(error, t)}</p>}
-			<Container mainAlignment="flex-start" minHeight="0" height="40vh">
+			<Container mainAlignment="flex-start" minHeight="0" maxHeight="100%">
 				{nodes &&
 					(nodes.length > 0 ? (
 						<ListContent

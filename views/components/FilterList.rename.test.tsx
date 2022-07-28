@@ -336,7 +336,7 @@ describe('Filter List', () => {
 				// nodes of the folder already cached from a previous navigation (1 page of n)
 				const parentFolder = populateFolder(NODES_LOAD_LIMIT - 1);
 				// put element as first node of the folder
-				parentFolder.children.unshift(element);
+				parentFolder.children.nodes.unshift(element);
 				// enable permission to rename
 				parentFolder.permissions.can_write_folder = true;
 				element.permissions.can_write_folder = true;
@@ -351,7 +351,7 @@ describe('Filter List', () => {
 				});
 
 				const newPosition = addNodeInSortedList(
-					parentFolder.children,
+					parentFolder.children.nodes,
 					{ ...element, name: newName },
 					NODES_SORT_DEFAULT
 				);
@@ -388,8 +388,10 @@ describe('Filter List', () => {
 				});
 				expect(parentFolderData?.getNode).toBeDefined();
 				expect(parentFolderData?.getNode).not.toBeNull();
-				expect((parentFolderData?.getNode as Folder).children).toHaveLength(NODES_LOAD_LIMIT);
-				expect(((parentFolderData?.getNode as Folder).children[0] as Node).id).toBe(element.id);
+				expect((parentFolderData?.getNode as Folder).children.nodes).toHaveLength(NODES_LOAD_LIMIT);
+				expect(((parentFolderData?.getNode as Folder).children.nodes[0] as Node).id).toBe(
+					element.id
+				);
 				// right click to open contextual menu
 				const nodeItem = screen.getByTestId(`node-item-${element.id}`);
 				// open context menu
@@ -413,16 +415,16 @@ describe('Filter List', () => {
 					query: GET_CHILDREN,
 					variables: getChildrenVariables(parentFolder.id, NODES_LOAD_LIMIT * 2)
 				});
-				expect((parentFolderData?.getNode as Folder).children).toHaveLength(
-					parentFolder.children.length
+				expect((parentFolderData?.getNode as Folder).children.nodes).toHaveLength(
+					parentFolder.children.nodes.length
 				);
 				// element is moved at its new position ( -1 because it is also remove from its previous position)
-				expect(((parentFolderData?.getNode as Folder).children[newPosition - 1] as Node).id).toBe(
-					element.id
-				);
-				expect(((parentFolderData?.getNode as Folder).children[newPosition - 1] as Node).name).toBe(
-					newName
-				);
+				expect(
+					((parentFolderData?.getNode as Folder).children.nodes[newPosition - 1] as Node).id
+				).toBe(element.id);
+				expect(
+					((parentFolderData?.getNode as Folder).children.nodes[newPosition - 1] as Node).name
+				).toBe(newName);
 			});
 
 			test('Rename a node with a parent folder already partially loaded, where node is not loaded yet, add node in cached children of the parent folder', async () => {
@@ -439,9 +441,9 @@ describe('Filter List', () => {
 				parentFolder.permissions.can_write_folder = true;
 				element.permissions.can_write_folder = true;
 				// new name set to put element as first element in folder
-				const newName = (parentFolder.children[0] as Node).name.substring(
+				const newName = (parentFolder.children.nodes[0] as Node).name.substring(
 					0,
-					(parentFolder.children[0] as Node).name.length - 1
+					(parentFolder.children.nodes[0] as Node).name.length - 1
 				);
 
 				// prepare the cache with the parent folder as if already loaded
@@ -485,11 +487,11 @@ describe('Filter List', () => {
 				});
 				expect(parentFolderData?.getNode).toBeDefined();
 				expect(parentFolderData?.getNode).not.toBeNull();
-				expect((parentFolderData?.getNode as Folder).children).toHaveLength(NODES_LOAD_LIMIT);
+				expect((parentFolderData?.getNode as Folder).children.nodes).toHaveLength(NODES_LOAD_LIMIT);
 				// element is not present in the cache
 				expect(
 					find(
-						(parentFolderData?.getNode as Folder).children,
+						(parentFolderData?.getNode as Folder).children.nodes,
 						(child) => (child as Node).id === element.id
 					)
 				).toBe(undefined);
@@ -516,12 +518,16 @@ describe('Filter List', () => {
 					query: GET_CHILDREN,
 					variables: getChildrenVariables(parentFolder.id, NODES_LOAD_LIMIT * 2)
 				});
-				// cached folder has 1 element more than the initial children list
-				expect((parentFolderData?.getNode as Folder).children).toHaveLength(
-					parentFolder.children.length + 1
+				// cached folder has 1 element more than the initial children.nodes list
+				expect((parentFolderData?.getNode as Folder).children.nodes).toHaveLength(
+					parentFolder.children.nodes.length + 1
 				);
-				expect(((parentFolderData?.getNode as Folder).children[0] as Node).id).toBe(element.id);
-				expect(((parentFolderData?.getNode as Folder).children[0] as Node).name).toBe(newName);
+				expect(((parentFolderData?.getNode as Folder).children.nodes[0] as Node).id).toBe(
+					element.id
+				);
+				expect(((parentFolderData?.getNode as Folder).children.nodes[0] as Node).name).toBe(
+					newName
+				);
 			});
 		});
 	});

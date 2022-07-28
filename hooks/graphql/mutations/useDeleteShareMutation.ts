@@ -61,7 +61,7 @@ export function useDeleteShareMutation(): (
 		DeleteShareMutationVariables
 	>(DELETE_SHARE);
 
-	useErrorHandler(error, 'DELETE_SHARE', 'error');
+	useErrorHandler(error, 'DELETE_SHARE', { type: 'error' });
 
 	const deleteShare: (
 		node: PickIdNodeType,
@@ -131,7 +131,7 @@ export function useDeleteShareMutation(): (
 							result.getNode &&
 							isFolder(result.getNode)
 						) {
-							listNodes = result.getNode.children;
+							listNodes = result.getNode.children?.nodes;
 						}
 						// close displayer when deleted share cause node to be removed from the list
 						if (

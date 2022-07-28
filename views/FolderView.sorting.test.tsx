@@ -12,7 +12,7 @@ import userEvent from '@testing-library/user-event';
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { populateFile, populateFolder } from '../mocks/mockUtils';
 import { NodeSort } from '../types/graphql/types';
-import { getChildrenVariables, mockGetChildren } from '../utils/mockUtils';
+import { getChildrenVariables, mockGetChildren, mockGetPermissions } from '../utils/mockUtils';
 import { render } from '../utils/testUtils';
 import { DisplayerProps } from './components/Displayer';
 import FolderView from './FolderView';
@@ -41,19 +41,20 @@ describe('Sorting', () => {
 		const filename1 = 'a';
 		const file1 = populateFile(fileId1, filename1);
 		file1.permissions.can_write_file = false;
-		currentFolder.children.push(file1);
+		currentFolder.children.nodes.push(file1);
 
 		const fileId2 = 'fileId2';
 		const filename2 = 'b';
 		const file2 = populateFile(fileId2, filename2);
 		file2.permissions.can_write_file = false;
-		currentFolder.children.push(file2);
+		currentFolder.children.nodes.push(file2);
 
-		currentFolder2.children.push(file2);
-		currentFolder2.children.push(file1);
+		currentFolder2.children.nodes.push(file2);
+		currentFolder2.children.nodes.push(file1);
 
 		const mocks = [
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+			mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 			mockGetChildren(
 				getChildrenVariables(currentFolder2.id, undefined, NodeSort.NameDesc),
 				currentFolder2

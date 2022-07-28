@@ -34,6 +34,7 @@ import {
 } from '../../../types/graphql/types';
 import { isFile, isFolder } from '../../../utils/ActionsFactory';
 import { getChipLabel, sharePermissionsGetter } from '../../../utils/utils';
+import { RouteLeavingGuard } from '../RouteLeavingGuard';
 import { ChipWithPopover } from './ChipWithPopover';
 import { EditShareChipPopoverContainer } from './EditShareChipPopoverContainer';
 
@@ -149,7 +150,7 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 		[activeRow, checkboxValue, share, updateShare]
 	);
 
-	const { openDeletePermanentlyModal } = useDecreaseYourOwnSharePermissionModal(
+	const { openDecreaseYourOwnSharePermissionModal } = useDecreaseYourOwnSharePermissionModal(
 		updateShareCallback,
 		updateShareActionCallback
 	);
@@ -212,7 +213,10 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 				color: 'gray0',
 				label: (permissions.can_share && editChipTooltipLabel) || undefined
 			});
-		} else {
+		} else if (
+			share.permission === SharePermission.ReadAndWrite ||
+			share.permission === SharePermission.ReadWriteAndShare
+		) {
 			icons.push({
 				icon: 'Edit2Outline',
 				id: 'Edit2Outline',
@@ -277,6 +281,17 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 
 	return (
 		<>
+			<RouteLeavingGuard
+				when={initialActiveRow !== activeRow || initialCheckboxValue !== checkboxValue}
+				onSave={updateShareCallback}
+			>
+				<Text overflow="break-word">
+					{t('modal.unsaved_changes.body.line1', 'Do you want to leave the page without saving?')}
+				</Text>
+				<Text overflow="break-word">
+					{t('modal.unsaved_changes.body.line2', 'All unsaved changes will be lost')}
+				</Text>
+			</RouteLeavingGuard>
 			<ChipWithPopover
 				size={SHARE_CHIP_SIZE}
 				avatarLabel={chipLabel}
@@ -296,7 +311,7 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 						saveDisabled={initialActiveRow === activeRow && initialCheckboxValue === checkboxValue}
 						saveOnClick={
 							yourselfChip && decreasingSharePermissions
-								? openDeletePermanentlyModal
+								? openDecreaseYourOwnSharePermissionModal
 								: updateShareCallback
 						}
 						closePopover={closePopover}

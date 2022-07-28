@@ -6,6 +6,7 @@
 
 import React from 'react';
 
+import { ApolloError } from '@apollo/client';
 import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import 'jest-styled-components';
@@ -17,6 +18,7 @@ import {
 	populateFile,
 	populateFolder,
 	populateLocalRoot,
+	populateNodePage,
 	populateNodes
 } from '../../mocks/mockUtils';
 import { Node } from '../../types/common';
@@ -25,13 +27,22 @@ import { isFile, isFolder } from '../../utils/ActionsFactory';
 import {
 	getChildrenVariables,
 	getFindNodesVariables,
+	mockCreateFolder,
+	mockCreateFolderError,
 	mockFindNodes,
 	mockGetBaseNode,
 	mockGetChildren,
 	mockGetPath,
+	mockGetPermissions,
 	mockGetRootsList
 } from '../../utils/mockUtils';
-import { buildBreadCrumbRegExp, render } from '../../utils/testUtils';
+import {
+	buildBreadCrumbRegExp,
+	generateError,
+	iconRegexp,
+	render,
+	waitForNetworkResponse
+} from '../../utils/testUtils';
 import { NodesSelectionModalContent } from './NodesSelectionModalContent';
 import { HoverContainer } from './StyledComponents';
 
@@ -77,7 +88,7 @@ describe('Nodes Selection Modal Content', () => {
 		const localRoot = populateLocalRoot();
 		const folder = populateFolder();
 		const file = populateFile();
-		localRoot.children = [folder, file];
+		localRoot.children = populateNodePage([folder, file]);
 		folder.parent = localRoot;
 		file.parent = localRoot;
 
@@ -85,6 +96,7 @@ describe('Nodes Selection Modal Content', () => {
 			mockGetRootsList(),
 			mockGetPath({ node_id: localRoot.id }, [localRoot]),
 			mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+			mockGetPermissions({ node_id: localRoot.id }, localRoot),
 			mockGetBaseNode({ node_id: localRoot.id }, localRoot)
 		];
 
@@ -144,7 +156,7 @@ describe('Nodes Selection Modal Content', () => {
 		const localRoot = populateLocalRoot();
 		const folder = populateFolder();
 		const file = populateFile();
-		localRoot.children = [folder, file];
+		localRoot.children = populateNodePage([folder, file]);
 		folder.parent = localRoot;
 		file.parent = localRoot;
 
@@ -152,6 +164,7 @@ describe('Nodes Selection Modal Content', () => {
 			mockGetRootsList(),
 			mockGetPath({ node_id: localRoot.id }, [localRoot]),
 			mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+			mockGetPermissions({ node_id: localRoot.id }, localRoot),
 			mockGetBaseNode({ node_id: localRoot.id }, localRoot)
 		];
 
@@ -217,7 +230,7 @@ describe('Nodes Selection Modal Content', () => {
 		const localRoot = populateLocalRoot();
 		const folder = populateFolder();
 		const file = populateFile();
-		localRoot.children = [folder, file];
+		localRoot.children = populateNodePage([folder, file]);
 		folder.parent = localRoot;
 		file.parent = localRoot;
 
@@ -225,6 +238,7 @@ describe('Nodes Selection Modal Content', () => {
 			mockGetRootsList(),
 			mockGetPath({ node_id: localRoot.id }, [localRoot]),
 			mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+			mockGetPermissions({ node_id: localRoot.id }, localRoot),
 			mockGetBaseNode({ node_id: localRoot.id }, localRoot)
 		];
 
@@ -418,7 +432,7 @@ describe('Nodes Selection Modal Content', () => {
 				const localRoot = populateLocalRoot();
 				const folder = populateFolder();
 				const file = populateFile();
-				localRoot.children = [folder, file];
+				localRoot.children = populateNodePage([folder, file]);
 				folder.parent = localRoot;
 				file.parent = localRoot;
 
@@ -426,7 +440,8 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
-					mockGetChildren(getChildrenVariables(localRoot.id), localRoot)
+					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot)
 				];
 
 				const { findByTextWithMarkup } = render(
@@ -479,7 +494,7 @@ describe('Nodes Selection Modal Content', () => {
 				const localRoot = populateLocalRoot();
 				const folder = populateFolder();
 				const file = populateFile();
-				localRoot.children = [folder, file];
+				localRoot.children = populateNodePage([folder, file]);
 				folder.parent = localRoot;
 				file.parent = localRoot;
 
@@ -487,7 +502,8 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
-					mockGetChildren(getChildrenVariables(localRoot.id), localRoot)
+					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot)
 				];
 
 				const { findByTextWithMarkup } = render(
@@ -542,7 +558,7 @@ describe('Nodes Selection Modal Content', () => {
 				const localRoot = populateLocalRoot();
 				const folder = populateFolder();
 				const file = populateFile();
-				localRoot.children = [folder, file];
+				localRoot.children = populateNodePage([folder, file]);
 				folder.parent = localRoot;
 				file.parent = localRoot;
 
@@ -550,7 +566,8 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
 					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
-					mockGetBaseNode({ node_id: localRoot.id }, localRoot)
+					mockGetBaseNode({ node_id: localRoot.id }, localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot)
 				];
 
 				const { findByTextWithMarkup } = render(
@@ -612,7 +629,7 @@ describe('Nodes Selection Modal Content', () => {
 				const localRoot = populateLocalRoot();
 				const folder = populateFolder();
 				const file = populateFile();
-				localRoot.children = [folder, file];
+				localRoot.children = populateNodePage([folder, file]);
 				folder.parent = localRoot;
 				file.parent = localRoot;
 
@@ -620,6 +637,7 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
 					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot)
 				];
 
@@ -735,7 +753,7 @@ describe('Nodes Selection Modal Content', () => {
 			test('navigation through breadcrumb reset active folder and set opened folder if is selectable by param', async () => {
 				const localRoot = populateFolder(2, ROOTS.LOCAL_ROOT);
 				const folder = populateFolder();
-				localRoot.children.push(folder);
+				localRoot.children.nodes.push(folder);
 				folder.parent = localRoot;
 
 				const mocks = [
@@ -785,7 +803,7 @@ describe('Nodes Selection Modal Content', () => {
 				userEvent.dblClick(screen.getByText(/home/i));
 				await screen.findByText(folder.name);
 				expect(screen.getByText(folder.name)).toBeVisible();
-				expect(screen.getByText((localRoot.children[0] as Node).name)).toBeVisible();
+				expect(screen.getByText((localRoot.children.nodes[0] as Node).name)).toBeVisible();
 				breadcrumbItem = await findByTextWithMarkup(
 					buildBreadCrumbRegExp('Files', folder.parent.name)
 				);
@@ -819,7 +837,7 @@ describe('Nodes Selection Modal Content', () => {
 				userEvent.dblClick(screen.getByText(/home/i));
 				await screen.findByText(folder.name);
 				expect(screen.getByText(folder.name)).toBeVisible();
-				expect(screen.getByText((localRoot.children[0] as Node).name)).toBeVisible();
+				expect(screen.getByText((localRoot.children.nodes[0] as Node).name)).toBeVisible();
 				breadcrumbItem = await findByTextWithMarkup(
 					buildBreadCrumbRegExp('Files', folder.parent.name)
 				);
@@ -866,7 +884,7 @@ describe('Nodes Selection Modal Content', () => {
 			test('navigation through breadcrumb reset active folder and disable confirm button if opened folder is not selectable by param', async () => {
 				const localRoot = populateFolder(2, ROOTS.LOCAL_ROOT);
 				const folder = populateFolder();
-				localRoot.children.push(folder);
+				localRoot.children.nodes.push(folder);
 				folder.parent = localRoot;
 
 				const mocks = [
@@ -874,8 +892,10 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
 					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot),
 					mockGetPath({ node_id: folder.id }, [localRoot, folder]),
-					mockGetChildren(getChildrenVariables(folder.id), folder)
+					mockGetChildren(getChildrenVariables(folder.id), folder),
+					mockGetPermissions({ node_id: folder.id }, folder)
 				];
 
 				const { findByTextWithMarkup } = render(
@@ -915,7 +935,7 @@ describe('Nodes Selection Modal Content', () => {
 				userEvent.dblClick(screen.getByText(/home/i));
 				await screen.findByText(folder.name);
 				expect(screen.getByText(folder.name)).toBeVisible();
-				expect(screen.getByText((localRoot.children[0] as Node).name)).toBeVisible();
+				expect(screen.getByText((localRoot.children.nodes[0] as Node).name)).toBeVisible();
 				breadcrumbItem = await findByTextWithMarkup(buildBreadCrumbRegExp('Files', localRoot.name));
 				expect(breadcrumbItem).toBeVisible();
 				// confirm button is disabled because of navigation
@@ -1088,7 +1108,7 @@ describe('Nodes Selection Modal Content', () => {
 				const localRoot = populateLocalRoot();
 				const file = populateFile();
 				const folder = populateFolder(1);
-				localRoot.children = [folder, file];
+				localRoot.children = populateNodePage([folder, file]);
 				folder.parent = localRoot;
 				file.parent = localRoot;
 
@@ -1100,7 +1120,8 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
-					mockGetChildren(getChildrenVariables(localRoot.id), localRoot)
+					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot)
 				];
 
 				render(
@@ -1172,7 +1193,7 @@ describe('Nodes Selection Modal Content', () => {
 				const localRoot = populateLocalRoot();
 				const file = populateFile();
 				const folder = populateFolder(1);
-				localRoot.children = [folder, file];
+				localRoot.children = populateNodePage([folder, file]);
 				folder.parent = localRoot;
 				file.parent = localRoot;
 
@@ -1184,7 +1205,8 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
-					mockGetChildren(getChildrenVariables(localRoot.id), localRoot)
+					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot)
 				];
 
 				render(
@@ -1256,7 +1278,7 @@ describe('Nodes Selection Modal Content', () => {
 				const validFolder = populateFolder(1, undefined, 'valid folder');
 				const invalidFile = populateFile(undefined, 'not valid file');
 				const invalidFolder = populateFolder(0, undefined, 'not valid folder');
-				localRoot.children.push(validFile, validFolder, invalidFile, invalidFolder);
+				localRoot.children.nodes.push(validFile, validFolder, invalidFile, invalidFolder);
 				validFolder.parent = localRoot;
 				validFile.parent = localRoot;
 				invalidFolder.parent = localRoot;
@@ -1271,7 +1293,9 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
 					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot),
 					mockGetChildren(getChildrenVariables(invalidFolder.id), invalidFolder),
+					mockGetPermissions({ node_id: invalidFolder.id }, invalidFolder),
 					mockGetPath({ node_id: invalidFolder.id }, [localRoot, invalidFolder])
 				];
 
@@ -1302,7 +1326,7 @@ describe('Nodes Selection Modal Content', () => {
 				await screen.findByText(validFolder.name);
 				expect(screen.getByText(validFolder.name)).toBeVisible();
 				expect(screen.getByText(validFile.name)).toBeVisible();
-				expect(screen.getByText((localRoot.children[0] as Node).name)).toBeVisible();
+				expect(screen.getByText((localRoot.children.nodes[0] as Node).name)).toBeVisible();
 				// valid folder is not disabled
 				expect(screen.getByTestId(`node-item-${validFolder.id}`)).not.toHaveAttribute(
 					'disabled',
@@ -1385,14 +1409,15 @@ describe('Nodes Selection Modal Content', () => {
 			const localRoot = populateLocalRoot();
 			const file = populateFile();
 			const folder = populateFolder();
-			localRoot.children = [file, folder];
+			localRoot.children = populateNodePage([file, folder]);
 			file.parent = localRoot;
 			folder.parent = localRoot;
 			const mocks = [
 				mockGetRootsList(),
 				mockGetBaseNode({ node_id: localRoot.id }, localRoot),
 				mockGetPath({ node_id: localRoot.id }, [localRoot]),
-				mockGetChildren(getChildrenVariables(localRoot.id), localRoot)
+				mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+				mockGetPermissions({ node_id: localRoot.id }, localRoot)
 			];
 
 			const { findByTextWithMarkup } = render(
@@ -1447,7 +1472,7 @@ describe('Nodes Selection Modal Content', () => {
 		test('if a max number of nodes is selectable, when limit is overreached confirm button becomes disabled', async () => {
 			const localRoot = populateLocalRoot();
 			const nodes = populateNodes(5);
-			localRoot.children = [...nodes];
+			localRoot.children = populateNodePage([...nodes]);
 			forEach(nodes, (mockedNode) => {
 				mockedNode.parent = localRoot;
 			});
@@ -1455,7 +1480,8 @@ describe('Nodes Selection Modal Content', () => {
 				mockGetRootsList(),
 				mockGetBaseNode({ node_id: localRoot.id }, localRoot),
 				mockGetPath({ node_id: localRoot.id }, [localRoot]),
-				mockGetChildren(getChildrenVariables(localRoot.id), localRoot)
+				mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+				mockGetPermissions({ node_id: localRoot.id }, localRoot)
 			];
 
 			const { findByTextWithMarkup } = render(
@@ -1523,7 +1549,7 @@ describe('Nodes Selection Modal Content', () => {
 				const localRoot = populateLocalRoot();
 				const folder = populateFolder();
 				const file = populateFile();
-				localRoot.children = [folder, file];
+				localRoot.children = populateNodePage([folder, file]);
 				folder.parent = localRoot;
 				file.parent = localRoot;
 
@@ -1531,7 +1557,8 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
-					mockGetChildren(getChildrenVariables(localRoot.id), localRoot)
+					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot)
 				];
 
 				const { findByTextWithMarkup } = render(
@@ -1584,7 +1611,7 @@ describe('Nodes Selection Modal Content', () => {
 				const localRoot = populateLocalRoot();
 				const folder = populateFolder();
 				const file = populateFile();
-				localRoot.children = [folder, file];
+				localRoot.children = populateNodePage([folder, file]);
 				folder.parent = localRoot;
 				file.parent = localRoot;
 
@@ -1592,7 +1619,8 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
-					mockGetChildren(getChildrenVariables(localRoot.id), localRoot)
+					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot)
 				];
 
 				const { findByTextWithMarkup } = render(
@@ -1647,7 +1675,7 @@ describe('Nodes Selection Modal Content', () => {
 				const localRoot = populateLocalRoot();
 				const folder = populateFolder();
 				const file = populateFile();
-				localRoot.children = [folder, file];
+				localRoot.children = populateNodePage([folder, file]);
 				folder.parent = localRoot;
 				file.parent = localRoot;
 
@@ -1655,6 +1683,7 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
 					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot)
 				];
 
@@ -1717,7 +1746,7 @@ describe('Nodes Selection Modal Content', () => {
 				const localRoot = populateLocalRoot();
 				const folder = populateFolder();
 				const file = populateFile();
-				localRoot.children = [folder, file];
+				localRoot.children = populateNodePage([folder, file]);
 				folder.parent = localRoot;
 				file.parent = localRoot;
 
@@ -1725,6 +1754,7 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
 					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot)
 				];
 
@@ -1783,7 +1813,7 @@ describe('Nodes Selection Modal Content', () => {
 				const localRoot = populateLocalRoot();
 				const folder = populateFolder();
 				const file = populateFile();
-				localRoot.children = [folder, file];
+				localRoot.children = populateNodePage([folder, file]);
 				folder.parent = localRoot;
 				file.parent = localRoot;
 
@@ -1791,6 +1821,7 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
 					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot)
 				];
 
@@ -1876,7 +1907,7 @@ describe('Nodes Selection Modal Content', () => {
 				const localRoot = populateLocalRoot();
 				const folder = populateFolder();
 				const file = populateFile();
-				localRoot.children = [folder, file];
+				localRoot.children = populateNodePage([folder, file]);
 				folder.parent = localRoot;
 				file.parent = localRoot;
 
@@ -1884,6 +1915,7 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
 					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot)
 				];
 
@@ -1962,7 +1994,7 @@ describe('Nodes Selection Modal Content', () => {
 				const localRoot = populateLocalRoot();
 				const folder = populateFolder();
 				const file = populateFile();
-				localRoot.children = [folder, file];
+				localRoot.children = populateNodePage([folder, file]);
 				folder.parent = localRoot;
 				file.parent = localRoot;
 
@@ -1970,6 +2002,7 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
 					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot)
 				];
 
@@ -2039,7 +2072,7 @@ describe('Nodes Selection Modal Content', () => {
 				const localRoot = populateLocalRoot();
 				const folder = populateFolder();
 				const file = populateFile();
-				localRoot.children = [folder, file];
+				localRoot.children = populateNodePage([folder, file]);
 				folder.parent = localRoot;
 				file.parent = localRoot;
 
@@ -2047,6 +2080,7 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
 					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot)
 				];
 
@@ -2121,7 +2155,7 @@ describe('Nodes Selection Modal Content', () => {
 				const file1 = populateFile();
 				const file2 = populateFile();
 				const folder = populateFolder(1);
-				localRoot.children = [folder, file1, file2];
+				localRoot.children = populateNodePage([folder, file1, file2]);
 				folder.parent = localRoot;
 				file1.parent = localRoot;
 				file2.parent = localRoot;
@@ -2134,7 +2168,8 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
-					mockGetChildren(getChildrenVariables(localRoot.id), localRoot)
+					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot)
 				];
 
 				render(
@@ -2235,7 +2270,7 @@ describe('Nodes Selection Modal Content', () => {
 				const file = populateFile();
 				const folder1 = populateFolder(1);
 				const folder2 = populateFolder(1);
-				localRoot.children = [folder1, folder2, file];
+				localRoot.children = populateNodePage([folder1, folder2, file]);
 				folder1.parent = localRoot;
 				folder2.parent = localRoot;
 				file.parent = localRoot;
@@ -2248,7 +2283,8 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetRootsList(),
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
-					mockGetChildren(getChildrenVariables(localRoot.id), localRoot)
+					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot)
 				];
 
 				render(
@@ -2355,7 +2391,7 @@ describe('Nodes Selection Modal Content', () => {
 				const validFolder = populateFolder(1, undefined, 'valid folder');
 				const invalidFile = populateFile(undefined, 'not valid file');
 				const invalidFolder = populateFolder(0, undefined, 'not valid folder');
-				localRoot.children.push(validFile, validFolder, invalidFile, invalidFolder);
+				localRoot.children.nodes.push(validFile, validFolder, invalidFile, invalidFolder);
 				validFolder.parent = localRoot;
 				validFile.parent = localRoot;
 				invalidFolder.parent = localRoot;
@@ -2370,7 +2406,9 @@ describe('Nodes Selection Modal Content', () => {
 					mockGetBaseNode({ node_id: localRoot.id }, localRoot),
 					mockGetPath({ node_id: localRoot.id }, [localRoot]),
 					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+					mockGetPermissions({ node_id: localRoot.id }, localRoot),
 					mockGetChildren(getChildrenVariables(invalidFolder.id), invalidFolder),
+					mockGetPermissions({ node_id: invalidFolder.id }, invalidFolder),
 					mockGetPath({ node_id: invalidFolder.id }, [localRoot, invalidFolder])
 				];
 
@@ -2401,7 +2439,7 @@ describe('Nodes Selection Modal Content', () => {
 				await screen.findByText(validFolder.name);
 				expect(screen.getByText(validFolder.name)).toBeVisible();
 				expect(screen.getByText(validFile.name)).toBeVisible();
-				expect(screen.getByText((localRoot.children[0] as Node).name)).toBeVisible();
+				expect(screen.getByText((localRoot.children.nodes[0] as Node).name)).toBeVisible();
 				// valid folder is not disabled
 				expect(screen.getByTestId(`node-item-${validFolder.id}`)).not.toHaveAttribute(
 					'disabled',
@@ -2506,6 +2544,709 @@ describe('Nodes Selection Modal Content', () => {
 				});
 				expect(confirmAction).not.toHaveBeenCalled();
 			});
+		});
+	});
+
+	describe('Create folder', () => {
+		test('Create folder button is hidden by default', async () => {
+			const localRoot = populateLocalRoot();
+			const folder = populateFolder();
+			const file = populateFile();
+			localRoot.children = populateNodePage([folder, file]);
+			folder.parent = localRoot;
+			file.parent = localRoot;
+
+			const mocks = [
+				mockGetRootsList(),
+				mockGetPath({ node_id: localRoot.id }, [localRoot]),
+				mockGetBaseNode({ node_id: localRoot.id }, localRoot),
+				mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+				mockGetPermissions({ node_id: localRoot.id }, localRoot)
+			];
+
+			const isValidSelection = jest.fn().mockReturnValue(true);
+
+			const { findByTextWithMarkup } = render(
+				<NodesSelectionModalContent
+					confirmAction={confirmAction}
+					confirmLabel="Select"
+					title="Select nodes"
+					closeAction={closeAction}
+					canSelectOpenedFolder={false}
+					maxSelection={undefined}
+					isValidSelection={isValidSelection}
+				/>,
+				{
+					mocks
+				}
+			);
+
+			await screen.findByText(/home/i);
+			// wait for root list query to be executed
+			await waitForNetworkResponse();
+			// confirm button is disabled
+			expect(screen.getByRole('button', { name: /select/i })).toBeVisible();
+			// new folder button is hidden
+			expect(screen.queryByRole('button', { name: /new folder/i })).not.toBeInTheDocument();
+			userEvent.dblClick(screen.getByText(/home/i));
+			await screen.findByText(folder.name);
+			await findByTextWithMarkup(buildBreadCrumbRegExp('Files', localRoot.name));
+			await waitForNetworkResponse();
+			// new folder button is hidden
+			expect(screen.queryByRole('button', { name: /new folder/i })).not.toBeInTheDocument();
+		});
+
+		test('Create folder button is visible on folders if canCreateFolder prop is true', async () => {
+			const localRoot = populateLocalRoot();
+			const folder = populateFolder();
+			const file = populateFile();
+			localRoot.children = populateNodePage([folder, file]);
+			folder.parent = localRoot;
+			file.parent = localRoot;
+
+			const mocks = [
+				mockGetRootsList(),
+				mockGetPath({ node_id: localRoot.id }, [localRoot]),
+				mockGetBaseNode({ node_id: localRoot.id }, localRoot),
+				mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+				mockGetPermissions({ node_id: localRoot.id }, localRoot)
+			];
+
+			const isValidSelection = jest.fn().mockReturnValue(true);
+
+			const { findByTextWithMarkup } = render(
+				<NodesSelectionModalContent
+					confirmAction={confirmAction}
+					confirmLabel="Select"
+					title="Select nodes"
+					closeAction={closeAction}
+					canSelectOpenedFolder={false}
+					maxSelection={undefined}
+					isValidSelection={isValidSelection}
+					canCreateFolder
+				/>,
+				{
+					mocks
+				}
+			);
+
+			await screen.findByText(/home/i);
+			// wait for root list query to be executed
+			await waitForNetworkResponse();
+			// confirm button is disabled
+			expect(screen.getByRole('button', { name: /select/i })).toBeVisible();
+			// new folder button is hidden
+			expect(screen.queryByRole('button', { name: /new folder/i })).not.toBeInTheDocument();
+			userEvent.dblClick(screen.getByText(/home/i));
+			await screen.findByText(folder.name);
+			await findByTextWithMarkup(buildBreadCrumbRegExp('Files', localRoot.name));
+			await waitForNetworkResponse();
+			// new folder button is visible inside a folder
+			expect(screen.getByRole('button', { name: /new folder/i })).toBeVisible();
+		});
+
+		test('Create folder button is hidden in shared with me list', async () => {
+			const sharedFolder = populateFolder();
+			const folder = populateFolder();
+			const file = populateFile();
+			sharedFolder.children = populateNodePage([folder, file]);
+			folder.parent = sharedFolder;
+			file.parent = sharedFolder;
+
+			const nodes = [sharedFolder];
+
+			const mocks = [
+				mockGetRootsList(),
+				mockFindNodes(
+					getFindNodesVariables({
+						shared_with_me: true,
+						folder_id: ROOTS.LOCAL_ROOT,
+						cascade: false
+					}),
+					nodes
+				),
+				mockGetPath({ node_id: sharedFolder.id }, [sharedFolder]),
+				mockGetBaseNode({ node_id: sharedFolder.id }, sharedFolder),
+				mockGetChildren(getChildrenVariables(sharedFolder.id), sharedFolder),
+				mockGetPermissions({ node_id: sharedFolder.id }, sharedFolder)
+			];
+
+			const isValidSelection = jest.fn().mockReturnValue(true);
+
+			const { findByTextWithMarkup } = render(
+				<NodesSelectionModalContent
+					confirmAction={confirmAction}
+					confirmLabel="Select"
+					title="Select nodes"
+					closeAction={closeAction}
+					canSelectOpenedFolder={false}
+					maxSelection={undefined}
+					isValidSelection={isValidSelection}
+					canCreateFolder
+				/>,
+				{
+					mocks
+				}
+			);
+
+			await screen.findByText(/home/i);
+			// wait for root list query to be executed
+			await waitForNetworkResponse();
+			// confirm button is disabled
+			expect(screen.getByRole('button', { name: /select/i })).toBeVisible();
+			// new folder button is hidden
+			expect(screen.queryByRole('button', { name: /new folder/i })).not.toBeInTheDocument();
+			userEvent.dblClick(screen.getByText(/shared with me/i));
+			await screen.findByText(sharedFolder.name);
+			// new folder button is hidden
+			expect(screen.queryByRole('button', { name: /new folder/i })).not.toBeInTheDocument();
+			userEvent.dblClick(screen.getByText(sharedFolder.name));
+			await screen.findByText(folder.name);
+			await findByTextWithMarkup(buildBreadCrumbRegExp(sharedFolder.name));
+			// new folder button is visible inside a folder
+			expect(screen.getByRole('button', { name: /new folder/i })).toBeVisible();
+		});
+
+		test('Create folder button is disabled and has a tooltip if folder does not have permission to create folder', async () => {
+			const sharedFolder = populateFolder();
+			const folder = populateFolder();
+			const file = populateFile();
+			sharedFolder.children = populateNodePage([folder, file]);
+			sharedFolder.permissions.can_write_folder = false;
+			folder.parent = sharedFolder;
+			file.parent = sharedFolder;
+
+			const nodes = [sharedFolder];
+
+			const mocks = [
+				mockGetRootsList(),
+				mockFindNodes(
+					getFindNodesVariables({
+						shared_with_me: true,
+						folder_id: ROOTS.LOCAL_ROOT,
+						cascade: false
+					}),
+					nodes
+				),
+				mockGetPath({ node_id: sharedFolder.id }, [sharedFolder]),
+				mockGetBaseNode({ node_id: sharedFolder.id }, sharedFolder),
+				mockGetChildren(getChildrenVariables(sharedFolder.id), sharedFolder),
+				mockGetPermissions({ node_id: sharedFolder.id }, sharedFolder)
+			];
+
+			const isValidSelection = jest.fn().mockReturnValue(true);
+
+			const { findByTextWithMarkup } = render(
+				<NodesSelectionModalContent
+					confirmAction={confirmAction}
+					confirmLabel="Select"
+					title="Select nodes"
+					closeAction={closeAction}
+					canSelectOpenedFolder={false}
+					maxSelection={undefined}
+					isValidSelection={isValidSelection}
+					canCreateFolder
+				/>,
+				{
+					mocks
+				}
+			);
+
+			await screen.findByText(/home/i);
+			// wait for root list query to be executed
+			await waitForNetworkResponse();
+			// confirm button is disabled
+			expect(screen.getByRole('button', { name: /select/i })).toBeVisible();
+			// new folder button is hidden
+			expect(screen.queryByRole('button', { name: /new folder/i })).not.toBeInTheDocument();
+			userEvent.dblClick(screen.getByText(/shared with me/i));
+			await screen.findByText(sharedFolder.name);
+			// new folder button is hidden
+			expect(screen.queryByRole('button', { name: /new folder/i })).not.toBeInTheDocument();
+			userEvent.dblClick(screen.getByText(sharedFolder.name));
+			await screen.findByText(folder.name);
+			await findByTextWithMarkup(buildBreadCrumbRegExp(sharedFolder.name));
+			await waitForNetworkResponse();
+			// new folder button is visible inside a folder
+			const createFolderButton = screen.getByRole('button', { name: /new folder/i });
+			expect(createFolderButton).toBeVisible();
+			expect(createFolderButton).toHaveAttribute('disabled', '');
+			act(() => {
+				userEvent.hover(createFolderButton);
+			});
+			const tooltip = await screen.findByText(/you don't have the correct permissions/i);
+			expect(tooltip).toBeVisible();
+			act(() => {
+				userEvent.click(createFolderButton);
+			});
+			expect(screen.queryByRole('button', { name: /create/i })).not.toBeInTheDocument();
+			expect(screen.queryByRole('textbox', { name: /new folder's name/i })).not.toBeInTheDocument();
+		});
+
+		test('Create folder input is hidden on navigation between folders and value of input is cleared', async () => {
+			const localRoot = populateLocalRoot();
+			const folder = populateFolder();
+			const file = populateFile();
+			localRoot.children = populateNodePage([folder, file]);
+			localRoot.permissions.can_write_folder = true;
+			folder.parent = localRoot;
+			folder.permissions.can_write_folder = true;
+			file.parent = localRoot;
+
+			const mocks = [
+				mockGetRootsList(),
+				mockGetPath({ node_id: localRoot.id }, [localRoot]),
+				mockGetBaseNode({ node_id: localRoot.id }, localRoot),
+				mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+				mockGetPermissions({ node_id: localRoot.id }, localRoot),
+				mockGetPath({ node_id: folder.id }, [localRoot, folder]),
+				mockGetBaseNode({ node_id: folder.id }, folder),
+				mockGetChildren(getChildrenVariables(folder.id), folder),
+				mockGetPermissions({ node_id: folder.id }, folder)
+			];
+
+			const isValidSelection = jest.fn().mockReturnValue(true);
+
+			const newFolderName = 'new folder name';
+
+			const { findByTextWithMarkup } = render(
+				<NodesSelectionModalContent
+					confirmAction={confirmAction}
+					confirmLabel="Select"
+					title="Select nodes"
+					closeAction={closeAction}
+					canSelectOpenedFolder={false}
+					maxSelection={undefined}
+					isValidSelection={isValidSelection}
+					canCreateFolder
+				/>,
+				{
+					mocks
+				}
+			);
+
+			await screen.findByText(/home/i);
+			// wait for root list query to be executed
+			await waitForNetworkResponse();
+			expect(screen.getByRole('button', { name: /select/i })).toBeVisible();
+			userEvent.dblClick(screen.getByText(/home/i));
+			await screen.findByText(folder.name);
+			await findByTextWithMarkup(buildBreadCrumbRegExp('Files', localRoot.name));
+			await waitForNetworkResponse();
+			// new folder button is visible inside a folder
+			let newFolderButton = screen.getByRole('button', { name: /new folder/i });
+			expect(newFolderButton).toBeVisible();
+			expect(newFolderButton).not.toHaveAttribute('disabled', '');
+			act(() => {
+				userEvent.click(newFolderButton);
+			});
+			let inputElement = await screen.findByRole('textbox', { name: /new folder's name/i });
+			let createActionButton = await screen.findByRole('button', { name: /create/i });
+			expect(createActionButton).toHaveAttribute('disabled', '');
+			userEvent.type(inputElement, newFolderName);
+			await waitFor(() => expect(createActionButton).not.toHaveAttribute('disabled', ''));
+			expect(inputElement).toHaveValue(newFolderName);
+			userEvent.dblClick(screen.getByText(folder.name));
+			await findByTextWithMarkup(buildBreadCrumbRegExp('Files', localRoot.name, folder.name));
+			await screen.findByText(/nothing here/i);
+			newFolderButton = screen.getByRole('button', { name: /new folder/i });
+			expect(newFolderButton).toBeVisible();
+			expect(inputElement).not.toBeInTheDocument();
+			expect(createActionButton).not.toBeInTheDocument();
+			expect(newFolderButton).not.toHaveAttribute('disabled', '');
+			act(() => {
+				userEvent.click(newFolderButton);
+			});
+			inputElement = await screen.findByRole('textbox', { name: /new folder's name/i });
+			createActionButton = await screen.findByRole('button', { name: /create/i });
+			expect(createActionButton).toHaveAttribute('disabled', '');
+			expect(inputElement).not.toHaveValue(newFolderName);
+			expect(inputElement).toHaveValue('');
+		});
+
+		test('Create folder input is hidden on selection of a node and value of input is cleared', async () => {
+			const localRoot = populateLocalRoot();
+			const folder = populateFolder();
+			const file = populateFile();
+			localRoot.children = populateNodePage([folder, file]);
+			localRoot.permissions.can_write_folder = true;
+			folder.parent = localRoot;
+			folder.permissions.can_write_folder = true;
+			file.parent = localRoot;
+
+			const mocks = [
+				mockGetRootsList(),
+				mockGetPath({ node_id: localRoot.id }, [localRoot]),
+				mockGetBaseNode({ node_id: localRoot.id }, localRoot),
+				mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+				mockGetPermissions({ node_id: localRoot.id }, localRoot),
+				mockGetBaseNode({ node_id: folder.id }, folder)
+			];
+
+			const isValidSelection = jest.fn().mockReturnValue(true);
+
+			const newFolderName = 'new folder name';
+
+			const { findByTextWithMarkup } = render(
+				<NodesSelectionModalContent
+					confirmAction={confirmAction}
+					confirmLabel="Select"
+					title="Select nodes"
+					closeAction={closeAction}
+					canSelectOpenedFolder={false}
+					maxSelection={undefined}
+					isValidSelection={isValidSelection}
+					canCreateFolder
+				/>,
+				{
+					mocks
+				}
+			);
+
+			await screen.findByText(/home/i);
+			// wait for root list query to be executed
+			await waitForNetworkResponse();
+			expect(screen.getByRole('button', { name: /select/i })).toBeVisible();
+			userEvent.dblClick(screen.getByText(/home/i));
+			await screen.findByText(folder.name);
+			await findByTextWithMarkup(buildBreadCrumbRegExp('Files', localRoot.name));
+			await waitForNetworkResponse();
+			// new folder button is visible inside a folder
+			let newFolderButton = screen.getByRole('button', { name: /new folder/i });
+			expect(newFolderButton).toBeVisible();
+			expect(newFolderButton).not.toHaveAttribute('disabled', '');
+			act(() => {
+				userEvent.click(newFolderButton);
+			});
+			let inputElement = await screen.findByRole('textbox', { name: /new folder's name/i });
+			let createActionButton = await screen.findByRole('button', { name: /create/i });
+			expect(createActionButton).toHaveAttribute('disabled', '');
+			userEvent.type(inputElement, newFolderName);
+			await waitFor(() => expect(createActionButton).not.toHaveAttribute('disabled', ''));
+			expect(inputElement).toHaveValue(newFolderName);
+			userEvent.click(screen.getByText(folder.name));
+			await waitFor(() =>
+				expect(screen.getByRole('button', { name: /select/i })).not.toHaveAttribute('disabled', '')
+			);
+			newFolderButton = await screen.findByRole('button', { name: /new folder/i });
+			expect(newFolderButton).toBeVisible();
+			expect(inputElement).not.toBeInTheDocument();
+			expect(createActionButton).not.toBeInTheDocument();
+			expect(newFolderButton).not.toHaveAttribute('disabled', '');
+			act(() => {
+				userEvent.click(newFolderButton);
+			});
+			inputElement = await screen.findByRole('textbox', { name: /new folder's name/i });
+			createActionButton = await screen.findByRole('button', { name: /create/i });
+			expect(createActionButton).toHaveAttribute('disabled', '');
+			expect(inputElement).not.toHaveValue(newFolderName);
+			expect(inputElement).toHaveValue('');
+		});
+
+		test('Create folder action creates a new folder, adds it to the list in its ordered position and selects it', async () => {
+			const localRoot = populateLocalRoot();
+			const folder = populateFolder();
+			const file = populateFile();
+			localRoot.children = populateNodePage([folder, file]);
+			localRoot.permissions.can_write_folder = true;
+			folder.parent = localRoot;
+			file.parent = localRoot;
+
+			const newFolder = populateFolder();
+
+			const mocks = [
+				mockGetRootsList(),
+				mockGetPath({ node_id: localRoot.id }, [localRoot]),
+				mockGetBaseNode({ node_id: localRoot.id }, localRoot),
+				mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+				mockGetPermissions({ node_id: localRoot.id }, localRoot),
+				mockCreateFolder({ name: newFolder.name, destination_id: localRoot.id }, newFolder),
+				mockGetBaseNode({ node_id: newFolder.id }, newFolder)
+			];
+
+			const isValidSelection = jest.fn().mockReturnValue(true);
+
+			const { findByTextWithMarkup } = render(
+				<NodesSelectionModalContent
+					confirmAction={confirmAction}
+					confirmLabel="Select"
+					title="Select nodes"
+					closeAction={closeAction}
+					canSelectOpenedFolder={false}
+					maxSelection={undefined}
+					isValidSelection={isValidSelection}
+					canCreateFolder
+				/>,
+				{
+					mocks
+				}
+			);
+
+			await screen.findByText(/home/i);
+			// wait for root list query to be executed
+			await waitForNetworkResponse();
+			// confirm button is disabled
+			expect(screen.getByRole('button', { name: /select/i })).toBeVisible();
+			userEvent.dblClick(screen.getByText(/home/i));
+			await screen.findByText(folder.name);
+			await findByTextWithMarkup(buildBreadCrumbRegExp('Files', localRoot.name));
+			await waitForNetworkResponse();
+			const newFolderButton = screen.getByRole('button', { name: /new folder/i });
+			expect(newFolderButton).toBeVisible();
+			expect(newFolderButton).not.toHaveAttribute('disabled', '');
+			act(() => {
+				userEvent.click(newFolderButton);
+			});
+			const inputElement = await screen.findByRole('textbox', { name: /new folder's name/i });
+			const createActionButton = await screen.findByRole('button', { name: /create/i });
+			expect(createActionButton).toHaveAttribute('disabled', '');
+			userEvent.type(inputElement, newFolder.name);
+			await waitFor(() => expect(createActionButton).not.toHaveAttribute('disabled', ''));
+			userEvent.click(createActionButton);
+			await screen.findByTestId(`node-item-${newFolder.id}`);
+			expect(screen.queryByRole(/create/i)).not.toBeInTheDocument();
+			expect(screen.queryByRole('textbox', { name: /new folder's name/i })).not.toBeInTheDocument();
+			expect(screen.getByRole('button', { name: /new folder/i })).toBeVisible();
+			expect(screen.getByText(newFolder.name)).toBeVisible();
+			expect(screen.getByRole('button', { name: /select/i })).not.toHaveAttribute('disabled', '');
+			act(() => {
+				userEvent.click(screen.getByRole('button', { name: /select/i }));
+			});
+			act(() => {
+				jest.runOnlyPendingTimers();
+			});
+			expect(confirmAction).toHaveBeenCalled();
+			expect(confirmAction).toHaveBeenCalledWith([
+				expect.objectContaining({ id: newFolder.id, name: newFolder.name })
+			]);
+		});
+
+		test('Error does not create snackbar and is shown in input. Typing reset error', async () => {
+			const localRoot = populateLocalRoot();
+			const folder = populateFolder();
+			const file = populateFile();
+			localRoot.children = populateNodePage([folder, file]);
+			localRoot.permissions.can_write_folder = true;
+			folder.parent = localRoot;
+			file.parent = localRoot;
+
+			const newFolder = populateFolder();
+
+			const mocks = [
+				mockGetRootsList(),
+				mockGetPath({ node_id: localRoot.id }, [localRoot]),
+				mockGetBaseNode({ node_id: localRoot.id }, localRoot),
+				mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+				mockGetPermissions({ node_id: localRoot.id }, localRoot),
+				mockCreateFolderError(
+					{ name: newFolder.name, destination_id: localRoot.id },
+					new ApolloError({
+						graphQLErrors: [generateError('A folder with same name already exists')]
+					})
+				)
+			];
+
+			const isValidSelection = jest.fn().mockReturnValue(true);
+
+			const { findByTextWithMarkup } = render(
+				<NodesSelectionModalContent
+					confirmAction={confirmAction}
+					confirmLabel="Select"
+					title="Select nodes"
+					closeAction={closeAction}
+					canSelectOpenedFolder={false}
+					maxSelection={undefined}
+					isValidSelection={isValidSelection}
+					canCreateFolder
+				/>,
+				{
+					mocks
+				}
+			);
+
+			await screen.findByText(/home/i);
+			// wait for root list query to be executed
+			await waitForNetworkResponse();
+			// confirm button is disabled
+			expect(screen.getByRole('button', { name: /select/i })).toBeVisible();
+			userEvent.dblClick(screen.getByText(/home/i));
+			await screen.findByText(folder.name);
+			await findByTextWithMarkup(buildBreadCrumbRegExp('Files', localRoot.name));
+			await waitForNetworkResponse();
+			const newFolderButton = screen.getByRole('button', { name: /new folder/i });
+			expect(newFolderButton).toBeVisible();
+			act(() => {
+				userEvent.click(newFolderButton);
+			});
+			const inputElement = await screen.findByRole('textbox', { name: /new folder's name/i });
+			const createActionButton = await screen.findByRole('button', { name: /create/i });
+			userEvent.type(inputElement, newFolder.name);
+			await waitFor(() => expect(createActionButton).not.toHaveAttribute('disabled', ''));
+			userEvent.click(createActionButton);
+			await screen.findByText(/A folder with same name already exists/i);
+			expect(screen.getByText(/A folder with same name already exists/i)).toBeVisible();
+			userEvent.type(inputElement, 'something else');
+			expect(inputElement).toHaveValue(`${newFolder.name}something else`);
+			expect(screen.queryByText(/A folder with same name already exists/i)).not.toBeInTheDocument();
+		});
+
+		test('Close action does not call confirm', async () => {
+			const localRoot = populateLocalRoot();
+			const folder = populateFolder();
+			const file = populateFile();
+			localRoot.children = populateNodePage([folder, file]);
+			localRoot.permissions.can_write_folder = true;
+			folder.parent = localRoot;
+			file.parent = localRoot;
+
+			const newFolder = populateFolder();
+
+			const mocks = [
+				mockGetRootsList(),
+				mockGetPath({ node_id: localRoot.id }, [localRoot]),
+				mockGetBaseNode({ node_id: localRoot.id }, localRoot),
+				mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+				mockGetPermissions({ node_id: localRoot.id }, localRoot),
+				mockCreateFolderError(
+					{ name: newFolder.name, destination_id: localRoot.id },
+					new ApolloError({
+						graphQLErrors: [generateError('A folder with same name already exists')]
+					})
+				)
+			];
+
+			const isValidSelection = jest.fn().mockReturnValue(true);
+
+			render(
+				<NodesSelectionModalContent
+					confirmAction={confirmAction}
+					confirmLabel="Select"
+					title="Select nodes"
+					closeAction={closeAction}
+					canSelectOpenedFolder={false}
+					maxSelection={undefined}
+					isValidSelection={isValidSelection}
+					canCreateFolder
+				/>,
+				{
+					mocks
+				}
+			);
+
+			await screen.findByText(/home/i);
+			// wait for root list query to be executed
+			await waitForNetworkResponse();
+			// confirm button is disabled
+			expect(screen.getByRole('button', { name: /select/i })).toBeVisible();
+			userEvent.click(screen.getByText(/home/i));
+			await waitFor(() =>
+				expect(screen.getByRole('button', { name: /select/i })).not.toHaveAttribute('disabled', '')
+			);
+			expect(screen.getByTestId(iconRegexp.close)).toBeVisible();
+			act(() => {
+				userEvent.click(screen.getByTestId(iconRegexp.close));
+			});
+			expect(closeAction).toHaveBeenCalled();
+			expect(confirmAction).not.toHaveBeenCalled();
+		});
+
+		test('Create folder input is hidden on navigation through breadcrumb', async () => {
+			const localRoot = populateLocalRoot();
+			const folder = populateFolder();
+			const file = populateFile();
+			localRoot.children.nodes = [folder, file];
+			localRoot.permissions.can_write_folder = true;
+			folder.parent = localRoot;
+			folder.permissions.can_write_folder = true;
+			file.parent = localRoot;
+
+			const mocks = [
+				mockGetRootsList(),
+				mockGetPath({ node_id: localRoot.id }, [localRoot]),
+				mockGetBaseNode({ node_id: localRoot.id }, localRoot),
+				mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
+				mockGetPermissions({ node_id: localRoot.id }, localRoot),
+				mockGetPath({ node_id: folder.id }, [localRoot, folder]),
+				mockGetBaseNode({ node_id: folder.id }, folder),
+				mockGetChildren(getChildrenVariables(folder.id), folder),
+				mockGetPermissions({ node_id: folder.id }, folder)
+			];
+
+			const isValidSelection = jest.fn().mockReturnValue(true);
+
+			const newFolderName = 'new folder name';
+
+			const { findByTextWithMarkup } = render(
+				<NodesSelectionModalContent
+					confirmAction={confirmAction}
+					confirmLabel="Select"
+					title="Select nodes"
+					closeAction={closeAction}
+					canSelectOpenedFolder={false}
+					maxSelection={undefined}
+					isValidSelection={isValidSelection}
+					canCreateFolder
+				/>,
+				{
+					mocks
+				}
+			);
+
+			await screen.findByText(/home/i);
+			// wait for root list query to be executed
+			await waitForNetworkResponse();
+			expect(screen.getByRole('button', { name: /select/i })).toBeVisible();
+			userEvent.dblClick(screen.getByText(/home/i));
+			await screen.findByText(folder.name);
+			await findByTextWithMarkup(buildBreadCrumbRegExp('Files', localRoot.name));
+			await waitForNetworkResponse();
+			userEvent.dblClick(screen.getByText(folder.name));
+			await findByTextWithMarkup(buildBreadCrumbRegExp('Files', localRoot.name, folder.name));
+			await screen.findByText(/nothing here/i);
+			// new folder button is visible inside a folder
+			let newFolderButton = screen.getByRole('button', { name: /new folder/i });
+			expect(newFolderButton).toBeVisible();
+			expect(newFolderButton).not.toHaveAttribute('disabled', '');
+			act(() => {
+				userEvent.click(newFolderButton);
+			});
+			let inputElement = await screen.findByRole('textbox', { name: /new folder's name/i });
+			let createActionButton = await screen.findByRole('button', { name: /create/i });
+			expect(createActionButton).toHaveAttribute('disabled', '');
+			userEvent.type(inputElement, newFolderName);
+			await waitFor(() => expect(createActionButton).not.toHaveAttribute('disabled', ''));
+			expect(inputElement).toHaveValue(newFolderName);
+			// navigate back to local root folder
+			userEvent.click(screen.getByText(localRoot.name));
+			await screen.findByText(folder.name);
+			await findByTextWithMarkup(buildBreadCrumbRegExp('Files', localRoot.name));
+			await waitForNetworkResponse();
+			// input is hidden and new folder button is visible
+			newFolderButton = await screen.findByRole('button', { name: /new folder/i });
+			expect(newFolderButton).toBeVisible();
+			expect(inputElement).not.toBeInTheDocument();
+			expect(createActionButton).not.toBeInTheDocument();
+			expect(newFolderButton).not.toHaveAttribute('disabled', '');
+			// input value is reset
+			act(() => {
+				userEvent.click(newFolderButton);
+			});
+			inputElement = await screen.findByRole('textbox', { name: /new folder's name/i });
+			createActionButton = await screen.findByRole('button', { name: /create/i });
+			expect(createActionButton).toHaveAttribute('disabled', '');
+			// write again inside the input element
+			userEvent.type(inputElement, newFolderName);
+			await waitFor(() => expect(createActionButton).not.toHaveAttribute('disabled', ''));
+			expect(inputElement).toHaveValue(newFolderName);
+			// navigate back to root list through breadcrumb
+			userEvent.click(screen.getByText(/files/i));
+			await screen.findByText(/home/i);
+			// input is hidden
+			expect(screen.queryByRole('textbox', { name: /new folder's name/i })).not.toBeInTheDocument();
+			// create button is hidden
+			expect(screen.queryByRole('button', { name: /create/i })).not.toBeInTheDocument();
+			// new folder button is hidden
+			expect(screen.queryByRole('button', { name: /new folder/i })).not.toBeInTheDocument();
 		});
 	});
 });

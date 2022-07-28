@@ -15,6 +15,7 @@ import {
 	populateFile,
 	populateFolder,
 	populateNode,
+	populateNodePage,
 	populateNodes,
 	populateParents
 } from '../../mocks/mockUtils';
@@ -177,7 +178,7 @@ describe('Filter List', () => {
 				nodeToMove.permissions.can_write_folder = true;
 				nodeToMove.permissions.can_write_file = true;
 				const parentFolder = nodeToMove.parent as Folder;
-				parentFolder.children = [nodeToMove, destinationFolder];
+				parentFolder.children = populateNodePage([nodeToMove, destinationFolder]);
 				destinationFolder.parent = parentFolder;
 
 				// write destination folder in cache as if it was already loaded
@@ -327,7 +328,7 @@ describe('Filter List', () => {
 				nodeToMove.permissions.can_write_folder = true;
 				nodeToMove.permissions.can_write_file = true;
 				const parentFolder = nodeToMove.parent as Folder;
-				parentFolder.children = [nodeToMove, destinationFolder];
+				parentFolder.children = populateNodePage([nodeToMove, destinationFolder]);
 
 				// write destination folder in cache as if it was already loaded
 				global.apolloClient.writeQuery<GetChildrenQuery, GetChildrenQueryVariables>({

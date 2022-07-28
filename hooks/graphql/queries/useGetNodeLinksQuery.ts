@@ -20,7 +20,9 @@ export function useGetNodeLinksQuery(
 				node_id: nodeId
 			},
 			skip: !nodeId,
-			notifyOnNetworkStatusChange: true
+			notifyOnNetworkStatusChange: true,
+			errorPolicy: 'all',
+			returnPartialData: true
 		}
 	);
 	useErrorHandler(error, 'GET_NODE_LINKS');

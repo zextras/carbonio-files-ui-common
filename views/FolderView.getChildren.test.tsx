@@ -13,14 +13,15 @@ import forEach from 'lodash/forEach';
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { NODES_LOAD_LIMIT } from '../constants';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
-import { populateFolder } from '../mocks/mockUtils';
+import { populateFolder, populateNodePage } from '../mocks/mockUtils';
 import { Node } from '../types/common';
 import { Folder, GetChildrenQuery, GetChildrenQueryVariables } from '../types/graphql/types';
 import {
 	getChildrenVariables,
 	mockGetChildren,
 	mockGetChildrenError,
-	mockGetParent
+	mockGetParent,
+	mockGetPermissions
 } from '../utils/mockUtils';
 import { generateError, render, triggerLoadMore } from '../utils/testUtils';
 import { DisplayerProps } from './components/Displayer';
@@ -45,6 +46,12 @@ describe('Get children', () => {
 	test('access to a folder with network error response show an error page', async () => {
 		const currentFolder = populateFolder();
 		const mocks = [
+			mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
+			mockGetChildrenError(
+				getChildrenVariables(currentFolder.id),
+				new ApolloError({ graphQLErrors: [generateError('An error occurred')] })
+			),
+			// query is made 2 times (?)
 			mockGetChildrenError(
 				getChildrenVariables(currentFolder.id),
 				new ApolloError({ graphQLErrors: [generateError('An error occurred')] })
@@ -73,7 +80,7 @@ describe('Get children', () => {
 			query: GET_CHILDREN,
 			variables: getChildrenVariables(currentFolder.id)
 		});
-		forEach((queryResult?.getNode as Folder).children, (child) => {
+		forEach((queryResult?.getNode as Folder).children.nodes, (child) => {
 			const $child = child as Node;
 			expect(screen.getByTestId(`node-item-${$child.id}`)).toBeInTheDocument();
 			expect(screen.getByTestId(`node-item-${$child.id}`)).toHaveTextContent($child.name);
@@ -92,16 +99,14 @@ describe('Get children', () => {
 			),
 			mockGetChildren(getChildrenVariables(currentFolder.id), {
 				...currentFolder,
-				children: currentFolder.children.slice(0, NODES_LOAD_LIMIT)
+				children: populateNodePage(currentFolder.children.nodes.slice(0, NODES_LOAD_LIMIT))
 			} as Folder),
+			mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 			mockGetChildren(
-				{
-					...getChildrenVariables(currentFolder.id),
-					cursor: (currentFolder.children[NODES_LOAD_LIMIT - 1] as Node).id
-				},
+				getChildrenVariables(currentFolder.id, undefined, undefined, undefined, true),
 				{
 					...currentFolder,
-					children: currentFolder.children.slice(NODES_LOAD_LIMIT)
+					children: populateNodePage(currentFolder.children.nodes.slice(NODES_LOAD_LIMIT))
 				} as Folder
 			)
 		];
@@ -115,27 +120,35 @@ describe('Get children', () => {
 			within(screen.getByTestId('list-header')).queryByTestId('icon: Refresh')
 		);
 		// wait the rendering of the first item
-		await screen.findByTestId(`node-item-${(currentFolder.children[0] as Node).id}`);
+		await screen.findByTestId(`node-item-${(currentFolder.children.nodes[0] as Node).id}`);
 		expect(
-			screen.getByTestId(`node-item-${(currentFolder.children[NODES_LOAD_LIMIT - 1] as Node).id}`)
+			screen.getByTestId(
+				`node-item-${(currentFolder.children.nodes[NODES_LOAD_LIMIT - 1] as Node).id}`
+			)
 		).toBeVisible();
 		// the loading icon should be still visible at the bottom of the list because we have load the max limit of items per page
 		expect(screen.getByTestId('icon: Refresh')).toBeVisible();
 
 		// elements after the limit should not be rendered
 		expect(
-			screen.queryByTestId(`node-item-${(currentFolder.children[NODES_LOAD_LIMIT] as Node).id}`)
+			screen.queryByTestId(
+				`node-item-${(currentFolder.children.nodes[NODES_LOAD_LIMIT] as Node).id}`
+			)
 		).not.toBeInTheDocument();
 
 		await triggerLoadMore();
 
 		// wait for the response
-		await screen.findByTestId(`node-item-${(currentFolder.children[NODES_LOAD_LIMIT] as Node).id}`);
+		await screen.findByTestId(
+			`node-item-${(currentFolder.children.nodes[NODES_LOAD_LIMIT] as Node).id}`
+		);
 
 		// now all elements are loaded so last children should be visible and no loading icon should be rendered
 		expect(
 			screen.getByTestId(
-				`node-item-${(currentFolder.children[currentFolder.children.length - 1] as Node).id}`
+				`node-item-${
+					(currentFolder.children.nodes[currentFolder.children.nodes.length - 1] as Node).id
+				}`
 			)
 		).toBeVisible();
 		expect(screen.queryByTestId('Icon: Refresh')).not.toBeInTheDocument();

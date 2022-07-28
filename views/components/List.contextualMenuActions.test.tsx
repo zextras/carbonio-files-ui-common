@@ -24,7 +24,7 @@ describe('Contextual menu actions', () => {
 				const node2 = populateNode();
 				const node3 = populateNode();
 
-				currentFolder.children.push(node1, node2, node3);
+				currentFolder.children.nodes.push(node1, node2, node3);
 
 				const createFolderAction = jest.fn();
 				const createDocumentAction = jest.fn();
@@ -68,7 +68,7 @@ describe('Contextual menu actions', () => {
 					<List
 						folderId={currentFolder.id}
 						fillerWithActions={<EmptySpaceFiller actions={actions} />}
-						nodes={currentFolder.children as Array<Node>}
+						nodes={currentFolder.children.nodes as Array<Node>}
 						mainList
 						emptyListMessage={'hint'}
 					/>
@@ -123,7 +123,7 @@ describe('Contextual menu actions', () => {
 				const node2 = populateNode();
 				const node3 = populateNode();
 
-				currentFolder.children.push(node1, node2, node3);
+				currentFolder.children.nodes.push(node1, node2, node3);
 
 				const createFolderAction = jest.fn();
 				const createDocumentAction = jest.fn();
@@ -167,7 +167,7 @@ describe('Contextual menu actions', () => {
 					<List
 						folderId={currentFolder.id}
 						fillerWithActions={<EmptySpaceFiller actions={actions} />}
-						nodes={currentFolder.children as Array<Node>}
+						nodes={currentFolder.children.nodes as Array<Node>}
 						mainList
 						emptyListMessage={'hint'}
 					/>
@@ -263,7 +263,7 @@ describe('Contextual menu actions', () => {
 					<List
 						folderId={currentFolder.id}
 						fillerWithActions={<EmptySpaceFiller actions={actions} />}
-						nodes={currentFolder.children as Array<Node>}
+						nodes={currentFolder.children.nodes as Array<Node>}
 						mainList
 						emptyListMessage={'hint'}
 					/>
@@ -357,7 +357,7 @@ describe('Contextual menu actions', () => {
 					<List
 						folderId={currentFolder.id}
 						fillerWithActions={<EmptySpaceFiller actions={actions} />}
-						nodes={currentFolder.children as Array<Node>}
+						nodes={currentFolder.children.nodes as Array<Node>}
 						mainList
 						emptyListMessage={'hint'}
 					/>
@@ -412,20 +412,20 @@ describe('Contextual menu actions', () => {
 		test('Contextual menu shown actions', async () => {
 			const currentFolder = populateFolder(5);
 			// enable permission to Mfd
-			forEach(currentFolder.children, (mockedNode) => {
+			forEach(currentFolder.children.nodes, (mockedNode) => {
 				(mockedNode as Node).permissions.can_write_file = true;
 				(mockedNode as Node).permissions.can_write_folder = true;
 				(mockedNode as Node).flagged = false;
 				(mockedNode as Node).parent = populateFolder(0, currentFolder.id, currentFolder.name);
 			});
-			const element0 = currentFolder.children[0] as Node;
-			const element1 = currentFolder.children[1] as Node;
+			const element0 = currentFolder.children.nodes[0] as Node;
+			const element1 = currentFolder.children.nodes[1] as Node;
 
 			render(
 				<List
 					folderId={currentFolder.id}
 					fillerWithActions={<EmptySpaceFiller actions={[]} />}
-					nodes={currentFolder.children as Array<Node>}
+					nodes={currentFolder.children.nodes as Array<Node>}
 					mainList
 					emptyListMessage={'hint'}
 				/>
@@ -457,22 +457,22 @@ describe('Contextual menu actions', () => {
 			currentFolder.permissions.can_write_file = true;
 			currentFolder.permissions.can_write_folder = true;
 
-			forEach(currentFolder.children, (mockedNode) => {
+			forEach(currentFolder.children.nodes, (mockedNode) => {
 				(mockedNode as Node).permissions.can_write_file = true;
 				(mockedNode as Node).permissions.can_write_folder = true;
 				(mockedNode as Node).parent = currentFolder;
 				(mockedNode as Node).owner = currentFolder.owner;
 				(mockedNode as Node).flagged = false;
 			});
-			const element0 = currentFolder.children[0] as Node;
-			const element1 = currentFolder.children[1] as Node;
-			const element2 = currentFolder.children[2] as Node;
+			const element0 = currentFolder.children.nodes[0] as Node;
+			const element1 = currentFolder.children.nodes[1] as Node;
+			const element2 = currentFolder.children.nodes[2] as Node;
 
 			render(
 				<List
 					folderId={currentFolder.id}
 					fillerWithActions={<EmptySpaceFiller actions={[]} />}
-					nodes={currentFolder.children as Array<Node>}
+					nodes={currentFolder.children.nodes as Array<Node>}
 					mainList
 					emptyListMessage={'hint'}
 				/>
@@ -516,17 +516,17 @@ describe('Contextual menu actions', () => {
 		const node1 = populateNode();
 		// set the node not flagged so that we can search by flag action in the contextual menu of first node
 		node1.flagged = false;
-		currentFolder.children.push(node1);
+		currentFolder.children.nodes.push(node1);
 		const node2 = populateNode();
 		// set the second node flagged so that we can search by unflag action in the contextual menu of second node
 		node2.flagged = true;
-		currentFolder.children.push(node2);
+		currentFolder.children.nodes.push(node2);
 
 		render(
 			<List
 				folderId={currentFolder.id}
 				fillerWithActions={<EmptySpaceFiller actions={[]} />}
-				nodes={currentFolder.children as Array<Node>}
+				nodes={currentFolder.children.nodes as Array<Node>}
 				mainList
 				emptyListMessage={'hint'}
 			/>

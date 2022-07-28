@@ -4,19 +4,21 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 
-import { QueryResult, useQuery, useReactiveVar } from '@apollo/client';
+import { QueryOptions, QueryResult, useQuery, useReactiveVar } from '@apollo/client';
 
 import { nodeSortVar } from '../../../apollo/nodeSortVar';
 import { NODES_LOAD_LIMIT, SHARES_LOAD_LIMIT } from '../../../constants';
 import GET_NODE from '../../../graphql/queries/getNode.graphql';
 import { GetNodeQuery, GetNodeQueryVariables } from '../../../types/graphql/types';
+import { isFolder } from '../../../utils/ActionsFactory';
 import { useErrorHandler } from '../../useErrorHandler';
 
 interface GetNodeQueryHook extends Pick<QueryResult<GetNodeQuery>, 'data' | 'loading' | 'error'> {
 	loadMore: () => void;
 	hasMore: boolean;
+	pageToken: string | null | undefined;
 }
 
 /**
@@ -25,17 +27,11 @@ interface GetNodeQueryHook extends Pick<QueryResult<GetNodeQuery>, 'data' | 'loa
 export function useGetNodeQuery(
 	nodeId?: string,
 	sharesLimit = SHARES_LOAD_LIMIT,
-	fetchPolicy:
-		| 'cache-first'
-		| 'network-only'
-		| 'cache-only'
-		| 'no-cache'
-		| 'standby'
-		| 'cache-and-network'
-		| undefined = 'cache-first'
+	options: Omit<
+		QueryOptions<GetNodeQuery, GetNodeQueryVariables>,
+		'query' | 'variables' | 'skip'
+	> = {}
 ): GetNodeQueryHook {
-	const [hasMore, setHasMore] = useState(false);
-	const [lastChild, setLastChild] = useState<string | null | undefined>(undefined);
 	const nodeSort = useReactiveVar(nodeSortVar);
 	const { data, loading, error, fetchMore } = useQuery<GetNodeQuery, GetNodeQueryVariables>(
 		GET_NODE,
@@ -47,33 +43,37 @@ export function useGetNodeQuery(
 				shares_limit: sharesLimit
 			},
 			skip: !nodeId,
-			fetchPolicy,
-			notifyOnNetworkStatusChange: true
+			notifyOnNetworkStatusChange: true,
+			errorPolicy: 'all',
+			...options
 		}
 	);
 	useErrorHandler(error, 'GET_NODE');
 
-	useEffect(() => {
-		// every time data change check if cursor is set.
-		// If so, there is a new page
-		// otherwise there are no more children to load
-		let cursor = null;
-		if (data?.getNode?.__typename === 'Folder') {
-			cursor = data.getNode.cursor;
-		}
-		setLastChild(cursor);
-		setHasMore(cursor !== null);
-	}, [data]);
+	const { hasMore, pageToken } = useMemo(
+		() => ({
+			hasMore:
+				!!data?.getNode &&
+				isFolder(data.getNode) &&
+				data.getNode.children &&
+				data.getNode.children.page_token !== null,
+			pageToken:
+				data?.getNode && isFolder(data.getNode) && data.getNode.children
+					? data.getNode.children.page_token
+					: undefined
+		}),
+		[data?.getNode]
+	);
 
 	const loadMore = useCallback(() => {
-		fetchMore({
+		fetchMore<GetNodeQuery, GetNodeQueryVariables>({
 			variables: {
-				cursor: lastChild
+				page_token: pageToken
 			}
 		}).catch((err) => {
 			console.error(err);
 		});
-	}, [lastChild, fetchMore]);
+	}, [pageToken, fetchMore]);
 
-	return { data, loading, error, loadMore, hasMore };
+	return { data, loading, error, loadMore, hasMore, pageToken };
 }

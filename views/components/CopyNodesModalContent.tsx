@@ -115,10 +115,11 @@ export const CopyNodesModalContent: React.VFC<CopyNodesModalContentProps> = ({
 		if (
 			currentFolder?.getNode &&
 			isFolder(currentFolder.getNode) &&
-			currentFolder.getNode.children.length > 0
+			currentFolder.getNode.children?.nodes &&
+			currentFolder.getNode.children.nodes.length > 0
 		) {
 			return reduce(
-				currentFolder.getNode.children,
+				currentFolder.getNode.children.nodes,
 				(result: NodeListItemType[], node) => {
 					if (node) {
 						result.push({
@@ -241,7 +242,6 @@ export const CopyNodesModalContent: React.VFC<CopyNodesModalContentProps> = ({
 					loadMore={loadMore}
 					hasMore={hasMore}
 					navigateTo={navigateTo}
-					error={error}
 					loading={loading}
 					limitNavigation={false}
 					writingFolder={copyingFolder}

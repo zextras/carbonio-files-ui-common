@@ -14,15 +14,15 @@ import last from 'lodash/last';
 import map from 'lodash/map';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
-import { nodeListCursorVar } from '../apollo/nodeListCursorVar';
 import { NODES_LOAD_LIMIT, NODES_SORT_DEFAULT } from '../constants';
-import { populateFolder, populateNodes, sortNodes } from '../mocks/mockUtils';
+import { populateFolder, populateNodePage, populateNodes, sortNodes } from '../mocks/mockUtils';
 import { Node } from '../types/common';
 import { Folder } from '../types/graphql/types';
 import {
 	getChildrenVariables,
 	mockGetChildren,
 	mockGetParent,
+	mockGetPermissions,
 	mockTrashNodes,
 	mockUpdateNode
 } from '../utils/mockUtils';
@@ -46,21 +46,13 @@ jest.mock('./components/Displayer', () => ({
 }));
 
 describe('Rename', () => {
-	function getCachedCursor(folder: { id: string }): string | null | undefined {
-		const cursor = nodeListCursorVar()[folder.id];
-		if (cursor) {
-			return cursor.__ref.split(':')[1];
-		}
-		return cursor;
-	}
-
 	describe('Selection mode', () => {
 		test('Rename change node name and update the content of the folder, showing the element at its new position', async () => {
 			const currentFolder = populateFolder();
-			currentFolder.children = populateNodes(5, 'Folder');
-			sortNodes(currentFolder.children, NODES_SORT_DEFAULT);
+			currentFolder.children = populateNodePage(populateNodes(5, 'Folder'));
+			sortNodes(currentFolder.children.nodes, NODES_SORT_DEFAULT);
 			// enable permission to rename
-			forEach(currentFolder.children, (mockedNode) => {
+			forEach(currentFolder.children.nodes, (mockedNode) => {
 				(mockedNode as Node).permissions.can_write_file = true;
 				(mockedNode as Node).permissions.can_write_folder = true;
 				(mockedNode as Node).parent = currentFolder;
@@ -69,15 +61,16 @@ describe('Rename', () => {
 			// the element to rename is the first of the list. To assure that it changes position,
 			// the new name of the node is going to be the name of the last ordered element with the timestamp at the end
 			const timestamp = Date.now();
-			const element = currentFolder.children[0] as Node;
+			const element = currentFolder.children.nodes[0] as Node;
 			const newName = `${
-				(currentFolder.children[currentFolder.children.length - 1] as Node).name
+				(currentFolder.children.nodes[currentFolder.children.nodes.length - 1] as Node).name
 			}-${timestamp}`;
 
-			const newPos = currentFolder.children.length - 1;
+			const newPos = currentFolder.children.nodes.length - 1;
 
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockUpdateNode(
 					{
 						node_id: element.id,
@@ -110,7 +103,7 @@ describe('Rename', () => {
 			expect(nodeItem).toBeVisible();
 			expect(within(nodeItem).getByText(newName)).toBeVisible();
 			const nodes = screen.getAllByTestId('node-item', { exact: false });
-			expect(nodes).toHaveLength(currentFolder.children.length);
+			expect(nodes).toHaveLength(currentFolder.children.nodes.length);
 			expect(nodes[newPos]).toBe(screen.getByTestId(`node-item-${element.id}`));
 			// selection mode is de-activate
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
@@ -122,25 +115,26 @@ describe('Rename', () => {
 	describe('Contextual menu actions', () => {
 		test('Rename change node name and update the content of the folder, showing the element at its new position', async () => {
 			const currentFolder = populateFolder();
-			currentFolder.children = populateNodes(5, 'Folder');
+			currentFolder.children = populateNodePage(populateNodes(5, 'Folder'));
 			// enable permission to rename
-			forEach(currentFolder.children, (mockedNode) => {
+			forEach(currentFolder.children.nodes, (mockedNode) => {
 				(mockedNode as Node).permissions.can_write_file = true;
 				(mockedNode as Node).permissions.can_write_folder = true;
 				(mockedNode as Node).parent = currentFolder;
 			});
-			sortNodes(currentFolder.children, NODES_SORT_DEFAULT);
+			sortNodes(currentFolder.children.nodes, NODES_SORT_DEFAULT);
 
 			// the element to rename is the first of the list. To assure that it changes position,
 			// the new name of the node is going to be the name of the last ordered element with the timestamp at the end
 			const timestamp = Date.now();
-			const element = currentFolder.children[0] as Node;
+			const element = currentFolder.children.nodes[0] as Node;
 			const newName = `${
-				(currentFolder.children[currentFolder.children.length - 1] as Node).name
+				(currentFolder.children.nodes[currentFolder.children.nodes.length - 1] as Node).name
 			}-${timestamp}`;
 
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockUpdateNode(
 					{
 						node_id: element.id,
@@ -170,7 +164,7 @@ describe('Rename', () => {
 			expect(updatedNodeItem).toBeVisible();
 			expect(within(updatedNodeItem).getByText(newName)).toBeVisible();
 			const nodes = screen.getAllByTestId('node-item', { exact: false });
-			expect(nodes).toHaveLength(currentFolder.children.length);
+			expect(nodes).toHaveLength(currentFolder.children.nodes.length);
 			expect(nodes[nodes.length - 1]).toBe(updatedNodeItem);
 			// contextual menu is closed
 			expect(screen.queryByText(actionRegexp.rename)).not.toBeInTheDocument();
@@ -179,28 +173,28 @@ describe('Rename', () => {
 		test('Rename a node to an unordered position does not change cursor for pagination', async () => {
 			// folder with 3 pages
 			const currentFolder = populateFolder();
-			currentFolder.children = populateNodes(NODES_LOAD_LIMIT * 3, 'File');
-			sortNodes(currentFolder.children, NODES_SORT_DEFAULT);
+			currentFolder.children = populateNodePage(populateNodes(NODES_LOAD_LIMIT * 3, 'File'));
+			sortNodes(currentFolder.children.nodes, NODES_SORT_DEFAULT);
 			// enable permission to rename
 			currentFolder.permissions.can_write_folder = true;
-			forEach(currentFolder.children, (mockedNode) => {
+			forEach(currentFolder.children.nodes, (mockedNode) => {
 				(mockedNode as Node).permissions.can_write_file = true;
 				(mockedNode as Node).permissions.can_write_folder = true;
-				(mockedNode as Node).parent = { ...currentFolder, children: [] } as Folder;
+				(mockedNode as Node).parent = { ...currentFolder, children: { nodes: [] } } as Folder;
 			});
 
 			// the element to rename is the first of the list. New position is third position of third page
 			const timestamp = Date.now();
-			const element = currentFolder.children[0] as Node;
+			const element = currentFolder.children.nodes[0] as Node;
 			const newName = `${
-				(currentFolder.children[NODES_LOAD_LIMIT * 2 + 2] as Node).name
+				(currentFolder.children.nodes[NODES_LOAD_LIMIT * 2 + 2] as Node).name
 			}-${timestamp}`;
 
 			// the cursor is last element of first page and does not change after rename
-			const firstCursor = currentFolder.children[NODES_LOAD_LIMIT - 1] as Node;
+			const firstCursor = currentFolder.children.nodes[NODES_LOAD_LIMIT - 1] as Node;
 
 			// second page does not change after rename
-			const secondPage = currentFolder.children.slice(
+			const secondPage = currentFolder.children.nodes.slice(
 				NODES_LOAD_LIMIT,
 				NODES_LOAD_LIMIT * 2
 			) as Node[];
@@ -208,7 +202,7 @@ describe('Rename', () => {
 			const secondCursor = secondPage[secondPage.length - 1] as Node;
 
 			// third page has also the renamed element
-			let thirdPage = currentFolder.children.slice(NODES_LOAD_LIMIT * 2) as Node[];
+			let thirdPage = currentFolder.children.nodes.slice(NODES_LOAD_LIMIT * 2) as Node[];
 			// add the renamed node at third position
 			thirdPage.splice(2, 0, { ...element, name: newName });
 			// then resize third page to contain only NODES_LOAD_LIMIT elements
@@ -219,8 +213,9 @@ describe('Rename', () => {
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), {
 					...currentFolder,
-					children: currentFolder.children.slice(0, NODES_LOAD_LIMIT)
+					children: populateNodePage(currentFolder.children.nodes.slice(0, NODES_LOAD_LIMIT))
 				} as Folder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockUpdateNode(
 					{
 						node_id: element.id,
@@ -233,37 +228,30 @@ describe('Rename', () => {
 				),
 				// second page request
 				mockGetChildren(
-					{
-						...getChildrenVariables(currentFolder.id),
-						cursor: firstCursor.id
-					},
+					getChildrenVariables(currentFolder.id, undefined, undefined, undefined, true),
 					{
 						...currentFolder,
-						children: secondPage
+						children: populateNodePage(secondPage)
 					} as Folder
 				),
 				// third page request
 				mockGetChildren(
-					{
-						...getChildrenVariables(currentFolder.id),
-						cursor: secondCursor.id
-					},
+					getChildrenVariables(currentFolder.id, undefined, undefined, undefined, true),
 					{
 						...currentFolder,
-						children: thirdPage
+						children: populateNodePage(thirdPage)
 					} as Folder
 				),
 				// last page request
 				mockGetChildren(
-					{
-						...getChildrenVariables(currentFolder.id),
-						cursor: thirdCursor.id
-					},
+					getChildrenVariables(currentFolder.id, undefined, undefined, undefined, true),
 					{
 						...currentFolder,
 						// remaining elements
-						children: currentFolder.children.slice(
-							findIndex(currentFolder.children, thirdCursor) + 1
+						children: populateNodePage(
+							currentFolder.children.nodes.slice(
+								findIndex(currentFolder.children.nodes, thirdCursor) + 1
+							)
 						)
 					} as Folder
 				)
@@ -274,8 +262,6 @@ describe('Rename', () => {
 			// wait for the load to be completed
 			await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 
-			// check that cursor is last element
-			expect(getCachedCursor(currentFolder)).toBe(firstCursor.id);
 			let nodes = screen.getAllByTestId('node-item', { exact: false });
 			expect(screen.getByTestId(`node-item-${firstCursor.id}`)).toBe(nodes[nodes.length - 1]);
 			// right click to open contextual menu
@@ -294,8 +280,6 @@ describe('Rename', () => {
 			nodes = screen.getAllByTestId('node-item', { exact: false });
 			expect(nodes).toHaveLength(NODES_LOAD_LIMIT);
 			expect(nodes[nodes.length - 1]).toBe(updatedNodeItem);
-			// cursor is not changed, but it's now the second last element, before the renamed node
-			expect(getCachedCursor(currentFolder)).toBe(firstCursor.id);
 			expect(screen.getByTestId(`node-item-${firstCursor.id}`)).toBe(nodes[nodes.length - 2]);
 			// trigger the load of a new page
 			await triggerLoadMore();
@@ -305,8 +289,6 @@ describe('Rename', () => {
 			nodes = screen.getAllByTestId('node-item', { exact: false });
 			expect(nodes).toHaveLength(NODES_LOAD_LIMIT * 2);
 			expect(nodes[nodes.length - 1]).toBe(updatedNodeItem);
-			// cursor is the second last element shown, before the renamed node
-			expect(getCachedCursor(currentFolder)).toBe(secondCursor.id);
 			expect(screen.getByTestId(`node-item-${secondCursor.id}`)).toBe(nodes[nodes.length - 2]);
 			// trigger the load of a new page
 			await triggerLoadMore();
@@ -319,8 +301,6 @@ describe('Rename', () => {
 			expect(findIndex(nodes, (node) => node === updatedNodeItem)).toBe(
 				NODES_LOAD_LIMIT * 2 + 2 - 1
 			);
-			// cursor is changed and is last element of page 3
-			expect(getCachedCursor(currentFolder)).toBe(thirdCursor.id);
 			// last element is last node of third page
 			expect(screen.getByTestId(`node-item-${thirdPage[thirdPage.length - 1].id}`)).toBe(
 				nodes[nodes.length - 1]
@@ -329,28 +309,29 @@ describe('Rename', () => {
 			await triggerLoadMore();
 			// wait for the load to complete (last element of children is loaded)
 			await screen.findByTestId(
-				`node-item-${(currentFolder.children[currentFolder.children.length - 1] as Node).id}`
+				`node-item-${
+					(currentFolder.children.nodes[currentFolder.children.nodes.length - 1] as Node).id
+				}`
 			);
 			nodes = screen.getAllByTestId('node-item', { exact: false });
 			// number of elements shown is the total number of children
-			expect(nodes).toHaveLength(currentFolder.children.length);
+			expect(nodes).toHaveLength(currentFolder.children.nodes.length);
 			// load more icon is not visible
 			expect(screen.queryByTestId('icon: Refresh')).not.toBeInTheDocument();
 		});
 
 		test('Rename of last ordered node to unordered update cursor to be last ordered node and trigger load of the next page with the new cursor', async () => {
 			const currentFolder = populateFolder();
-			currentFolder.children = sortNodes(
-				populateNodes(NODES_LOAD_LIMIT * 2, 'File'),
-				NODES_SORT_DEFAULT
-			) as Node[];
-			forEach(currentFolder.children, (mockedNode) => {
+			currentFolder.children = populateNodePage(
+				sortNodes(populateNodes(NODES_LOAD_LIMIT * 2, 'File'), NODES_SORT_DEFAULT) as Node[]
+			);
+			forEach(currentFolder.children.nodes, (mockedNode) => {
 				(mockedNode as Node).permissions.can_write_file = true;
 				(mockedNode as Node).permissions.can_write_folder = true;
 				(mockedNode as Node).parent = currentFolder;
 			});
-			const firstPage = currentFolder.children.slice(0, NODES_LOAD_LIMIT) as Node[];
-			const secondPage = currentFolder.children.slice(NODES_LOAD_LIMIT) as Node[];
+			const firstPage = currentFolder.children.nodes.slice(0, NODES_LOAD_LIMIT) as Node[];
+			const secondPage = currentFolder.children.nodes.slice(NODES_LOAD_LIMIT) as Node[];
 
 			const nodeToRename = firstPage[firstPage.length - 1] as Node;
 			const newName = `${(last(secondPage) as Node).name}-renamed`;
@@ -358,21 +339,19 @@ describe('Rename', () => {
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), {
 					...currentFolder,
-					children: firstPage
+					children: populateNodePage(firstPage)
 				} as Folder),
 				mockGetParent({ node_id: currentFolder.id }, currentFolder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockUpdateNode(
 					{ node_id: nodeToRename.id, name: newName },
 					{ ...nodeToRename, name: newName }
 				),
 				mockGetChildren(
-					{
-						...getChildrenVariables(currentFolder.id),
-						cursor: firstPage[firstPage.length - 2].id
-					},
+					getChildrenVariables(currentFolder.id, undefined, undefined, undefined, true),
 					{
 						...currentFolder,
-						children: secondPage
+						children: populateNodePage(secondPage)
 					} as Folder
 				)
 			];
@@ -398,23 +377,22 @@ describe('Rename', () => {
 			expect(screen.getByText(firstPage[0].name)).toBeVisible();
 			expect(screen.getByText(newName)).toBeVisible();
 			const nodeItems = screen.getAllByTestId('node-item-', { exact: false });
-			expect(nodeItems).toHaveLength(currentFolder.children.length);
+			expect(nodeItems).toHaveLength(currentFolder.children.nodes.length);
 			expect(screen.getByTestId(`node-item-${nodeToRename.id}`)).toBe(last(nodeItems));
 		});
 
-		test('Rename of last ordered node to unordered and move to trash of all remaining ordered nodes refetch children from first page and add unOrdered to the list', async () => {
+		test('Rename of last ordered node to unordered and move to trash of all remaining ordered nodes triggers load of next page', async () => {
 			const currentFolder = populateFolder();
-			currentFolder.children = sortNodes(
-				populateNodes(NODES_LOAD_LIMIT * 2, 'File'),
-				NODES_SORT_DEFAULT
-			) as Node[];
-			forEach(currentFolder.children, (mockedNode) => {
+			currentFolder.children = populateNodePage(
+				sortNodes(populateNodes(NODES_LOAD_LIMIT * 2, 'File'), NODES_SORT_DEFAULT) as Node[]
+			);
+			forEach(currentFolder.children.nodes, (mockedNode) => {
 				(mockedNode as Node).permissions.can_write_file = true;
 				(mockedNode as Node).permissions.can_write_folder = true;
 				(mockedNode as Node).parent = currentFolder;
 			});
-			const firstPage = currentFolder.children.slice(0, NODES_LOAD_LIMIT) as Node[];
-			const secondPage = currentFolder.children.slice(NODES_LOAD_LIMIT) as Node[];
+			const firstPage = currentFolder.children.nodes.slice(0, NODES_LOAD_LIMIT) as Node[];
+			const secondPage = currentFolder.children.nodes.slice(NODES_LOAD_LIMIT) as Node[];
 
 			const nodeToRename = firstPage[firstPage.length - 1] as Node;
 			const newName = `${(last(secondPage) as Node).name}-renamed`;
@@ -424,18 +402,22 @@ describe('Rename', () => {
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), {
 					...currentFolder,
-					children: firstPage
+					children: populateNodePage(firstPage)
 				} as Folder),
 				mockGetParent({ node_id: currentFolder.id }, currentFolder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockUpdateNode(
 					{ node_id: nodeToRename.id, name: newName },
 					{ ...nodeToRename, name: newName }
 				),
 				mockTrashNodes({ node_ids: nodesToTrash }, nodesToTrash),
-				mockGetChildren(getChildrenVariables(currentFolder.id), {
-					...currentFolder,
-					children: secondPage
-				} as Folder)
+				mockGetChildren(
+					getChildrenVariables(currentFolder.id, undefined, undefined, undefined, true),
+					{
+						...currentFolder,
+						children: populateNodePage(secondPage)
+					} as Folder
+				)
 			];
 
 			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
@@ -463,6 +445,7 @@ describe('Rename', () => {
 			const snackbar = await screen.findByText(/Item moved to trash/i);
 			await waitForElementToBeRemoved(snackbar);
 			expect(screen.getByTestId('icon: Refresh')).toBeVisible();
+			await triggerLoadMore();
 			await screen.findByText(secondPage[0].name);
 			expect(screen.getByText(secondPage[0].name)).toBeVisible();
 			expect(screen.queryByText(firstPage[0].name)).not.toBeInTheDocument();

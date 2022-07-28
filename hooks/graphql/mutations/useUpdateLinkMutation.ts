@@ -11,7 +11,7 @@ import { FetchResult, useMutation } from '@apollo/client';
 
 import UPDATE_LINK from '../../../graphql/mutations/updateLink.graphql';
 import { UpdateLinkMutation, UpdateLinkMutationVariables } from '../../../types/graphql/types';
-import { useErrorHandler } from '../../useErrorHandler';
+import { ErrorHandlerOptions, useErrorHandler } from '../../useErrorHandler';
 
 export type UpdateLinkType = (
 	id: string,
@@ -22,7 +22,7 @@ export type UpdateLinkType = (
 /**
  * Can return error: ErrorCode.LINK_NOT_FOUND
  */
-export function useUpdateLinkMutation(): UpdateLinkType {
+export function useUpdateLinkMutation(errorHandlerOptions?: ErrorHandlerOptions): UpdateLinkType {
 	const [updateLinkMutation, { error: updateLinkError }] = useMutation<
 		UpdateLinkMutation,
 		UpdateLinkMutationVariables
@@ -40,7 +40,7 @@ export function useUpdateLinkMutation(): UpdateLinkType {
 		},
 		[updateLinkMutation]
 	);
-	useErrorHandler(updateLinkError, 'UPDATE_LINK');
+	useErrorHandler(updateLinkError, 'UPDATE_LINK', errorHandlerOptions);
 
 	return updateLink;
 }

@@ -23,10 +23,20 @@ import {
 	CreateDocsFileRequestBody,
 	CreateDocsFileResponse
 } from '../mocks/handleCreateDocsFileRequest';
-import { populateFile, populateFolder, populateNodes, sortNodes } from '../mocks/mockUtils';
-import { Node } from '../types/common';
+import {
+	populateFile,
+	populateFolder,
+	populateNodePage,
+	populateNodes,
+	sortNodes
+} from '../mocks/mockUtils';
 import { Folder, GetNodeQuery, GetNodeQueryVariables } from '../types/graphql/types';
-import { getChildrenVariables, mockGetChildren, mockGetParent } from '../utils/mockUtils';
+import {
+	getChildrenVariables,
+	mockGetChildren,
+	mockGetParent,
+	mockGetPermissions
+} from '../utils/mockUtils';
 import { render, triggerLoadMore } from '../utils/testUtils';
 import { DisplayerProps } from './components/Displayer';
 import FolderView from './FolderView';
@@ -86,13 +96,14 @@ describe('Create docs file', () => {
 		const node1 = populateFile('n1', 'first');
 		const node2 = populateFile('n2', 'second');
 		const node3 = populateFile('n3', 'third');
-		currentFolder.children.push(node1, node2, node3);
+		currentFolder.children.nodes.push(node1, node2, node3);
 
 		const newName = node2.name;
 
 		const mocks = [
 			mockGetParent({ node_id: currentFolder.id }, currentFolder),
-			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder)
+			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+			mockGetPermissions({ node_id: currentFolder.id }, currentFolder)
 		];
 
 		server.use(
@@ -109,7 +120,7 @@ describe('Create docs file', () => {
 		// wait for the load to be completed
 		await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 		expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
-			currentFolder.children.length
+			currentFolder.children.nodes.length
 		);
 
 		const createDocsDocument = find(
@@ -134,7 +145,7 @@ describe('Create docs file', () => {
 		expect(inputField).toBeVisible();
 		expect(inputField).toHaveValue(newName);
 		expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
-			currentFolder.children.length
+			currentFolder.children.nodes.length
 		);
 	});
 
@@ -146,11 +157,12 @@ describe('Create docs file', () => {
 		node2.parent = currentFolder;
 		const node3 = populateFile('n3', 'third');
 		// add node 1 and 3 as children, node 2 is the new file
-		currentFolder.children.push(node1, node3);
+		currentFolder.children.nodes.push(node1, node3);
 
 		const mocks = [
 			mockGetParent({ node_id: currentFolder.id }, currentFolder),
-			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder)
+			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+			mockGetPermissions({ node_id: currentFolder.id }, currentFolder)
 		];
 
 		server.use(
@@ -171,7 +183,7 @@ describe('Create docs file', () => {
 		// wait for the load to be completed
 		await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 		expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
-			currentFolder.children.length
+			currentFolder.children.nodes.length
 		);
 
 		const createDocsDocument = find(
@@ -197,14 +209,14 @@ describe('Create docs file', () => {
 		expect(nodeItem).toBeVisible();
 		expect(within(nodeItem).getByText(node2.name)).toBeVisible();
 		const nodes = screen.getAllByTestId('node-item', { exact: false });
-		expect(nodes).toHaveLength(currentFolder.children.length + 1);
+		expect(nodes).toHaveLength(currentFolder.children.nodes.length + 1);
 		expect(nodes[1]).toBe(nodeItem);
 	});
 
 	test('Create docs file add file node as right sorted position of the list if neighbor is already loaded but unordered', async () => {
 		const currentFolder = populateFolder();
-		currentFolder.children = populateNodes(NODES_LOAD_LIMIT, 'Folder');
-		sortNodes(currentFolder.children, NODES_SORT_DEFAULT);
+		currentFolder.children = populateNodePage(populateNodes(NODES_LOAD_LIMIT, 'Folder'));
+		sortNodes(currentFolder.children.nodes, NODES_SORT_DEFAULT);
 		currentFolder.permissions.can_write_folder = true;
 		const node1 = populateFile('n1', `zzzz-new-file-n1`);
 		node1.parent = currentFolder;
@@ -222,16 +234,14 @@ describe('Create docs file', () => {
 
 		const mocks = [
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+			mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 			// fetchMore request, cursor is still last ordered node (last child of initial folder)
 			mockGetChildren(
-				{
-					...getChildrenVariables(currentFolder.id),
-					cursor: (currentFolder.children[currentFolder.children.length - 1] as Node).id
-				},
+				getChildrenVariables(currentFolder.id, undefined, undefined, undefined, true),
 				{
 					...currentFolder,
 					// second page contains the new created nodes and node3, not loaded before
-					children: [node1, node2, node3]
+					children: populateNodePage([node1, node2, node3])
 				} as Folder
 			)
 		];
@@ -266,7 +276,7 @@ describe('Create docs file', () => {
 		// wait for the load to be completed
 		await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 		let nodes = screen.getAllByTestId('node-item', { exact: false });
-		expect(nodes).toHaveLength(currentFolder.children.length);
+		expect(nodes).toHaveLength(currentFolder.children.nodes.length);
 
 		const createDocsDocument = find(
 			mockedCreateOptions,
@@ -292,7 +302,7 @@ describe('Create docs file', () => {
 		expect(node2Item).toBeVisible();
 		expect(within(node2Item).getByText(node2.name)).toBeVisible();
 		nodes = screen.getAllByTestId('node-item', { exact: false });
-		expect(nodes).toHaveLength(currentFolder.children.length + 1);
+		expect(nodes).toHaveLength(currentFolder.children.nodes.length + 1);
 		// node2 is last element of the list
 		expect(nodes[nodes.length - 1]).toBe(node2Item);
 
@@ -311,7 +321,7 @@ describe('Create docs file', () => {
 		expect(node1Item).toBeVisible();
 		expect(within(node1Item).getByText(node1.name)).toBeVisible();
 		nodes = screen.getAllByTestId('node-item', { exact: false });
-		expect(nodes).toHaveLength(currentFolder.children.length + 2);
+		expect(nodes).toHaveLength(currentFolder.children.nodes.length + 2);
 		// node1 is before node2 of the list
 		expect(nodes[nodes.length - 2]).toBe(node1Item);
 		// node2 is last element of the list
@@ -321,7 +331,7 @@ describe('Create docs file', () => {
 		// wait for the load to be completed (node3 is now loaded)
 		await screen.findByTestId(`node-item-${node3.id}`);
 		nodes = screen.getAllByTestId('node-item', { exact: false });
-		expect(nodes).toHaveLength(currentFolder.children.length + 3);
+		expect(nodes).toHaveLength(currentFolder.children.nodes.length + 3);
 		// node1, node2 and node3 should have the correct order
 		expect(screen.getByTestId(`node-item-${node1.id}`)).toBe(nodes[nodes.length - 3]);
 		expect(screen.getByTestId(`node-item-${node2.id}`)).toBe(nodes[nodes.length - 2]);

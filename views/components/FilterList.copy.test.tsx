@@ -15,6 +15,7 @@ import GET_CHILDREN from '../../graphql/queries/getChildren.graphql';
 import {
 	populateFile,
 	populateFolder,
+	populateNodePage,
 	populateNodes,
 	populateParents
 } from '../../mocks/mockUtils';
@@ -70,7 +71,7 @@ describe('Filter List', () => {
 				currentFilter.push(destinationFolder);
 				const { node: nodeToCopy, path } = populateParents(currentFilter[0], 2, true);
 				const parentFolder = nodeToCopy.parent as Folder;
-				parentFolder.children = [nodeToCopy, destinationFolder];
+				parentFolder.children = populateNodePage([nodeToCopy, destinationFolder]);
 
 				// write destination folder in cache as if it was already loaded
 				global.apolloClient.writeQuery<GetChildrenQuery, GetChildrenQueryVariables>({
@@ -174,7 +175,7 @@ describe('Filter List', () => {
 				forEach(nodesToCopy, (mockedNode) => {
 					mockedNode.parent = parentFolder;
 				});
-				parentFolder.children.push(destinationFolder, ...nodesToCopy);
+				parentFolder.children.nodes.push(destinationFolder, ...nodesToCopy);
 
 				// write destination folder in cache as if it was already loaded
 				global.apolloClient.writeQuery<GetChildrenQuery, GetChildrenQueryVariables>({
@@ -265,7 +266,7 @@ describe('Filter List', () => {
 				const destinationFolder = populateFolder();
 				destinationFolder.permissions.can_write_folder = true;
 				destinationFolder.permissions.can_write_file = true;
-				localRoot.children.push(destinationFolder);
+				localRoot.children.nodes.push(destinationFolder);
 				const nodesToCopy = currentFilter.slice(0, 2);
 				forEach(nodesToCopy, (mockedNode) => {
 					mockedNode.parent = populateFolder();
@@ -378,7 +379,7 @@ describe('Filter List', () => {
 				currentFilter.push(destinationFolder);
 				const { node: nodeToCopy, path } = populateParents(currentFilter[0], 2, true);
 				const parentFolder = nodeToCopy.parent as Folder;
-				parentFolder.children = [nodeToCopy, destinationFolder];
+				parentFolder.children = populateNodePage([nodeToCopy, destinationFolder]);
 
 				// write destination folder in cache as if it was already loaded
 				global.apolloClient.writeQuery<GetChildrenQuery, GetChildrenQueryVariables>({

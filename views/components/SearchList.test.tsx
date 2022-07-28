@@ -58,7 +58,6 @@ describe('Search list', () => {
 			const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
 			const files: File[] = [];
 			forEach(uploadedFiles, (file) => {
-				// eslint-disable-next-line no-param-reassign
 				file.parent = localRoot;
 				files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 			});

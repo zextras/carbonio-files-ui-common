@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { Avatar, Container, Row, Text, getColor } from '@zextras/carbonio-design-system';
+import { Avatar, Container, Row, Text, getColor, Shimmer } from '@zextras/carbonio-design-system';
 import styled, { css, SimpleInterpolation } from 'styled-components';
 
 import {
@@ -142,3 +142,10 @@ export const OverFlowHiddenRow = styled(Row)`
 export const ItalicText = styled(Text)`
 	font-style: italic;
 `;
+
+export const ShimmerText = styled(Shimmer.Text).attrs<{
+	$size: 'extrasmall' | 'small' | 'medium' | 'large' | 'extralarge';
+}>(({ $size, theme }) => ({
+	height: css`calc(${theme.sizes.font[$size]} * 1.2)`,
+	'data-testid': 'shimmer-text'
+}))``;

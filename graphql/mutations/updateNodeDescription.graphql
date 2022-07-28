@@ -4,7 +4,7 @@
 
 mutation updateNodeDescription($node_id: String!, $description: String) {
 	updateNode(node_id: $node_id, description: $description) {
-		id,
+		id
 		description
 	}
 }

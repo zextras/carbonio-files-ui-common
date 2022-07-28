@@ -12,12 +12,12 @@ import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 
 import { useActiveNode } from '../../../hooks/useActiveNode';
-import { DISPLAYER_TABS } from '../../constants';
+import { DISPLAYER_TABS, ROOTS } from '../../constants';
 import { GetNodeQuery } from '../../types/graphql/types';
 import { canUpsertDescription, isFile, isFolder } from '../../utils/ActionsFactory';
+import { DisplayerActions } from './DisplayerActions';
+import { DisplayerHeader } from './DisplayerHeader';
 import { NodeDetails } from './NodeDetails';
-import { PreviewPanelActions } from './PreviewPanelActions';
-import { PreviewPanelHeader } from './PreviewPanelHeader';
 import { NodeSharing } from './sharing/NodeSharing';
 import { DisplayerContentContainer } from './StyledComponents';
 import { Versioning } from './versioning/Versioning';
@@ -101,13 +101,14 @@ export const DisplayerNode: React.VFC<DisplayerNodeProps> = ({
 
 	return (
 		<>
-			<PreviewPanelHeader
+			<DisplayerHeader
 				name={node.name}
 				type={node.type}
 				closeAction={removeActiveNode}
 				mimeType={node.__typename === 'File' ? node.mime_type : undefined}
+				trashed={node.rootId === ROOTS.TRASH}
 			/>
-			<PreviewPanelActions node={node} />
+			<DisplayerActions node={node} />
 			<ContentContainer
 				height="fill"
 				background="gray5"
@@ -142,7 +143,7 @@ export const DisplayerNode: React.VFC<DisplayerNodeProps> = ({
 							loading={loading}
 							loadMore={loadMore}
 							hasMore={hasMore}
-							nodes={isFolder(node) ? node.children : undefined}
+							nodes={isFolder(node) ? node.children?.nodes : undefined}
 							shares={node.shares}
 							type={node.type}
 							rootId={node.rootId || undefined}

@@ -19,6 +19,7 @@ import {
 	Row,
 	useSnackbar
 } from '@zextras/carbonio-design-system';
+import size from 'lodash/size';
 import moment from 'moment-timezone';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
@@ -26,6 +27,7 @@ import styled from 'styled-components';
 import useUserInfo from '../../../../../hooks/useUserInfo';
 import { PublicLinkRowStatus } from '../../../../types/common';
 import { copyToClipboard, formatDate } from '../../../../utils/utils';
+import { RouteLeavingGuard } from '../../RouteLeavingGuard';
 
 const CustomText = styled(Text)`
 	margin-right: 0;
@@ -84,6 +86,13 @@ export const PublicLinkComponent: React.FC<PublicLinkComponentProps> = ({
 
 	const [date, setDate] = useState(initialMomentDate);
 	const [updatedTimestamp, setUpdatedTimestamp] = useState(expiresAt);
+
+	const isSomethingChanged = useMemo(
+		() =>
+			(expiresAt !== updatedTimestamp && (expiresAt != null || updatedTimestamp != null)) ||
+			size(description) !== size(linkDescriptionValue),
+		[description, expiresAt, linkDescriptionValue, updatedTimestamp]
+	);
 
 	const handleChange = useCallback((d: Date | null) => {
 		if (d === null) {
@@ -160,6 +169,18 @@ export const PublicLinkComponent: React.FC<PublicLinkComponentProps> = ({
 
 	return (
 		<Container>
+			<RouteLeavingGuard
+				when={isSomethingChanged}
+				onSave={onEditConfirmCallback}
+				dataHasError={moreThan300Characters}
+			>
+				<Text overflow="break-word">
+					{t('modal.unsaved_changes.body.line1', 'Do you want to leave the page without saving?')}
+				</Text>
+				<Text overflow="break-word">
+					{t('modal.unsaved_changes.body.line2', 'All unsaved changes will be lost')}
+				</Text>
+			</RouteLeavingGuard>
 			<Padding vertical="small" />
 			<Container orientation="horizontal" mainAlignment="space-between">
 				<Chip
@@ -201,7 +222,7 @@ export const PublicLinkComponent: React.FC<PublicLinkComponentProps> = ({
 								color="secondary"
 								label={t('publicLink.link.editLink', 'Edit Link')}
 								onClick={onEditConfirmCallback}
-								disabled={moreThan300Characters}
+								disabled={moreThan300Characters || !isSomethingChanged}
 							/>
 						</>
 					)}

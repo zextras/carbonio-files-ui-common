@@ -13,13 +13,14 @@ import map from 'lodash/map';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { NODES_LOAD_LIMIT } from '../constants';
-import { populateFile, populateFolder, sortNodes } from '../mocks/mockUtils';
+import { populateFile, populateFolder, populateNodePage, sortNodes } from '../mocks/mockUtils';
 import { Node } from '../types/common';
 import { Folder, NodeSort } from '../types/graphql/types';
 import {
 	getChildrenVariables,
 	mockGetChildren,
 	mockGetParent,
+	mockGetPermissions,
 	mockTrashNodes
 } from '../utils/mockUtils';
 import { actionRegexp, render, selectNodes, triggerLoadMore } from '../utils/testUtils';
@@ -50,17 +51,18 @@ describe('Mark for deletion - trash', () => {
 			const file = populateFile(fileId1, filename1);
 			file.permissions.can_write_file = false;
 			file.parent = populateFolder(0, currentFolder.id, currentFolder.name);
-			currentFolder.children.push(file);
+			currentFolder.children.nodes.push(file);
 
 			const folderId1 = 'folderId1';
 			const folderName1 = 'folderName1';
 			const folder = populateFolder(0, folderId1, folderName1);
 			folder.permissions.can_write_folder = true;
 			folder.parent = populateFolder(0, currentFolder.id, currentFolder.name);
-			currentFolder.children.push(folder);
+			currentFolder.children.nodes.push(folder);
 
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockTrashNodes(
 					{
 						node_ids: [folderId1]
@@ -111,24 +113,25 @@ describe('Mark for deletion - trash', () => {
 
 		test('Mark for deletion of all loaded nodes trigger refetch of first page', async () => {
 			const currentFolder = populateFolder(NODES_LOAD_LIMIT * 2);
-			forEach(currentFolder.children, (mockedNode) => {
+			forEach(currentFolder.children.nodes, (mockedNode) => {
 				(mockedNode as Node).permissions.can_write_file = true;
 				(mockedNode as Node).permissions.can_write_folder = true;
 			});
-			const firstPage = currentFolder.children.slice(0, NODES_LOAD_LIMIT);
-			const secondPage = currentFolder.children.slice(NODES_LOAD_LIMIT);
+			const firstPage = currentFolder.children.nodes.slice(0, NODES_LOAD_LIMIT);
+			const secondPage = currentFolder.children.nodes.slice(NODES_LOAD_LIMIT);
 			const nodesToTrash = map(firstPage, (node) => (node as Node).id);
 
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), {
 					...currentFolder,
-					children: firstPage
+					children: populateNodePage(firstPage)
 				} as Folder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockGetParent({ node_id: currentFolder.id }, currentFolder),
 				mockTrashNodes({ node_ids: nodesToTrash }, nodesToTrash),
 				mockGetChildren(getChildrenVariables(currentFolder.id), {
 					...currentFolder,
-					children: secondPage
+					children: populateNodePage(secondPage)
 				} as Folder)
 			];
 
@@ -160,25 +163,26 @@ describe('Mark for deletion - trash', () => {
 			expect(
 				screen.queryByText((firstPage[NODES_LOAD_LIMIT - 1] as Node).name)
 			).not.toBeInTheDocument();
-		}, 60000);
+		});
 	});
 
 	describe('Contextual menu actions', () => {
 		test('Mark for deletion from context menu', async () => {
 			const currentFolder = populateFolder(5);
 			// enable permission to MfD
-			forEach(currentFolder.children, (mockedNode) => {
+			forEach(currentFolder.children.nodes, (mockedNode) => {
 				(mockedNode as Node).permissions.can_write_file = true;
 				(mockedNode as Node).permissions.can_write_folder = true;
 				(mockedNode as Node).parent = populateFolder(0, currentFolder.id, currentFolder.name);
 			});
 			const sort = NodeSort.NameAsc; // sort only by name
-			sortNodes(currentFolder.children, sort);
+			sortNodes(currentFolder.children.nodes, sort);
 
-			const element = currentFolder.children[0] as Node;
+			const element = currentFolder.children.nodes[0] as Node;
 
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockTrashNodes(
 					{
 						node_ids: [element.id]
@@ -215,19 +219,20 @@ describe('Mark for deletion - trash', () => {
 		test('Mark for deletion from context menu on selected nodes', async () => {
 			const currentFolder = populateFolder(5);
 			// enable permission to Mfd
-			forEach(currentFolder.children, (mockedNode) => {
+			forEach(currentFolder.children.nodes, (mockedNode) => {
 				(mockedNode as Node).permissions.can_write_file = true;
 				(mockedNode as Node).permissions.can_write_folder = true;
 				(mockedNode as Node).parent = populateFolder(0, currentFolder.id, currentFolder.name);
 			});
 			const sort = NodeSort.NameAsc; // sort only by name
-			sortNodes(currentFolder.children, sort);
+			sortNodes(currentFolder.children.nodes, sort);
 
-			const element0 = currentFolder.children[0] as Node;
-			const element1 = currentFolder.children[1] as Node;
+			const element0 = currentFolder.children.nodes[0] as Node;
+			const element1 = currentFolder.children.nodes[1] as Node;
 
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockTrashNodes(
 					{
 						node_ids: [element0.id, element1.id]
@@ -259,36 +264,33 @@ describe('Mark for deletion - trash', () => {
 			expect(screen.queryByText(actionRegexp.moveToTrash)).not.toBeInTheDocument();
 
 			expect(screen.queryAllByTestId(`file-icon-preview`).length).toEqual(3);
-			expect.assertions(3);
 		});
 
-		test('Mark for deletion of last ordered node update cursor to be last ordered node and trigger load of the new page with the new cursor', async () => {
+		test('Mark for deletion of last ordered node trigger load of the new page with the new cursor', async () => {
 			const currentFolder = populateFolder(NODES_LOAD_LIMIT * 2);
 			currentFolder.permissions.can_write_folder = true;
 			currentFolder.permissions.can_write_file = true;
-			forEach(currentFolder.children, (mockedNode) => {
+			forEach(currentFolder.children.nodes, (mockedNode) => {
 				(mockedNode as Node).permissions.can_write_file = true;
 				(mockedNode as Node).permissions.can_write_folder = true;
 				(mockedNode as Node).parent = currentFolder;
 			});
-			const firstPage = currentFolder.children.slice(0, NODES_LOAD_LIMIT) as Node[];
-			const secondPage = currentFolder.children.slice(NODES_LOAD_LIMIT) as Node[];
+			const firstPage = currentFolder.children.nodes.slice(0, NODES_LOAD_LIMIT) as Node[];
+			const secondPage = currentFolder.children.nodes.slice(NODES_LOAD_LIMIT) as Node[];
 
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), {
 					...currentFolder,
-					children: firstPage
+					children: populateNodePage(firstPage)
 				} as Folder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockGetParent({ node_id: currentFolder.id }, currentFolder),
 				mockTrashNodes({ node_ids: [firstPage[NODES_LOAD_LIMIT - 1].id] }, [
 					firstPage[NODES_LOAD_LIMIT - 1].id
 				]),
 				mockGetChildren(
-					{
-						...getChildrenVariables(currentFolder.id),
-						cursor: firstPage[NODES_LOAD_LIMIT - 2].id
-					},
-					{ ...currentFolder, children: secondPage } as Folder
+					getChildrenVariables(currentFolder.id, undefined, undefined, undefined, true),
+					{ ...currentFolder, children: populateNodePage(secondPage) } as Folder
 				)
 			];
 

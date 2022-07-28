@@ -30,7 +30,14 @@ import {
 	SharePermission,
 	User
 } from '../types/graphql/types';
-import { ContactMatch } from '../types/network';
+import {
+	ContactGroupMatch,
+	ContactInformation,
+	GalAccountMatch,
+	Match,
+	Member
+} from '../types/network';
+import { MakeRequired } from '../types/utils';
 import { ActionsFactoryNodeType } from '../utils/ActionsFactory';
 import { nodeSortComparator } from '../utils/utils';
 
@@ -45,10 +52,21 @@ export function sortNodes(
 	return nodes.sort((a, b) => nodeSortComparator(a, b, sortsList));
 }
 
-export function populateUser(id?: string, name?: string): User {
+export function populateNodePage(
+	nodes: Maybe<Node>[],
+	pageSize: number = NODES_LOAD_LIMIT
+): NodePage {
+	return {
+		__typename: 'NodePage',
+		nodes,
+		page_token: nodes.length === pageSize ? 'next_page_token' : null
+	};
+}
+
+export function populateUser(id?: string, name?: string, email?: string): User {
 	return {
 		id: id || faker.datatype.uuid(),
-		email: faker.internet.exampleEmail(name),
+		email: email || faker.internet.exampleEmail(name),
 		full_name: name || faker.name.findName(),
 		__typename: 'User'
 	};
@@ -214,7 +232,7 @@ export function populateFolder(
 	}
 	const folder: Folder = {
 		...populateNodeFields(type, id, folderName),
-		children,
+		children: populateNodePage(children),
 		__typename: 'Folder'
 	};
 	if (!folder.id.includes('LOCAL')) {
@@ -222,11 +240,12 @@ export function populateFolder(
 	}
 	for (let i = 0; i < childrenLimit; i += 1) {
 		const child = populateNode();
-		child.parent = { ...folder, children: [] } as Folder;
+		child.parent = { ...folder, children: populateNodePage([]) } as Folder;
 		child.name = `child-${i} - ${child.name}`;
 		children.push(child);
 	}
-	sortNodes(folder.children, sort);
+	sortNodes(folder.children.nodes, sort);
+	folder.children = populateNodePage(children);
 	return folder;
 }
 
@@ -309,15 +328,10 @@ export function populateFile(id?: string, name?: string): FilesFile {
 	return file;
 }
 
-export function populateNodePage(nodes: Node[], pageSize: number = NODES_LOAD_LIMIT): NodePage {
-	return {
-		__typename: 'NodePage',
-		nodes,
-		page_token: nodes.length === pageSize ? 'next_page_token' : null
-	};
-}
-
-export function populateContact(fullName?: string, email?: string): ContactMatch {
+export function populateContact(
+	fullName?: string,
+	email?: string
+): MakeRequired<Match, 'id' | 'email' | 'full'> {
 	return {
 		id: faker.datatype.uuid(),
 		email:
@@ -325,6 +339,73 @@ export function populateContact(fullName?: string, email?: string): ContactMatch
 			(fullName && `${fullName.replace(/\s+/i, '.')}@example.com`) ||
 			faker.internet.exampleEmail(fullName),
 		full: fullName || faker.name.findName()
+	};
+}
+
+export function populateGalContact(fullName?: string, email?: string): GalAccountMatch {
+	return {
+		...populateContact(fullName, email),
+		isGroup: false,
+		type: 'gal'
+	};
+}
+
+export function populateContactGroupMatch(name?: string): ContactGroupMatch {
+	return {
+		id: faker.datatype.uuid(),
+		type: 'contact',
+		isGroup: true,
+		display: name || `${faker.name.jobArea()} ${faker.name.jobDescriptor()}`
+	};
+}
+
+export function populateContactInformation(type: Member['type']): ContactInformation {
+	return {
+		id: faker.datatype.uuid(),
+		_attrs: {
+			nickname: faker.internet.userName(),
+			email: faker.internet.email(),
+			zimbraId: (type === 'G' && faker.datatype.uuid()) || undefined
+		}
+	};
+}
+
+export function populateMember(memberType?: Member['type']): Member {
+	const type = memberType || faker.helpers.arrayElement<Member['type']>(['C', 'G', 'I']);
+	const contactInformation = populateContactInformation(type);
+	if (type === 'I') {
+		return {
+			type,
+			value: contactInformation._attrs?.email || ''
+		};
+	}
+	return {
+		type,
+		value: '',
+		cn: [contactInformation]
+	};
+}
+
+export function populateMembers(type?: Member['type'], limit = 5): Member[] {
+	const contacts: Member[] = [];
+	for (let i = 0; i < limit; i += 1) {
+		contacts.push(populateMember(type));
+	}
+	return contacts;
+}
+
+export function populateContactGroup(
+	contactGroupMatch: ContactGroupMatch,
+	limit = 5
+): ContactInformation {
+	return {
+		id: contactGroupMatch.id,
+		_attrs: {
+			nickname: contactGroupMatch.display,
+			fullName: contactGroupMatch.display,
+			type: contactGroupMatch.type
+		},
+		m: populateMembers(undefined, limit)
 	};
 }
 

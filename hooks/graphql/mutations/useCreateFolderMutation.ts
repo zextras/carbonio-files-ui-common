@@ -7,7 +7,7 @@
 /* eslint-disable arrow-body-style */
 import { useCallback } from 'react';
 
-import { ApolloError, FetchResult, useMutation } from '@apollo/client';
+import { FetchResult, MutationResult, useMutation } from '@apollo/client';
 
 import CREATE_FOLDER from '../../../graphql/mutations/createFolder.graphql';
 import {
@@ -24,14 +24,19 @@ export type CreateFolderType = (
 	name: string
 ) => Promise<FetchResult<CreateFolderMutation>>;
 
+type CreateFolderMutationOptions = {
+	showSnackbar?: boolean;
+};
+
 /**
  * Can return error: ErrorCode.FILE_VERSION_NOT_FOUND, ErrorCode.NODE_NOT_FOUND
  */
-export function useCreateFolderMutation(): [
-	createFolder: CreateFolderType,
-	createFolderError: ApolloError | undefined
-] {
-	const [createFolderMutation, { error: createFolderError }] = useMutation<
+export function useCreateFolderMutation(
+	{ showSnackbar = true }: CreateFolderMutationOptions = { showSnackbar: true }
+): {
+	createFolder: CreateFolderType;
+} & Pick<MutationResult<CreateFolderMutation>, 'error' | 'loading' | 'reset'> {
+	const [createFolderMutation, { error: createFolderError, loading, reset }] = useMutation<
 		CreateFolderMutation,
 		CreateFolderMutationVariables
 	>(CREATE_FOLDER);
@@ -50,14 +55,18 @@ export function useCreateFolderMutation(): [
 				update(cache, { data }) {
 					if (data?.createFolder) {
 						const newPosition = addNodeToFolder(parentFolder, data.createFolder);
-						scrollToNodeItem(data.createFolder.id, newPosition === parentFolder.children.length);
+						scrollToNodeItem(
+							data.createFolder.id,
+							newPosition === parentFolder.children.nodes.length
+						);
 					}
 				}
 			});
 		},
 		[createFolderMutation, addNodeToFolder]
 	);
-	useErrorHandler(createFolderError, 'CREATE_FOLDER');
 
-	return [createFolder, createFolderError];
+	useErrorHandler(createFolderError, 'CREATE_FOLDER', { showSnackbar });
+
+	return { createFolder, error: createFolderError, loading, reset };
 }

@@ -12,10 +12,15 @@ import forEach from 'lodash/forEach';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { NODES_LOAD_LIMIT } from '../constants';
-import { populateFolder, populateNodes } from '../mocks/mockUtils';
+import { populateFolder, populateNodePage, populateNodes } from '../mocks/mockUtils';
 import { Node } from '../types/common';
 import { Folder } from '../types/graphql/types';
-import { getChildrenVariables, mockGetChildren, mockGetParent } from '../utils/mockUtils';
+import {
+	getChildrenVariables,
+	mockGetChildren,
+	mockGetParent,
+	mockGetPermissions
+} from '../utils/mockUtils';
 import { iconRegexp, render, selectNodes, triggerLoadMore } from '../utils/testUtils';
 import { DisplayerProps } from './components/Displayer';
 import FolderView from './FolderView';
@@ -40,21 +45,24 @@ describe('Folder View Selection mode', () => {
 		const currentFolder = populateFolder(10);
 		const mocks = [
 			mockGetParent({ node_id: currentFolder.id }, currentFolder),
-			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder)
+			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+			mockGetPermissions({ node_id: currentFolder.id }, currentFolder)
 		];
 		render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
 
-		await screen.findByText((currentFolder.children[0] as Node).name);
-		expect(screen.getByText((currentFolder.children[0] as Node).name)).toBeVisible();
+		await screen.findByText((currentFolder.children.nodes[0] as Node).name);
+		expect(screen.getByText((currentFolder.children.nodes[0] as Node).name)).toBeVisible();
 		expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
-		selectNodes([(currentFolder.children[0] as Node).id]);
+		selectNodes([(currentFolder.children.nodes[0] as Node).id]);
 		// check that all wanted items are selected
 		expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 		expect(screen.getByText(/select all/i)).toBeVisible();
 		// deselect node. Selection mode remains active
-		selectNodes([(currentFolder.children[0] as Node).id]);
+		selectNodes([(currentFolder.children.nodes[0] as Node).id]);
 		expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
-		expect(screen.getAllByTestId('unCheckedAvatar')).toHaveLength(currentFolder.children.length);
+		expect(screen.getAllByTestId('unCheckedAvatar')).toHaveLength(
+			currentFolder.children.nodes.length
+		);
 		expect(screen.getByText(/select all/i)).toBeVisible();
 
 		expect(screen.queryByTestId(iconRegexp.moveToTrash)).not.toBeInTheDocument();
@@ -87,45 +95,47 @@ describe('Folder View Selection mode', () => {
 		const mocks = [
 			mockGetParent({ node_id: currentFolder.id }, currentFolder),
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+			mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 			mockGetChildren(
-				{
-					...getChildrenVariables(currentFolder.id),
-					cursor: (currentFolder.children[NODES_LOAD_LIMIT - 1] as Node).id
-				},
-				{ ...currentFolder, children: secondPage } as Folder
+				getChildrenVariables(currentFolder.id, undefined, undefined, undefined, true),
+				{ ...currentFolder, children: populateNodePage(secondPage) } as Folder
 			)
 		];
 		render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
 
-		await screen.findByText((currentFolder.children[0] as Folder).name);
+		await screen.findByText((currentFolder.children.nodes[0] as Folder).name);
 		expect(screen.queryByText(/select all/i)).not.toBeInTheDocument();
-		selectNodes([(currentFolder.children[0] as Folder).id]);
+		selectNodes([(currentFolder.children.nodes[0] as Folder).id]);
 		// check that all wanted items are selected
 		expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 		expect(screen.getByText(/\bselect all/i)).toBeVisible();
 		userEvent.click(screen.getByText(/\bselect all/i));
 		await screen.findByText(/deselect all/i);
 		expect(screen.queryByTestId('unCheckedAvatar')).not.toBeInTheDocument();
-		expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(currentFolder.children.length);
+		expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(
+			currentFolder.children.nodes.length
+		);
 		expect(screen.getByText(/deselect all/i)).toBeVisible();
 		expect(screen.queryByText(/\bselect all/i)).not.toBeInTheDocument();
 		await triggerLoadMore();
 		await screen.findByText(secondPage[0].name);
-		expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(currentFolder.children.length);
+		expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(
+			currentFolder.children.nodes.length
+		);
 		expect(screen.getAllByTestId('unCheckedAvatar')).toHaveLength(secondPage.length);
 		expect(screen.queryByText(/deselect all/i)).not.toBeInTheDocument();
 		expect(screen.getByText(/\bselect all/i)).toBeVisible();
 		userEvent.click(screen.getByText(/\bselect all/i));
 		await screen.findByText(/deselect all/i);
 		expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(
-			currentFolder.children.length + secondPage.length
+			currentFolder.children.nodes.length + secondPage.length
 		);
 		expect(screen.queryByTestId('unCheckedAvatar')).not.toBeInTheDocument();
 		expect(screen.getByText(/deselect all/i)).toBeVisible();
 		userEvent.click(screen.getByText(/deselect all/i));
 		await screen.findByText(/\bselect all/i);
 		expect(screen.getAllByTestId('unCheckedAvatar')).toHaveLength(
-			currentFolder.children.length + secondPage.length
+			currentFolder.children.nodes.length + secondPage.length
 		);
 		expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 	});

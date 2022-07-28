@@ -4,7 +4,7 @@
 
 #import "../fragments/child.graphql"
 
-mutation createFolder($destination_id: String!, $name: String!) {
+mutation createFolder($destination_id: String!, $name: String!, $shares_limit: Int = 1) {
 	createFolder(destination_id: $destination_id, name: $name) {
 		...Child
 	}

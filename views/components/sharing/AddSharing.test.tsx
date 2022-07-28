@@ -11,7 +11,7 @@ import { act, screen, waitFor, waitForElementToBeRemoved } from '@testing-librar
 import userEvent from '@testing-library/user-event';
 
 import {
-	populateContact,
+	populateGalContact,
 	populateNode,
 	populateShare,
 	populateUser
@@ -47,9 +47,9 @@ describe('Add Sharing', () => {
 		// mock soap fetch implementation
 		mockedSoapFetch.mockReturnValue({
 			match: [
-				populateContact(`${user.full_name[0]}-other-contact-1`),
-				populateContact(user.full_name, user.email),
-				populateContact(`${user.full_name[0]}-other-contact-2`)
+				populateGalContact(`${user.full_name[0]}-other-contact-1`),
+				populateGalContact(user.full_name, user.email),
+				populateGalContact(`${user.full_name[0]}-other-contact-2`)
 			]
 		});
 
@@ -90,9 +90,9 @@ describe('Add Sharing', () => {
 		// mock soap fetch implementation
 		mockedSoapFetch.mockReturnValue({
 			match: [
-				populateContact(`${user.full_name[0]}-other-contact-1`),
-				populateContact(user.full_name, user.email),
-				populateContact(`${user.full_name[0]}-other-contact-2`)
+				populateGalContact(`${user.full_name[0]}-other-contact-1`),
+				populateGalContact(user.full_name, user.email),
+				populateGalContact(`${user.full_name[0]}-other-contact-2`)
 			]
 		});
 
@@ -123,9 +123,9 @@ describe('Add Sharing', () => {
 		// mock soap fetch implementation
 		mockedSoapFetch.mockReturnValue({
 			match: [
-				populateContact(`${user.full_name[0]}-other-contact-1`),
-				populateContact(user.full_name, user.email),
-				populateContact(`${user.full_name[0]}-other-contact-2`)
+				populateGalContact(`${user.full_name[0]}-other-contact-1`),
+				populateGalContact(user.full_name, user.email),
+				populateGalContact(`${user.full_name[0]}-other-contact-2`)
 			]
 		});
 
@@ -152,10 +152,10 @@ describe('Add Sharing', () => {
 		// mock soap fetch implementation
 		mockedSoapFetch.mockReturnValue({
 			match: [
-				populateContact('contact-1', 'contact1@example.com'),
-				populateContact('contact-2', 'contactsamemail@example.com'),
-				populateContact('contact-3', 'contactsamemail@example.com'),
-				populateContact('contact-4', 'contact4@example.com')
+				populateGalContact('contact-1', 'contact1@example.com'),
+				populateGalContact('contact-2', 'contactsamemail@example.com'),
+				populateGalContact('contact-3', 'contactsamemail@example.com'),
+				populateGalContact('contact-4', 'contact4@example.com')
 			]
 		});
 
@@ -180,9 +180,9 @@ describe('Add Sharing', () => {
 		// mock soap fetch implementation
 		mockedSoapFetch.mockReturnValue({
 			match: [
-				populateContact('contact-1', 'contact1@example.com'),
-				populateContact('contact-2', 'contact2@example.com'),
-				populateContact('contact-3', 'contact3@example.com')
+				populateGalContact('contact-1', 'contact1@example.com'),
+				populateGalContact('contact-2', 'contact2@example.com'),
+				populateGalContact('contact-3', 'contact3@example.com')
 			]
 		});
 
@@ -226,9 +226,9 @@ describe('Add Sharing', () => {
 		// mock soap fetch implementation
 		mockedSoapFetch.mockReturnValue({
 			match: [
-				populateContact(`${user.full_name[0]}-other-contact-1`),
-				populateContact(user.full_name, user.email),
-				populateContact(`${user.full_name[0]}-other-contact-2`)
+				populateGalContact(`${user.full_name[0]}-other-contact-1`),
+				populateGalContact(user.full_name, user.email),
+				populateGalContact(`${user.full_name[0]}-other-contact-2`)
 			]
 		});
 
@@ -267,12 +267,12 @@ describe('Add Sharing', () => {
 		user.email = user.email.toLowerCase();
 		const mocks = [mockGetAccountByEmail({ email: user.email }, user)];
 		// mock soap fetch implementation
-		const contact = populateContact(user.full_name, user.email);
+		const contact = populateGalContact(user.full_name, user.email);
 		mockedSoapFetch.mockReturnValue({
 			match: [
-				populateContact(`${user.full_name}-other-contact-1`),
+				populateGalContact(`${user.full_name[0]}-other-contact-1`),
 				contact,
-				populateContact(`${user.full_name}-other-contact-2`)
+				populateGalContact(`${user.full_name[0]}-other-contact-2`)
 			]
 		});
 
@@ -343,9 +343,9 @@ describe('Add Sharing', () => {
 		// mock soap fetch implementation
 		mockedSoapFetch.mockReturnValue({
 			match: [
-				populateContact(`${user.full_name[0]}-other-contact-1`),
-				populateContact(user.full_name, user.email),
-				populateContact(`${user.full_name[0]}-other-contact-2`)
+				populateGalContact(`${user.full_name[0]}-other-contact-1`),
+				populateGalContact(user.full_name, user.email),
+				populateGalContact(`${user.full_name[0]}-other-contact-2`)
 			]
 		});
 		// write getNode in cache since it is used to establish permissions
@@ -456,9 +456,9 @@ describe('Add Sharing', () => {
 		// mock soap fetch implementation
 		mockedSoapFetch.mockReturnValue({
 			match: [
-				populateContact(`${user.full_name[0]}-other-contact-1`),
-				populateContact(user.full_name, user.email),
-				populateContact(`${user.full_name[0]}-other-contact-2`)
+				populateGalContact(`${user.full_name[0]}-other-contact-1`),
+				populateGalContact(user.full_name, user.email),
+				populateGalContact(`${user.full_name[0]}-other-contact-2`)
 			]
 		});
 		// write getNode in cache since it is used to establish permissions
@@ -551,9 +551,9 @@ describe('Add Sharing', () => {
 		// mock soap fetch implementation
 		mockedSoapFetch.mockReturnValue({
 			match: [
-				populateContact(`${user.full_name[0]}-other-contact-1`),
-				populateContact(user.full_name, user.email),
-				populateContact(`${user.full_name[0]}-other-contact-2`)
+				populateGalContact(`${user.full_name[0]}-other-contact-1`),
+				populateGalContact(user.full_name, user.email),
+				populateGalContact(`${user.full_name[0]}-other-contact-2`)
 			]
 		});
 
@@ -621,9 +621,9 @@ describe('Add Sharing', () => {
 		// mock soap fetch implementation
 		mockedSoapFetch.mockReturnValue({
 			match: [
-				populateContact(`${user.full_name[0]}-other-contact-1`),
-				populateContact(user.full_name, user.email),
-				populateContact(`${user.full_name[0]}-other-contact-2`)
+				populateGalContact(`${user.full_name[0]}-other-contact-1`),
+				populateGalContact(user.full_name, user.email),
+				populateGalContact(`${user.full_name[0]}-other-contact-2`)
 			]
 		});
 
@@ -682,9 +682,9 @@ describe('Add Sharing', () => {
 		// mock soap fetch implementation
 		mockedSoapFetch.mockReturnValue({
 			match: [
-				populateContact(`${user.full_name[0]}-other-contact-1`),
-				populateContact(user.full_name, user.email),
-				populateContact(`${user.full_name[0]}-other-contact-2`)
+				populateGalContact(`${user.full_name[0]}-other-contact-1`),
+				populateGalContact(user.full_name, user.email),
+				populateGalContact(`${user.full_name[0]}-other-contact-2`)
 			]
 		});
 
@@ -753,16 +753,16 @@ describe('Add Sharing', () => {
 		mockedSoapFetch
 			.mockReturnValueOnce({
 				match: [
-					populateContact(`${user1.full_name[0]}-other-contact-1`),
-					populateContact(user1.full_name, user1.email),
-					populateContact(`${user1.full_name[0]}-other-contact-2`)
+					populateGalContact(`${user1.full_name[0]}-other-contact-1`),
+					populateGalContact(user1.full_name, user1.email),
+					populateGalContact(`${user1.full_name[0]}-other-contact-2`)
 				]
 			})
 			.mockReturnValueOnce({
 				match: [
-					populateContact(`${user2.full_name[0]}-other-contact-1`),
-					populateContact(user2.full_name, user2.email),
-					populateContact(`${user2.full_name[0]}-other-contact-2`)
+					populateGalContact(`${user2.full_name[0]}-other-contact-1`),
+					populateGalContact(user2.full_name, user2.email),
+					populateGalContact(`${user2.full_name[0]}-other-contact-2`)
 				]
 			});
 		// write getNode in cache since it is used to establish permissions

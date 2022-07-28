@@ -21,7 +21,7 @@ import map from 'lodash/map';
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { NODES_LOAD_LIMIT } from '../constants';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
-import { populateFolder } from '../mocks/mockUtils';
+import { populateFolder, populateNodePage } from '../mocks/mockUtils';
 import { Node } from '../types/common';
 import { Folder, GetChildrenQuery, GetChildrenQueryVariables } from '../types/graphql/types';
 import {
@@ -29,6 +29,7 @@ import {
 	mockGetChildren,
 	mockGetParent,
 	mockGetPath,
+	mockGetPermissions,
 	mockMoveNodes
 } from '../utils/mockUtils';
 import {
@@ -67,8 +68,8 @@ describe('Move', () => {
 			const destinationFolder = populateFolder();
 			destinationFolder.permissions.can_write_folder = true;
 			destinationFolder.permissions.can_write_file = true;
-			currentFolder.children.push(destinationFolder);
-			const nodeToMove = currentFolder.children[0] as Node;
+			currentFolder.children.nodes.push(destinationFolder);
+			const nodeToMove = currentFolder.children.nodes[0] as Node;
 			nodeToMove.permissions.can_write_folder = true;
 			nodeToMove.permissions.can_write_file = true;
 
@@ -83,6 +84,7 @@ describe('Move', () => {
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 				mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockMoveNodes(
 					{
 						node_ids: [nodeToMove.id],
@@ -119,7 +121,7 @@ describe('Move', () => {
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 
 			expect(screen.queryAllByTestId('node-item', { exact: false })).toHaveLength(
-				currentFolder.children.length - 1
+				currentFolder.children.nodes.length - 1
 			);
 
 			destinationFolderCachedData = global.apolloClient.readQuery<
@@ -140,8 +142,11 @@ describe('Move', () => {
 			const destinationFolder = populateFolder();
 			destinationFolder.permissions.can_write_folder = true;
 			destinationFolder.permissions.can_write_file = true;
-			currentFolder.children.push(destinationFolder);
-			const nodesToMove = [currentFolder.children[0], currentFolder.children[1]] as Node[];
+			currentFolder.children.nodes.push(destinationFolder);
+			const nodesToMove = [
+				currentFolder.children.nodes[0],
+				currentFolder.children.nodes[1]
+			] as Node[];
 			forEach(nodesToMove, (mockedNode) => {
 				(mockedNode as Node).permissions.can_write_folder = true;
 				(mockedNode as Node).permissions.can_write_file = true;
@@ -157,6 +162,7 @@ describe('Move', () => {
 			});
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 				mockMoveNodes(
 					{
@@ -211,7 +217,7 @@ describe('Move', () => {
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 
 			expect(screen.queryAllByTestId('node-item', { exact: false })).toHaveLength(
-				currentFolder.children.length - nodesToMove.length
+				currentFolder.children.nodes.length - nodesToMove.length
 			);
 
 			destinationFolderCachedData = global.apolloClient.readQuery<
@@ -237,21 +243,22 @@ describe('Move', () => {
 			destinationFolder.parent = commonParent;
 			destinationFolder.permissions.can_write_folder = true;
 			destinationFolder.permissions.can_write_file = true;
-			commonParent.children.push(currentFolder, destinationFolder);
-			forEach(currentFolder.children, (mockedNode) => {
+			commonParent.children.nodes.push(currentFolder, destinationFolder);
+			forEach(currentFolder.children.nodes, (mockedNode) => {
 				(mockedNode as Node).permissions.can_write_file = true;
 				(mockedNode as Node).permissions.can_write_folder = true;
 				(mockedNode as Node).parent = currentFolder;
 			});
-			const firstPage = currentFolder.children.slice(0, NODES_LOAD_LIMIT) as Node[];
-			const secondPage = currentFolder.children.slice(NODES_LOAD_LIMIT) as Node[];
+			const firstPage = currentFolder.children.nodes.slice(0, NODES_LOAD_LIMIT) as Node[];
+			const secondPage = currentFolder.children.nodes.slice(NODES_LOAD_LIMIT) as Node[];
 			const nodesToMove = [...firstPage];
 
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), {
 					...currentFolder,
-					children: firstPage
+					children: populateNodePage(firstPage)
 				} as Folder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockGetParent({ node_id: currentFolder.id }, currentFolder),
 				mockGetPath({ node_id: currentFolder.id }, [commonParent, currentFolder]),
 				mockGetChildren(getChildrenVariables(commonParent.id), commonParent),
@@ -265,7 +272,7 @@ describe('Move', () => {
 				),
 				mockGetChildren(getChildrenVariables(currentFolder.id), {
 					...currentFolder,
-					children: secondPage
+					children: populateNodePage(secondPage)
 				} as Folder)
 			];
 
@@ -289,7 +296,7 @@ describe('Move', () => {
 			userEvent.click(moveAction);
 			await findByTextWithMarkup(buildBreadCrumbRegExp(commonParent.name, currentFolder.name));
 			const modalList = screen.getByTestId('modal-list', { exact: false });
-			await within(modalList).findByText((currentFolder.children[0] as Node).name);
+			await within(modalList).findByText((currentFolder.children.nodes[0] as Node).name);
 			const moveModalButton = await screen.findByRole('button', { name: actionRegexp.move });
 			expect(moveModalButton).toHaveAttribute('disabled', '');
 			userEvent.click(screen.getByText(commonParent.name));
@@ -309,7 +316,7 @@ describe('Move', () => {
 			expect(screen.queryByText(firstPage[NODES_LOAD_LIMIT - 1].name)).not.toBeInTheDocument();
 			expect(screen.getByText(secondPage[0].name)).toBeVisible();
 			expect(screen.getByText(secondPage[NODES_LOAD_LIMIT - 1].name)).toBeVisible();
-		}, 60000);
+		});
 	});
 
 	describe('Contextual menu actions', () => {
@@ -320,8 +327,8 @@ describe('Move', () => {
 			const destinationFolder = populateFolder();
 			destinationFolder.permissions.can_write_folder = true;
 			destinationFolder.permissions.can_write_file = true;
-			currentFolder.children.push(destinationFolder);
-			const nodeToMove = currentFolder.children[0] as Node;
+			currentFolder.children.nodes.push(destinationFolder);
+			const nodeToMove = currentFolder.children.nodes[0] as Node;
 			nodeToMove.permissions.can_write_folder = true;
 			nodeToMove.permissions.can_write_file = true;
 
@@ -336,6 +343,7 @@ describe('Move', () => {
 
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 				mockMoveNodes(
 					{
@@ -370,7 +378,7 @@ describe('Move', () => {
 			await waitForElementToBeRemoved(snackbar);
 
 			expect(screen.queryAllByTestId('node-item', { exact: false })).toHaveLength(
-				currentFolder.children.length - 1
+				currentFolder.children.nodes.length - 1
 			);
 
 			destinationFolderCachedData = global.apolloClient.readQuery<
@@ -387,22 +395,23 @@ describe('Move', () => {
 		test('Move of last ordered node update cursor to be last ordered node and trigger load of the next page with the new cursor', async () => {
 			const currentFolder = populateFolder(NODES_LOAD_LIMIT * 2 - 1);
 			const destinationFolder = populateFolder();
-			currentFolder.children.unshift(destinationFolder);
+			currentFolder.children.nodes.unshift(destinationFolder);
 			currentFolder.permissions.can_write_folder = true;
 			currentFolder.permissions.can_write_file = true;
-			forEach(currentFolder.children, (mockedNode) => {
+			forEach(currentFolder.children.nodes, (mockedNode) => {
 				(mockedNode as Node).permissions.can_write_file = true;
 				(mockedNode as Node).permissions.can_write_folder = true;
 				(mockedNode as Node).parent = currentFolder;
 			});
-			const firstPage = currentFolder.children.slice(0, NODES_LOAD_LIMIT) as Node[];
-			const secondPage = currentFolder.children.slice(NODES_LOAD_LIMIT) as Node[];
+			const firstPage = currentFolder.children.nodes.slice(0, NODES_LOAD_LIMIT) as Node[];
+			const secondPage = currentFolder.children.nodes.slice(NODES_LOAD_LIMIT) as Node[];
 
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), {
 					...currentFolder,
-					children: firstPage
+					children: populateNodePage(firstPage)
 				} as Folder),
+				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockGetParent({ node_id: currentFolder.id }, currentFolder),
 				mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 				mockMoveNodes(
@@ -413,11 +422,8 @@ describe('Move', () => {
 					[{ ...firstPage[NODES_LOAD_LIMIT - 1], parent: destinationFolder }]
 				),
 				mockGetChildren(
-					{
-						...getChildrenVariables(currentFolder.id),
-						cursor: firstPage[NODES_LOAD_LIMIT - 2].id
-					},
-					{ ...currentFolder, children: secondPage } as Folder
+					getChildrenVariables(currentFolder.id, undefined, undefined, undefined, true),
+					{ ...currentFolder, children: populateNodePage(secondPage) } as Folder
 				)
 			];
 

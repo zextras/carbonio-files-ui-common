@@ -52,7 +52,9 @@ export const AddShareChip = React.forwardRef<HTMLDivElement, ShareChip>(function
 	};
 
 	const { activeNodeId } = useActiveNode();
-	const { data: nodeData } = useGetNodeQuery(activeNodeId, undefined, 'cache-only');
+	const { data: nodeData } = useGetNodeQuery(activeNodeId, undefined, {
+		fetchPolicy: 'cache-only'
+	});
 	const node = useMemo(() => nodeData?.getNode || null, [nodeData]);
 
 	const changeRole = (containerIdx: keyof typeof rowIdxToRoleMap): void => {

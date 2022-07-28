@@ -36,12 +36,16 @@ export const UploadList: React.VFC = () => {
 	const [t] = useTranslation();
 
 	const { add, removeById, removeAllCompleted, retryById } = useUpload();
-	const uploadStatus = useReactiveVar<Array<UploadType>>(uploadVar);
+	const uploadStatusMap = useReactiveVar<{ [id: string]: UploadType }>(uploadVar);
+	const uploadStatus = useMemo(() => map(uploadStatusMap, (value) => value), [uploadStatusMap]);
+
+	const uploadStatusSizeIsZero = useMemo(() => uploadStatus.length === 0, [uploadStatus]);
+
 	const { setIsEmpty } = useContext(ListContext);
 
 	useEffect(() => {
-		setIsEmpty(uploadStatus.length === 0);
-	}, [uploadStatus.length, setIsEmpty]);
+		setIsEmpty(uploadStatusSizeIsZero);
+	}, [setIsEmpty, uploadStatusSizeIsZero]);
 
 	const crumbs = useMemo(
 		() => [

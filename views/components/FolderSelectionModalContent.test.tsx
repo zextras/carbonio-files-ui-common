@@ -17,6 +17,7 @@ import {
 	populateFile,
 	populateFolder,
 	populateLocalRoot,
+	populateNodePage,
 	populateNodes,
 	populateParents
 } from '../../mocks/mockUtils';
@@ -59,7 +60,7 @@ describe('Folder Selection Modal Content', () => {
 		const file = populateFile();
 		const parent = populateFolder();
 		const { path } = populateParents(parent, 2, true);
-		parent.children = [folder, folder2, file];
+		parent.children = populateNodePage([folder, folder2, file]);
 		folder.parent = parent;
 		folder2.parent = parent;
 		file.parent = parent;
@@ -113,7 +114,7 @@ describe('Folder Selection Modal Content', () => {
 				id: parent.id,
 				name: parent.name
 			}),
-			false
+			true
 		);
 		// confirm reset active folder in the modal
 		expect(chooseButton).toHaveAttribute('disabled', '');
@@ -130,7 +131,7 @@ describe('Folder Selection Modal Content', () => {
 				id: folder2.id,
 				name: folder2.name
 			}),
-			false
+			true
 		);
 		// confirm reset active folder in the modal
 		expect(chooseButton).toHaveAttribute('disabled', '');
@@ -206,7 +207,7 @@ describe('Folder Selection Modal Content', () => {
 	test('navigation through breadcrumb reset active folder', async () => {
 		const localRoot = populateFolder(2, ROOTS.LOCAL_ROOT);
 		const folder = populateFolder();
-		localRoot.children.push(folder);
+		localRoot.children.nodes.push(folder);
 		folder.parent = localRoot;
 
 		const mocks = [
@@ -236,7 +237,7 @@ describe('Folder Selection Modal Content', () => {
 		userEvent.dblClick(screen.getByText(/home/i));
 		await screen.findByText(folder.name);
 		expect(screen.getByText(folder.name)).toBeVisible();
-		expect(screen.getByText((localRoot.children[0] as Node).name)).toBeVisible();
+		expect(screen.getByText((localRoot.children.nodes[0] as Node).name)).toBeVisible();
 		breadcrumbItem = await findByTextWithMarkup(buildBreadCrumbRegExp('Files', folder.parent.name));
 		expect(breadcrumbItem).toBeVisible();
 		// choose button is disabled because active folder (opened folder) is same as set one
@@ -267,7 +268,7 @@ describe('Folder Selection Modal Content', () => {
 		userEvent.dblClick(screen.getByText(/home/i));
 		await screen.findByText(folder.name);
 		expect(screen.getByText(folder.name)).toBeVisible();
-		expect(screen.getByText((localRoot.children[0] as Node).name)).toBeVisible();
+		expect(screen.getByText((localRoot.children.nodes[0] as Node).name)).toBeVisible();
 		breadcrumbItem = await findByTextWithMarkup(buildBreadCrumbRegExp('Files', folder.parent.name));
 		expect(breadcrumbItem).toBeVisible();
 		// choose button is disabled because active folder (opened folder) is same as set one
@@ -294,7 +295,7 @@ describe('Folder Selection Modal Content', () => {
 				id: folder.id,
 				name: folder.name
 			}),
-			false
+			true
 		);
 	});
 
@@ -346,9 +347,9 @@ describe('Folder Selection Modal Content', () => {
 		);
 		await screen.findByText(/home/i);
 		const checkboxLabel = screen.getByText('search also in contained folders');
-		let checkboxUnchecked = screen.getByTestId('icon: Square');
+		let checkboxChecked = screen.getByTestId('icon: CheckmarkSquare');
 		expect(checkboxLabel).toBeVisible();
-		expect(checkboxUnchecked).toBeVisible();
+		expect(checkboxChecked).toBeVisible();
 		const chooseButton = screen.getByRole('button', { name: /choose folder/i });
 		expect(chooseButton).toBeVisible();
 		// choose button is disabled because active folder and cascade have same value as current filter
@@ -356,21 +357,21 @@ describe('Folder Selection Modal Content', () => {
 		act(() => {
 			userEvent.click(checkboxLabel);
 		});
-		const checkboxChecked = await screen.findByTestId('icon: CheckmarkSquare');
-		expect(checkboxChecked).toBeVisible();
+		const checkboxUnchecked = await screen.findByTestId('icon: Square');
+		expect(checkboxUnchecked).toBeVisible();
 		// choose button is active because cascade has changed its value
 		expect(chooseButton).not.toHaveAttribute('disabled', '');
 		act(() => {
-			userEvent.click(checkboxChecked);
+			userEvent.click(checkboxUnchecked);
 		});
-		checkboxUnchecked = await screen.findByTestId('icon: Square');
-		expect(checkboxUnchecked).toBeVisible();
+		checkboxChecked = await screen.findByTestId('icon: CheckmarkSquare');
+		expect(checkboxChecked).toBeVisible();
 		// choose button is disabled because active folder and cascade have same value as current filter
 		expect(chooseButton).toHaveAttribute('disabled', '');
 		act(() => {
-			userEvent.click(checkboxUnchecked);
+			userEvent.click(checkboxChecked);
 		});
-		await screen.findByTestId('icon: CheckmarkSquare');
+		await screen.findByTestId('icon: Square');
 		userEvent.click(chooseButton);
 		act(() => {
 			// run timers of tooltip
@@ -382,7 +383,7 @@ describe('Folder Selection Modal Content', () => {
 				id: localRoot.id,
 				name: localRoot.name
 			}),
-			true
+			false
 		);
 	});
 
@@ -422,7 +423,7 @@ describe('Folder Selection Modal Content', () => {
 		expect(confirmAction).toHaveBeenCalled();
 		expect(confirmAction).toHaveBeenCalledWith(
 			expect.objectContaining({ id: ROOTS.SHARED_WITH_ME, name: 'Shared with me' }),
-			false
+			true
 		);
 		// choose button is now disabled because of reset
 		expect(chooseButton).toHaveAttribute('disabled', '');
@@ -438,7 +439,7 @@ describe('Folder Selection Modal Content', () => {
 		expect(confirmAction).toHaveBeenCalledTimes(2);
 		expect(confirmAction).toHaveBeenLastCalledWith(
 			expect.objectContaining({ id: ROOTS.TRASH, name: 'Trash' }),
-			false
+			true
 		);
 		// choose button is now disabled because of reset
 		expect(chooseButton).toHaveAttribute('disabled', '');
@@ -468,7 +469,7 @@ describe('Folder Selection Modal Content', () => {
 		expect(confirmAction).toHaveBeenCalledTimes(3);
 		expect(confirmAction).toHaveBeenLastCalledWith(
 			expect.objectContaining({ id: ROOTS.SHARED_WITH_ME, name: 'Shared with me' }),
-			false
+			true
 		);
 	});
 
@@ -476,7 +477,7 @@ describe('Folder Selection Modal Content', () => {
 		const localRoot = populateLocalRoot(2);
 		const folder = populateFolder(3);
 		folder.parent = localRoot;
-		localRoot.children.push(folder);
+		localRoot.children.nodes.push(folder);
 		const mocks = [
 			mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
 			mockGetPath({ node_id: localRoot.id }, [localRoot]),
@@ -488,10 +489,10 @@ describe('Folder Selection Modal Content', () => {
 		await screen.findByText(/home/i);
 		userEvent.dblClick(screen.getByText(/home/i));
 		await screen.findByText(folder.name);
-		expect(screen.getByText((localRoot.children[0] as Node).name)).toBeVisible();
+		expect(screen.getByText((localRoot.children.nodes[0] as Node).name)).toBeVisible();
 		expect(screen.getByText(folder.name)).toBeVisible();
 		userEvent.dblClick(screen.getByText(folder.name));
-		await screen.findByText((folder.children[0] as Node).name);
+		await screen.findByText((folder.children.nodes[0] as Node).name);
 		const chooseButton = screen.getByRole('button', { name: /choose folder/i });
 		expect(chooseButton).not.toHaveAttribute('disabled', '');
 		userEvent.click(chooseButton);
@@ -502,7 +503,7 @@ describe('Folder Selection Modal Content', () => {
 		expect(confirmAction).toHaveBeenCalled();
 		expect(confirmAction).toHaveBeenLastCalledWith(
 			expect.objectContaining({ id: folder.id, name: folder.name }),
-			false
+			true
 		);
 	});
 
@@ -530,7 +531,7 @@ describe('Folder Selection Modal Content', () => {
 		expect(screen.getByText(filter[0].name)).toBeVisible();
 		expect(screen.getByText(folder.name)).toBeVisible();
 		userEvent.dblClick(screen.getByText(folder.name));
-		await screen.findByText((folder.children[0] as Node).name);
+		await screen.findByText((folder.children.nodes[0] as Node).name);
 		const chooseButton = screen.getByRole('button', { name: /choose folder/i });
 		expect(chooseButton).not.toHaveAttribute('disabled', '');
 		userEvent.click(chooseButton);
@@ -541,7 +542,7 @@ describe('Folder Selection Modal Content', () => {
 		expect(confirmAction).toHaveBeenCalled();
 		expect(confirmAction).toHaveBeenLastCalledWith(
 			expect.objectContaining({ id: folder.id, name: folder.name }),
-			false
+			true
 		);
 	});
 });

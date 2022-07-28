@@ -206,6 +206,7 @@ export const render = (
 };
 
 export async function triggerLoadMore(): Promise<void> {
+	expect(screen.getByTestId('icon: Refresh')).toBeVisible();
 	const { calls } = (window.IntersectionObserver as jest.Mock<IntersectionObserver>).mock;
 	const [onChange] = calls[calls.length - 1];
 	// trigger the intersection on the observed element
@@ -287,7 +288,8 @@ export const actionRegexp = {
 	openDocument: /^open document$/i,
 	deletePermanently: /^delete permanently$/i,
 	restore: /^restore$/i,
-	manageShares: /^manage shares$/i
+	manageShares: /^manage shares$/i,
+	preview: /^preview$/i
 } as const;
 
 export const iconRegexp = {
@@ -301,7 +303,9 @@ export const iconRegexp = {
 	flag: /^icon: FlagOutline$/i,
 	unflag: /^icon: UnflagOutline$/i,
 	download: /^icon: Download$/i,
-	openDocument: /^icon: BookOpenOutline$/i
+	openDocument: /^icon: BookOpenOutline$/i,
+	close: /^icon: Close$/i,
+	trash: /^icon: Trash2Outline$/i
 } as const;
 
 export function waitForNetworkResponse(): Promise<void> {

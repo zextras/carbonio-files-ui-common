@@ -11,7 +11,7 @@ import userEvent from '@testing-library/user-event';
 import forEach from 'lodash/forEach';
 
 import {
-	populateContact,
+	populateGalContact,
 	populateDistributionList,
 	populateNode,
 	populateShare,
@@ -291,9 +291,9 @@ describe('Node Sharing', () => {
 			// mock soap fetch implementation
 			mockedSoapFetch.mockReturnValue({
 				match: [
-					populateContact(`${user.full_name[0]}-other-contact-1`),
-					populateContact(user.full_name, user.email),
-					populateContact(`${user.full_name[0]}-other-contact-2`)
+					populateGalContact(`${user.full_name[0]}-other-contact-1`),
+					populateGalContact(user.full_name, user.email),
+					populateGalContact(`${user.full_name[0]}-other-contact-2`)
 				]
 			});
 			const mocks = [
@@ -320,6 +320,7 @@ describe('Node Sharing', () => {
 			});
 			render(<NodeSharing node={node} />, { mocks, initialRouterEntries: [`/?node=${node.id}`] });
 			await screen.findByText(getChipLabel(share.share_target as SharedTarget));
+			await screen.findByTestId('icon: EyeOutline');
 			expect(screen.getByText(/Add new people or groups/i)).toBeVisible();
 			expect(screen.getByRole('button', { name: /share/i })).toBeVisible();
 			expect(screen.getByRole('button', { name: /share/i })).toHaveAttribute('disabled', '');
@@ -428,15 +429,15 @@ describe('Node Sharing', () => {
 			mockedSoapFetch
 				.mockReturnValueOnce({
 					match: [
-						populateContact(`${user1.full_name[0]}-other-contact-1`),
-						populateContact(user1.full_name, user1.email),
-						populateContact(`${user1.full_name[0]}-other-contact-2`)
+						populateGalContact(`${user1.full_name[0]}-other-contact-1`),
+						populateGalContact(user1.full_name, user1.email),
+						populateGalContact(`${user1.full_name[0]}-other-contact-2`)
 					]
 				})
 				.mockReturnValueOnce({
 					match: [
-						populateContact(`${user2.full_name[0]}-other-contact-1`),
-						populateContact(user2.full_name, user2.email)
+						populateGalContact(`${user2.full_name[0]}-other-contact-1`),
+						populateGalContact(user2.full_name, user2.email)
 					]
 				});
 			const mocks = [
@@ -472,6 +473,7 @@ describe('Node Sharing', () => {
 			});
 			render(<NodeSharing node={node} />, { mocks, initialRouterEntries: [`/?node=${node.id}`] });
 			await screen.findByText(getChipLabel(share.share_target as SharedTarget));
+			await screen.findByTestId('icon: EyeOutline');
 			expect(screen.getByText(/Add new people or groups/i)).toBeVisible();
 			expect(screen.getByRole('button', { name: /share/i })).toBeVisible();
 			expect(screen.getByRole('button', { name: /share/i })).toHaveAttribute('disabled', '');

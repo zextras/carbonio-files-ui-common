@@ -26,7 +26,7 @@ import { useTranslation } from 'react-i18next';
 import { useActiveNode } from '../../../hooks/useActiveNode';
 import { useSendViaMail } from '../../../hooks/useSendViaMail';
 import useUserInfo from '../../../hooks/useUserInfo';
-import { DISPLAYER_TABS, PREVIEW_TYPE } from '../../constants';
+import { DISPLAYER_TABS, PREVIEW_MAX_SIZE, PREVIEW_TYPE } from '../../constants';
 import { useDeleteNodesMutation } from '../../hooks/graphql/mutations/useDeleteNodesMutation';
 import { useFlagNodesMutation } from '../../hooks/graphql/mutations/useFlagNodesMutation';
 import { useRestoreNodesMutation } from '../../hooks/graphql/mutations/useRestoreNodesMutation';
@@ -55,14 +55,14 @@ import {
 	openNodeWithDocs
 } from '../../utils/utils';
 
-interface PreviewPanelActionsParams {
+interface DisplayerActionsParams {
 	node: ActionsFactoryNodeType &
 		Pick<Node, 'rootId' | 'id' | 'name'> &
 		GetNodeParentType &
 		MakeOptional<Pick<File, 'version'>, 'version'>;
 }
 
-export const PreviewPanelActions: React.VFC<PreviewPanelActionsParams> = ({ node }) => {
+export const DisplayerActions: React.VFC<DisplayerActionsParams> = ({ node }) => {
 	const [t] = useTranslation();
 
 	/** Mutation to update the flag status */
@@ -94,7 +94,7 @@ export const PreviewPanelActions: React.VFC<PreviewPanelActionsParams> = ({ node
 
 	const { me } = useUserInfo();
 
-	const permittedPreviewPanelActions: Action[] = useMemo(
+	const permittedDisplayerActions: Action[] = useMemo(
 		() =>
 			getAllPermittedActions(
 				[node],
@@ -171,7 +171,7 @@ export const PreviewPanelActions: React.VFC<PreviewPanelActionsParams> = ({ node
 						((documentType === PREVIEW_TYPE.PDF && getPdfPreviewSrc(id, version)) ||
 							(documentType === PREVIEW_TYPE.DOCUMENT && getDocumentPreviewSrc(id, version)))) ||
 					'';
-				if (includes(permittedPreviewPanelActions, Action.OpenWithDocs)) {
+				if (includes(permittedDisplayerActions, Action.OpenWithDocs)) {
 					actions.unshift({
 						id: 'OpenWithDocs',
 						icon: 'BookOpenOutline',
@@ -183,20 +183,20 @@ export const PreviewPanelActions: React.VFC<PreviewPanelActionsParams> = ({ node
 					previewType: 'pdf',
 					filename: name,
 					extension: extension || undefined,
-					size: (size && humanFileSize(size)) || undefined,
-					useFallback: size > 20971520,
+					size: (size !== undefined && humanFileSize(size)) || undefined,
+					useFallback: size !== undefined && size > PREVIEW_MAX_SIZE,
 					actions,
 					closeAction,
 					src
 				});
 			}
-		} else if (includes(permittedPreviewPanelActions, Action.OpenWithDocs)) {
+		} else if (includes(permittedDisplayerActions, Action.OpenWithDocs)) {
 			// if preview is not supported and document can be opened with docs, open editor
 			openNodeWithDocs(node.id);
 		}
 	}, [
 		$isSupportedByPreview,
-		permittedPreviewPanelActions,
+		permittedDisplayerActions,
 		node,
 		t,
 		documentType,
@@ -332,8 +332,8 @@ export const PreviewPanelActions: React.VFC<PreviewPanelActionsParams> = ({ node
 		]
 	);
 
-	const permittedPreviewPanelPrimaryActionsIconButtons = map(
-		take(permittedPreviewPanelActions, 3),
+	const permittedDisplayerPrimaryActionsIconButtons = map(
+		take(permittedDisplayerActions, 3),
 		(value: Action) => {
 			const item = itemsMap[value];
 			return (
@@ -360,9 +360,9 @@ export const PreviewPanelActions: React.VFC<PreviewPanelActionsParams> = ({ node
 		}
 	);
 
-	const permittedPreviewPanelSecondaryActionsItems = useMemo<DropdownItem[]>(
-		() => buildActionItems(itemsMap, drop(permittedPreviewPanelActions, 3)),
-		[itemsMap, permittedPreviewPanelActions]
+	const permittedDisplayerSecondaryActionsItems = useMemo<DropdownItem[]>(
+		() => buildActionItems(itemsMap, drop(permittedDisplayerActions, 3)),
+		[itemsMap, permittedDisplayerActions]
 	);
 
 	return (
@@ -374,11 +374,11 @@ export const PreviewPanelActions: React.VFC<PreviewPanelActionsParams> = ({ node
 			padding={{ horizontal: 'large', vertical: 'small' }}
 			data-testid="displayer-actions-header"
 		>
-			{permittedPreviewPanelPrimaryActionsIconButtons}
+			{permittedDisplayerPrimaryActionsIconButtons}
 
-			{permittedPreviewPanelSecondaryActionsItems.length > 0 && (
+			{permittedDisplayerSecondaryActionsItems.length > 0 && (
 				<Padding left="extrasmall">
-					<Dropdown placement="bottom-end" items={permittedPreviewPanelSecondaryActionsItems}>
+					<Dropdown placement="bottom-end" items={permittedDisplayerSecondaryActionsItems}>
 						<IconButton size="medium" icon="MoreVertical" onClick={(): void => undefined} />
 					</Dropdown>
 				</Padding>

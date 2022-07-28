@@ -112,7 +112,7 @@ describe('Drag and drop', () => {
 		expect(screen.getByText(uploadedFiles[0].name)).toBeVisible();
 		expect(screen.getByText(uploadedFiles[1].name)).toBeVisible();
 		expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
-			currentFolder.children.length + uploadedFiles.length
+			currentFolder.children.nodes.length + uploadedFiles.length
 		);
 		expect(
 			screen.queryByText(/Drop here your attachments to quick-add them to this folder/m)
@@ -180,8 +180,8 @@ describe('Drag and drop', () => {
 		currentFolder.permissions.can_write_file = true;
 		const destinationFolder = populateFolder();
 		destinationFolder.permissions.can_write_file = true;
-		destinationFolder.parent = { ...currentFolder, children: [] } as Folder;
-		currentFolder.children.push(destinationFolder);
+		destinationFolder.parent = { ...currentFolder, children: { nodes: [] } } as Folder;
+		currentFolder.children.nodes.push(destinationFolder);
 		const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
 		const files: File[] = [];
 		forEach(uploadedFiles, (file) => {
@@ -234,7 +234,7 @@ describe('Drag and drop', () => {
 		);
 		await waitForElementToBeRemoved(snackbar);
 		expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
-			currentFolder.children.length
+			currentFolder.children.nodes.length
 		);
 		expect(screen.queryByTestId('dropzone-overlay')).not.toBeInTheDocument();
 	});
@@ -244,8 +244,8 @@ describe('Drag and drop', () => {
 		currentFolder.permissions.can_write_file = true;
 		const destinationFolder = populateFolder();
 		destinationFolder.permissions.can_write_file = false;
-		destinationFolder.parent = { ...currentFolder, children: [] } as Folder;
-		currentFolder.children.push(destinationFolder);
+		destinationFolder.parent = { ...currentFolder, children: { nodes: [] } } as Folder;
+		currentFolder.children.nodes.push(destinationFolder);
 		const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
 		const files: File[] = [];
 		forEach(uploadedFiles, (file) => {
@@ -296,7 +296,7 @@ describe('Drag and drop', () => {
 		expect(screen.queryByTestId('dropzone-overlay')).not.toBeInTheDocument();
 		expect(screen.queryByText(/Upload occurred/i)).not.toBeInTheDocument();
 		expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
-			currentFolder.children.length
+			currentFolder.children.nodes.length
 		);
 		expect(reqIndex).toBe(0);
 	});
@@ -306,8 +306,8 @@ describe('Drag and drop', () => {
 		currentFolder.permissions.can_write_file = true;
 		const destinationFile = populateFile();
 		destinationFile.permissions.can_write_file = true;
-		destinationFile.parent = { ...currentFolder, children: [] } as Folder;
-		currentFolder.children.push(destinationFile);
+		destinationFile.parent = { ...currentFolder, children: { nodes: [] } } as Folder;
+		currentFolder.children.nodes.push(destinationFile);
 		const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
 		const files: File[] = [];
 		forEach(uploadedFiles, (file) => {
@@ -360,7 +360,7 @@ describe('Drag and drop', () => {
 		expect(screen.getByText(uploadedFiles[0].name)).toBeVisible();
 		expect(screen.getByText(uploadedFiles[1].name)).toBeVisible();
 		expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
-			currentFolder.children.length + uploadedFiles.length
+			currentFolder.children.nodes.length + uploadedFiles.length
 		);
 		expect(
 			screen.queryByText(/Drop here your attachments to quick-add them to this folder/m)
@@ -371,7 +371,7 @@ describe('Drag and drop', () => {
 		const currentFolder = populateFolder(5);
 		currentFolder.permissions.can_write_file = true;
 		currentFolder.permissions.can_write_folder = true;
-		const nodesToDrag = [currentFolder.children[0]] as Node[];
+		const nodesToDrag = [currentFolder.children.nodes[0]] as Node[];
 		forEach(nodesToDrag, (mockedNode) => {
 			mockedNode.permissions.can_write_file = true;
 			mockedNode.permissions.can_write_folder = true;
@@ -380,12 +380,12 @@ describe('Drag and drop', () => {
 		destinationFolder.permissions.can_write_folder = true;
 		destinationFolder.permissions.can_write_file = true;
 		destinationFolder.parent = currentFolder;
-		currentFolder.children.push(destinationFolder);
+		currentFolder.children.nodes.push(destinationFolder);
 		const folderWithoutPermission = populateFolder();
 		folderWithoutPermission.permissions.can_write_folder = false;
 		folderWithoutPermission.permissions.can_write_file = false;
 		folderWithoutPermission.parent = currentFolder;
-		currentFolder.children.push(folderWithoutPermission);
+		currentFolder.children.nodes.push(folderWithoutPermission);
 
 		const mocks = [
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
@@ -472,7 +472,7 @@ describe('Drag and drop', () => {
 		const currentFolder = populateFolder(5);
 		currentFolder.permissions.can_write_file = true;
 		currentFolder.permissions.can_write_folder = true;
-		const nodesToDrag = [currentFolder.children[0]] as Node[];
+		const nodesToDrag = [currentFolder.children.nodes[0]] as Node[];
 		forEach(nodesToDrag, (mockedNode) => {
 			mockedNode.permissions.can_write_file = false;
 			mockedNode.permissions.can_write_folder = false;
@@ -481,12 +481,12 @@ describe('Drag and drop', () => {
 		destinationFolder.permissions.can_write_folder = true;
 		destinationFolder.permissions.can_write_file = true;
 		destinationFolder.parent = currentFolder;
-		currentFolder.children.push(destinationFolder);
+		currentFolder.children.nodes.push(destinationFolder);
 		const folderWithoutPermission = populateFolder();
 		folderWithoutPermission.permissions.can_write_folder = false;
 		folderWithoutPermission.permissions.can_write_file = false;
 		folderWithoutPermission.parent = currentFolder;
-		currentFolder.children.push(folderWithoutPermission);
+		currentFolder.children.nodes.push(folderWithoutPermission);
 
 		const mocks = [
 			mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
@@ -564,7 +564,7 @@ describe('Drag and drop', () => {
 		const currentFolder = populateFolder(5);
 		currentFolder.permissions.can_write_file = true;
 		currentFolder.permissions.can_write_folder = true;
-		const nodesToDrag = [...currentFolder.children] as Node[];
+		const nodesToDrag = [...currentFolder.children.nodes] as Node[];
 		forEach(nodesToDrag, (mockedNode) => {
 			mockedNode.permissions.can_write_file = true;
 			mockedNode.permissions.can_write_folder = true;
@@ -573,7 +573,7 @@ describe('Drag and drop', () => {
 		destinationFolder.permissions.can_write_folder = true;
 		destinationFolder.permissions.can_write_file = true;
 		destinationFolder.parent = currentFolder;
-		currentFolder.children.push(destinationFolder);
+		currentFolder.children.nodes.push(destinationFolder);
 
 		const mocks = [
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
@@ -650,7 +650,7 @@ describe('Drag and drop', () => {
 		path[1].permissions.can_write_file = false;
 		path[1].owner = owner;
 
-		const nodesToDrag = [currentFolder.children[0]] as Node[];
+		const nodesToDrag = [currentFolder.children.nodes[0]] as Node[];
 		forEach(nodesToDrag, (mockedNode) => {
 			mockedNode.permissions.can_write_file = true;
 			mockedNode.permissions.can_write_folder = true;

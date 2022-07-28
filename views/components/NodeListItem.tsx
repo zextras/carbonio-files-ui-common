@@ -12,6 +12,7 @@ import debounce from 'lodash/debounce';
 import includes from 'lodash/includes';
 import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { useActiveNode } from '../../../hooks/useActiveNode';
@@ -19,9 +20,11 @@ import { useSendViaMail } from '../../../hooks/useSendViaMail';
 import useUserInfo from '../../../hooks/useUserInfo';
 import {
 	DISPLAYER_TABS,
+	DOUBLE_CLICK_DELAY,
 	LIST_ITEM_AVATAR_HEIGHT,
 	LIST_ITEM_HEIGHT,
 	LIST_ITEM_HEIGHT_COMPACT,
+	PREVIEW_MAX_SIZE,
 	PREVIEW_TYPE,
 	ROOTS
 } from '../../constants';
@@ -38,12 +41,18 @@ import {
 	humanFileSize,
 	openNodeWithDocs,
 	getDocumentPreviewSrc,
-	isSupportedByPreview
+	isSupportedByPreview,
+	isSearchView
 } from '../../utils/utils';
 import { ContextualMenu } from './ContextualMenu';
 import { NodeAvatarIcon } from './NodeAvatarIcon';
 import { NodeHoverBar } from './NodeHoverBar';
-import { HoverBarContainer, HoverContainer, ListItemContainer } from './StyledComponents';
+import {
+	FlexContainer,
+	HoverBarContainer,
+	HoverContainer,
+	ListItemContainer
+} from './StyledComponents';
 
 const CustomText = styled(Text)`
 	text-transform: uppercase;
@@ -133,13 +142,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 	const [t] = useTranslation();
 	const { createPreview } = useContext(PreviewsManagerContext);
 	const { setActiveNode } = useActiveNode();
-
-	const usePdfPreviewFallback = useMemo(() => {
-		if (size) {
-			return size > 20971520;
-		}
-		return true;
-	}, [size]);
+	const location = useLocation();
 	const userInfo = useUserInfo();
 	const [isContextualMenuActive, setIsContextualMenuActive] = useState(false);
 	const selectIdCallback = useCallback(
@@ -234,8 +237,8 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 							previewType: 'pdf',
 							filename: name,
 							extension: extension || undefined,
-							size: (size && humanFileSize(size)) || undefined,
-							useFallback: usePdfPreviewFallback,
+							size: (size !== undefined && humanFileSize(size)) || undefined,
+							useFallback: size !== undefined && size > PREVIEW_MAX_SIZE,
 							actions,
 							closeAction,
 							src
@@ -263,8 +266,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 			t,
 			version,
 			setActiveNode,
-			documentType,
-			usePdfPreviewFallback
+			documentType
 		]
 	);
 
@@ -403,7 +405,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 				(event: React.SyntheticEvent) => {
 					setActive(event);
 				},
-				200,
+				DOUBLE_CLICK_DELAY,
 				{ leading: false, trailing: true }
 			),
 		[setActive]
@@ -522,6 +524,11 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 												<Icon icon="ArrowCircleRight" customColor="#FFB74D" disabled={disabled} />
 											</Padding>
 										)}
+										{trashed && isSearchView(location) && (
+											<Padding left="extrasmall">
+												<Icon icon="Trash2Outline" disabled={disabled} />
+											</Padding>
+										)}
 										<Padding left="extrasmall">
 											<Text size="extrasmall" color="gray1" disabled={disabled}>
 												{formatDate(updatedAt, undefined, userInfo.zimbraPrefTimeZoneId)}
@@ -538,8 +545,8 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 									mainAlignment="flex-start"
 								>
 									<Container
-										flexGrow={1}
 										flexShrink={0}
+										flexGrow={1}
 										flexBasis="auto"
 										mainAlignment="flex-start"
 										orientation="horizontal"
@@ -561,8 +568,8 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 										<Container
 											width="fit"
 											minWidth={0}
-											flexGrow={1}
 											flexShrink={1}
+											flexGrow={1}
 											flexBasis="auto"
 											orientation="horizontal"
 											mainAlignment="flex-end"

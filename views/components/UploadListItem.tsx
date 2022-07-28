@@ -197,7 +197,11 @@ export const UploadListItem: React.VFC<UploadListItemProps> = React.memo(
 								padding={{ vertical: 'extrasmall' }}
 								mainAlignment="flex-end"
 							>
-								<Text size="small">{percentage}%</Text>
+								<Text size="small">
+									{status === UploadStatus.QUEUED
+										? t('uploadItem.queued', 'Queued')
+										: `${percentage}%`}
+								</Text>
 								<Padding left="extrasmall">{statusIcon}</Padding>
 							</Container>
 							<Container
