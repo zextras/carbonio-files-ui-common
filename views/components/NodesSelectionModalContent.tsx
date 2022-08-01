@@ -174,6 +174,13 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 		[hideCreateFolderInput]
 	);
 
+	useEffect(
+		() => () => {
+			hideCreateFolderInputDebounced.cancel();
+		},
+		[hideCreateFolderInputDebounced]
+	);
+
 	const checkSelectable = useCallback(
 		(node: NodeWithMetadata | RootListItemType) =>
 			// folders and roots are never disabled since they must be navigable
