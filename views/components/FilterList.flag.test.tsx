@@ -175,7 +175,7 @@ describe('Filter List', () => {
 			const unflagAction = await screen.findByTestId(iconRegexp.unflag);
 			userEvent.click(unflagAction);
 			await waitForElementToBeRemoved(screen.queryByText(firstPage[0].name));
-			const snackbar = await screen.findByText(/success/i);
+			const snackbar = await screen.findByText(/item unflagged successfully/i);
 			await screen.findByText(secondPage[0].name);
 			await waitForElementToBeRemoved(snackbar);
 			expect(screen.getByText(secondPage[0].name)).toBeVisible();

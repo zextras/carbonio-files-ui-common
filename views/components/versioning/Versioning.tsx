@@ -105,6 +105,22 @@ export const Versioning: React.VFC<VersioningProps> = ({ node }) => {
 		[configs, node.permissions.can_write_file, versions.length]
 	);
 
+	const cloneVersionDisabledTooltip = useMemo(() => {
+		if (!node.permissions.can_write_file) {
+			return t(
+				'displayer.version.actions.tooltip.disabledByPermission',
+				"You don't have the correct permissions"
+			);
+		}
+		if (versions.length >= Number(configs[CONFIGS.MAX_VERSIONS])) {
+			return t(
+				'displayer.version.actions.tooltip.disabledByMaxVersion',
+				'You have reached the maximum number of versions'
+			);
+		}
+		return undefined;
+	}, [configs, node.permissions.can_write_file, t, versions.length]);
+
 	const numberOfVersionsWithKeep = useMemo(
 		() => filter(versions, (version) => version && version.keep_forever).length,
 		[versions]
@@ -120,19 +136,77 @@ export const Versioning: React.VFC<VersioningProps> = ({ node }) => {
 		[configs, node.permissions.can_write_file, numberOfVersionsWithKeep]
 	);
 
+	const keepVersionDisabledTooltip = useMemo(() => {
+		if (!node.permissions.can_write_file) {
+			return t(
+				'displayer.version.actions.tooltip.disabledByPermission',
+				"You don't have the correct permissions"
+			);
+		}
+		if (numberOfVersionsWithKeep >= Number(configs[CONFIGS.MAX_KEEP_VERSIONS])) {
+			return t(
+				'displayer.version.actions.tooltip.disabledByMaxKeepVersion',
+				'You have reached the maximum number of versions to keep forever'
+			);
+		}
+		return undefined;
+	}, [configs, node.permissions.can_write_file, numberOfVersionsWithKeep, t]);
+
 	const canDeleteVersion = useCallback<(version: Version) => boolean>(
 		(version) => !version.keep_forever && node.permissions.can_write_file,
 		[node]
 	);
+
+	const deleteDisabledTooltip = useMemo(
+		() => (version: Version) => {
+			if (!node.permissions.can_write_file) {
+				return t(
+					'displayer.version.actions.tooltip.disabledByPermission',
+					"You don't have the correct permissions"
+				);
+			}
+			if (version.keep_forever) {
+				return t(
+					'displayer.version.actions.tooltip.disabledByVersionKeepForever',
+					'Versions marked to be kept forever cannot be deleted'
+				);
+			}
+			if (lastVersion.length > 0 && version.version === lastVersion[0]?.version) {
+				return t(
+					'displayer.version.actions.tooltip.disabledByDeleteCurrent',
+					'Current version cannot be deleted'
+				);
+			}
+
+			return undefined;
+		},
+		[lastVersion, node.permissions.can_write_file, t]
+	);
+
+	const $canOpenVersionWithDocs = useMemo(() => canOpenVersionWithDocs([node]), [node]);
+
+	const openWithDocsDisabledTooltip = useMemo(() => {
+		if (!$canOpenVersionWithDocs) {
+			return t(
+				'displayer.version.actions.tooltip.disabledByDocs',
+				'This version cannot be opened by the online editor'
+			);
+		}
+		return undefined;
+	}, [$canOpenVersionWithDocs, t]);
 
 	const lastVersionComponent = map(lastVersion, (version) => (
 		<VersionRow
 			key={`version${version.version}`}
 			background={'gray6'}
 			canCloneVersion={canCloneVersion}
+			cloneVersionTooltip={cloneVersionDisabledTooltip}
 			canDelete={false}
+			deleteTooltip={deleteDisabledTooltip(version)}
 			canKeepVersion={canKeepVersion(version)}
-			canOpenWithDocs={canOpenVersionWithDocs([node])}
+			keepVersionTooltip={keepVersionDisabledTooltip}
+			canOpenWithDocs={$canOpenVersionWithDocs}
+			openWithDocsTooltip={openWithDocsDisabledTooltip}
 			clonedFromVersion={version.cloned_from_version || undefined}
 			cloneUpdatedAt={
 				version.cloned_from_version
@@ -158,9 +232,13 @@ export const Versioning: React.VFC<VersioningProps> = ({ node }) => {
 			key={`version${version.version}`}
 			background={'gray6'}
 			canCloneVersion={canCloneVersion}
+			cloneVersionTooltip={cloneVersionDisabledTooltip}
 			canDelete={canDeleteVersion(version)}
+			deleteTooltip={deleteDisabledTooltip(version)}
 			canKeepVersion={canKeepVersion(version)}
-			canOpenWithDocs={canOpenVersionWithDocs([node])}
+			keepVersionTooltip={keepVersionDisabledTooltip}
+			canOpenWithDocs={$canOpenVersionWithDocs}
+			openWithDocsTooltip={openWithDocsDisabledTooltip}
 			clonedFromVersion={version.cloned_from_version || undefined}
 			cloneUpdatedAt={
 				version.cloned_from_version
@@ -196,9 +274,13 @@ export const Versioning: React.VFC<VersioningProps> = ({ node }) => {
 			key={`version${version.version}`}
 			background={'gray6'}
 			canCloneVersion={canCloneVersion}
+			cloneVersionTooltip={cloneVersionDisabledTooltip}
 			canDelete={canDeleteVersion(version)}
+			deleteTooltip={deleteDisabledTooltip(version)}
 			canKeepVersion={canKeepVersion(version)}
-			canOpenWithDocs={canOpenVersionWithDocs([node])}
+			keepVersionTooltip={keepVersionDisabledTooltip}
+			canOpenWithDocs={$canOpenVersionWithDocs}
+			openWithDocsTooltip={openWithDocsDisabledTooltip}
 			clonedFromVersion={version.cloned_from_version || undefined}
 			cloneUpdatedAt={
 				version.cloned_from_version
@@ -237,7 +319,8 @@ export const Versioning: React.VFC<VersioningProps> = ({ node }) => {
 					<Text style={{ lineHeight: '21px' }} weight="light" overflow="break-word" size="small">
 						{t(
 							'displayer.version.mainHint',
-							'You can manually delete any file version or restore one as the current version. Select one or more versions that you want to keep forever.'
+							'Files saves the last {{maxVersions}} versions of your files. You can manually delete any file version or restore one as the current version. Select one or more versions that you want to keep forever.',
+							{ replace: { maxVersions: configs[CONFIGS.MAX_VERSIONS] } }
 						)}
 					</Text>
 				</Padding>

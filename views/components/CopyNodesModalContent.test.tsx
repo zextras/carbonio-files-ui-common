@@ -42,7 +42,8 @@ import {
 	buildBreadCrumbRegExp,
 	render,
 	selectNodes,
-	triggerLoadMore
+	triggerLoadMore,
+	waitForNetworkResponse
 } from '../../utils/testUtils';
 import { CopyNodesModalContent } from './CopyNodesModalContent';
 
@@ -590,24 +591,21 @@ describe('Copy Nodes Modal', () => {
 		);
 		userEvent.click(screen.getByText('Files'));
 		await screen.findByText('Home');
+		await waitForNetworkResponse();
+		const confirmButton = screen.getByRole('button', { name: actionRegexp.copy });
 		expect(screen.getByText('Home')).toBeVisible();
 		expect(screen.getByText(/shared with me/i)).toBeVisible();
-		const confirmButton = screen.getByRole('button', { name: actionRegexp.copy });
 		expect(confirmButton).toHaveAttribute('disabled');
-		act(() => {
-			userEvent.hover(confirmButton, undefined);
-		});
-		await screen.findByText(/you can't perform this action here/i);
-		expect(screen.getByText(/you can't perform this action here/i)).toBeVisible();
+		userEvent.hover(confirmButton);
+		const tooltip = await screen.findByText(/you can't perform this action here/i);
+		expect(tooltip).toBeVisible();
 		act(() => {
 			userEvent.unhover(confirmButton);
 		});
-		expect(screen.queryByText(/you can't perform this action here/i)).not.toBeInTheDocument();
+		expect(tooltip).not.toBeInTheDocument();
 		userEvent.click(screen.getByText('Home'));
 		expect(confirmButton).not.toHaveAttribute('disabled');
-		act(() => {
-			userEvent.hover(confirmButton);
-		});
+		userEvent.hover(confirmButton);
 		expect(screen.queryByText(/you can't perform this action here/i)).not.toBeInTheDocument();
 		act(() => {
 			userEvent.click(confirmButton);
