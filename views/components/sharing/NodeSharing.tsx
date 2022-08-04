@@ -30,6 +30,7 @@ import { isFile } from '../../../utils/ActionsFactory';
 import { getChipLabel } from '../../../utils/utils';
 import { AddSharing } from './AddSharing';
 import { EditShareChip } from './EditShareChip';
+import { InvitationLink } from './invitationLink/InvitationLink';
 import { PublicLink } from './publicLink/PublicLink';
 
 const MainContainer = styled(Container)`
@@ -51,7 +52,7 @@ const CustomText = styled(Text)`
 `;
 
 interface NodeSharingProps {
-	node: Pick<Node, '__typename' | 'id' | 'permissions' | 'owner'> & {
+	node: Pick<Node, '__typename' | 'id' | 'permissions' | 'owner' | 'name'> & {
 		shares?: Array<
 			// eslint-disable-next-line camelcase
 			| (Pick<Share, '__typename'> & { shared_target?: Pick<SharedTarget, '__typename' | 'id'> })
@@ -178,6 +179,16 @@ export const NodeSharing: React.VFC<NodeSharingProps> = ({ node }) => {
 				{node.permissions.can_share && <Divider />}
 				{node.permissions.can_share && <AddSharing node={node} />}
 			</Container>
+			{node.permissions.can_share && (
+				<InvitationLink
+					nodeId={node.id}
+					nodeName={node.name}
+					nodeTypename={node.__typename}
+					canWrite={
+						isFile(node) ? node.permissions.can_write_file : node.permissions.can_write_folder
+					}
+				/>
+			)}
 			{isFile(node) && node.permissions.can_share && (
 				<PublicLink
 					nodeId={node.id}
