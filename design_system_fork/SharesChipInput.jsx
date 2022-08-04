@@ -13,8 +13,10 @@ import findIndex from 'lodash/findIndex';
 import map from 'lodash/map';
 import noop from 'lodash/noop';
 import slice from 'lodash/slice';
+import { useTranslation } from 'react-i18next';
 import styled, { css } from 'styled-components';
 
+import { getChipLabel } from '../utils/utils';
 import { AddShareChip } from '../views/components/sharing/AddShareChip';
 import { useKeyboard, getKeyboardPreset } from './useKeyboard';
 
@@ -100,9 +102,12 @@ function reducer(state, action) {
 		case 'reset':
 			return action.value;
 		case 'update': {
-			const idx = findIndex(state, (item) => item.id === action.id);
-			state[idx] = { ...state[idx], ...action.updatedFields };
-			return [...state];
+			if (action.id) {
+				const idx = findIndex(state, (item) => item.id === action.id);
+				state[idx] = { ...state[idx], ...action.updatedFields };
+				return [...state];
+			}
+			return state;
 		}
 		default:
 			throw new Error();
@@ -118,7 +123,7 @@ export const ShareChipInput = React.forwardRef(function ChipInputFn(
 		/** Callback to call when Input's value changes */
 		onChange = undefined,
 		/** Chip label getter, receives the single value item as prop */
-		getChipLabel = (item) => item.value,
+		getChipLabel: chipLabelFactory = (item) => item.value,
 		/** name of the field to use as value */
 		valueKey,
 		/** Input's default value */
@@ -135,6 +140,7 @@ export const ShareChipInput = React.forwardRef(function ChipInputFn(
 	},
 	ref
 ) {
+	const [t] = useTranslation();
 	const [contacts, dispatch] = useReducer(reducer, defaultValue ?? value);
 	const [active, setActive] = useState(false);
 	const [hasFocus, setHasFocus] = useState(false);
@@ -189,7 +195,7 @@ export const ShareChipInput = React.forwardRef(function ChipInputFn(
 
 	const onChipClose = useCallback(
 		(index, ev) => {
-			ev.stopPropagation();
+			ev && ev.stopPropagation();
 			dispatch({ type: 'pop', index });
 			contentEditableInput.current.focus();
 		},
@@ -229,7 +235,7 @@ export const ShareChipInput = React.forwardRef(function ChipInputFn(
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [contacts]);
 
-	const labels = useMemo(() => map(contacts, getChipLabel), [contacts, getChipLabel]);
+	const labels = useMemo(() => map(contacts, chipLabelFactory), [contacts, chipLabelFactory]);
 	const setFocus = useCallback(() => contentEditableInput.current.focus(), [contentEditableInput]);
 	const onKeyUp = useCallback(
 		(ev) => {
@@ -269,11 +275,19 @@ export const ShareChipInput = React.forwardRef(function ChipInputFn(
 						{map(contacts, (item, index) => (
 							<AddShareChip
 								key={`${index}-${item.id}`}
+								avatarLabel={getChipLabel(item)}
 								label={labels[index]}
 								onClose={(ev) => onChipClose(index, ev)}
 								onUpdate={onChipUpdate}
 								value={item}
-								error={item.id === undefined}
+								error={
+									item.id === undefined
+										? t(
+												'share.chip.tooltip.error.contactNotFound',
+												'This email address is not associated to a Carbonio user'
+										  )
+										: false
+								}
 							/>
 						))}
 						<InputContainer>
