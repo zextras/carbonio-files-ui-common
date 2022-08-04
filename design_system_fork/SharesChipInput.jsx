@@ -102,9 +102,12 @@ function reducer(state, action) {
 		case 'reset':
 			return action.value;
 		case 'update': {
-			const idx = findIndex(state, (item) => item.id === action.id);
-			state[idx] = { ...state[idx], ...action.updatedFields };
-			return [...state];
+			if (action.id) {
+				const idx = findIndex(state, (item) => item.id === action.id);
+				state[idx] = { ...state[idx], ...action.updatedFields };
+				return [...state];
+			}
+			return state;
 		}
 		default:
 			throw new Error();

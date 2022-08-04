@@ -58,6 +58,7 @@ export const AddShareChip: React.FC<AddShareChipProps> = ({
 	/** Chip update function */
 	onUpdate,
 	onClose,
+	error,
 	/** Accept all Chip props */
 	...rest
 }) => {
@@ -111,34 +112,36 @@ export const AddShareChip: React.FC<AddShareChipProps> = ({
 
 	const actions: Array<ChipActionsType> = useMemo(() => {
 		const icons: Array<ChipActionsType> = [];
-		if (value.role === Role.Viewer) {
-			icons.push({
-				icon: 'EyeOutline',
-				id: 'EyeOutline',
-				type: 'button',
-				color: 'gray0',
-				label: editShareTooltip,
-				onClick: openPermissionsPopover
-			});
-		} else {
-			icons.push({
-				icon: 'Edit2Outline',
-				id: 'Edit2Outline',
-				type: 'button',
-				color: 'gray0',
-				label: editShareTooltip,
-				onClick: openPermissionsPopover
-			});
-		}
-		if (value.sharingAllowed) {
-			icons.push({
-				icon: 'Share',
-				id: 'Share',
-				type: 'button',
-				color: 'gray0',
-				label: editShareTooltip,
-				onClick: openPermissionsPopover
-			});
+		if (!error) {
+			if (value.role === Role.Viewer) {
+				icons.push({
+					icon: 'EyeOutline',
+					id: 'EyeOutline',
+					type: 'button',
+					color: 'gray0',
+					label: editShareTooltip,
+					onClick: openPermissionsPopover
+				});
+			} else {
+				icons.push({
+					icon: 'Edit2Outline',
+					id: 'Edit2Outline',
+					type: 'button',
+					color: 'gray0',
+					label: editShareTooltip,
+					onClick: openPermissionsPopover
+				});
+			}
+			if (value.sharingAllowed) {
+				icons.push({
+					icon: 'Share',
+					id: 'Share',
+					type: 'button',
+					color: 'gray0',
+					label: editShareTooltip,
+					onClick: openPermissionsPopover
+				});
+			}
 		}
 		if (onClose) {
 			icons.push({
@@ -153,6 +156,7 @@ export const AddShareChip: React.FC<AddShareChipProps> = ({
 		return icons;
 	}, [
 		editShareTooltip,
+		error,
 		onClose,
 		openPermissionsPopover,
 		removeShareTooltip,
@@ -173,6 +177,7 @@ export const AddShareChip: React.FC<AddShareChipProps> = ({
 				popoverOpen={popoverOpen}
 				openPopoverOnClick={false}
 				onChange={updatePermissionsPopover}
+				error={error}
 				{...rest}
 			>
 				{(_closePopover: () => void): JSX.Element => (
