@@ -48,7 +48,7 @@ export const ChipWithPopover = React.forwardRef<HTMLDivElement, ChipWithPopoverP
 		ref
 	) {
 		const innerRef = useCombinedRefs<HTMLDivElement>(ref);
-		const [open, setOpen] = useState(false);
+		const [open, setOpen] = useState(popoverOpen);
 
 		useEffect(() => {
 			setOpen(popoverOpen);

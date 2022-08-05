@@ -250,8 +250,8 @@ describe('Node Sharing', () => {
 			expect(screen.queryByTestId('icon: Share')).not.toBeInTheDocument();
 			// open on chip to open popover
 			userEvent.click(screen.getAllByTestId('icon: EyeOutline')[0]);
+			await screen.findByText(/edit .+ collaboration/i);
 			await screen.findByText(/viewer/i);
-			await screen.findByText(/edit \w+'s collaboration/i);
 			expect(screen.getByText(/viewer/i)).toBeVisible();
 			expect(screen.getByText(/editor/i)).toBeVisible();
 			expect(screen.getByText(/sharing allowed/i)).toBeVisible();

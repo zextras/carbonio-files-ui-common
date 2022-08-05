@@ -47,13 +47,16 @@ export const AddShareChip = React.forwardRef<HTMLDivElement, Omit<ShareChip, 'la
 		{
 			/** Chip value */
 			value,
-			onClose /** Accept all Chip props */,
+			onClose,
+			/** Accept all Chip props */
 			...rest
 		},
 		ref
 	) {
 		const [t] = useTranslation();
 		const [popoverOpen, setPopoverOpen] = useState(false);
+		const error = useMemo(() => value.id === undefined, [value.id]);
+
 		const switchSharingAllowed = (): void => {
 			value.onUpdate(value.id, { sharingAllowed: !value.sharingAllowed });
 		};
@@ -99,36 +102,38 @@ export const AddShareChip = React.forwardRef<HTMLDivElement, Omit<ShareChip, 'la
 			[t, value]
 		);
 
-		const actions = useMemo<ChipAction[]>(() => {
-			const icons: ChipAction[] = [];
-			if (value.role === Role.Viewer) {
-				icons.push({
-					icon: 'EyeOutline',
-					id: 'EyeOutline',
-					type: 'button',
-					color: 'gray0',
-					label: editShareTooltip,
-					onClick: openPermissionsPopover
-				});
-			} else {
-				icons.push({
-					icon: 'Edit2Outline',
-					id: 'Edit2Outline',
-					type: 'button',
-					color: 'gray0',
-					label: editShareTooltip,
-					onClick: openPermissionsPopover
-				});
-			}
-			if (value.sharingAllowed) {
-				icons.push({
-					icon: 'Share',
-					id: 'Share',
-					type: 'button',
-					color: 'gray0',
-					label: editShareTooltip,
-					onClick: openPermissionsPopover
-				});
+		const actions: Array<ChipAction> = useMemo(() => {
+			const icons: Array<ChipAction> = [];
+			if (!error) {
+				if (value.role === Role.Viewer) {
+					icons.push({
+						icon: 'EyeOutline',
+						id: 'EyeOutline',
+						type: 'button',
+						color: 'gray0',
+						label: editShareTooltip,
+						onClick: openPermissionsPopover
+					});
+				} else {
+					icons.push({
+						icon: 'Edit2Outline',
+						id: 'Edit2Outline',
+						type: 'button',
+						color: 'gray0',
+						label: editShareTooltip,
+						onClick: openPermissionsPopover
+					});
+				}
+				if (value.sharingAllowed) {
+					icons.push({
+						icon: 'Share',
+						id: 'Share',
+						type: 'button',
+						color: 'gray0',
+						label: editShareTooltip,
+						onClick: openPermissionsPopover
+					});
+				}
 			}
 			if (onClose) {
 				icons.push({
@@ -143,6 +148,7 @@ export const AddShareChip = React.forwardRef<HTMLDivElement, Omit<ShareChip, 'la
 			return icons;
 		}, [
 			editShareTooltip,
+			error,
 			onClose,
 			openPermissionsPopover,
 			removeShareTooltip,
@@ -166,7 +172,7 @@ export const AddShareChip = React.forwardRef<HTMLDivElement, Omit<ShareChip, 'la
 				label={<ShareChipLabel contact={value} showTooltip={value.id !== undefined} />}
 				background={(value.id !== undefined && 'gray2') || undefined}
 				error={
-					value.id === undefined &&
+					error &&
 					t(
 						'share.chip.tooltip.error.contactNotFound',
 						'This email address is not associated to a Carbonio user'
