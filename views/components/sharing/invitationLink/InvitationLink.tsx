@@ -54,20 +54,20 @@ export const InvitationLink: React.FC<InvitationLinkProps> = ({
 
 	const readAndShareInvitationLink = useMemo(() => {
 		if (getInvitationLinksQueryData?.getNode?.invitation_links) {
-			return find(getInvitationLinksQueryData?.getNode?.invitation_links, [
-				'permission',
-				SharePermission.ReadAndShare
-			]);
+			return find(
+				getInvitationLinksQueryData?.getNode?.invitation_links,
+				(link) => link?.permission === SharePermission.ReadAndShare
+			);
 		}
 		return undefined;
 	}, [getInvitationLinksQueryData]);
 
 	const readWriteAndShareInvitationLink = useMemo(() => {
 		if (getInvitationLinksQueryData?.getNode?.invitation_links) {
-			return find(getInvitationLinksQueryData?.getNode?.invitation_links, [
-				'permission',
-				SharePermission.ReadWriteAndShare
-			]);
+			return find(
+				getInvitationLinksQueryData?.getNode?.invitation_links,
+				(link) => link?.permission === SharePermission.ReadWriteAndShare
+			);
 		}
 		return undefined;
 	}, [getInvitationLinksQueryData]);
@@ -82,65 +82,9 @@ export const InvitationLink: React.FC<InvitationLinkProps> = ({
 		__typename: nodeTypename
 	});
 
-	const createReadAndShareInvitationLinkCallback = useCallback(() => {
-		createInvitationLink(SharePermission.ReadAndShare).then(({ data }) => {
-			if (data) {
-				createSnackbar({
-					key: new Date().toLocaleString(),
-					type: 'info',
-					label: t(
-						'snackbar.invitationLink.newInvitationLinkGenerated.label',
-						'New Invitation Link generated'
-					),
-					replace: true,
-					onActionClick: () => {
-						copyToClipboard(data.createInvitationLink.url as string).then(() => {
-							createSnackbar({
-								key: new Date().toLocaleString(),
-								type: 'info',
-								label: t('snackbar.invitationLink.copyInvitationLink', 'Invitation link copied'),
-								replace: true,
-								hideButton: true
-							});
-						});
-					},
-					actionLabel: t('snackbar.invitationLink.actionLabel.copyLink', 'Copy Link')
-				});
-			}
-		});
-	}, [createInvitationLink, createSnackbar, t]);
-
-	const createReadWriteAndShareInvitationLinkCallback = useCallback(() => {
-		createInvitationLink(SharePermission.ReadWriteAndShare).then(({ data }) => {
-			if (data) {
-				createSnackbar({
-					key: new Date().toLocaleString(),
-					type: 'info',
-					label: t(
-						'snackbar.invitationLink.newInvitationLinkGenerated.label',
-						'New Invitation Link generated'
-					),
-					replace: true,
-					onActionClick: () => {
-						copyToClipboard(data.createInvitationLink.url as string).then(() => {
-							createSnackbar({
-								key: new Date().toLocaleString(),
-								type: 'info',
-								label: t('snackbar.invitationLink.copyInvitationLink', 'Invitation link copied'),
-								replace: true,
-								hideButton: true
-							});
-						});
-					},
-					actionLabel: t('snackbar.invitationLink.actionLabel.copyLink', 'Copy Link')
-				});
-			}
-		});
-	}, [createInvitationLink, createSnackbar, t]);
-
-	const copyInvitationUrl = useCallback(
-		(_event) => {
-			copyToClipboard(_event.target.textContent).then(() => {
+	const copyLinkToClipboard = useCallback(
+		(link: string) => {
+			copyToClipboard(link).then(() => {
 				createSnackbar({
 					key: new Date().toLocaleString(),
 					type: 'info',
@@ -153,6 +97,42 @@ export const InvitationLink: React.FC<InvitationLinkProps> = ({
 		[createSnackbar, t]
 	);
 
+	const createCallback = useCallback(
+		({ data }) => {
+			if (data) {
+				createSnackbar({
+					key: new Date().toLocaleString(),
+					type: 'info',
+					label: t(
+						'snackbar.invitationLink.newInvitationLinkGenerated.label',
+						'New Invitation Link generated'
+					),
+					replace: true,
+					onActionClick: () => {
+						copyLinkToClipboard(data.createInvitationLink.url);
+					},
+					actionLabel: t('snackbar.invitationLink.actionLabel.copyLink', 'Copy Link')
+				});
+			}
+		},
+		[copyLinkToClipboard, createSnackbar, t]
+	);
+
+	const createReadAndShareInvitationLinkCallback = useCallback(() => {
+		createInvitationLink(SharePermission.ReadAndShare).then(createCallback);
+	}, [createCallback, createInvitationLink]);
+
+	const createReadWriteAndShareInvitationLinkCallback = useCallback(() => {
+		createInvitationLink(SharePermission.ReadWriteAndShare).then(createCallback);
+	}, [createCallback, createInvitationLink]);
+
+	const copyInvitationUrl = useCallback(
+		(event) => {
+			copyLinkToClipboard(event.target.textContent);
+		},
+		[copyLinkToClipboard]
+	);
+
 	const openDeleteModal = useCallback(
 		(linkId: string) => {
 			const closeModal = createModal({
@@ -162,8 +142,11 @@ export const InvitationLink: React.FC<InvitationLinkProps> = ({
 				confirmLabel: t('modal.revokeInvitationLink.button.confirm', 'Revoke'),
 				confirmColor: 'error',
 				onConfirm: () => {
-					deleteInvitationsLinks([linkId]);
-					closeModal();
+					deleteInvitationsLinks([linkId]).then(({ data }) => {
+						if (data) {
+							closeModal();
+						}
+					});
 				},
 				showCloseIcon: true,
 				onClose: () => {
