@@ -18,6 +18,7 @@ import {
 	DistributionList,
 	File as FilesFile,
 	Folder,
+	InvitationLink,
 	Link,
 	Maybe,
 	Node,
@@ -153,7 +154,8 @@ function populateNodeFields(type?: NodeType, id?: string, name?: string): Node {
 		parent: null,
 		share: null,
 		shares: [],
-		links: []
+		links: [],
+		invitation_links: []
 	};
 }
 
@@ -417,6 +419,22 @@ export function populateLink(node: Node): Link {
 			faker.date.future().getTime()
 		]),
 		description: faker.helpers.arrayElement([null, faker.lorem.sentence()]),
+		url: faker.internet.url(),
+		node
+	};
+}
+
+export function populateInvitationLink(
+	node: Node,
+	sharePermission?: SharePermission
+): InvitationLink {
+	return {
+		permission:
+			sharePermission ||
+			faker.helpers.arrayElement([SharePermission.ReadAndShare, SharePermission.ReadWriteAndShare]),
+		__typename: 'InvitationLink',
+		id: faker.datatype.uuid(),
+		created_at: faker.date.recent().getTime(),
 		url: faker.internet.url(),
 		node
 	};

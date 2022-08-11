@@ -18,7 +18,9 @@ import {
 import CLONE_VERSION from '../graphql/mutations/cloneVersion.graphql';
 import COPY_NODES from '../graphql/mutations/copyNodes.graphql';
 import CREATE_FOLDER from '../graphql/mutations/createFolder.graphql';
+import CREATE_INVITATION_LINK from '../graphql/mutations/createInvitationLink.graphql';
 import CREATE_SHARE from '../graphql/mutations/createShare.graphql';
+import DELETE_INVITATION_LINKS from '../graphql/mutations/deleteInvitationLinks.graphql';
 import DELETE_NODES from '../graphql/mutations/deleteNodes.graphql';
 import DELETE_SHARE from '../graphql/mutations/deleteShare.graphql';
 import DELETE_VERSIONS from '../graphql/mutations/deleteVersions.graphql';
@@ -37,6 +39,7 @@ import GET_BASE_NODE from '../graphql/queries/getBaseNode.graphql';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import GET_CONFIGS from '../graphql/queries/getConfigs.graphql';
 import GET_NODE from '../graphql/queries/getNode.graphql';
+import GET_NODE_INVITATION_LINKS from '../graphql/queries/getNodeInvitationLinks.graphql';
 import GET_NODE_LINKS from '../graphql/queries/getNodeLinks.graphql';
 import GET_PARENT from '../graphql/queries/getParent.graphql';
 import GET_PATH from '../graphql/queries/getPath.graphql';
@@ -110,7 +113,14 @@ import {
 	GetConfigsQuery,
 	GetConfigsQueryVariables,
 	GetAccountsByEmailQueryVariables,
-	GetAccountsByEmailQuery
+	GetAccountsByEmailQuery,
+	GetNodeInvitationLinksQueryVariables,
+	GetNodeInvitationLinksQuery,
+	InvitationLink,
+	CreateInvitationLinkMutationVariables,
+	CreateInvitationLinkMutation,
+	DeleteInvitationLinksMutationVariables,
+	DeleteInvitationLinksMutation
 } from '../types/graphql/types';
 
 type Id = string;
@@ -139,6 +149,8 @@ type MockVariablePossibleType =
 	| GetAccountByEmailQueryVariables
 	| GetAccountsByEmailQueryVariables
 	| GetNodeLinksQueryVariables
+	| GetNodeInvitationLinksQueryVariables
+	| DeleteInvitationLinksMutationVariables
 	| DeleteVersionsMutationVariables
 	| GetVersionsQueryVariables;
 
@@ -717,6 +729,70 @@ export function mockGetNodeLinks(
 					...node,
 					links: []
 				}
+			}
+		}
+	};
+}
+
+/**
+ * Get Node Links mock
+ */
+export function mockGetNodeInvitationLinks(
+	variables: GetNodeInvitationLinksQueryVariables,
+	node: Node,
+	invitationLinks?: Array<Maybe<InvitationLink>>
+): Mock<GetNodeInvitationLinksQuery, GetNodeInvitationLinksQueryVariables> {
+	return {
+		request: {
+			query: GET_NODE_INVITATION_LINKS,
+			variables
+		},
+		result: {
+			data: {
+				getNode: {
+					...node,
+					invitation_links: invitationLinks || []
+				}
+			}
+		}
+	};
+}
+
+/**
+ * Create invitation link mock
+ */
+export function mockCreateInvitationLink(
+	variables: CreateInvitationLinkMutationVariables,
+	createInvitationLink: InvitationLink
+): Mock<CreateInvitationLinkMutation, CreateInvitationLinkMutationVariables> {
+	return {
+		request: {
+			query: CREATE_INVITATION_LINK,
+			variables
+		},
+		result: {
+			data: {
+				createInvitationLink
+			}
+		}
+	};
+}
+
+/**
+ * Delete invitation links mock
+ */
+export function mockDeleteInvitationLinks(
+	variables: DeleteInvitationLinksMutationVariables,
+	deleteInvitationLinks: Array<string>
+): Mock<DeleteInvitationLinksMutation, DeleteInvitationLinksMutationVariables> {
+	return {
+		request: {
+			query: DELETE_INVITATION_LINKS,
+			variables
+		},
+		result: {
+			data: {
+				deleteInvitationLinks
 			}
 		}
 	};

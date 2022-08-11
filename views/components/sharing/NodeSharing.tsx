@@ -135,6 +135,7 @@ export const NodeSharing: React.VFC<NodeSharingProps> = ({ node }) => {
 				height="fit"
 				padding={{ all: 'large' }}
 				background="gray6"
+				data-testid="node-sharing-collaborators"
 			>
 				{!node.permissions.can_share && (
 					<Padding bottom="large" width="100%">

@@ -50,7 +50,7 @@ export const InvitationLink: React.FC<InvitationLinkProps> = ({
 	const createSnackbar = useCreateSnackbar();
 	const createModal = useModal();
 
-	const { data: getInvitationLinksQueryData } = useGetNodeInvitationLinksQuery(nodeId);
+	const { data: getInvitationLinksQueryData, loading } = useGetNodeInvitationLinksQuery(nodeId);
 
 	const readAndShareInvitationLink = useMemo(() => {
 		if (getInvitationLinksQueryData?.getNode?.invitation_links) {
@@ -189,6 +189,7 @@ export const InvitationLink: React.FC<InvitationLinkProps> = ({
 			height="fit"
 			padding={{ all: 'large' }}
 			background="gray6"
+			data-testid="invitation-link-container"
 		>
 			<Container
 				mainAlignment="flex-start"
@@ -213,6 +214,7 @@ export const InvitationLink: React.FC<InvitationLinkProps> = ({
 				crossAlignment="flex-start"
 				gap="8px"
 				padding={{ all: 'small' }}
+				data-testid="read-share-invitation-link-container"
 			>
 				<Icon icon="EyeOutline" size="medium" />
 				<Container crossAlignment="flex-start" width="fit">
@@ -257,6 +259,7 @@ export const InvitationLink: React.FC<InvitationLinkProps> = ({
 						type="outlined"
 						label={t('invitationLink.button.generateLink', 'Generate Link')}
 						onClick={createReadAndShareInvitationLinkCallback}
+						disabled={loading}
 					/>
 				)}
 			</FlexContainer>
@@ -268,6 +271,7 @@ export const InvitationLink: React.FC<InvitationLinkProps> = ({
 					crossAlignment="flex-start"
 					gap="8px"
 					padding={{ all: 'small' }}
+					data-testid="read-write-share-invitation-link-container"
 				>
 					<Icon icon="Edit2Outline" size="medium" />
 					<Container crossAlignment="flex-start" width="fit">
@@ -312,6 +316,7 @@ export const InvitationLink: React.FC<InvitationLinkProps> = ({
 							type="outlined"
 							label={t('invitationLink.button.generateLink', 'Generate Link')}
 							onClick={createReadWriteAndShareInvitationLinkCallback}
+							disabled={loading}
 						/>
 					)}
 				</FlexContainer>
