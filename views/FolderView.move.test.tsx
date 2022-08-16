@@ -26,6 +26,7 @@ import { Node } from '../types/common';
 import { Folder, GetChildrenQuery, GetChildrenQueryVariables } from '../types/graphql/types';
 import {
 	getChildrenVariables,
+	mockGetChild,
 	mockGetChildren,
 	mockGetParent,
 	mockGetPath,
@@ -85,6 +86,7 @@ describe('Move', () => {
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 				mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
+				mockGetChild({ node_id: currentFolder.id }, currentFolder),
 				mockMoveNodes(
 					{
 						node_ids: [nodeToMove.id],
@@ -163,6 +165,7 @@ describe('Move', () => {
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
+				mockGetChild({ node_id: currentFolder.id }, currentFolder),
 				mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 				mockMoveNodes(
 					{
@@ -259,6 +262,7 @@ describe('Move', () => {
 					children: populateNodePage(firstPage)
 				} as Folder),
 				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
+				mockGetChild({ node_id: currentFolder.id }, currentFolder),
 				mockGetParent({ node_id: currentFolder.id }, currentFolder),
 				mockGetPath({ node_id: currentFolder.id }, [commonParent, currentFolder]),
 				mockGetChildren(getChildrenVariables(commonParent.id), commonParent),
@@ -344,6 +348,7 @@ describe('Move', () => {
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
+				mockGetChild({ node_id: currentFolder.id }, currentFolder),
 				mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 				mockMoveNodes(
 					{
@@ -412,6 +417,7 @@ describe('Move', () => {
 					children: populateNodePage(firstPage)
 				} as Folder),
 				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
+				mockGetChild({ node_id: currentFolder.id }, currentFolder),
 				mockGetParent({ node_id: currentFolder.id }, currentFolder),
 				mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 				mockMoveNodes(

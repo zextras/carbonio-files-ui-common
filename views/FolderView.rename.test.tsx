@@ -20,6 +20,7 @@ import { Node } from '../types/common';
 import { Folder } from '../types/graphql/types';
 import {
 	getChildrenVariables,
+	mockGetChild,
 	mockGetChildren,
 	mockGetParent,
 	mockGetPermissions,
@@ -71,6 +72,7 @@ describe('Rename', () => {
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
+				mockGetChild({ node_id: currentFolder.id }, currentFolder),
 				mockUpdateNode(
 					{
 						node_id: element.id,
@@ -135,6 +137,8 @@ describe('Rename', () => {
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
+				mockGetChild({ node_id: currentFolder.id }, currentFolder),
+				mockGetChild({ node_id: currentFolder.id }, currentFolder),
 				mockUpdateNode(
 					{
 						node_id: element.id,
@@ -216,6 +220,7 @@ describe('Rename', () => {
 					children: populateNodePage(currentFolder.children.nodes.slice(0, NODES_LOAD_LIMIT))
 				} as Folder),
 				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
+				mockGetChild({ node_id: currentFolder.id }, currentFolder),
 				mockUpdateNode(
 					{
 						node_id: element.id,
@@ -343,6 +348,7 @@ describe('Rename', () => {
 				} as Folder),
 				mockGetParent({ node_id: currentFolder.id }, currentFolder),
 				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
+				mockGetChild({ node_id: currentFolder.id }, currentFolder),
 				mockUpdateNode(
 					{ node_id: nodeToRename.id, name: newName },
 					{ ...nodeToRename, name: newName }
@@ -406,6 +412,7 @@ describe('Rename', () => {
 				} as Folder),
 				mockGetParent({ node_id: currentFolder.id }, currentFolder),
 				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
+				mockGetChild({ node_id: currentFolder.id }, currentFolder),
 				mockUpdateNode(
 					{ node_id: nodeToRename.id, name: newName },
 					{ ...nodeToRename, name: newName }
