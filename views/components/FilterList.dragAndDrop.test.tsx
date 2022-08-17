@@ -83,7 +83,10 @@ describe('Filter List', () => {
 				files
 			};
 
-			render(<FilterList sharedWithMe trashed={false} canUploadFile cascade={false} />, { mocks });
+			render(
+				<FilterList sharedWithMe folderId={ROOTS.LOCAL_ROOT} canUploadFile cascade={false} />,
+				{ mocks }
+			);
 
 			await screen.findByText(currentFilter[0].name);
 
@@ -165,7 +168,12 @@ describe('Filter List', () => {
 
 			render(
 				<Route path="/filter/:filter">
-					<FilterList sharedWithMe={false} trashed canUploadFile={false} cascade={false} />
+					<FilterList
+						sharedWithMe={false}
+						folderId={ROOTS.TRASH}
+						canUploadFile={false}
+						cascade={false}
+					/>
 				</Route>,
 				{
 					mocks,
@@ -243,7 +251,9 @@ describe('Filter List', () => {
 				files
 			};
 
-			render(<FilterList trashed={false} sharedWithMe cascade canUploadFile />, { mocks });
+			render(<FilterList folderId={ROOTS.LOCAL_ROOT} sharedWithMe cascade canUploadFile />, {
+				mocks
+			});
 
 			await screen.findByText(destinationFolder.name);
 
@@ -362,7 +372,7 @@ describe('Filter List', () => {
 
 			render(
 				<Route path="/filter/:filter">
-					<FilterList trashed cascade canUploadFile={false} />
+					<FilterList folderId={ROOTS.TRASH} cascade canUploadFile={false} />
 				</Route>,
 				{ mocks, initialRouterEntries: ['/filter/myTrash'] }
 			);
@@ -425,9 +435,17 @@ describe('Filter List', () => {
 				})
 			});
 
-			render(<FilterList sharedWithMe={false} trashed canUploadFile={false} cascade={false} />, {
-				mocks
-			});
+			render(
+				<FilterList
+					sharedWithMe={false}
+					folderId={ROOTS.TRASH}
+					canUploadFile={false}
+					cascade={false}
+				/>,
+				{
+					mocks
+				}
+			);
 
 			const itemToDrag = await screen.findByText(currentFilter[0].name);
 
@@ -502,7 +520,7 @@ describe('Filter List', () => {
 				})
 			});
 
-			render(<FilterList flagged trashed={false} canUploadFile cascade />, { mocks });
+			render(<FilterList flagged folderId={ROOTS.LOCAL_ROOT} canUploadFile cascade />, { mocks });
 
 			const itemToDrag = await screen.findByText(nodesToDrag[0].name);
 			fireEvent.dragStart(itemToDrag, { dataTransfer: dataTransfer() });
@@ -593,7 +611,7 @@ describe('Filter List', () => {
 				})
 			});
 
-			render(<FilterList flagged trashed={false} canUploadFile cascade />, { mocks });
+			render(<FilterList flagged folderId={ROOTS.LOCAL_ROOT} canUploadFile cascade />, { mocks });
 
 			const itemToDrag = await screen.findByText(nodesToDrag[0].name);
 			fireEvent.dragStart(itemToDrag, { dataTransfer: dataTransfer() });
@@ -693,7 +711,7 @@ describe('Filter List', () => {
 
 			render(
 				<Route path="/filter/:filter">
-					<FilterList flagged trashed={false} canUploadFile cascade />
+					<FilterList flagged folderId={ROOTS.LOCAL_ROOT} canUploadFile cascade />
 				</Route>,
 				{
 					mocks,

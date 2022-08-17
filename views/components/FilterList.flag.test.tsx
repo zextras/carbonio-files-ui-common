@@ -52,7 +52,7 @@ describe('Filter List', () => {
 				// and it's an object instead of a Window class instance, so the check on the prop type fail for the target prop
 				render(
 					<Route path="/filter/:filter?">
-						<FilterList flagged trashed={false} cascade />
+						<FilterList flagged folderId={ROOTS.LOCAL_ROOT} cascade />
 					</Route>,
 					{ initialRouterEntries: ['/filter/flagged'], mocks }
 				);
@@ -110,7 +110,7 @@ describe('Filter List', () => {
 				// and it's an object instead of a Window class instance, so the check on the prop type fail for the target prop
 				render(
 					<Route path="/filter/:filter?">
-						<FilterList flagged trashed={false} cascade />
+						<FilterList flagged folderId={ROOTS.LOCAL_ROOT} cascade />
 					</Route>,
 					{ initialRouterEntries: ['/filter/flagged'], mocks }
 				);
@@ -160,7 +160,7 @@ describe('Filter List', () => {
 				)
 			];
 
-			render(<FilterList flagged trashed={false} cascade />, { mocks });
+			render(<FilterList flagged folderId={ROOTS.LOCAL_ROOT} cascade />, { mocks });
 
 			await screen.findByText(firstPage[0].name);
 			expect(screen.getByText(firstPage[0].name)).toBeVisible();

@@ -385,7 +385,8 @@ describe('Folder Selection Modal Content', () => {
 			mockFindNodes(
 				getFindNodesVariables({
 					shared_with_me: true,
-					cascade: false,
+					cascade: true,
+					direct_share: true,
 					folder_id: ROOTS.LOCAL_ROOT
 				}),
 				sharedWithMeFilter
@@ -493,7 +494,8 @@ describe('Folder Selection Modal Content', () => {
 			mockFindNodes(
 				getFindNodesVariables({
 					shared_with_me: true,
-					cascade: false,
+					cascade: true,
+					direct_share: true,
 					folder_id: ROOTS.LOCAL_ROOT
 				}),
 				filter

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
+import { RootsType, SearchParams, URLParams } from '../types/common';
 import { NodeSort } from '../types/graphql/types';
 
 export const NODES_LOAD_LIMIT = 25;
@@ -27,7 +28,7 @@ export const DISPLAYER_TABS = {
 	// activities: 'activities',
 	versioning: 'versioning'
 } as const;
-export const ROOTS = {
+export const ROOTS: RootsType = {
 	ENTRY_POINT: 'ROOTS_ENTRY_POINT',
 	LOCAL_ROOT: 'LOCAL_ROOT',
 	LOCAL_CHAT_ROOT: 'LOCAL_CHAT_ROOT',
@@ -48,6 +49,35 @@ export const CONFIGS = {
 	MAX_KEEP_VERSIONS: 'max-number-of-keep-versions'
 } as const;
 export const PREVIEW_MAX_SIZE = 20971520;
+export const FILTER_PARAMS: Record<URLParams['filter'], SearchParams> = {
+	flagged: {
+		flagged: true,
+		folderId: ROOTS.LOCAL_ROOT,
+		cascade: true
+	},
+	sharedByMe: {
+		sharedByMe: true,
+		folderId: ROOTS.LOCAL_ROOT,
+		cascade: true,
+		directShare: true
+	},
+	sharedWithMe: {
+		sharedWithMe: true,
+		folderId: ROOTS.LOCAL_ROOT,
+		cascade: true,
+		directShare: true
+	},
+	myTrash: {
+		folderId: ROOTS.TRASH,
+		sharedWithMe: false,
+		cascade: false
+	},
+	sharedTrash: {
+		folderId: ROOTS.TRASH,
+		sharedWithMe: true,
+		cascade: false
+	}
+} as const;
 
 // endpoint
 // keep endpoint without trailing slash

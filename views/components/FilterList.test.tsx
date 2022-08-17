@@ -231,7 +231,7 @@ describe('Filter list', () => {
 				];
 				render(
 					<Route path="/filter/:filter">
-						<FilterList trashed cascade={false} />
+						<FilterList folderId={ROOTS.TRASH} cascade={false} />
 					</Route>,
 					{ mocks, initialRouterEntries: ['/filter/myTrash'] }
 				);

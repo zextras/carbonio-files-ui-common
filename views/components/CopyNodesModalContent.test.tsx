@@ -220,7 +220,8 @@ describe('Copy Nodes Modal', () => {
 				getFindNodesVariables({
 					shared_with_me: true,
 					folder_id: ROOTS.LOCAL_ROOT,
-					cascade: false
+					cascade: true,
+					direct_share: true
 				}),
 				sharedWithMeFilter
 			),
