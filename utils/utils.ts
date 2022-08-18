@@ -187,6 +187,21 @@ export const formatTime = (
 	return moment(date).format('HH.mm A');
 };
 
+export const removeTimezoneOffset = (date: Date): number => {
+	const userTimezoneOffset = date.getTimezoneOffset() * 60000;
+	return date.getTime() - userTimezoneOffset;
+};
+
+export const initExpirationDate = (date: Date | undefined): Date | undefined => {
+	if (date) {
+		const epoch = removeTimezoneOffset(date);
+		// add 23 hours and 59 minutes
+		const epochPlusOneDay = epoch + 24 * 60 * 60 * 1000 - 60000;
+		return new Date(epochPlusOneDay);
+	}
+	return undefined;
+};
+
 /**
  * Decode an Apollo Error in a string message
  */

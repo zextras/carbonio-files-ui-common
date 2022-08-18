@@ -42,7 +42,7 @@ interface PublicLinkComponentProps {
 	status: PublicLinkRowStatus;
 	expiresAt?: number | null;
 	onEdit: (linkId: string) => void;
-	onEditConfirm: (linkId: string, description?: string, expiresAt?: number) => void;
+	onEditConfirm: (linkId: string, description?: string, expiresAt?: number) => Promise<unknown>;
 	onUndo: () => void;
 	onRevokeOrRemove: (linkId: string, isRevoke: boolean) => void;
 	forceUrlCopyDisabled: boolean;
@@ -66,7 +66,7 @@ export const PublicLinkComponent: React.FC<PublicLinkComponentProps> = ({
 
 	const isExpired = useMemo(() => (expiresAt ? Date.now() > expiresAt : false), [expiresAt]);
 
-	const [linkDescriptionValue, setLinkDescriptionValue] = useState(description || undefined);
+	const [linkDescriptionValue, setLinkDescriptionValue] = useState<string>(description || '');
 
 	const moreThan300Characters = useMemo(
 		() => linkDescriptionValue != null && linkDescriptionValue.length > 300,
@@ -114,7 +114,7 @@ export const PublicLinkComponent: React.FC<PublicLinkComponentProps> = ({
 	}, [id, onEdit]);
 
 	const onUndoCallback = useCallback(() => {
-		setLinkDescriptionValue(description || undefined);
+		setLinkDescriptionValue(description || '');
 		setDate(initialMomentDate);
 		setUpdatedTimestamp(expiresAt);
 		onUndo();
@@ -124,13 +124,17 @@ export const PublicLinkComponent: React.FC<PublicLinkComponentProps> = ({
 		onRevokeOrRemove(id, !isExpired);
 	}, [id, onRevokeOrRemove, isExpired]);
 
-	const onEditConfirmCallback = useCallback(() => {
-		onEditConfirm(
-			id,
-			linkDescriptionValue,
-			updatedTimestamp !== expiresAt ? updatedTimestamp || 0 : undefined
-		);
-	}, [expiresAt, id, linkDescriptionValue, onEditConfirm, updatedTimestamp]);
+	const onEditConfirmCallback = useCallback(
+		() =>
+			Promise.allSettled([
+				onEditConfirm(
+					id,
+					linkDescriptionValue,
+					updatedTimestamp !== expiresAt ? updatedTimestamp || 0 : undefined
+				)
+			]),
+		[expiresAt, id, linkDescriptionValue, onEditConfirm, updatedTimestamp]
+	);
 
 	const copyUrl = useCallback(
 		(_event) => {

@@ -6,29 +6,16 @@
 
 import React from 'react';
 
+import { ApolloError } from '@apollo/client';
 import { faker } from '@faker-js/faker';
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, waitForElementToBeRemoved, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import { UseUpdateNodeDescriptionMutationHook } from '../../hooks/graphql/mutations/useUpdateNodeDescriptionMutation';
 import { populateFile } from '../../mocks/mockUtils';
 import { canUpsertDescription } from '../../utils/ActionsFactory';
-import { mockUpdateNodeDescription } from '../../utils/mockUtils';
-import { render } from '../../utils/testUtils';
+import { mockUpdateNodeDescription, mockUpdateNodeDescriptionError } from '../../utils/mockUtils';
+import { generateError, render } from '../../utils/testUtils';
 import { NodeDetailsDescription } from './NodeDetailsDescription';
-
-const updateNodeDescriptionMockFun = jest.fn();
-
-const mockedUseUpdateNodeDescriptionMutationHook: ReturnType<UseUpdateNodeDescriptionMutationHook> =
-	{
-		updateNodeDescription: updateNodeDescriptionMockFun,
-		updateNodeDescriptionError: undefined
-	};
-
-jest.mock('../../hooks/graphql/mutations/useUpdateNodeDescriptionMutation', () => ({
-	useUpdateNodeDescriptionMutation: (): ReturnType<UseUpdateNodeDescriptionMutationHook> =>
-		mockedUseUpdateNodeDescriptionMutationHook
-}));
 
 describe('NodeDetailsDescription component', () => {
 	test('Missing description show missing description label', () => {
@@ -235,6 +222,8 @@ describe('NodeDetailsDescription component', () => {
 		node.permissions.can_write_file = true;
 		const newDescription = 'newDescription';
 
+		const updateNodeDescriptionMutationCallback = jest.fn();
+
 		const mocks = [
 			mockUpdateNodeDescription(
 				{
@@ -244,7 +233,8 @@ describe('NodeDetailsDescription component', () => {
 				{
 					...node,
 					description: newDescription
-				}
+				},
+				updateNodeDescriptionMutationCallback
 			)
 		];
 		render(
@@ -283,8 +273,52 @@ describe('NodeDetailsDescription component', () => {
 
 		expect(saveIcon).not.toBeVisible();
 
-		expect(updateNodeDescriptionMockFun).toBeCalled();
-		expect(updateNodeDescriptionMockFun).toBeCalledTimes(1);
-		expect(updateNodeDescriptionMockFun).toHaveBeenCalledWith(node.id, newDescription);
+		await waitFor(() => expect(updateNodeDescriptionMutationCallback).toHaveBeenCalled());
+		expect(updateNodeDescriptionMutationCallback).toHaveBeenCalledTimes(1);
+	});
+
+	test('if save operation throws an error, description input field is shown with last description typed', async () => {
+		const node = populateFile();
+		node.permissions.can_write_file = true;
+		const newDescription = 'newDescription';
+
+		const mocks = [
+			mockUpdateNodeDescriptionError(
+				{
+					node_id: node.id,
+					description: newDescription
+				},
+				new ApolloError({ graphQLErrors: [generateError('update description error')] })
+			)
+		];
+		render(
+			<NodeDetailsDescription
+				id={node.id}
+				description={node.description}
+				canUpsertDescription={canUpsertDescription(node)}
+			/>,
+			{ mocks }
+		);
+		expect(screen.getByText(/description/i)).toBeVisible();
+		expect(screen.getByText(node.description)).toBeVisible();
+
+		const editIcon = screen.getByTestId('icon: Edit2Outline');
+		expect(editIcon).toBeVisible();
+		userEvent.click(editIcon);
+		const saveIcon = await screen.findByTestId('icon: SaveOutline');
+		expect(saveIcon).toBeVisible();
+		const inputField = screen.getByRole('textbox', {
+			name: /maximum length allowed is 4096 characters/i
+		});
+		userEvent.clear(inputField);
+		userEvent.type(inputField, newDescription);
+		userEvent.click(saveIcon);
+		const snackbar = await screen.findByText(/update description error/i);
+		await waitForElementToBeRemoved(snackbar);
+		expect(
+			screen.getByRole('textbox', { name: /maximum length allowed is 4096 characters/i })
+		).toBeVisible();
+		expect(screen.getByTestId('icon: SaveOutline')).toBeVisible();
+		expect(screen.queryByTestId('icon: Edit2Outline')).not.toBeInTheDocument();
 	});
 });

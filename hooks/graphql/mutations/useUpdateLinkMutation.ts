@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-/* eslint-disable arrow-body-style */
 import { useCallback } from 'react';
 
 import { FetchResult, useMutation } from '@apollo/client';
@@ -29,15 +28,14 @@ export function useUpdateLinkMutation(errorHandlerOptions?: ErrorHandlerOptions)
 	>(UPDATE_LINK);
 
 	const updateLink: UpdateLinkType = useCallback(
-		(id: string, description?: string, expiresAt?: number) => {
-			return updateLinkMutation({
+		(id: string, description?: string, expiresAt?: number) =>
+			updateLinkMutation({
 				variables: {
 					link_id: id,
 					description,
 					expires_at: expiresAt
 				}
-			});
-		},
+			}),
 		[updateLinkMutation]
 	);
 	useErrorHandler(updateLinkError, 'UPDATE_LINK', errorHandlerOptions);
