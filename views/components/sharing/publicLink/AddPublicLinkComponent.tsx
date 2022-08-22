@@ -114,7 +114,7 @@ export const AddPublicLinkComponent: React.FC<AddPublicLinkComponentProps> = ({
 					width="fit"
 				>
 					<TextWithLineHeight size="medium">
-						{t('publicLink.addLink.title', 'Public Link')}
+						{t('publicLink.addLink.title', 'Public Links')}
 					</TextWithLineHeight>
 					<TextWithLineHeight size="extrasmall" color="secondary" overflow="break-word">
 						{t(

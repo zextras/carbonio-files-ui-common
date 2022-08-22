@@ -21,9 +21,9 @@ import find from 'lodash/find';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 
-import { useCreateInvitationLinkMutation } from '../../../../hooks/graphql/mutations/useCreateInvitationLinkMutation';
-import { useDeleteInvitationLinksMutation } from '../../../../hooks/graphql/mutations/useDeleteInvitationLinksMutation';
-import { useGetNodeInvitationLinksQuery } from '../../../../hooks/graphql/queries/useGetNodeInvitationLinksQuery';
+import { useCreateCollaborationLinkMutation } from '../../../../hooks/graphql/mutations/useCreateCollaborationLinkMutation';
+import { useDeleteCollaborationLinksMutation } from '../../../../hooks/graphql/mutations/useDeleteCollaborationLinksMutation';
+import { useGetNodeCollaborationLinksQuery } from '../../../../hooks/graphql/queries/useGetNodeCollaborationLinksQuery';
 import { useCreateSnackbar } from '../../../../hooks/useCreateSnackbar';
 import { SharePermission } from '../../../../types/graphql/types';
 import { copyToClipboard } from '../../../../utils/utils';
@@ -33,14 +33,14 @@ const CustomButton = styled(Button)`
 	margin-left: auto;
 `;
 
-interface InvitationLinkProps {
+interface CollaborationLinksProps {
 	nodeTypename: 'File' | 'Folder' | undefined;
 	nodeId: string;
 	canWrite: boolean;
 	nodeName: string;
 }
 
-export const InvitationLink: React.FC<InvitationLinkProps> = ({
+export const CollaborationLinks: React.FC<CollaborationLinksProps> = ({
 	nodeId,
 	nodeTypename,
 	canWrite,
@@ -50,34 +50,35 @@ export const InvitationLink: React.FC<InvitationLinkProps> = ({
 	const createSnackbar = useCreateSnackbar();
 	const createModal = useModal();
 
-	const { data: getInvitationLinksQueryData, loading } = useGetNodeInvitationLinksQuery(nodeId);
+	const { data: getCollaborationLinksQueryData, loading } =
+		useGetNodeCollaborationLinksQuery(nodeId);
 
-	const readAndShareInvitationLink = useMemo(() => {
-		if (getInvitationLinksQueryData?.getNode?.invitation_links) {
+	const readAndShareCollaborationLink = useMemo(() => {
+		if (getCollaborationLinksQueryData?.getNode?.collaboration_links) {
 			return find(
-				getInvitationLinksQueryData?.getNode?.invitation_links,
+				getCollaborationLinksQueryData?.getNode?.collaboration_links,
 				(link) => link?.permission === SharePermission.ReadAndShare
 			);
 		}
 		return undefined;
-	}, [getInvitationLinksQueryData]);
+	}, [getCollaborationLinksQueryData]);
 
-	const readWriteAndShareInvitationLink = useMemo(() => {
-		if (getInvitationLinksQueryData?.getNode?.invitation_links) {
+	const readWriteAndShareCollaborationLink = useMemo(() => {
+		if (getCollaborationLinksQueryData?.getNode?.collaboration_links) {
 			return find(
-				getInvitationLinksQueryData?.getNode?.invitation_links,
+				getCollaborationLinksQueryData?.getNode?.collaboration_links,
 				(link) => link?.permission === SharePermission.ReadWriteAndShare
 			);
 		}
 		return undefined;
-	}, [getInvitationLinksQueryData]);
+	}, [getCollaborationLinksQueryData]);
 
-	/** Mutation to create invitation link */
-	const { createInvitationLink, loading: createInvitationLinkLoading } =
-		useCreateInvitationLinkMutation(nodeId);
+	/** Mutation to create collaboration link */
+	const { createCollaborationLink, loading: createCollaborationLinkLoading } =
+		useCreateCollaborationLinkMutation(nodeId);
 
-	/** Mutation to delete invitation link */
-	const deleteInvitationsLinks = useDeleteInvitationLinksMutation({
+	/** Mutation to delete collaboration link */
+	const deleteCollaborationsLinks = useDeleteCollaborationLinksMutation({
 		id: nodeId,
 		__typename: nodeTypename
 	});
@@ -88,7 +89,7 @@ export const InvitationLink: React.FC<InvitationLinkProps> = ({
 				createSnackbar({
 					key: new Date().toLocaleString(),
 					type: 'info',
-					label: t('snackbar.invitationLink.copyInvitationLink', 'Invitation link copied'),
+					label: t('snackbar.collaborationLink.copyCollaborationLink', 'Collaboration link copied'),
 					replace: true,
 					hideButton: true
 				});
@@ -104,29 +105,29 @@ export const InvitationLink: React.FC<InvitationLinkProps> = ({
 					key: new Date().toLocaleString(),
 					type: 'info',
 					label: t(
-						'snackbar.invitationLink.newInvitationLinkGenerated.label',
-						'New Invitation Link generated'
+						'snackbar.collaborationLink.newCollaborationLinkGenerated.label',
+						'New Collaboration Link generated'
 					),
 					replace: true,
 					onActionClick: () => {
-						copyLinkToClipboard(data.createInvitationLink.url);
+						copyLinkToClipboard(data.createCollaborationLink.url);
 					},
-					actionLabel: t('snackbar.invitationLink.actionLabel.copyLink', 'Copy Link')
+					actionLabel: t('snackbar.collaborationLink.actionLabel.copyLink', 'Copy Link')
 				});
 			}
 		},
 		[copyLinkToClipboard, createSnackbar, t]
 	);
 
-	const createReadAndShareInvitationLinkCallback = useCallback(() => {
-		createInvitationLink(SharePermission.ReadAndShare).then(createCallback);
-	}, [createCallback, createInvitationLink]);
+	const createReadAndShareCollaborationLinkCallback = useCallback(() => {
+		createCollaborationLink(SharePermission.ReadAndShare).then(createCallback);
+	}, [createCallback, createCollaborationLink]);
 
-	const createReadWriteAndShareInvitationLinkCallback = useCallback(() => {
-		createInvitationLink(SharePermission.ReadWriteAndShare).then(createCallback);
-	}, [createCallback, createInvitationLink]);
+	const createReadWriteAndShareCollaborationLinkCallback = useCallback(() => {
+		createCollaborationLink(SharePermission.ReadWriteAndShare).then(createCallback);
+	}, [createCallback, createCollaborationLink]);
 
-	const copyInvitationUrl = useCallback(
+	const copyCollaborationUrl = useCallback(
 		(event) => {
 			copyLinkToClipboard(event.target.textContent);
 		},
@@ -136,13 +137,13 @@ export const InvitationLink: React.FC<InvitationLinkProps> = ({
 	const openDeleteModal = useCallback(
 		(linkId: string) => {
 			const closeModal = createModal({
-				title: t('modal.revokeInvitationLink.header', 'Revoke {{nodeName}} invitation link', {
+				title: t('modal.revokeCollaborationLink.header', 'Revoke {{nodeName}} collaboration link', {
 					replace: { nodeName }
 				}),
-				confirmLabel: t('modal.revokeInvitationLink.button.confirm', 'Revoke'),
+				confirmLabel: t('modal.revokeCollaborationLink.button.confirm', 'Revoke'),
 				confirmColor: 'error',
 				onConfirm: () => {
-					deleteInvitationsLinks([linkId]).then(({ data }) => {
+					deleteCollaborationsLinks([linkId]).then(({ data }) => {
 						if (data) {
 							closeModal();
 						}
@@ -156,8 +157,8 @@ export const InvitationLink: React.FC<InvitationLinkProps> = ({
 					<Container padding={{ vertical: 'large' }}>
 						<Text overflow="break-word" size="small">
 							{t(
-								'modal.revokeInvitationLink.body',
-								'By revoking this link, you are blocking access to {{nodeName}} for anyone who tries to use the link to access the file',
+								'modal.revokeCollaborationLink.body',
+								'By revoking this link, you are blocking the possibility to create new shares with it. Everyone who has already used the collaboration link will keep the access to the node.',
 								{
 									replace: { nodeName }
 								}
@@ -167,20 +168,20 @@ export const InvitationLink: React.FC<InvitationLinkProps> = ({
 				)
 			});
 		},
-		[createModal, deleteInvitationsLinks, nodeName, t]
+		[createModal, deleteCollaborationsLinks, nodeName, t]
 	);
 
-	const deleteReadAndShareInvitationLinkCallback = useCallback(() => {
-		if (readAndShareInvitationLink) {
-			openDeleteModal(readAndShareInvitationLink.id);
+	const deleteReadAndShareCollaborationLinkCallback = useCallback(() => {
+		if (readAndShareCollaborationLink) {
+			openDeleteModal(readAndShareCollaborationLink.id);
 		}
-	}, [openDeleteModal, readAndShareInvitationLink]);
+	}, [openDeleteModal, readAndShareCollaborationLink]);
 
-	const deleteReadWriteAndShareInvitationLinkCallback = useCallback(() => {
-		if (readWriteAndShareInvitationLink) {
-			openDeleteModal(readWriteAndShareInvitationLink.id);
+	const deleteReadWriteAndShareCollaborationLinkCallback = useCallback(() => {
+		if (readWriteAndShareCollaborationLink) {
+			openDeleteModal(readWriteAndShareCollaborationLink.id);
 		}
-	}, [openDeleteModal, readWriteAndShareInvitationLink]);
+	}, [openDeleteModal, readWriteAndShareCollaborationLink]);
 
 	return (
 		<Container
@@ -189,7 +190,7 @@ export const InvitationLink: React.FC<InvitationLinkProps> = ({
 			height="fit"
 			padding={{ all: 'large' }}
 			background="gray6"
-			data-testid="invitation-link-container"
+			data-testid="collaboration-link-container"
 		>
 			<Container
 				mainAlignment="flex-start"
@@ -198,12 +199,12 @@ export const InvitationLink: React.FC<InvitationLinkProps> = ({
 				background="gray6"
 			>
 				<TextWithLineHeight size="medium">
-					{t('invitationLink.title', 'Invitation Link')}
+					{t('collaborationLinks.title', 'Collaboration Links')}
 				</TextWithLineHeight>
 				<TextWithLineHeight size="extrasmall" color="secondary" overflow="break-word">
 					{t(
-						'invitationLink.description',
-						'Internal users will receive the permissions by opening the link. You can always modify granted permissions once the users has clicked on the link.'
+						'collaborationLinks.description',
+						'Internal users will receive the permissions by opening the link. You can always modify granted permissions.'
 					)}
 				</TextWithLineHeight>
 			</Container>
@@ -214,51 +215,54 @@ export const InvitationLink: React.FC<InvitationLinkProps> = ({
 				crossAlignment="flex-start"
 				gap="8px"
 				padding={{ all: 'small' }}
-				data-testid="read-share-invitation-link-container"
+				data-testid="read-share-collaboration-link-container"
 			>
 				<Icon icon="EyeOutline" size="medium" />
 				<Container crossAlignment="flex-start" width="fit">
 					<TextWithLineHeight size="small">
-						{t('invitationLink.row.title.ReadAndShare', 'Read and Share')}
+						{t('collaborationLinks.row.title.ReadAndShare', 'Read and Share')}
 					</TextWithLineHeight>
-					{readAndShareInvitationLink ? (
+					{readAndShareCollaborationLink ? (
 						<Chip
 							label={
 								<Tooltip
-									label={t('invitationLink.link.urlChip.tooltip.copy', 'Copy invitation link')}
+									label={t(
+										'collaborationLinks.link.urlChip.tooltip.copy',
+										'Copy collaboration link'
+									)}
 									maxWidth="unset"
 									placement="top"
 								>
 									<Text size="small" weight="light">
-										{readAndShareInvitationLink.url}
+										{readAndShareCollaborationLink.url}
 									</Text>
 								</Tooltip>
 							}
 							hasAvatar={false}
 							minWidth={0}
-							onClick={copyInvitationUrl}
+							onClick={copyCollaborationUrl}
 						/>
 					) : (
 						<TextWithLineHeight size="extrasmall" color="secondary">
-							{t('invitationLink.row.placeholder', 'Create a link in order to share it')}
+							{t('collaborationLinks.row.placeholder', 'Create a link in order to share the node')}
 						</TextWithLineHeight>
 					)}
 				</Container>
-				{readAndShareInvitationLink ? (
+				{readAndShareCollaborationLink ? (
 					<CustomButton
 						isSmall
 						type="outlined"
 						color="error"
-						label={t('invitationLink.button.revoke', 'Revoke')}
-						onClick={deleteReadAndShareInvitationLinkCallback}
+						label={t('collaborationLinks.button.revoke', 'Revoke')}
+						onClick={deleteReadAndShareCollaborationLinkCallback}
 						icon={'SlashOutline'}
 					/>
 				) : (
 					<CustomButton
 						isSmall
 						type="outlined"
-						label={t('invitationLink.button.generateLink', 'Generate Link')}
-						onClick={createReadAndShareInvitationLinkCallback}
+						label={t('collaborationLinks.button.generateLink', 'Generate Link')}
+						onClick={createReadAndShareCollaborationLinkCallback}
 						disabled={loading}
 					/>
 				)}
@@ -271,51 +275,57 @@ export const InvitationLink: React.FC<InvitationLinkProps> = ({
 					crossAlignment="flex-start"
 					gap="8px"
 					padding={{ all: 'small' }}
-					data-testid="read-write-share-invitation-link-container"
+					data-testid="read-write-share-collaboration-link-container"
 				>
 					<Icon icon="Edit2Outline" size="medium" />
 					<Container crossAlignment="flex-start" width="fit">
 						<TextWithLineHeight size="small">
-							{t('invitationLink.row.title.writeAndShare', 'Write and Share')}
+							{t('collaborationLinks.row.title.writeAndShare', 'Write and Share')}
 						</TextWithLineHeight>
-						{readWriteAndShareInvitationLink ? (
+						{readWriteAndShareCollaborationLink ? (
 							<Chip
 								label={
 									<Tooltip
-										label={t('invitationLink.link.urlChip.tooltip.copy', 'Copy invitation link')}
+										label={t(
+											'collaborationLinks.link.urlChip.tooltip.copy',
+											'Copy collaboration link'
+										)}
 										maxWidth="unset"
 										placement="top"
 									>
 										<Text size="small" weight="light">
-											{readWriteAndShareInvitationLink.url}
+											{readWriteAndShareCollaborationLink.url}
 										</Text>
 									</Tooltip>
 								}
 								hasAvatar={false}
 								minWidth={0}
-								onClick={copyInvitationUrl}
+								onClick={copyCollaborationUrl}
 							/>
 						) : (
 							<TextWithLineHeight size="extrasmall" color="secondary">
-								{t('invitationLink.row.placeholder', 'Create a link in order to share it')}
+								{t(
+									'collaborationLinks.row.placeholder',
+									'Create a link in order to share the node'
+								)}
 							</TextWithLineHeight>
 						)}
 					</Container>
-					{readWriteAndShareInvitationLink ? (
+					{readWriteAndShareCollaborationLink ? (
 						<CustomButton
 							isSmall
 							type="outlined"
 							color="error"
-							label={t('invitationLink.button.revoke', 'Revoke')}
-							onClick={deleteReadWriteAndShareInvitationLinkCallback}
+							label={t('collaborationLinks.button.revoke', 'Revoke')}
+							onClick={deleteReadWriteAndShareCollaborationLinkCallback}
 							icon={'SlashOutline'}
 						/>
 					) : (
 						<CustomButton
 							isSmall
 							type="outlined"
-							label={t('invitationLink.button.generateLink', 'Generate Link')}
-							onClick={createReadWriteAndShareInvitationLinkCallback}
+							label={t('collaborationLinks.button.generateLink', 'Generate Link')}
+							onClick={createReadWriteAndShareCollaborationLinkCallback}
 							disabled={loading}
 						/>
 					)}

@@ -29,8 +29,8 @@ import { Share, SharedTarget } from '../../../types/graphql/types';
 import { isFile } from '../../../utils/ActionsFactory';
 import { getChipLabel } from '../../../utils/utils';
 import { AddSharing } from './AddSharing';
+import { CollaborationLinks } from './collaborationLinks/CollaborationLinks';
 import { EditShareChip } from './EditShareChip';
-import { InvitationLink } from './invitationLink/InvitationLink';
 import { PublicLink } from './publicLink/PublicLink';
 
 const MainContainer = styled(Container)`
@@ -181,7 +181,7 @@ export const NodeSharing: React.VFC<NodeSharingProps> = ({ node }) => {
 				{node.permissions.can_share && <AddSharing node={node} />}
 			</Container>
 			{node.permissions.can_share && (
-				<InvitationLink
+				<CollaborationLinks
 					nodeId={node.id}
 					nodeName={node.name}
 					nodeTypename={node.__typename}

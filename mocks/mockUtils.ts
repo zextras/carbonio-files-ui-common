@@ -18,7 +18,7 @@ import {
 	DistributionList,
 	File as FilesFile,
 	Folder,
-	InvitationLink,
+	CollaborationLink,
 	Link,
 	Maybe,
 	Node,
@@ -155,7 +155,7 @@ function populateNodeFields(type?: NodeType, id?: string, name?: string): Node {
 		share: null,
 		shares: [],
 		links: [],
-		invitation_links: []
+		collaboration_links: []
 	};
 }
 
@@ -424,15 +424,15 @@ export function populateLink(node: Node): Link {
 	};
 }
 
-export function populateInvitationLink(
+export function populateCollaborationLink(
 	node: Node,
 	sharePermission?: SharePermission
-): InvitationLink {
+): CollaborationLink {
 	return {
 		permission:
 			sharePermission ||
 			faker.helpers.arrayElement([SharePermission.ReadAndShare, SharePermission.ReadWriteAndShare]),
-		__typename: 'InvitationLink',
+		__typename: 'CollaborationLink',
 		id: faker.datatype.uuid(),
 		created_at: faker.date.recent().getTime(),
 		url: faker.internet.url(),

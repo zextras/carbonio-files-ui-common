@@ -2,13 +2,13 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-only
 
-#import "../fragments/invitationLink.graphql"
+#import "../fragments/collaborationLink.graphql"
 
-query getNodeInvitationLinks($node_id: ID!) {
+query getNodeCollaborationLinks($node_id: ID!) {
 	getNode(node_id: $node_id) {
 		id
-		invitation_links {
-			...InvitationLink
+		collaboration_links {
+			...CollaborationLink
 		}
 	}
 }

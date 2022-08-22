@@ -17,10 +17,10 @@ import {
 } from '../constants';
 import CLONE_VERSION from '../graphql/mutations/cloneVersion.graphql';
 import COPY_NODES from '../graphql/mutations/copyNodes.graphql';
+import CREATE_COLLABORATION_LINK from '../graphql/mutations/createCollaborationLink.graphql';
 import CREATE_FOLDER from '../graphql/mutations/createFolder.graphql';
-import CREATE_INVITATION_LINK from '../graphql/mutations/createInvitationLink.graphql';
 import CREATE_SHARE from '../graphql/mutations/createShare.graphql';
-import DELETE_INVITATION_LINKS from '../graphql/mutations/deleteInvitationLinks.graphql';
+import DELETE_COLLABORATION_LINKS from '../graphql/mutations/deleteCollaborationLinks.graphql';
 import DELETE_NODES from '../graphql/mutations/deleteNodes.graphql';
 import DELETE_SHARE from '../graphql/mutations/deleteShare.graphql';
 import DELETE_VERSIONS from '../graphql/mutations/deleteVersions.graphql';
@@ -39,7 +39,7 @@ import GET_BASE_NODE from '../graphql/queries/getBaseNode.graphql';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import GET_CONFIGS from '../graphql/queries/getConfigs.graphql';
 import GET_NODE from '../graphql/queries/getNode.graphql';
-import GET_NODE_INVITATION_LINKS from '../graphql/queries/getNodeInvitationLinks.graphql';
+import GET_NODE_COLLABORATION_LINKS from '../graphql/queries/getNodeCollaborationLinks.graphql';
 import GET_NODE_LINKS from '../graphql/queries/getNodeLinks.graphql';
 import GET_PARENT from '../graphql/queries/getParent.graphql';
 import GET_PATH from '../graphql/queries/getPath.graphql';
@@ -114,13 +114,13 @@ import {
 	GetConfigsQueryVariables,
 	GetAccountsByEmailQueryVariables,
 	GetAccountsByEmailQuery,
-	GetNodeInvitationLinksQueryVariables,
-	GetNodeInvitationLinksQuery,
-	InvitationLink,
-	CreateInvitationLinkMutationVariables,
-	CreateInvitationLinkMutation,
-	DeleteInvitationLinksMutationVariables,
-	DeleteInvitationLinksMutation
+	GetNodeCollaborationLinksQueryVariables,
+	GetNodeCollaborationLinksQuery,
+	CollaborationLink,
+	CreateCollaborationLinkMutationVariables,
+	CreateCollaborationLinkMutation,
+	DeleteCollaborationLinksMutationVariables,
+	DeleteCollaborationLinksMutation
 } from '../types/graphql/types';
 
 type Id = string;
@@ -149,8 +149,8 @@ type MockVariablePossibleType =
 	| GetAccountByEmailQueryVariables
 	| GetAccountsByEmailQueryVariables
 	| GetNodeLinksQueryVariables
-	| GetNodeInvitationLinksQueryVariables
-	| DeleteInvitationLinksMutationVariables
+	| GetNodeCollaborationLinksQueryVariables
+	| DeleteCollaborationLinksMutationVariables
 	| DeleteVersionsMutationVariables
 	| GetVersionsQueryVariables;
 
@@ -737,21 +737,21 @@ export function mockGetNodeLinks(
 /**
  * Get Node Links mock
  */
-export function mockGetNodeInvitationLinks(
-	variables: GetNodeInvitationLinksQueryVariables,
+export function mockGetNodeCollaborationLinks(
+	variables: GetNodeCollaborationLinksQueryVariables,
 	node: Node,
-	invitationLinks?: Array<Maybe<InvitationLink>>
-): Mock<GetNodeInvitationLinksQuery, GetNodeInvitationLinksQueryVariables> {
+	collaborationLinks?: Array<Maybe<CollaborationLink>>
+): Mock<GetNodeCollaborationLinksQuery, GetNodeCollaborationLinksQueryVariables> {
 	return {
 		request: {
-			query: GET_NODE_INVITATION_LINKS,
+			query: GET_NODE_COLLABORATION_LINKS,
 			variables
 		},
 		result: {
 			data: {
 				getNode: {
 					...node,
-					invitation_links: invitationLinks || []
+					collaboration_links: collaborationLinks || []
 				}
 			}
 		}
@@ -759,40 +759,40 @@ export function mockGetNodeInvitationLinks(
 }
 
 /**
- * Create invitation link mock
+ * Create collaboration link mock
  */
-export function mockCreateInvitationLink(
-	variables: CreateInvitationLinkMutationVariables,
-	createInvitationLink: InvitationLink
-): Mock<CreateInvitationLinkMutation, CreateInvitationLinkMutationVariables> {
+export function mockCreateCollaborationLink(
+	variables: CreateCollaborationLinkMutationVariables,
+	createCollaborationLink: CollaborationLink
+): Mock<CreateCollaborationLinkMutation, CreateCollaborationLinkMutationVariables> {
 	return {
 		request: {
-			query: CREATE_INVITATION_LINK,
+			query: CREATE_COLLABORATION_LINK,
 			variables
 		},
 		result: {
 			data: {
-				createInvitationLink
+				createCollaborationLink
 			}
 		}
 	};
 }
 
 /**
- * Delete invitation links mock
+ * Delete collaboration links mock
  */
-export function mockDeleteInvitationLinks(
-	variables: DeleteInvitationLinksMutationVariables,
-	deleteInvitationLinks: Array<string>
-): Mock<DeleteInvitationLinksMutation, DeleteInvitationLinksMutationVariables> {
+export function mockDeleteCollaborationLinks(
+	variables: DeleteCollaborationLinksMutationVariables,
+	deleteCollaborationLinks: Array<string>
+): Mock<DeleteCollaborationLinksMutation, DeleteCollaborationLinksMutationVariables> {
 	return {
 		request: {
-			query: DELETE_INVITATION_LINKS,
+			query: DELETE_COLLABORATION_LINKS,
 			variables
 		},
 		result: {
 			data: {
-				deleteInvitationLinks
+				deleteCollaborationLinks
 			}
 		}
 	};

@@ -6,20 +6,20 @@
 
 import { QueryResult, useQuery } from '@apollo/client';
 
-import GET_NODE_INVITATION_LINKS from '../../../graphql/queries/getNodeInvitationLinks.graphql';
+import GET_NODE_COLLABORATION_LINKS from '../../../graphql/queries/getNodeCollaborationLinks.graphql';
 import {
-	GetNodeInvitationLinksQuery,
-	GetNodeInvitationLinksQueryVariables
+	GetNodeCollaborationLinksQuery,
+	GetNodeCollaborationLinksQueryVariables
 } from '../../../types/graphql/types';
 import { useErrorHandler } from '../../useErrorHandler';
 
-export function useGetNodeInvitationLinksQuery(
+export function useGetNodeCollaborationLinksQuery(
 	nodeId: string
-): Pick<QueryResult<GetNodeInvitationLinksQuery>, 'data' | 'loading' | 'error'> {
+): Pick<QueryResult<GetNodeCollaborationLinksQuery>, 'data' | 'loading' | 'error'> {
 	const { data, loading, error } = useQuery<
-		GetNodeInvitationLinksQuery,
-		GetNodeInvitationLinksQueryVariables
-	>(GET_NODE_INVITATION_LINKS, {
+		GetNodeCollaborationLinksQuery,
+		GetNodeCollaborationLinksQueryVariables
+	>(GET_NODE_COLLABORATION_LINKS, {
 		variables: {
 			node_id: nodeId
 		},
@@ -28,7 +28,7 @@ export function useGetNodeInvitationLinksQuery(
 		errorPolicy: 'all',
 		returnPartialData: true
 	});
-	useErrorHandler(error, 'GET_NODE_INVITATION_LINKS');
+	useErrorHandler(error, 'GET_NODE_COLLABORATION_LINKS');
 
 	return { data, loading, error };
 }

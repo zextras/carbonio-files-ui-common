@@ -32,7 +32,7 @@ import {
 	mockDeleteShare,
 	mockGetAccountByEmail,
 	mockGetNode,
-	mockGetNodeInvitationLinks,
+	mockGetNodeCollaborationLinks,
 	mockGetNodeLinks,
 	mockGetShares,
 	mockUpdateShare
@@ -70,7 +70,7 @@ describe('Node Sharing', () => {
 		const mocks = [
 			mockGetShares(getSharesVariables(node.id), node),
 			mockGetNodeLinks({ node_id: node.id }, node),
-			mockGetNodeInvitationLinks({ node_id: node.id }, node)
+			mockGetNodeCollaborationLinks({ node_id: node.id }, node)
 		];
 		const { getByTextWithMarkup } = render(<NodeSharing node={node} />, { mocks });
 		await screen.findByText(/collaborators/i);
@@ -156,7 +156,7 @@ describe('Node Sharing', () => {
 			const mocks = [
 				mockGetShares(getSharesVariables(node.id), node),
 				mockGetNodeLinks({ node_id: node.id }, node),
-				mockGetNodeInvitationLinks({ node_id: node.id }, node)
+				mockGetNodeCollaborationLinks({ node_id: node.id }, node)
 			];
 			render(<NodeSharing node={node} />, { mocks });
 			await screen.findByText(getChipLabel(shares[0].share_target as SharedTarget));
@@ -178,7 +178,7 @@ describe('Node Sharing', () => {
 			const mocks = [
 				mockGetShares(getSharesVariables(node.id), node),
 				mockGetNodeLinks({ node_id: node.id }, node),
-				mockGetNodeInvitationLinks({ node_id: node.id }, node)
+				mockGetNodeCollaborationLinks({ node_id: node.id }, node)
 			];
 			render(<NodeSharing node={node} />, { mocks });
 			await screen.findByText(getChipLabel(shares[0].share_target as SharedTarget));
@@ -195,7 +195,7 @@ describe('Node Sharing', () => {
 			const mocks = [
 				mockGetShares(getSharesVariables(node.id), node),
 				mockGetNodeLinks({ node_id: node.id }, node),
-				mockGetNodeInvitationLinks({ node_id: node.id }, node),
+				mockGetNodeCollaborationLinks({ node_id: node.id }, node),
 				mockDeleteShare(
 					{ node_id: node.id, share_target_id: (share.share_target as SharedTarget).id },
 					true
@@ -238,7 +238,7 @@ describe('Node Sharing', () => {
 			const mocks = [
 				mockGetShares(getSharesVariables(node.id), node),
 				mockGetNodeLinks({ node_id: node.id }, node),
-				mockGetNodeInvitationLinks({ node_id: node.id }, node),
+				mockGetNodeCollaborationLinks({ node_id: node.id }, node),
 				mockUpdateShare(
 					{
 						share_target_id: shareToUpdate.share_target.id,
@@ -312,7 +312,7 @@ describe('Node Sharing', () => {
 			const mocks = [
 				mockGetShares(getSharesVariables(node.id), node),
 				mockGetNodeLinks({ node_id: node.id }, node),
-				mockGetNodeInvitationLinks({ node_id: node.id }, node),
+				mockGetNodeCollaborationLinks({ node_id: node.id }, node),
 				mockGetAccountByEmail({ email: user.email }, user),
 				mockCreateShare(
 					{
@@ -461,7 +461,7 @@ describe('Node Sharing', () => {
 			const mocks = [
 				mockGetShares(getSharesVariables(node.id), node),
 				mockGetNodeLinks({ node_id: node.id }, node),
-				mockGetNodeInvitationLinks({ node_id: node.id }, node),
+				mockGetNodeCollaborationLinks({ node_id: node.id }, node),
 				mockGetAccountByEmail({ email: user1.email }, user1),
 				mockGetAccountByEmail({ email: user2.email }, user2),
 				mockCreateShare(
