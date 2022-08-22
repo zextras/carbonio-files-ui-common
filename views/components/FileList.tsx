@@ -23,11 +23,11 @@ const FileList: React.VFC<FileListProps> = ({ fileId, canUploadFile }) => {
 	const { data: nodeData, loading, loadMore, hasMore } = useGetNodeQuery(fileId);
 	const node = useMemo(() => nodeData?.getNode || null, [nodeData]);
 
-	const { setActiveNode } = useActiveNode();
+	const { setActiveNode, tab } = useActiveNode();
 
 	useEffect(() => {
-		setActiveNode(fileId);
-	}, [fileId, setActiveNode]);
+		setActiveNode(fileId, tab);
+	}, [fileId, setActiveNode, tab]);
 
 	const nodes = useMemo<NodeListItemType[]>(() => {
 		if (node) {
