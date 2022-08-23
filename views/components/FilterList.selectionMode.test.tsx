@@ -27,7 +27,7 @@ describe('Filter List', () => {
 			];
 			render(
 				<Route path="/filter/:filter">
-					<FilterList flagged cascade trashed={false} />
+					<FilterList flagged cascade folderId={ROOTS.LOCAL_ROOT} />
 				</Route>,
 				{ mocks, initialRouterEntries: ['/filter/flagged'] }
 			);

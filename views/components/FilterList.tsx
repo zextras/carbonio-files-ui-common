@@ -11,25 +11,19 @@ import { useTranslation } from 'react-i18next';
 
 import { ROOTS } from '../../constants';
 import { useFindNodesQuery } from '../../hooks/graphql/queries/useFindNodesQuery';
-import { Crumb, NodeListItemType } from '../../types/common';
+import { Crumb, NodeListItemType, SearchParams } from '../../types/common';
 import { NonNullableListItem, Unwrap } from '../../types/utils';
 import { List } from './List';
 
-interface FilterListProps {
-	flagged?: boolean;
-	sharedByMe?: boolean;
-	sharedWithMe?: boolean;
-	trashed?: boolean;
+interface FilterListProps extends Omit<SearchParams, 'keywords'> {
 	canUploadFile?: boolean;
-	cascade?: boolean;
-	directShare?: boolean;
 }
 
 const FilterList: React.VFC<FilterListProps> = ({
 	flagged,
 	sharedByMe,
 	sharedWithMe,
-	trashed,
+	folderId,
 	canUploadFile,
 	cascade,
 	directShare
@@ -43,11 +37,12 @@ const FilterList: React.VFC<FilterListProps> = ({
 		flagged,
 		sharedByMe,
 		sharedWithMe,
-		folderId:
-			(trashed === true && ROOTS.TRASH) || (trashed === false && ROOTS.LOCAL_ROOT) || undefined,
+		folderId,
 		cascade,
 		directShare
 	});
+
+	const trashed = useMemo(() => folderId === ROOTS.TRASH, [folderId]);
 
 	const [t] = useTranslation();
 

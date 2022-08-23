@@ -13,7 +13,7 @@ import reduce from 'lodash/reduce';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 
-import { ROOTS } from '../../constants';
+import { FILTER_PARAMS, ROOTS } from '../../constants';
 import { useFindNodesQuery } from '../../hooks/graphql/queries/useFindNodesQuery';
 import { Crumb, NodeListItemType, RootListItemType } from '../../types/common';
 import { MakeOptional, NodeType } from '../../types/graphql/types';
@@ -37,6 +37,11 @@ const ModalContainer = styled(Container)`
 	flex: 1 1 auto;
 `;
 
+type FilterQueryParams = Pick<
+	Parameters<typeof useFindNodesQuery>[0],
+	'flagged' | 'sharedWithMe' | 'folderId' | 'cascade' | 'directShare'
+>;
+
 export const ModalRootsList: React.VFC<RootsListProps> = ({
 	activeNodes,
 	setActiveNode,
@@ -46,12 +51,7 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 	checkSelectable
 }) => {
 	const [t] = useTranslation();
-	const [filterQueryParams, setFilterQueryParam] = useState<
-		Pick<
-			Parameters<typeof useFindNodesQuery>[0],
-			'flagged' | 'sharedWithMe' | 'folderId' | 'cascade'
-		>
-	>({});
+	const [filterQueryParams, setFilterQueryParam] = useState<FilterQueryParams>({});
 	const { data: findNodesData, loading, loadMore, hasMore } = useFindNodesQuery(filterQueryParams);
 
 	const listRef = useRef<HTMLDivElement | null>(null);
@@ -78,7 +78,7 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 					id: 'sharedWithMe',
 					label: t('modal.roots.sharedWitMe', 'Shared with me'),
 					click: (event: React.SyntheticEvent) => {
-						setFilterQueryParam({ sharedWithMe: true, folderId: ROOTS.LOCAL_ROOT, cascade: false });
+						setFilterQueryParam(FILTER_PARAMS.sharedWithMe);
 						setActiveNode(
 							{
 								id: ROOTS.SHARED_WITH_ME,
@@ -181,7 +181,7 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 					navigateTo(id, event);
 					break;
 				case ROOTS.SHARED_WITH_ME:
-					setFilterQueryParam({ sharedWithMe: true, folderId: ROOTS.LOCAL_ROOT, cascade: false });
+					setFilterQueryParam(FILTER_PARAMS.sharedWithMe);
 					break;
 				default:
 					break;
