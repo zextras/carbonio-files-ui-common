@@ -536,7 +536,11 @@ describe('Filter List', () => {
 			expect(draggedNodeItems).toHaveLength(2);
 			expect(draggedNodeItems[0]).toHaveAttribute('disabled', '');
 			expect(draggedNodeItems[1]).not.toHaveAttribute('disabled', '');
-			expect(screen.queryByTestId('dropzone-overlay')).not.toBeInTheDocument();
+			// dropzone overlay of the list is shown
+			await screen.findByTestId('dropzone-overlay');
+			expect(screen.getByTestId('dropzone-overlay')).toBeVisible();
+			expect(screen.getByText(/drag&drop mode/i)).toBeVisible();
+			expect(screen.getByText(/you cannot drop your items in this area/i)).toBeVisible();
 			fireEvent.dragLeave(itemToDrag, { dataTransfer: dataTransfer() });
 
 			// drag and drop on folder without permissions
@@ -747,6 +751,79 @@ describe('Filter List', () => {
 
 			// selection mode stays active
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToDrag.length);
+		});
+
+		test('Drag of a node in a filter empty space shows disabled dropzone overlay for the list. Drop does nothing', async () => {
+			const currentFilter = populateNodes(5);
+			const nodesToDrag = [currentFilter[0]];
+			forEach(nodesToDrag, (mockedNode) => {
+				mockedNode.permissions.can_write_file = true;
+				mockedNode.permissions.can_write_folder = true;
+				mockedNode.parent = populateFolder();
+				mockedNode.parent.permissions.can_write_folder = true;
+				mockedNode.parent.permissions.can_write_file = true;
+			});
+
+			const mocks = [
+				mockFindNodes(
+					getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+					currentFilter
+				)
+			];
+
+			let dataTransferData: Record<string, string> = {};
+			let dataTransferTypes: string[] = [];
+			const dataTransfer = (): Partial<DataTransfer> => ({
+				setDragImage: jest.fn(),
+				setData: jest.fn().mockImplementation((type, data) => {
+					dataTransferData[type] = data;
+					dataTransferTypes.includes(type) || dataTransferTypes.push(type);
+				}),
+				getData: jest.fn().mockImplementation((type) => dataTransferData[type]),
+				types: dataTransferTypes,
+				clearData: jest.fn().mockImplementation(() => {
+					dataTransferTypes = [];
+					dataTransferData = {};
+				})
+			});
+
+			render(<FilterList flagged trashed={false} canUploadFile cascade />, { mocks });
+
+			const itemToDrag = await screen.findByText(nodesToDrag[0].name);
+			fireEvent.dragStart(itemToDrag, { dataTransfer: dataTransfer() });
+			fireEvent.dragEnter(itemToDrag, { dataTransfer: dataTransfer() });
+			await waitFor(
+				() =>
+					new Promise((resolve) => {
+						setTimeout(resolve, 100);
+					})
+			);
+			// two items are visible for the node, the one in the list is disabled, the other one is the one dragged and is not disabled
+			const draggedNodeItems = screen.getAllByText(nodesToDrag[0].name);
+			expect(draggedNodeItems).toHaveLength(2);
+			expect(draggedNodeItems[0]).toHaveAttribute('disabled', '');
+			expect(draggedNodeItems[1]).not.toHaveAttribute('disabled', '');
+			// dropzone overlay of the list is shown
+			await screen.findByTestId('dropzone-overlay');
+			expect(screen.getByTestId('dropzone-overlay')).toBeVisible();
+			expect(screen.getByText(/drag&drop mode/i)).toBeVisible();
+			expect(screen.getByText(/you cannot drop your items in this area/i)).toBeVisible();
+			await waitFor(
+				() =>
+					new Promise((resolve) => {
+						setTimeout(resolve, 100);
+					})
+			);
+			fireEvent.drop(itemToDrag, { dataTransfer: dataTransfer() });
+			fireEvent.dragEnd(itemToDrag, { dataTransfer: dataTransfer() });
+			await waitFor(
+				() =>
+					new Promise((resolve) => {
+						setTimeout(resolve, 100);
+					})
+			);
+			expect(screen.queryByText(/item moved/i)).not.toBeInTheDocument();
+			expect(screen.queryByTestId('dropzone-overlay')).not.toBeInTheDocument();
 		});
 	});
 });

@@ -195,7 +195,11 @@ describe('Search list', () => {
 			expect(draggedNodeItems).toHaveLength(2);
 			expect(draggedNodeItems[0]).toHaveAttribute('disabled', '');
 			expect(draggedNodeItems[1]).not.toHaveAttribute('disabled', '');
-			expect(screen.queryByTestId('dropzone-overlay')).not.toBeInTheDocument();
+			// dropzone overlay of the list is shown
+			await screen.findByTestId('dropzone-overlay');
+			expect(screen.getByTestId('dropzone-overlay')).toBeVisible();
+			expect(screen.getByText(/drag&drop mode/i)).toBeVisible();
+			expect(screen.getByText(/you cannot drop your items in this area/i)).toBeVisible();
 			fireEvent.dragLeave(itemToDrag, { dataTransfer: dataTransfer() });
 
 			// drag and drop on folder without permissions

@@ -20,7 +20,7 @@ import FilterList from './FilterList';
 
 describe('Filter List', () => {
 	describe('Mark for deletion', () => {
-		describe('Selectin mode', () => {
+		describe('Selection mode', () => {
 			test('Mark for deletion remove selected items from the filter list', async () => {
 				const currentFilter = populateNodes(3);
 				forEach(currentFilter, (mockedNode) => {

@@ -4,14 +4,17 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import React, { useCallback, useContext, useEffect, useMemo } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
+import { useReactiveVar } from '@apollo/client';
 import { Container } from '@zextras/carbonio-design-system';
 import { PreviewsManagerContext } from '@zextras/carbonio-ui-preview';
 import filter from 'lodash/filter';
 import find from 'lodash/find';
 import includes from 'lodash/includes';
+import isEmpty from 'lodash/isEmpty';
 import size from 'lodash/size';
+import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 
@@ -20,6 +23,7 @@ import { useActiveNode } from '../../../hooks/useActiveNode';
 import { useNavigation } from '../../../hooks/useNavigation';
 import { useSendViaMail } from '../../../hooks/useSendViaMail';
 import useUserInfo from '../../../hooks/useUserInfo';
+import { draggedItemsVar } from '../../apollo/dragAndDropVar';
 import { DISPLAYER_TABS, DRAG_TYPES, PREVIEW_MAX_SIZE, PREVIEW_TYPE, ROOTS } from '../../constants';
 import { ListContext, NodeAvatarIconContext } from '../../contexts';
 import {
@@ -30,6 +34,7 @@ import {
 	FlagNodesType,
 	useFlagNodesMutation
 } from '../../hooks/graphql/mutations/useFlagNodesMutation';
+import { useMoveNodesMutation } from '../../hooks/graphql/mutations/useMoveNodesMutation';
 import {
 	RestoreType,
 	useRestoreNodesMutation
@@ -42,6 +47,7 @@ import {
 	UpdateNodeType,
 	useUpdateNodeMutation
 } from '../../hooks/graphql/mutations/useUpdateNodeMutation';
+import { useGetChildQuery } from '../../hooks/graphql/queries/useGetChildQuery';
 import { OpenCopyModal, useCopyModal } from '../../hooks/modals/useCopyModal';
 import { useDeletePermanentlyModal } from '../../hooks/modals/useDeletePermanentlyModal';
 import { OpenMoveModal, useMoveModal } from '../../hooks/modals/useMoveModal';
@@ -56,7 +62,9 @@ import {
 	ActionsFactoryChecker,
 	ActionsFactoryCheckerMap,
 	buildActionItems,
-	getAllPermittedActions
+	canBeMoveDestination,
+	getAllPermittedActions,
+	isFolder
 } from '../../utils/ActionsFactory';
 import {
 	downloadNode,
@@ -104,6 +112,19 @@ export const List: React.VFC<ListProps> = ({
 	const { navigateToFolder } = useNavigation();
 	const { activeNodeId: activeNode, setActiveNode } = useActiveNode();
 	const [t] = useTranslation();
+	const { data: getChildData } = useGetChildQuery(folderId || '');
+	const draggedItems = useReactiveVar(draggedItemsVar);
+	const [dropzoneEnabled, setDropzoneEnabled] = useState(false);
+	const [dropzoneModal, setDropzoneModal] = useState<{
+		title: string;
+		message: string;
+		icons?: string[];
+	}>();
+
+	const folderNode = useMemo(
+		() => (getChildData?.getNode && isFolder(getChildData.getNode) && getChildData.getNode) || null,
+		[getChildData?.getNode]
+	);
 
 	const { setIsEmpty } = useContext(ListContext);
 
@@ -527,8 +548,71 @@ export const List: React.VFC<ListProps> = ({
 		[add, canUpload, createSnackbar, folderId, navigateToFolder, t]
 	);
 
-	const dropzoneModal = useMemo(
-		() =>
+	const { moveNodes: moveNodesMutation } = useMoveNodesMutation();
+
+	const moveNodesAction = useCallback<React.DragEventHandler>(
+		(event) => {
+			const movingNodes = JSON.parse(event.dataTransfer.getData(DRAG_TYPES.move) || '{}');
+			if (movingNodes && folderNode) {
+				moveNodesMutation(folderNode, ...movingNodes).then(() => {
+					exitSelectionMode();
+				});
+			}
+		},
+		[exitSelectionMode, folderNode, moveNodesMutation]
+	);
+
+	const [dragging, isDragged] = useMemo(
+		() => [
+			!isEmpty(draggedItems),
+			!!folderId && !!draggedItems && some(draggedItems, (item) => item.id === folderId)
+		],
+		[draggedItems, folderId]
+	);
+
+	const dropTypes = useMemo(() => {
+		const types = [DRAG_TYPES.upload];
+		if (!isDragged) {
+			types.push(DRAG_TYPES.move);
+		}
+		return types;
+	}, [isDragged]);
+
+	const dropEffect = useMemo(() => {
+		if (!isDragged) {
+			return dragging ? 'move' : 'copy';
+		}
+		return 'none';
+	}, [dragging, isDragged]);
+
+	const dragMoveHandler = useCallback(() => {
+		const draggedNodes = draggedItemsVar();
+		const canMove =
+			draggedNodes !== null &&
+			draggedNodes.length > 0 &&
+			folderNode !== null &&
+			canBeMoveDestination(folderNode, draggedNodes, me);
+		setDropzoneModal(
+			canMove
+				? {
+						title: t('dropzone.move.title.enabled', 'Drag&Drop Mode'),
+						message: t(
+							'dropzone.move.message.enabled',
+							'Drop here your items \n to quickly move them to this folder'
+						),
+						icons: ['ImageOutline', 'FileAddOutline', 'FilmOutline']
+				  }
+				: {
+						title: t('dropzone.move.title.disabled', 'Drag&Drop Mode'),
+						message: t('dropzone.move.message.disabled', 'You cannot drop your items in this area'),
+						icons: ['AlertTriangleOutline']
+				  }
+		);
+		return canMove;
+	}, [folderNode, me, t]);
+
+	const dragUploadHandler = useCallback(() => {
+		setDropzoneModal(
 			canUpload
 				? {
 						title: t('uploads.dropzone.title.enabled', 'Drag&Drop Mode'),
@@ -551,8 +635,38 @@ export const List: React.VFC<ListProps> = ({
 							'You cannot drop an attachment in this area'
 						),
 						icons: ['AlertTriangleOutline']
-				  },
-		[canUpload, folderId, t]
+				  }
+		);
+		return canUpload;
+	}, [canUpload, folderId, t]);
+
+	const dragEnterHandler = useCallback<React.DragEventHandler>(
+		(event) => {
+			// check if node is a valid destination for write inside action
+			setDropzoneEnabled(() => {
+				if (event.dataTransfer.types.includes(DRAG_TYPES.move)) {
+					return dragMoveHandler();
+				}
+				if (event.dataTransfer.types.includes(DRAG_TYPES.upload)) {
+					return dragUploadHandler();
+				}
+				return false;
+			});
+		},
+		[dragMoveHandler, dragUploadHandler]
+	);
+
+	const dropHandler = useCallback<React.DragEventHandler>(
+		(event) => {
+			if (dropzoneEnabled) {
+				if (event.dataTransfer.types.includes(DRAG_TYPES.move)) {
+					moveNodesAction(event);
+				} else if (event.dataTransfer.types.includes(DRAG_TYPES.upload)) {
+					uploadWithDragAndDrop(event);
+				}
+			}
+		},
+		[dropzoneEnabled, moveNodesAction, uploadWithDragAndDrop]
 	);
 
 	return (
@@ -575,13 +689,14 @@ export const List: React.VFC<ListProps> = ({
 				actionComponent={<SortingComponent />}
 			/>
 			<Dropzone
-				onDrop={uploadWithDragAndDrop}
-				disabled={!canUpload}
-				title={dropzoneModal.title}
-				message={dropzoneModal.message}
-				icons={dropzoneModal.icons}
-				effect="copy"
-				types={[DRAG_TYPES.upload]}
+				onDrop={dropHandler}
+				onDragEnter={dragEnterHandler}
+				disabled={isDragged || !dropzoneEnabled}
+				effect={dropEffect}
+				types={dropTypes}
+				title={dropzoneModal?.title}
+				message={dropzoneModal?.message}
+				icons={dropzoneModal?.icons}
 			>
 				{(): JSX.Element => (
 					<Container background="gray6" mainAlignment="flex-start">

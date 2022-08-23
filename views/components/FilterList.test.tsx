@@ -22,6 +22,7 @@ import {
 	getFindNodesVariables,
 	mockFindNodes,
 	mockFlagNodes,
+	mockGetChild,
 	mockGetChildren,
 	mockGetPermissions
 } from '../../utils/mockUtils';
@@ -159,6 +160,7 @@ describe('Filter list', () => {
 			const mocks = [
 				mockFindNodes(getFindNodesVariables({ flagged: true }), nodes),
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+				mockGetChild({ node_id: currentFolder.id }, currentFolder),
 				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockFlagNodes(
 					{

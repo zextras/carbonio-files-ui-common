@@ -17,6 +17,7 @@ import { Node } from '../types/common';
 import { Folder } from '../types/graphql/types';
 import {
 	getChildrenVariables,
+	mockGetChild,
 	mockGetChildren,
 	mockGetParent,
 	mockGetPermissions
@@ -46,7 +47,8 @@ describe('Folder View Selection mode', () => {
 		const mocks = [
 			mockGetParent({ node_id: currentFolder.id }, currentFolder),
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
-			mockGetPermissions({ node_id: currentFolder.id }, currentFolder)
+			mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
+			mockGetChild({ node_id: currentFolder.id }, currentFolder)
 		];
 		render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
 
@@ -96,6 +98,7 @@ describe('Folder View Selection mode', () => {
 			mockGetParent({ node_id: currentFolder.id }, currentFolder),
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 			mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
+			mockGetChild({ node_id: currentFolder.id }, currentFolder),
 			mockGetChildren(
 				getChildrenVariables(currentFolder.id, undefined, undefined, undefined, true),
 				{ ...currentFolder, children: populateNodePage(secondPage) } as Folder

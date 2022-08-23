@@ -19,6 +19,7 @@ import {
 	getChildrenVariables,
 	mockCreateFolder,
 	mockCreateFolderError,
+	mockGetChild,
 	mockGetChildren,
 	mockGetParent,
 	mockGetPermissions
@@ -90,6 +91,7 @@ describe('Create folder', () => {
 		const mocks = [
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 			mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
+			mockGetChild({ node_id: currentFolder.id }, currentFolder),
 			mockCreateFolderError(
 				{
 					destination_id: currentFolder.id,
@@ -150,6 +152,7 @@ describe('Create folder', () => {
 			mockGetParent({ node_id: currentFolder.id }, currentFolder),
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 			mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
+			mockGetChild({ node_id: currentFolder.id }, currentFolder),
 			mockCreateFolder(
 				{
 					destination_id: currentFolder.id,
@@ -210,6 +213,7 @@ describe('Create folder', () => {
 		const mocks = [
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 			mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
+			mockGetChild({ node_id: currentFolder.id }, currentFolder),
 			mockCreateFolder(
 				{
 					destination_id: currentFolder.id,
@@ -312,6 +316,7 @@ describe('Create folder', () => {
 			mockGetParent({ node_id: currentFolder.id }, currentFolder),
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 			mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
+			mockGetChild({ node_id: currentFolder.id }, currentFolder),
 			mockCreateFolder(
 				{
 					destination_id: currentFolder.id,
