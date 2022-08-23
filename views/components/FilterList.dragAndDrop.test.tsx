@@ -787,7 +787,7 @@ describe('Filter List', () => {
 				})
 			});
 
-			render(<FilterList flagged trashed={false} canUploadFile cascade />, { mocks });
+			render(<FilterList flagged folderId={ROOTS.LOCAL_ROOT} canUploadFile cascade />, { mocks });
 
 			const itemToDrag = await screen.findByText(nodesToDrag[0].name);
 			fireEvent.dragStart(itemToDrag, { dataTransfer: dataTransfer() });
