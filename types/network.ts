@@ -60,15 +60,8 @@ export interface ContactInformation {
 }
 
 export interface DerefContactInformation extends ContactInformation {
-	_attrs: {
-		firstName?: string;
-		fileAs?: string;
+	_attrs: ContactInformation['_attrs'] & {
 		email: string;
-		fullName?: string;
-		nickname: string;
-		lastName?: string;
-		type?: string;
-		zimbraId?: string;
 	};
 }
 

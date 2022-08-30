@@ -260,7 +260,7 @@ describe('Node Sharing', () => {
 			).not.toBeInTheDocument();
 			expect(screen.queryByTestId('icon: Share')).not.toBeInTheDocument();
 			// open on chip to open popover
-			userEvent.click(screen.getByText(getChipLabel(shareToUpdate.share_target)));
+			userEvent.click(screen.getAllByTestId('icon: EyeOutline')[0]);
 			await screen.findByText(/edit .+ collaboration/i);
 			await screen.findByText(/viewer/i);
 			expect(screen.getByText(/viewer/i)).toBeVisible();
@@ -371,7 +371,7 @@ describe('Node Sharing', () => {
 			// share button is enabled
 			expect(screen.getByRole('button', { name: /share/i })).not.toHaveAttribute('disabled');
 			// change permissions on the new share
-			userEvent.click(screen.getByText(user.full_name), undefined, { skipHover: true });
+			userEvent.click(screen.getAllByTestId('icon: EyeOutline')[1], undefined, { skipHover: true });
 			// the popover to change permission is shown
 			await screen.findByText(/editor/i);
 			// wait for the listener of the popover to be registered
@@ -520,7 +520,7 @@ describe('Node Sharing', () => {
 			expect(within(collaboratorsContainer).getAllByTestId('icon: EyeOutline')).toHaveLength(2);
 			// change permissions on the new share
 			act(() => {
-				userEvent.click(screen.getByText(user1.full_name));
+				userEvent.click(screen.getAllByTestId('icon: EyeOutline')[1]);
 			});
 			// the popover to change permission is shown
 			await screen.findByText(/editor/i);
@@ -560,7 +560,7 @@ describe('Node Sharing', () => {
 			// because the other share is set on editor
 			expect(within(collaboratorsContainer).getAllByTestId('icon: EyeOutline')).toHaveLength(2);
 			// change permissions on the new share
-			userEvent.click(screen.getByText(user2.full_name), undefined, { skipHover: true });
+			userEvent.click(screen.getAllByTestId('icon: EyeOutline')[1], undefined, { skipHover: true });
 			// the popover to change permission is shown
 			await screen.findByTestId('icon: Square');
 			// wait for the listener of the popover to be registered

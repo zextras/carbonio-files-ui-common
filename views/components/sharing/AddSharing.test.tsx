@@ -263,7 +263,7 @@ describe('Add Sharing', () => {
 		await waitFor(() => expect(createShareMutationFn).toHaveBeenCalled());
 	});
 
-	test('when user click on a new share chip the popover is shown', async () => {
+	test('when user click on a new share permissions icon button of the chip the popover is shown', async () => {
 		const node = populateNode();
 		node.permissions.can_share = true;
 		const user = populateUser();
@@ -297,7 +297,7 @@ describe('Add Sharing', () => {
 		// dropdown is closed
 		expect(screen.queryByText(user.email)).not.toBeInTheDocument();
 		// click on the chip to open the popover
-		userEvent.click(screen.getByText(user.full_name), undefined, { skipHover: true });
+		userEvent.click(screen.getByTestId('icon: EyeOutline'), undefined, { skipHover: true });
 		await screen.findByText(/viewer/i);
 		// wait for the popover to register listener
 		await waitFor(
@@ -817,7 +817,7 @@ describe('Add Sharing', () => {
 
 		// edit first share to be an editor
 		// click on chip to open popover
-		userEvent.click(screen.getByText(user1.full_name), undefined, { skipHover: true });
+		userEvent.click(screen.getAllByTestId('icon: EyeOutline')[0]);
 		await screen.findByText(/viewer/i);
 		// wait for the popover to register listeners
 		await waitFor(
@@ -832,11 +832,14 @@ describe('Add Sharing', () => {
 		// wait for the chip to update replacing the viewer icon with the editor one
 		// there are 2 editor icons because one is inside the popover
 		await waitFor(() => expect(screen.getAllByTestId('icon: Edit2Outline')).toHaveLength(2));
+		// click on chip to close popover
+		act(() => {
+			userEvent.click(screen.getByText(user1.full_name));
+		});
+		expect(screen.getByTestId('icon: Edit2Outline')).toBeVisible();
 
 		// edit second share to allow re-share
-		act(() => {
-			userEvent.click(screen.getByText(user2.full_name), undefined, { skipHover: true });
-		});
+		userEvent.click(screen.getByTestId('icon: EyeOutline'));
 		// previous popover is closed and the one related to second share is opened
 		await screen.findByText(/viewer/i);
 		// wait for the popover to register listeners

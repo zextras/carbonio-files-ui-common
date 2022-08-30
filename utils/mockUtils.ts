@@ -36,6 +36,7 @@ import FIND_NODES from '../graphql/queries/findNodes.graphql';
 import GET_ACCOUNT_BY_EMAIL from '../graphql/queries/getAccountByEmail.graphql';
 import GET_ACCOUNTS_BY_EMAIL from '../graphql/queries/getAccountsByEmail.graphql';
 import GET_BASE_NODE from '../graphql/queries/getBaseNode.graphql';
+import GET_CHILD from '../graphql/queries/getChild.graphql';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import GET_CONFIGS from '../graphql/queries/getConfigs.graphql';
 import GET_NODE from '../graphql/queries/getNode.graphql';
@@ -120,7 +121,9 @@ import {
 	CreateCollaborationLinkMutationVariables,
 	CreateCollaborationLinkMutation,
 	DeleteCollaborationLinksMutationVariables,
-	DeleteCollaborationLinksMutation
+	DeleteCollaborationLinksMutation,
+	GetChildQuery,
+	GetChildQueryVariables
 } from '../types/graphql/types';
 
 type Id = string;
@@ -152,7 +155,8 @@ type MockVariablePossibleType =
 	| GetNodeCollaborationLinksQueryVariables
 	| DeleteCollaborationLinksMutationVariables
 	| DeleteVersionsMutationVariables
-	| GetVersionsQueryVariables;
+	| GetVersionsQueryVariables
+	| GetChildQueryVariables;
 
 export interface Mock<
 	TData = Record<string, unknown>,
@@ -909,6 +913,30 @@ export function mockGetConfigs(
 		result: {
 			data: {
 				getConfigs: configs
+			}
+		}
+	};
+}
+
+/**
+ * Get Child mock
+ */
+
+export function mockGetChild(
+	variables: GetChildQueryVariables,
+	node: GetChildQuery['getNode']
+): Mock<GetChildQuery, GetChildQueryVariables> {
+	return {
+		request: {
+			query: GET_CHILD,
+			variables: {
+				node_id: variables.node_id,
+				shares_limit: variables?.shares_limit || 1
+			}
+		},
+		result: {
+			data: {
+				getNode: node
 			}
 		}
 	};

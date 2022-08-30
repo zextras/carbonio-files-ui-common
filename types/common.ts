@@ -6,7 +6,6 @@
 
 import React, { DragEventHandler } from 'react';
 
-import { ROOTS } from '../constants';
 import {
 	BaseNodeFragment,
 	ChildFragment,
@@ -144,7 +143,7 @@ export interface ChipProps {
 	error?: boolean;
 	avatarPicture?: string;
 	closable?: boolean;
-	onClose?: (event: React.SyntheticEvent) => void;
+	onClose?: (event?: React.SyntheticEvent) => void;
 	avatarIcon?: string;
 	avatarBackground?: string;
 	avatarColor?: string;
@@ -319,9 +318,18 @@ export interface Contact {
 	company?: string;
 }
 
+export type RootsType = {
+	ENTRY_POINT: 'ROOTS_ENTRY_POINT';
+	LOCAL_ROOT: 'LOCAL_ROOT';
+	TRASH: 'TRASH_ROOT';
+	TRASH_MY_ELEMENTS: 'TRASH_ROOT_MY_ELEMENTS';
+	TRASH_SHARED_ELEMENTS: 'TRASH_ROOT_SHARED_ELEMENTS';
+	SHARED_WITH_ME: 'SHARED_WITH_ME_ROOT';
+};
+
 export type URLParams = {
 	filter: 'flagged' | 'myTrash' | 'sharedTrash' | 'sharedByMe' | 'sharedWithMe';
-	rootId: typeof ROOTS[keyof typeof ROOTS];
+	rootId: RootsType[keyof RootsType];
 };
 
 export type TargetModule = 'MAILS' | 'CONTACTS' | 'CALENDARS' | 'CHATS';

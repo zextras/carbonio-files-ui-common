@@ -5,7 +5,7 @@
  */
 
 /* eslint-disable arrow-body-style */
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Popover, Chip } from '@zextras/carbonio-design-system';
 import styled from 'styled-components';
@@ -23,29 +23,39 @@ const ActiveChip = styled(Chip)`
 `;
 
 export interface ChipWithPopoverProps extends ChipProps {
-	onClose?: (event: React.SyntheticEvent) => void;
+	onClose?: (event?: React.SyntheticEvent) => void;
 	background?: string;
 	openPopoverOnClick?: boolean;
+	popoverOpen?: boolean;
 	onClick?: (event: React.SyntheticEvent) => void;
 	children: (closePopover: () => void) => JSX.Element;
+	onChange?: (newState: boolean) => void;
 }
 
 export const ChipWithPopover: React.VFC<ChipWithPopoverProps> = ({
 	onClose,
 	background,
 	openPopoverOnClick = true,
+	popoverOpen = false,
 	onClick,
 	children,
+	onChange,
 	...rest
 }) => {
 	const ref = useRef<HTMLDivElement>(null);
-	const [open, setOpen] = useState(false);
+	const [open, setOpen] = useState(popoverOpen);
+
+	useEffect(() => {
+		setOpen(popoverOpen);
+	}, [popoverOpen]);
 
 	const setOpenToFalse = useCallback(() => {
-		if (open) {
+		if (onChange) {
+			onChange(false);
+		} else {
 			setOpen(false);
 		}
-	}, [open, setOpen]);
+	}, [onChange]);
 
 	const onCloseChip = useCallback(
 		(ev: React.SyntheticEvent) => {
@@ -62,14 +72,18 @@ export const ChipWithPopover: React.VFC<ChipWithPopoverProps> = ({
 
 	const onClickChip = useCallback<React.MouseEventHandler>(
 		(ev) => {
-			if (openPopoverOnClick && !open) {
-				setOpen(true);
+			if (openPopoverOnClick) {
+				if (onChange) {
+					onChange(true);
+				} else {
+					setOpen(true);
+				}
 			}
 			if (onClick) {
 				onClick(ev);
 			}
 		},
-		[openPopoverOnClick, open, onClick]
+		[openPopoverOnClick, onClick, onChange]
 	);
 
 	return (
@@ -84,7 +98,7 @@ export const ChipWithPopover: React.VFC<ChipWithPopoverProps> = ({
 				/>
 			</div>
 			<CustomPopover
-				open={openPopoverOnClick ? open : false}
+				open={open}
 				anchorEl={ref}
 				styleAsModal
 				placement="bottom-start"

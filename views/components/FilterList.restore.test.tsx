@@ -51,7 +51,7 @@ describe('Filter List', () => {
 					)
 				];
 
-				render(<FilterList trashed cascade={false} />, { mocks });
+				render(<FilterList folderId={ROOTS.TRASH} cascade={false} />, { mocks });
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -239,7 +239,7 @@ describe('Filter List', () => {
 				mockFindNodes(getFindNodesVariables({ folder_id: ROOTS.TRASH, cascade: false }), secondPage)
 			];
 
-			render(<FilterList trashed cascade={false} />, { mocks });
+			render(<FilterList folderId={ROOTS.TRASH} cascade={false} />, { mocks });
 
 			await screen.findByText(firstPage[0].name);
 			expect(screen.getByText(firstPage[0].name)).toBeVisible();

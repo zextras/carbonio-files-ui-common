@@ -132,7 +132,7 @@ describe('Add Share Chip', () => {
 		expect(screen.getByText('Someone Name')).toBeVisible();
 
 		act(() => {
-			userEvent.click(screen.getByText('Someone Name'));
+			userEvent.click(screen.getByTestId('icon: EyeOutline'));
 		});
 
 		expect(screen.getByText('Viewer')).toBeVisible();
@@ -175,7 +175,7 @@ describe('Add Share Chip', () => {
 			expect(screen.getByText('Someone Name')).toBeVisible();
 
 			act(() => {
-				userEvent.click(screen.getByText('Someone Name'));
+				userEvent.click(screen.getByTestId('icon: EyeOutline'));
 			});
 
 			expect(screen.getByText('Editor')).toBeVisible();
@@ -216,7 +216,7 @@ describe('Add Share Chip', () => {
 			expect(screen.getByText('Someone Name')).toBeVisible();
 
 			act(() => {
-				userEvent.click(screen.getByText('Someone Name'));
+				userEvent.click(screen.getByTestId('icon: EyeOutline'));
 			});
 
 			expect(screen.getByTestId('exclusive-selection-editor')).toBeInTheDocument();
@@ -260,7 +260,7 @@ describe('Add Share Chip', () => {
 			expect(screen.getByText('Someone Name')).toBeVisible();
 
 			act(() => {
-				userEvent.click(screen.getByText('Someone Name'));
+				userEvent.click(screen.getByTestId('icon: EyeOutline'));
 			});
 
 			expect(screen.getByText('Sharing allowed')).toBeVisible();
@@ -308,7 +308,7 @@ describe('Add Share Chip', () => {
 			expect(screen.getByText('Someone Name')).toBeVisible();
 
 			act(() => {
-				userEvent.click(screen.getByText('Someone Name'));
+				userEvent.click(screen.getByTestId('icon: EyeOutline'));
 			});
 
 			expect(screen.getByText('Sharing allowed')).toBeVisible();

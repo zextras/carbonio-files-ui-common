@@ -12,12 +12,14 @@ import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
+import { useParams } from 'react-router-dom';
 
 import { useActiveNode } from '../../../../hooks/useActiveNode';
 import { useNavigation } from '../../../../hooks/useNavigation';
 import MOVE_NODES from '../../../graphql/mutations/moveNodes.graphql';
 import GET_CHILDREN from '../../../graphql/queries/getChildren.graphql';
 import GET_PATH from '../../../graphql/queries/getPath.graphql';
+import { URLParams } from '../../../types/common';
 import {
 	Folder,
 	GetChildrenQuery,
@@ -31,6 +33,7 @@ import {
 import { isFolder } from '../../../utils/ActionsFactory';
 import { useCreateSnackbar } from '../../useCreateSnackbar';
 import { useErrorHandler } from '../../useErrorHandler';
+import useQueryParam from '../../useQueryParam';
 import { useUpdateFolderContent } from '../useUpdateFolderContent';
 import { isOperationVariables, isQueryResult } from '../utils';
 
@@ -46,6 +49,9 @@ export function useMoveNodesMutation(): { moveNodes: MoveNodesType; loading: boo
 	const [t] = useTranslation();
 	const createSnackbar = useCreateSnackbar();
 	const { activeNodeId, removeActiveNode } = useActiveNode();
+	const folderIdQueryParam = useQueryParam('folder');
+	const { rootId } = useParams<URLParams>();
+	const currentFolderId = folderIdQueryParam || rootId;
 	const { removeNodesFromFolder } = useUpdateFolderContent();
 	const { navigateToFolder } = useNavigation();
 
@@ -130,8 +136,8 @@ export function useMoveNodesMutation(): { moveNodes: MoveNodesType; loading: boo
 						isOperationVariables<GetChildrenQueryVariables>(query, variables, GET_CHILDREN) &&
 						variables.node_id === destinationFolder.id
 					) {
-						// avoid refetch getNode for the destination (folder content opened inside move modal)
-						return false;
+						// avoid refetch getNode for the destination if destination is not the opened folder inside main list (folder content opened inside move modal)
+						return currentFolderId === destinationFolder.id;
 					}
 
 					const lastResult = lastDiff?.result;
@@ -159,7 +165,7 @@ export function useMoveNodesMutation(): { moveNodes: MoveNodesType; loading: boo
 				}
 			});
 		},
-		[activeNodeId, moveNodesMutation, removeActiveNode, removeNodesFromFolder]
+		[activeNodeId, currentFolderId, moveNodesMutation, removeActiveNode, removeNodesFromFolder]
 	);
 
 	return { moveNodes, loading };

@@ -20,7 +20,7 @@ import FilterList from './FilterList';
 
 describe('Filter List', () => {
 	describe('Mark for deletion', () => {
-		describe('Selectin mode', () => {
+		describe('Selection mode', () => {
 			test('Mark for deletion remove selected items from the filter list', async () => {
 				const currentFilter = populateNodes(3);
 				forEach(currentFilter, (mockedNode) => {
@@ -45,7 +45,7 @@ describe('Filter List', () => {
 					)
 				];
 
-				render(<FilterList flagged trashed={false} cascade />, { mocks });
+				render(<FilterList flagged folderId={ROOTS.LOCAL_ROOT} cascade />, { mocks });
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -161,7 +161,7 @@ describe('Filter List', () => {
 				)
 			];
 
-			render(<FilterList flagged trashed={false} cascade />, { mocks });
+			render(<FilterList flagged folderId={ROOTS.LOCAL_ROOT} cascade />, { mocks });
 
 			await screen.findByText(firstPage[0].name);
 			expect(screen.getByText(firstPage[0].name)).toBeVisible();

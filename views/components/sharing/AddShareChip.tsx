@@ -5,16 +5,19 @@
  */
 
 /* eslint-disable arrow-body-style */
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import filter from 'lodash/filter';
 import toLower from 'lodash/toLower';
+import { useTranslation } from 'react-i18next';
 
 import { useActiveNode } from '../../../../hooks/useActiveNode';
+import { SHARE_CHIP_MAX_WIDTH } from '../../../constants';
 import { useGetNodeQuery } from '../../../hooks/graphql/queries/useGetNodeQuery';
 import { ChipActionsType, ChipProps, Role } from '../../../types/common';
 import { Node } from '../../../types/graphql/types';
 import { isFile, isFolder } from '../../../utils/ActionsFactory';
+import { getChipLabel } from '../../../utils/utils';
 import { ChipWithPopover } from './ChipWithPopover';
 import { NewShareChipPopoverContainer } from './NewShareChipPopoverContainer';
 
@@ -54,9 +57,14 @@ export const AddShareChip: React.FC<AddShareChipProps> = ({
 	value,
 	/** Chip update function */
 	onUpdate,
+	onClose,
+	error,
 	/** Accept all Chip props */
 	...rest
 }) => {
+	const [t] = useTranslation();
+	const [popoverOpen, setPopoverOpen] = useState(false);
+
 	const switchSharingAllowed = (): void => {
 		onUpdate(value.id, { sharingAllowed: !value.sharingAllowed });
 	};
@@ -86,22 +94,92 @@ export const AddShareChip: React.FC<AddShareChipProps> = ({
 		});
 	}, [node]);
 
+	const openPermissionsPopover = useCallback(() => {
+		setPopoverOpen((prevState) => !prevState);
+	}, []);
+
+	const [editShareTooltip, removeShareTooltip] = useMemo(
+		() => [
+			t('displayer.share.chip.tooltip.edit.collaborator', "Edit {{username}}'s collaboration", {
+				replace: { username: getChipLabel(value) }
+			}),
+			t('displayer.share.chip.tooltip.remove.collaborator', 'Remove {{username}}', {
+				replace: { username: getChipLabel(value) }
+			})
+		],
+		[t, value]
+	);
+
 	const actions: Array<ChipActionsType> = useMemo(() => {
 		const icons: Array<ChipActionsType> = [];
-		if (value.role === Role.Viewer) {
-			icons.push({ icon: 'EyeOutline', id: 'EyeOutline', type: 'icon', color: 'gray0' });
-		} else {
-			icons.push({ icon: 'Edit2Outline', id: 'Edit2Outline', type: 'icon', color: 'gray0' });
+		if (!error) {
+			if (value.role === Role.Viewer) {
+				icons.push({
+					icon: 'EyeOutline',
+					id: 'EyeOutline',
+					type: 'button',
+					color: 'gray0',
+					label: editShareTooltip,
+					onClick: openPermissionsPopover
+				});
+			} else {
+				icons.push({
+					icon: 'Edit2Outline',
+					id: 'Edit2Outline',
+					type: 'button',
+					color: 'gray0',
+					label: editShareTooltip,
+					onClick: openPermissionsPopover
+				});
+			}
+			if (value.sharingAllowed) {
+				icons.push({
+					icon: 'Share',
+					id: 'Share',
+					type: 'button',
+					color: 'gray0',
+					label: editShareTooltip,
+					onClick: openPermissionsPopover
+				});
+			}
 		}
-		if (value.sharingAllowed) {
-			icons.push({ icon: 'Share', id: 'Share', type: 'icon', color: 'gray0' });
+		if (onClose) {
+			icons.push({
+				icon: 'Close',
+				id: 'Remove',
+				type: 'button',
+				color: 'gray0',
+				label: removeShareTooltip,
+				onClick: onClose
+			});
 		}
 		return icons;
-	}, [value]);
+	}, [
+		editShareTooltip,
+		error,
+		onClose,
+		openPermissionsPopover,
+		removeShareTooltip,
+		value.role,
+		value.sharingAllowed
+	]);
+
+	const updatePermissionsPopover = useCallback((newState: boolean) => {
+		setPopoverOpen(newState);
+	}, []);
 
 	return (
 		<>
-			<ChipWithPopover maxWidth="210px" background="gray2" actions={actions} {...rest}>
+			<ChipWithPopover
+				maxWidth={SHARE_CHIP_MAX_WIDTH}
+				background="gray2"
+				actions={actions}
+				popoverOpen={popoverOpen}
+				openPopoverOnClick={false}
+				onChange={updatePermissionsPopover}
+				error={error}
+				{...rest}
+			>
 				{(_closePopover: () => void): JSX.Element => (
 					<NewShareChipPopoverContainer
 						activeRow={rowRoleToIdxMap[value.role]}

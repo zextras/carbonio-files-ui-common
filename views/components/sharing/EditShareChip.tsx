@@ -7,12 +7,12 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { FetchResult, useLazyQuery } from '@apollo/client';
-import { Text, Tooltip } from '@zextras/carbonio-design-system';
+import { Text } from '@zextras/carbonio-design-system';
 import filter from 'lodash/filter';
 import map from 'lodash/map';
 import { useTranslation } from 'react-i18next';
 
-import { SHARE_CHIP_SIZE } from '../../../constants';
+import { SHARE_CHIP_MAX_WIDTH, SHARE_CHIP_SIZE } from '../../../constants';
 import GET_PERMISSIONS from '../../../graphql/queries/getPermissions.graphql';
 import { useDeleteShareMutation } from '../../../hooks/graphql/mutations/useDeleteShareMutation';
 import { useUpdateShareMutation } from '../../../hooks/graphql/mutations/useUpdateShareMutation';
@@ -38,6 +38,7 @@ import { getChipLabel, sharePermissionsGetter } from '../../../utils/utils';
 import { RouteLeavingGuard } from '../RouteLeavingGuard';
 import { ChipWithPopover } from './ChipWithPopover';
 import { EditShareChipPopoverContainer } from './EditShareChipPopoverContainer';
+import { ShareChipLabel } from './ShareChipLabel';
 
 const rowSharePermissionToIdxMap = {
 	[SharePermission.ReadOnly]: 0,
@@ -84,6 +85,7 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 	const [updateShare] = useUpdateShareMutation();
 	const [t] = useTranslation();
 	const createSnackbar = useCreateSnackbar();
+	const [popoverOpen, setPopoverOpen] = useState(false);
 
 	const [getPermissionsLazy] = useLazyQuery<GetPermissionsQuery, GetPermissionsQueryVariables>(
 		GET_PERMISSIONS,
@@ -168,15 +170,9 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 		yourselfChip
 	);
 
-	const openDeleteShareModalCallback = useCallback(
-		(ev) => {
-			if (ev) {
-				ev.stopPropagation();
-			}
-			openDeleteShareModal();
-		},
-		[openDeleteShareModal]
-	);
+	const openDeleteShareModalCallback = useCallback(() => {
+		openDeleteShareModal();
+	}, [openDeleteShareModal]);
 
 	const disabledRows = useMemo(() => {
 		const filtered = filter(
@@ -201,6 +197,19 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 		[yourselfChip, share.share_target, t]
 	);
 
+	const openPermissionsPopover = useMemo(() => {
+		if (permissions.can_share) {
+			return () => {
+				setPopoverOpen((prevState) => !prevState);
+			};
+		}
+		return undefined;
+	}, [permissions]);
+
+	const updatePermissionsPopover = useCallback((newState: boolean) => {
+		setPopoverOpen(newState);
+	}, []);
+
 	const actions: Array<ChipActionsType> = useMemo(() => {
 		const icons: Array<ChipActionsType> = [];
 		if (
@@ -210,9 +219,10 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 			icons.push({
 				icon: 'EyeOutline',
 				id: 'EyeOutline',
-				type: 'icon',
+				type: permissions.can_share ? 'button' : 'icon',
 				color: 'gray0',
-				label: (permissions.can_share && editChipTooltipLabel) || undefined
+				label: (permissions.can_share && editChipTooltipLabel) || undefined,
+				onClick: permissions.can_share ? openPermissionsPopover : undefined
 			});
 		} else if (
 			share.permission === SharePermission.ReadAndWrite ||
@@ -221,9 +231,10 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 			icons.push({
 				icon: 'Edit2Outline',
 				id: 'Edit2Outline',
-				type: 'icon',
+				type: permissions.can_share ? 'button' : 'icon',
 				color: 'gray0',
-				label: (permissions.can_share && editChipTooltipLabel) || undefined
+				label: (permissions.can_share && editChipTooltipLabel) || undefined,
+				onClick: permissions.can_share ? openPermissionsPopover : undefined
 			});
 		}
 		if (
@@ -233,9 +244,10 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 			icons.push({
 				icon: 'Share',
 				id: 'Share',
-				type: 'icon',
+				type: permissions.can_share ? 'button' : 'icon',
 				color: 'gray0',
-				label: (permissions.can_share && editChipTooltipLabel) || undefined
+				label: (permissions.can_share && editChipTooltipLabel) || undefined,
+				onClick: permissions.can_share ? openPermissionsPopover : undefined
 			});
 		}
 
@@ -258,26 +270,16 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 	}, [
 		editChipTooltipLabel,
 		openDeleteShareModalCallback,
+		openPermissionsPopover,
 		permissions.can_share,
-		share.permission,
-		share.share_target,
+		share,
 		t,
 		yourselfChip
 	]);
 
 	const chipLabelComponent = useMemo(
-		() => (
-			<Tooltip
-				label={permissions.can_share ? editChipTooltipLabel : chipLabel}
-				maxWidth="100%"
-				overflowTooltip={!permissions.can_share}
-			>
-				<Text size={SHARE_CHIP_SIZE} weight="light">
-					{chipLabel}
-				</Text>
-			</Tooltip>
-		),
-		[chipLabel, editChipTooltipLabel, permissions.can_share]
+		() => <ShareChipLabel contact={share.share_target} />,
+		[share.share_target]
 	);
 
 	return (
@@ -299,8 +301,10 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 				label={chipLabelComponent}
 				background="gray3"
 				actions={actions}
-				openPopoverOnClick={permissions.can_share}
-				maxWidth="210px"
+				openPopoverOnClick={false}
+				popoverOpen={popoverOpen}
+				onChange={updatePermissionsPopover}
+				maxWidth={SHARE_CHIP_MAX_WIDTH}
 			>
 				{(closePopover: () => void): JSX.Element => (
 					<EditShareChipPopoverContainer
