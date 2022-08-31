@@ -20,6 +20,7 @@ import { useTranslation } from 'react-i18next';
 import { PublicLinkRowStatus } from '../../../../types/common';
 import { initExpirationDate } from '../../../../utils/utils';
 import { RouteLeavingGuard } from '../../RouteLeavingGuard';
+import { TextWithLineHeight } from '../../StyledComponents';
 
 interface AddPublicLinkComponentProps {
 	status: PublicLinkRowStatus;
@@ -105,7 +106,23 @@ export const AddPublicLinkComponent: React.FC<AddPublicLinkComponentProps> = ({
 				</Text>
 			</RouteLeavingGuard>
 			<Container orientation="horizontal" mainAlignment="space-between">
-				<Text size="medium">{t('publicLink.addLink.title', 'Public Link')}</Text>
+				<Container
+					mainAlignment="flex-start"
+					crossAlignment="flex-start"
+					height="fit"
+					background="gray6"
+					width="fit"
+				>
+					<TextWithLineHeight size="medium">
+						{t('publicLink.addLink.title', 'Public Links')}
+					</TextWithLineHeight>
+					<TextWithLineHeight size="extrasmall" color="secondary" overflow="break-word">
+						{t(
+							'publicLink.addLink.description',
+							'Anyone on the internet with the link can view or download the file'
+						)}
+					</TextWithLineHeight>
+				</Container>
 				{limitReached && (
 					<Text size="small" color="secondary">
 						{t(

@@ -29,6 +29,7 @@ import { Share, SharedTarget } from '../../../types/graphql/types';
 import { isFile } from '../../../utils/ActionsFactory';
 import { getChipLabel, getChipTooltip } from '../../../utils/utils';
 import { AddSharing } from './AddSharing';
+import { CollaborationLinks } from './collaborationLinks/CollaborationLinks';
 import { EditShareChip } from './EditShareChip';
 import { PublicLink } from './publicLink/PublicLink';
 
@@ -51,7 +52,7 @@ const CustomText = styled(Text)`
 `;
 
 interface NodeSharingProps {
-	node: Pick<Node, '__typename' | 'id' | 'permissions' | 'owner'> & {
+	node: Pick<Node, '__typename' | 'id' | 'permissions' | 'owner' | 'name'> & {
 		shares?: Array<
 			// eslint-disable-next-line camelcase
 			| (Pick<Share, '__typename'> & { shared_target?: Pick<SharedTarget, '__typename' | 'id'> })
@@ -134,6 +135,7 @@ export const NodeSharing: React.VFC<NodeSharingProps> = ({ node }) => {
 				height="fit"
 				padding={{ all: 'large' }}
 				background="gray6"
+				data-testid="node-sharing-collaborators"
 			>
 				{!node.permissions.can_share && (
 					<Padding bottom="large" width="100%">
@@ -178,6 +180,16 @@ export const NodeSharing: React.VFC<NodeSharingProps> = ({ node }) => {
 				{node.permissions.can_share && <Divider />}
 				{node.permissions.can_share && <AddSharing node={node} />}
 			</Container>
+			{node.permissions.can_share && (
+				<CollaborationLinks
+					nodeId={node.id}
+					nodeName={node.name}
+					nodeTypename={node.__typename}
+					canWrite={
+						isFile(node) ? node.permissions.can_write_file : node.permissions.can_write_folder
+					}
+				/>
+			)}
 			{isFile(node) && node.permissions.can_share && (
 				<PublicLink
 					nodeId={node.id}

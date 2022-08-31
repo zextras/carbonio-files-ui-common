@@ -17,9 +17,11 @@ import {
 } from '../constants';
 import CLONE_VERSION from '../graphql/mutations/cloneVersion.graphql';
 import COPY_NODES from '../graphql/mutations/copyNodes.graphql';
+import CREATE_COLLABORATION_LINK from '../graphql/mutations/createCollaborationLink.graphql';
 import CREATE_FOLDER from '../graphql/mutations/createFolder.graphql';
 import CREATE_LINK from '../graphql/mutations/createLink.graphql';
 import CREATE_SHARE from '../graphql/mutations/createShare.graphql';
+import DELETE_COLLABORATION_LINKS from '../graphql/mutations/deleteCollaborationLinks.graphql';
 import DELETE_NODES from '../graphql/mutations/deleteNodes.graphql';
 import DELETE_SHARE from '../graphql/mutations/deleteShare.graphql';
 import DELETE_VERSIONS from '../graphql/mutations/deleteVersions.graphql';
@@ -40,6 +42,7 @@ import GET_CHILD from '../graphql/queries/getChild.graphql';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import GET_CONFIGS from '../graphql/queries/getConfigs.graphql';
 import GET_NODE from '../graphql/queries/getNode.graphql';
+import GET_NODE_COLLABORATION_LINKS from '../graphql/queries/getNodeCollaborationLinks.graphql';
 import GET_NODE_LINKS from '../graphql/queries/getNodeLinks.graphql';
 import GET_PARENT from '../graphql/queries/getParent.graphql';
 import GET_PATH from '../graphql/queries/getPath.graphql';
@@ -114,6 +117,13 @@ import {
 	GetConfigsQueryVariables,
 	GetAccountsByEmailQueryVariables,
 	GetAccountsByEmailQuery,
+	GetNodeCollaborationLinksQueryVariables,
+	GetNodeCollaborationLinksQuery,
+	CollaborationLink,
+	CreateCollaborationLinkMutationVariables,
+	CreateCollaborationLinkMutation,
+	DeleteCollaborationLinksMutationVariables,
+	DeleteCollaborationLinksMutation,
 	GetChildQuery,
 	GetChildQueryVariables,
 	CreateLinkMutationVariables,
@@ -149,6 +159,8 @@ type MockVariablePossibleType =
 	| GetAccountByEmailQueryVariables
 	| GetAccountsByEmailQueryVariables
 	| GetNodeLinksQueryVariables
+	| GetNodeCollaborationLinksQueryVariables
+	| DeleteCollaborationLinksMutationVariables
 	| DeleteVersionsMutationVariables
 	| GetVersionsQueryVariables
 	| GetChildQueryVariables
@@ -770,6 +782,70 @@ export function mockGetNodeLinks(
 		result: {
 			data: {
 				getNode: node
+			}
+		}
+	};
+}
+
+/**
+ * Get Node Links mock
+ */
+export function mockGetNodeCollaborationLinks(
+	variables: GetNodeCollaborationLinksQueryVariables,
+	node: Node,
+	collaborationLinks?: Array<Maybe<CollaborationLink>>
+): Mock<GetNodeCollaborationLinksQuery, GetNodeCollaborationLinksQueryVariables> {
+	return {
+		request: {
+			query: GET_NODE_COLLABORATION_LINKS,
+			variables
+		},
+		result: {
+			data: {
+				getNode: {
+					...node,
+					collaboration_links: collaborationLinks || []
+				}
+			}
+		}
+	};
+}
+
+/**
+ * Create collaboration link mock
+ */
+export function mockCreateCollaborationLink(
+	variables: CreateCollaborationLinkMutationVariables,
+	createCollaborationLink: CollaborationLink
+): Mock<CreateCollaborationLinkMutation, CreateCollaborationLinkMutationVariables> {
+	return {
+		request: {
+			query: CREATE_COLLABORATION_LINK,
+			variables
+		},
+		result: {
+			data: {
+				createCollaborationLink
+			}
+		}
+	};
+}
+
+/**
+ * Delete collaboration links mock
+ */
+export function mockDeleteCollaborationLinks(
+	variables: DeleteCollaborationLinksMutationVariables,
+	deleteCollaborationLinks: Array<string>
+): Mock<DeleteCollaborationLinksMutation, DeleteCollaborationLinksMutationVariables> {
+	return {
+		request: {
+			query: DELETE_COLLABORATION_LINKS,
+			variables
+		},
+		result: {
+			data: {
+				deleteCollaborationLinks
 			}
 		}
 	};

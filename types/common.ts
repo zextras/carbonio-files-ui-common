@@ -24,6 +24,8 @@ export type Node = FilesFile | Folder;
 
 export type PickIdNodeType = Pick<Node, 'id'>;
 
+export type PickIdTypenameNodeType = Pick<Node, 'id' | '__typename'>;
+
 export type GetNodeParentType = {
 	parent?: Maybe<
 		| ({ __typename?: 'File' } & Pick<FilesFile, 'id' | 'name'> & {
