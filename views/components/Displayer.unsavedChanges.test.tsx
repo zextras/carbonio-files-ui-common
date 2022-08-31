@@ -66,7 +66,7 @@ function getFirstOfNextMonth(from: Date | number = Date.now()): Date {
 	return chosenDate;
 }
 
-describe('Displayer', () => {
+describe.skip('Displayer', () => {
 	describe('With unsaved changes', () => {
 		describe('on description', () => {
 			test('click on other tab show dialog to warn user about unsaved changes', async () => {
