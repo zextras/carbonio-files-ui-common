@@ -44,6 +44,8 @@ import {
 	Folder,
 	GetChildrenQuery,
 	GetChildrenQueryVariables,
+	GetNodeCollaborationLinksQuery,
+	GetNodeCollaborationLinksQueryVariables,
 	GetNodeQuery,
 	GetNodeQueryVariables,
 	GetPathQuery,
@@ -642,6 +644,10 @@ describe('Filter view', () => {
 				),
 				graphql.query<GetSharesQuery, GetSharesQueryVariables>('getShares', (req, res, ctx) =>
 					res(ctx.data({ getNode: node }))
+				),
+				graphql.query<GetNodeCollaborationLinksQuery, GetNodeCollaborationLinksQueryVariables>(
+					'getNodeCollaborationLinks',
+					(req, res, ctx) => res(ctx.data({ getNode: node }))
 				),
 				graphql.mutation<DeleteShareMutation, DeleteShareMutationVariables>(
 					'deleteShare',
