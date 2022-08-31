@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
 	Container,
@@ -46,7 +46,7 @@ const CustomItalicText = styled(ItalicText)`
 `;
 
 export const NodeDetailsDescription: React.VFC<NodeDetailsDescriptionProps> = ({
-	description,
+	description = '',
 	canUpsertDescription,
 	id,
 	loading
@@ -55,7 +55,11 @@ export const NodeDetailsDescription: React.VFC<NodeDetailsDescriptionProps> = ({
 	const [editingDescription, setEditingDescription] = useState(false);
 	const { updateNodeDescription } = useUpdateNodeDescriptionMutation();
 
-	const [descriptionValue, setDescriptionValue] = useState(description || '');
+	const [descriptionValue, setDescriptionValue] = useState(description);
+
+	useEffect(() => {
+		setDescriptionValue(description);
+	}, [description]);
 
 	const isDescriptionChanged = useMemo(
 		() => editingDescription && descriptionValue !== description,
@@ -80,16 +84,24 @@ export const NodeDetailsDescription: React.VFC<NodeDetailsDescriptionProps> = ({
 
 	const closeEdit = useCallback(() => {
 		setEditingDescription(false);
-		setDescriptionValue(description || '');
+		setDescriptionValue(description);
 	}, [description]);
 
 	const save = useCallback(() => {
 		if (!moreThan4096Characters) {
-			if (description !== descriptionValue) {
-				updateNodeDescription(id, descriptionValue);
-			}
 			setEditingDescription(false);
+			if (description !== descriptionValue) {
+				const promise = updateNodeDescription(id, descriptionValue).catch((reason) => {
+					setEditingDescription(true);
+					throw reason;
+				});
+				return Promise.allSettled([promise]);
+			}
+			return Promise.allSettled([Promise.resolve()]);
 		}
+		return Promise.allSettled([
+			Promise.reject(new Error('description is more than 4096 characters'))
+		]);
 	}, [description, descriptionValue, id, moreThan4096Characters, updateNodeDescription]);
 
 	return (
@@ -179,7 +191,7 @@ export const NodeDetailsDescription: React.VFC<NodeDetailsDescriptionProps> = ({
 								size="small"
 								icon="Edit2Outline"
 								onClick={openEdit}
-								disabled={!canUpsertDescription}
+								disabled={!canUpsertDescription || loading}
 							/>
 						</Tooltip>
 					</Row>

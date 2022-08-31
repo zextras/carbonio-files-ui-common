@@ -79,34 +79,40 @@ export const PublicLink: React.FC<AddPublicLinkProps> = ({
 				const minOffset = moment().tz(zimbraPrefTimeZoneId).utcOffset();
 				expiresWithOffset = expiresAt.getTime() - minOffset * 60 * 1000;
 			}
-			createLink(description, expiresWithOffset).then(({ data }) => {
-				if (data) {
-					createSnackbar({
-						key: new Date().toLocaleString(),
-						type: 'info',
-						label: t(
-							'snackbar.publicLink.newPublicLinkGenerated.label',
-							'New public Link generated'
-						),
-						replace: true,
-						onActionClick: () => {
-							copyToClipboard(data.createLink.url as string).then(() => {
-								createSnackbar({
-									key: new Date().toLocaleString(),
-									type: 'info',
-									label: t('snackbar.publicLink.copyLink', 'Public link copied'),
-									replace: true,
-									hideButton: true
-								});
-							});
-						},
-						actionLabel: t('snackbar.publicLink.actionLabel.copyLink', 'Copy Link')
-					});
-				}
-			});
-
 			setAddPublicLinkStatus(PublicLinkRowStatus.CLOSED);
 			setThereIsOpenRow(false);
+			return createLink(description, expiresWithOffset)
+				.then(({ data }) => {
+					if (data) {
+						createSnackbar({
+							key: new Date().toLocaleString(),
+							type: 'info',
+							label: t(
+								'snackbar.publicLink.newPublicLinkGenerated.label',
+								'New public Link generated'
+							),
+							replace: true,
+							onActionClick: () => {
+								copyToClipboard(data.createLink.url as string).then(() => {
+									createSnackbar({
+										key: new Date().toLocaleString(),
+										type: 'info',
+										label: t('snackbar.publicLink.copyLink', 'Public link copied'),
+										replace: true,
+										hideButton: true
+									});
+								});
+							},
+							actionLabel: t('snackbar.publicLink.actionLabel.copyLink', 'Copy Link')
+						});
+					}
+				})
+				.catch((reason) => {
+					// reset to open to show populate fields which cause error
+					setAddPublicLinkStatus(PublicLinkRowStatus.OPEN);
+					setThereIsOpenRow(true);
+					throw reason;
+				});
 		},
 		[createLink, createSnackbar, t, zimbraPrefTimeZoneId]
 	);
@@ -176,31 +182,37 @@ export const PublicLink: React.FC<AddPublicLinkProps> = ({
 			} else if (expiresAt === 0) {
 				expiresWithOffset = expiresAt;
 			}
-			updateLink(linkId, description, expiresWithOffset).then(({ data }) => {
-				if (data) {
-					createSnackbar({
-						key: new Date().toLocaleString(),
-						type: 'info',
-						label: t('snackbar.publicLink.linkUpdated.label', 'Public Link updated'),
-						replace: true,
-						onActionClick: () => {
-							copyToClipboard(data.updateLink?.url as string).then(() => {
-								createSnackbar({
-									key: new Date().toLocaleString(),
-									type: 'info',
-									label: t('snackbar.publicLink.copyLink', 'Public link copied'),
-									replace: true,
-									hideButton: true
-								});
-							});
-						},
-						actionLabel: t('snackbar.publicLink.actionLabel.copyLink', 'Copy Link')
-					});
-				}
-			});
 
 			setOpenLinkId(undefined);
 			setThereIsOpenRow(false);
+			return updateLink(linkId, description, expiresWithOffset)
+				.then(({ data }) => {
+					if (data) {
+						createSnackbar({
+							key: new Date().toLocaleString(),
+							type: 'info',
+							label: t('snackbar.publicLink.linkUpdated.label', 'Public Link updated'),
+							replace: true,
+							onActionClick: () => {
+								copyToClipboard(data.updateLink?.url as string).then(() => {
+									createSnackbar({
+										key: new Date().toLocaleString(),
+										type: 'info',
+										label: t('snackbar.publicLink.copyLink', 'Public link copied'),
+										replace: true,
+										hideButton: true
+									});
+								});
+							},
+							actionLabel: t('snackbar.publicLink.actionLabel.copyLink', 'Copy Link')
+						});
+					}
+				})
+				.catch((reason) => {
+					setOpenLinkId(linkId);
+					setThereIsOpenRow(true);
+					throw reason;
+				});
 		},
 		[createSnackbar, t, updateLink, zimbraPrefTimeZoneId]
 	);

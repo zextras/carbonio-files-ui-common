@@ -394,6 +394,8 @@ describe('Node Sharing', () => {
 			expect(screen.queryByText(/viewer/i)).not.toBeInTheDocument();
 			// click on share button to complete the creation of the new share
 			userEvent.click(screen.getByRole('button', { name: /share/i }));
+			// chip is removed from the add section
+			expect(screen.queryByText(user.full_name)).not.toBeInTheDocument();
 			// and then a new chip is created in the collaborators list
 			await screen.findByText(user.full_name);
 			// popover is closed

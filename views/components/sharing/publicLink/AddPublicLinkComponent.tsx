@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-/* eslint-disable no-nested-ternary */
 import React, { useCallback, useMemo, useState } from 'react';
 
 import {
@@ -19,13 +18,14 @@ import {
 import { useTranslation } from 'react-i18next';
 
 import { PublicLinkRowStatus } from '../../../../types/common';
+import { initExpirationDate } from '../../../../utils/utils';
 import { RouteLeavingGuard } from '../../RouteLeavingGuard';
 
 interface AddPublicLinkComponentProps {
 	status: PublicLinkRowStatus;
 	onAddLink: () => void;
 	onUndo: () => void;
-	onGenerate: (linkDescriptionValue: string, date: Date | undefined) => void;
+	onGenerate: (linkDescriptionValue: string, date: Date | undefined) => Promise<unknown>;
 	limitReached: boolean;
 }
 
@@ -56,22 +56,22 @@ export const AddPublicLinkComponent: React.FC<AddPublicLinkComponentProps> = ({
 		[date, linkDescriptionValue.length]
 	);
 
-	const handleChange = useCallback((d) => {
+	const handleChange = useCallback((d: string | Date) => {
 		if (typeof d === 'string' && d.length === 0) {
 			setDate(undefined);
-		} else {
-			const userTimezoneOffset = d.getTimezoneOffset() * 60000;
-			const epoch = d.getTime() - userTimezoneOffset;
-			// add 23 hours and 59 minutes
-			const epochPlusOneDay = epoch + 24 * 60 * 60 * 1000 - 60000;
-			setDate(new Date(epochPlusOneDay));
+		} else if (d instanceof Date) {
+			setDate(d);
 		}
 	}, []);
 
 	const onGenerateCallback = useCallback(() => {
-		onGenerate(linkDescriptionValue, date);
-		setLinkDescriptionValue('');
-		setDate(undefined);
+		const expirationDate = initExpirationDate(date);
+		return Promise.allSettled([
+			onGenerate(linkDescriptionValue, expirationDate).then(() => {
+				setLinkDescriptionValue('');
+				setDate(undefined);
+			})
+		]);
 	}, [date, linkDescriptionValue, onGenerate]);
 
 	const onUndoCallback = useCallback(() => {
@@ -180,6 +180,7 @@ export const AddPublicLinkComponent: React.FC<AddPublicLinkComponentProps> = ({
 						onCalendarOpen={handleCalendarOpen}
 						minDate={new Date()}
 						popperPlacement="bottom-end"
+						defaultValue={date}
 					/>
 					{(date || pickerIsOpen) && (
 						<Row width="fill" mainAlignment="flex-start" padding={{ top: 'small' }}>

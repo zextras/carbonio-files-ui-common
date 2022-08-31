@@ -251,18 +251,38 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 	const [loading, setLoading] = useState(false);
 
 	const createShareCallback = useCallback(() => {
-		forEach(chips, (chip) => {
+		const customMessageText = trim(mailTextValue);
+		const promises = map(chips, (chip) => {
 			if (chip.id) {
-				createShare(
+				return createShare(
 					node,
 					chip.id,
 					sharePermissionsGetter(chip.role, chip.sharingAllowed),
-					trim(mailTextValue).length > 0 ? trim(mailTextValue) : undefined
-				).catch(console.error);
+					customMessageText.length > 0 ? customMessageText : undefined
+				);
 			}
+			return Promise.resolve();
 		});
 		setChips([]);
 		setMailTextValue('');
+
+		return Promise.allSettled(promises).then((results) => {
+			const notCreatedChips = reduce<typeof results[number], ShareChip[]>(
+				results,
+				(accumulator, createSharePromiseResult, index) => {
+					if (createSharePromiseResult.status === 'rejected') {
+						accumulator.push(chips[index]);
+					}
+					return accumulator;
+				},
+				[]
+			);
+			// show chips which creation went in error inside the chipInput
+			setChips(notCreatedChips);
+			// if at least one creation went in error, restore the custom message
+			setMailTextValue(notCreatedChips.length === 0 ? '' : customMessageText);
+			return results;
+		});
 	}, [chips, createShare, mailTextValue, node]);
 
 	const addShareContact = useCallback(
@@ -467,6 +487,13 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 		[]
 	);
 
+	const customMessageChangeHandler = useCallback(
+		(ev: React.ChangeEvent<HTMLInputElement>): void => {
+			setMailTextValue(ev.target.value);
+		},
+		[]
+	);
+
 	return (
 		<Container padding={{ top: 'large' }}>
 			<RouteLeavingGuard
@@ -481,7 +508,7 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 					{t('modal.unsaved_changes.body.line2', 'All unsaved changes will be lost')}
 				</Text>
 			</RouteLeavingGuard>
-			<Container>
+			<Container data-testid="add-shares-input-container">
 				<ShareChipInput
 					inputRef={inputRef}
 					placeholder={t('displayer.share.addShare.input.placeholder', 'Add new people or groups')}
@@ -535,9 +562,7 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 					'Add a custom message to this notification'
 				)}
 				value={mailTextValue}
-				onChange={(ev: React.ChangeEvent<HTMLInputElement>): void => {
-					setMailTextValue(ev.target.value);
-				}}
+				onChange={customMessageChangeHandler}
 			/>
 			<Container orientation="horizontal" mainAlignment="flex-end" padding={{ top: 'small' }}>
 				<Button
