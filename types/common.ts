@@ -8,7 +8,6 @@ import React, { DragEventHandler } from 'react';
 
 import { BreadcrumbsProps, ChipItem } from '@zextras/carbonio-design-system';
 
-import { ROOTS } from '../constants';
 import {
 	BaseNodeFragment,
 	ChildFragment,
@@ -27,6 +26,8 @@ import { SnakeToCamelCase } from './utils';
 export type Node = FilesFile | Folder;
 
 export type PickIdNodeType = Pick<Node, 'id'>;
+
+export type PickIdTypenameNodeType = Pick<Node, 'id' | '__typename'>;
 
 export type GetNodeParentType = {
 	parent?: Maybe<
@@ -297,9 +298,18 @@ export interface Contact {
 	company?: string;
 }
 
+export type RootsType = {
+	ENTRY_POINT: 'ROOTS_ENTRY_POINT';
+	LOCAL_ROOT: 'LOCAL_ROOT';
+	TRASH: 'TRASH_ROOT';
+	TRASH_MY_ELEMENTS: 'TRASH_ROOT_MY_ELEMENTS';
+	TRASH_SHARED_ELEMENTS: 'TRASH_ROOT_SHARED_ELEMENTS';
+	SHARED_WITH_ME: 'SHARED_WITH_ME_ROOT';
+};
+
 export type URLParams = {
 	filter: 'flagged' | 'myTrash' | 'sharedTrash' | 'sharedByMe' | 'sharedWithMe';
-	rootId: typeof ROOTS[keyof typeof ROOTS];
+	rootId: RootsType[keyof RootsType];
 };
 
 export type TargetModule = 'MAILS' | 'CONTACTS' | 'CALENDARS' | 'CHATS';

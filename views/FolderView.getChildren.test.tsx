@@ -9,15 +9,24 @@ import React from 'react';
 import { ApolloError } from '@apollo/client';
 import { screen, waitForElementToBeRemoved, within } from '@testing-library/react';
 import forEach from 'lodash/forEach';
+import { graphql } from 'msw';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
+import server from '../../mocks/server';
 import { NODES_LOAD_LIMIT } from '../constants';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import { populateFolder, populateNodePage } from '../mocks/mockUtils';
 import { Node } from '../types/common';
-import { Folder, GetChildrenQuery, GetChildrenQueryVariables } from '../types/graphql/types';
+import {
+	Folder,
+	GetChildQuery,
+	GetChildQueryVariables,
+	GetChildrenQuery,
+	GetChildrenQueryVariables
+} from '../types/graphql/types';
 import {
 	getChildrenVariables,
+	mockGetChild,
 	mockGetChildren,
 	mockGetChildrenError,
 	mockGetParent,
@@ -47,6 +56,7 @@ describe('Get children', () => {
 		const currentFolder = populateFolder();
 		const mocks = [
 			mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
+			mockGetChild({ node_id: currentFolder.id }, currentFolder),
 			mockGetChildrenError(
 				getChildrenVariables(currentFolder.id),
 				new ApolloError({ graphQLErrors: [generateError('An error occurred')] })
@@ -68,6 +78,16 @@ describe('Get children', () => {
 
 	test('first access to a folder show loading state and than show children', async () => {
 		const currentFolder = populateFolder();
+
+		server.use(
+			graphql.query<GetChildQuery, GetChildQueryVariables>('getChild', (req, res, ctx) => {
+				let result = null;
+				if (req.variables.node_id === currentFolder.id) {
+					result = currentFolder;
+				}
+				return res(ctx.data({ getNode: result }));
+			})
+		);
 
 		render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`] });
 
@@ -102,6 +122,7 @@ describe('Get children', () => {
 				children: populateNodePage(currentFolder.children.nodes.slice(0, NODES_LOAD_LIMIT))
 			} as Folder),
 			mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
+			mockGetChild({ node_id: currentFolder.id }, currentFolder),
 			mockGetChildren(
 				getChildrenVariables(currentFolder.id, undefined, undefined, undefined, true),
 				{

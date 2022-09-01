@@ -13,18 +13,21 @@ import {
 	Input,
 	Padding,
 	Text,
-	Row
+	Row,
+	DateTimePickerProps
 } from '@zextras/carbonio-design-system';
 import { useTranslation } from 'react-i18next';
 
 import { PublicLinkRowStatus } from '../../../../types/common';
+import { initExpirationDate } from '../../../../utils/utils';
 import { RouteLeavingGuard } from '../../RouteLeavingGuard';
+import { TextWithLineHeight } from '../../StyledComponents';
 
 interface AddPublicLinkComponentProps {
 	status: PublicLinkRowStatus;
 	onAddLink: () => void;
 	onUndo: () => void;
-	onGenerate: (linkDescriptionValue: string, date: Date | undefined) => void;
+	onGenerate: (linkDescriptionValue: string, date: Date | undefined) => Promise<unknown>;
 	limitReached: boolean;
 }
 
@@ -55,22 +58,25 @@ export const AddPublicLinkComponent: React.FC<AddPublicLinkComponentProps> = ({
 		[date, linkDescriptionValue.length]
 	);
 
-	const handleChange = useCallback((d) => {
-		if (typeof d === 'string' && d.length === 0) {
-			setDate(undefined);
-		} else {
-			const userTimezoneOffset = d.getTimezoneOffset() * 60000;
-			const epoch = d.getTime() - userTimezoneOffset;
-			// add 23 hours and 59 minutes
-			const epochPlusOneDay = epoch + 24 * 60 * 60 * 1000 - 60000;
-			setDate(new Date(epochPlusOneDay));
-		}
-	}, []);
+	const handleChange = useCallback<NonNullable<DateTimePickerProps['onChange']>>(
+		(d: Date | null) => {
+			if (d instanceof Date) {
+				setDate(d);
+			} else {
+				setDate(undefined);
+			}
+		},
+		[]
+	);
 
 	const onGenerateCallback = useCallback(() => {
-		onGenerate(linkDescriptionValue, date);
-		setLinkDescriptionValue('');
-		setDate(undefined);
+		const expirationDate = initExpirationDate(date);
+		return Promise.allSettled([
+			onGenerate(linkDescriptionValue, expirationDate).then(() => {
+				setLinkDescriptionValue('');
+				setDate(undefined);
+			})
+		]);
 	}, [date, linkDescriptionValue, onGenerate]);
 
 	const onUndoCallback = useCallback(() => {
@@ -104,7 +110,23 @@ export const AddPublicLinkComponent: React.FC<AddPublicLinkComponentProps> = ({
 				</Text>
 			</RouteLeavingGuard>
 			<Container orientation="horizontal" mainAlignment="space-between">
-				<Text size="medium">{t('publicLink.addLink.title', 'Public Link')}</Text>
+				<Container
+					mainAlignment="flex-start"
+					crossAlignment="flex-start"
+					height="fit"
+					background="gray6"
+					width="fit"
+				>
+					<TextWithLineHeight size="medium">
+						{t('publicLink.addLink.title', 'Public Links')}
+					</TextWithLineHeight>
+					<TextWithLineHeight size="extrasmall" color="secondary" overflow="break-word">
+						{t(
+							'publicLink.addLink.description',
+							'Anyone on the internet with the link can view or download the file'
+						)}
+					</TextWithLineHeight>
+				</Container>
 				{limitReached && (
 					<Text size="small" color="secondary">
 						{t(
@@ -179,6 +201,7 @@ export const AddPublicLinkComponent: React.FC<AddPublicLinkComponentProps> = ({
 						onCalendarOpen={handleCalendarOpen}
 						minDate={new Date()}
 						popperPlacement="bottom-end"
+						defaultValue={date}
 					/>
 					{(date || pickerIsOpen) && (
 						<Row width="fill" mainAlignment="flex-start" padding={{ top: 'small' }}>

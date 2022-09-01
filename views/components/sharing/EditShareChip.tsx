@@ -152,6 +152,11 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 		[activeRow, checkboxValue, share, updateShare]
 	);
 
+	const routeLeavingGuardOnSaveHandler = useCallback(
+		(): ReturnType<typeof Promise.allSettled> => Promise.allSettled([updateShareCallback()]),
+		[updateShareCallback]
+	);
+
 	const { openDecreaseYourOwnSharePermissionModal } = useDecreaseYourOwnSharePermissionModal(
 		updateShareCallback,
 		updateShareActionCallback
@@ -282,7 +287,7 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 		<>
 			<RouteLeavingGuard
 				when={initialActiveRow !== activeRow || initialCheckboxValue !== checkboxValue}
-				onSave={updateShareCallback}
+				onSave={routeLeavingGuardOnSaveHandler}
 			>
 				<Text overflow="break-word">
 					{t('modal.unsaved_changes.body.line1', 'Do you want to leave the page without saving?')}

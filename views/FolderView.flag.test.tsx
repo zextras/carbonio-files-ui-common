@@ -18,6 +18,7 @@ import { Folder } from '../types/graphql/types';
 import {
 	getChildrenVariables,
 	mockFlagNodes,
+	mockGetChild,
 	mockGetChildren,
 	mockGetPermissions
 } from '../utils/mockUtils';
@@ -67,6 +68,7 @@ describe('Flag', () => {
 					children: currentFolder.children
 				} as Folder),
 				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
+				mockGetChild({ node_id: currentFolder.id }, currentFolder),
 				mockFlagNodes(
 					{
 						node_ids: nodesIdsToFlag,
@@ -128,6 +130,7 @@ describe('Flag', () => {
 			const mocks = [
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
 				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
+				mockGetChild({ node_id: currentFolder.id }, currentFolder),
 				mockFlagNodes(
 					{
 						node_ids: [node.id],

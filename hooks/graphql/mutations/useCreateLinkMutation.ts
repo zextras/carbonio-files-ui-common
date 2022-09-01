@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-/* eslint-disable arrow-body-style */
 import { useCallback } from 'react';
 
 import { FetchResult, useMutation } from '@apollo/client';
@@ -33,8 +32,8 @@ export function useCreateLinkMutation(
 	>(CREATE_LINK);
 
 	const createLink: CreateLinkType = useCallback(
-		(description?: string, expiresAt?: number) => {
-			return createLinkMutation({
+		(description?: string, expiresAt?: number) =>
+			createLinkMutation({
 				variables: {
 					node_id: nodeId,
 					description,
@@ -56,8 +55,7 @@ export function useCreateLinkMutation(
 						});
 					}
 				}
-			});
-		},
+			}),
 		[createLinkMutation, nodeId, nodeTypename]
 	);
 	useErrorHandler(createLinkError, 'CREATE_LINK');

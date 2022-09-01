@@ -8,12 +8,13 @@ import React, { useEffect, useState, FC, useMemo } from 'react';
 
 import { Modal, Button } from '@zextras/carbonio-design-system';
 import { Location } from 'history';
+import filter from 'lodash/filter';
 import { useTranslation } from 'react-i18next';
 import { Prompt, useHistory } from 'react-router-dom';
 
 export const RouteLeavingGuard: FC<{
 	when?: boolean;
-	onSave: () => void;
+	onSave: () => Promise<PromiseSettledResult<Awaited<unknown>>[]>;
 	dataHasError?: boolean;
 }> = ({ children, when, onSave, dataHasError = false }) => {
 	const history = useHistory();
@@ -41,9 +42,24 @@ export const RouteLeavingGuard: FC<{
 	};
 
 	const onConfirm = (): void => {
-		setModalVisible(false);
-		onSave();
-		setConfirmedNavigation(true);
+		onSave()
+			.then((results) => {
+				const rejected = filter(
+					results,
+					(result): result is PromiseRejectedResult => result.status === 'rejected'
+				);
+				if (rejected.length > 0) {
+					console.error(rejected);
+					cancel();
+				} else {
+					setModalVisible(false);
+					setConfirmedNavigation(true);
+				}
+			})
+			.catch((reason) => {
+				console.error(reason);
+				cancel();
+			});
 	};
 
 	const onSecondaryAction = (): void => {
@@ -57,6 +73,7 @@ export const RouteLeavingGuard: FC<{
 			history.push(lastLocation);
 		}
 	}, [confirmedNavigation, history, lastLocation]);
+
 	return (
 		<>
 			<Prompt when={when} message={handleBlockedNavigation} />

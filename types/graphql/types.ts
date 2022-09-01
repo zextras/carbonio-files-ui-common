@@ -12,11 +12,37 @@ export type Scalars = {
 	Boolean: boolean;
 	Int: number;
 	Float: number;
-	/** A custom scalar representing a date in a timestamp format */
 	DateTime: number;
 };
 
 export type Account = DistributionList | User;
+
+/**
+ *  Definition of a collaboration link. It represents an internal link that allows a logged user to
+ *  auto-share a specific node with a specific permission.
+ *  Each node can have at maximum 2 CollaborationLink:
+ *   - one that allows to auto-share the node with the READ+SHARE permission;
+ *   - one that allows to auto-share the node with the WRITE+SHARE permission.
+ *  A collaboration link can be generated only if the requester has the <strong>can_share</strong>
+ *  permission on the node.
+ */
+export type CollaborationLink = {
+	__typename?: 'CollaborationLink';
+	/**  Link creation timestamp. */
+	created_at: Scalars['DateTime'];
+	/**  Unique identifier of the CollaborationLink. */
+	id: Scalars['ID'];
+	/**  Node on which the share is created when a logged user clicks on the collaboration link. */
+	node: Node;
+	/**  The permission type created/updated when a logged user clicks on the collaboration link. */
+	permission: SharePermission;
+	/**
+	 *  Full URL allowing a logged user to auto-share the related node with the related permission.
+	 *  After the creation/update of the share, the system returns a redirect to the internal url of
+	 *  the shared node.
+	 */
+	url: Scalars['String'];
+};
 
 export type Config = {
 	__typename?: 'Config';
@@ -40,6 +66,13 @@ export type DistributionListUsersArgs = {
 export type File = Node & {
 	__typename?: 'File';
 	cloned_from_version?: Maybe<Scalars['Int']>;
+	/**
+	 *  Returns all the CollaborationLinks of current node.
+	 *  It can be maximum of 2 collaboration links:
+	 *   - one that allows to auto-share the node with the READ+SHARE permission;
+	 *   - one that allows to auto-share the node with the WRITE+SHARE permission.
+	 */
+	collaboration_links: Array<Maybe<CollaborationLink>>;
 	/**  File creation timestamp */
 	created_at: Scalars['DateTime'];
 	/**  Creator of the file */
@@ -100,6 +133,13 @@ export type Folder = Node & {
 	__typename?: 'Folder';
 	/**  List of all child nodes of a folder. */
 	children: NodePage;
+	/**
+	 *  Returns all the CollaborationLinks of current node.
+	 *  It can be maximum of 2 collaboration links:
+	 *   - one that allows to auto-share the node with the READ+SHARE permission;
+	 *   - one that allows to auto-share the node with the WRITE+SHARE permission.
+	 */
+	collaboration_links: Array<Maybe<CollaborationLink>>;
 	/**  Folder creation timestamp */
 	created_at: Scalars['DateTime'];
 	/**  Creator of the folder */
@@ -181,6 +221,12 @@ export type Mutation = {
 	cloneVersion: File;
 	/**  Allows to copy a list of Nodes into a specified Folder. */
 	copyNodes?: Maybe<Array<Node>>;
+	/**
+	 *  Allows to create a collaboration link for an existing node. A collaboration link can be created
+	 *  only if the requester has the <strong>can_share<strong> permission on the specified node.
+	 *  If the collaboration link already exists the system returns the already created one.
+	 */
+	createCollaborationLink: CollaborationLink;
 	/**  <strong>Creates a new folder</strong> */
 	createFolder: Node;
 	/**
@@ -194,6 +240,12 @@ export type Mutation = {
 	 *  and, optionally, an expiration timestamp.
 	 */
 	createShare: Share;
+	/**
+	 *  Allows to delete a list of collaboration links in batch. It returns:
+	 *   - an array of IDs for each collaboration link removed;
+	 *   - a list of errors for each collaboration link that could not be removed.
+	 */
+	deleteCollaborationLinks: Array<Maybe<Scalars['ID']>>;
 	/**
 	 *  Allows to delete a list of links in batch. It returns an array of IDs for each removed link and
 	 *  a list of errors for each link that could not be removed.
@@ -242,6 +294,11 @@ export type MutationCopyNodesArgs = {
 	node_ids?: InputMaybe<Array<Scalars['ID']>>;
 };
 
+export type MutationCreateCollaborationLinkArgs = {
+	node_id: Scalars['ID'];
+	permission: SharePermission;
+};
+
 export type MutationCreateFolderArgs = {
 	destination_id: Scalars['String'];
 	name: Scalars['String'];
@@ -259,6 +316,10 @@ export type MutationCreateShareArgs = {
 	node_id: Scalars['ID'];
 	permission: SharePermission;
 	share_target_id: Scalars['ID'];
+};
+
+export type MutationDeleteCollaborationLinksArgs = {
+	collaboration_link_ids: Array<Scalars['ID']>;
 };
 
 export type MutationDeleteLinksArgs = {
@@ -325,6 +386,13 @@ export type MutationUpdateShareArgs = {
 
 /**  Definition of the Node interface */
 export type Node = {
+	/**
+	 *  Returns all the CollaborationLinks of current node.
+	 *  It can be maximum of 2 collaboration links:
+	 *   - one that allows to auto-share the node with the READ+SHARE permission;
+	 *   - one that allows to auto-share the node with the WRITE+SHARE permission.
+	 */
+	collaboration_links: Array<Maybe<CollaborationLink>>;
 	/**  Node creation timestamp */
 	created_at: Scalars['DateTime'];
 	/**  Creator of the node (it will be a User type when it will be implemented) */
@@ -458,6 +526,13 @@ export type Query = {
 	findNodes?: Maybe<NodePage>;
 	getAccountByEmail?: Maybe<Account>;
 	getAccountsByEmail: Array<Maybe<Account>>;
+	/**
+	 *  Returns all the CollaborationLinks of the specified node.
+	 *  The response is not paginated because each node can have a maximum of 2 collaboration links:
+	 *   - one that allows to auto-share the node with the READ+SHARE permission;
+	 *   - one that allows to auto-share the node with the WRITE+SHARE permission.
+	 */
+	getCollaborationLinks: Array<Maybe<CollaborationLink>>;
 	getConfigs: Array<Maybe<Config>>;
 	/**
 	 *  Returns all the links of the specified node.
@@ -498,6 +573,10 @@ export type QueryGetAccountByEmailArgs = {
 
 export type QueryGetAccountsByEmailArgs = {
 	emails: Array<Scalars['String']>;
+};
+
+export type QueryGetCollaborationLinksArgs = {
+	node_id: Scalars['ID'];
 };
 
 export type QueryGetLinksArgs = {
@@ -794,6 +873,15 @@ type Child_Folder_Fragment = {
 
 export type ChildFragment = Child_File_Fragment | Child_Folder_Fragment;
 
+export type CollaborationLinkFragment = {
+	__typename?: 'CollaborationLink';
+	id: string;
+	url: string;
+	permission: SharePermission;
+	created_at: number;
+	node: { __typename?: 'File'; id: string } | { __typename?: 'Folder'; id: string };
+};
+
 export type LinkFragment = {
 	__typename?: 'Link';
 	id: string;
@@ -1053,6 +1141,23 @@ export type CopyNodesMutation = {
 	> | null;
 };
 
+export type CreateCollaborationLinkMutationVariables = Exact<{
+	node_id: Scalars['ID'];
+	permission: SharePermission;
+}>;
+
+export type CreateCollaborationLinkMutation = {
+	__typename?: 'Mutation';
+	createCollaborationLink: {
+		__typename?: 'CollaborationLink';
+		id: string;
+		url: string;
+		permission: SharePermission;
+		created_at: number;
+		node: { __typename?: 'File'; id: string } | { __typename?: 'Folder'; id: string };
+	};
+};
+
 export type CreateFolderMutationVariables = Exact<{
 	destination_id: Scalars['String'];
 	name: Scalars['String'];
@@ -1254,6 +1359,15 @@ export type CreateShareMutation = {
 			| null;
 		node: { __typename?: 'File'; id: string } | { __typename?: 'Folder'; id: string };
 	};
+};
+
+export type DeleteCollaborationLinksMutationVariables = Exact<{
+	collaboration_link_ids: Array<Scalars['ID']> | Scalars['ID'];
+}>;
+
+export type DeleteCollaborationLinksMutation = {
+	__typename?: 'Mutation';
+	deleteCollaborationLinks: Array<string | null>;
 };
 
 export type DeleteLinksMutationVariables = Exact<{
@@ -2530,6 +2644,40 @@ export type GetNodeQuery = {
 					can_read_share: boolean;
 					can_change_share: boolean;
 				};
+		  }
+		| null;
+};
+
+export type GetNodeCollaborationLinksQueryVariables = Exact<{
+	node_id: Scalars['ID'];
+}>;
+
+export type GetNodeCollaborationLinksQuery = {
+	__typename?: 'Query';
+	getNode?:
+		| {
+				__typename?: 'File';
+				id: string;
+				collaboration_links: Array<{
+					__typename?: 'CollaborationLink';
+					id: string;
+					url: string;
+					permission: SharePermission;
+					created_at: number;
+					node: { __typename?: 'File'; id: string } | { __typename?: 'Folder'; id: string };
+				} | null>;
+		  }
+		| {
+				__typename?: 'Folder';
+				id: string;
+				collaboration_links: Array<{
+					__typename?: 'CollaborationLink';
+					id: string;
+					url: string;
+					permission: SharePermission;
+					created_at: number;
+					node: { __typename?: 'File'; id: string } | { __typename?: 'Folder'; id: string };
+				} | null>;
 		  }
 		| null;
 };

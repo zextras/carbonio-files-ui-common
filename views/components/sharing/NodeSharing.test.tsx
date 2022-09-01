@@ -6,7 +6,7 @@
 
 import React from 'react';
 
-import { act, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/react';
+import { act, screen, waitFor, waitForElementToBeRemoved, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import forEach from 'lodash/forEach';
 
@@ -32,6 +32,7 @@ import {
 	mockDeleteShare,
 	mockGetAccountByEmail,
 	mockGetNode,
+	mockGetNodeCollaborationLinks,
 	mockGetNodeLinks,
 	mockGetShares,
 	mockUpdateShare
@@ -68,7 +69,8 @@ describe('Node Sharing', () => {
 		node.owner = populateUser();
 		const mocks = [
 			mockGetShares(getSharesVariables(node.id), node),
-			mockGetNodeLinks({ node_id: node.id }, node)
+			mockGetNodeLinks({ node_id: node.id }, node),
+			mockGetNodeCollaborationLinks({ node_id: node.id }, node)
 		];
 		const { getByTextWithMarkup } = render(<NodeSharing node={node} />, { mocks });
 		await screen.findByText(/collaborators/i);
@@ -153,7 +155,8 @@ describe('Node Sharing', () => {
 			node.shares = shares;
 			const mocks = [
 				mockGetShares(getSharesVariables(node.id), node),
-				mockGetNodeLinks({ node_id: node.id }, node)
+				mockGetNodeLinks({ node_id: node.id }, node),
+				mockGetNodeCollaborationLinks({ node_id: node.id }, node)
 			];
 			render(<NodeSharing node={node} />, { mocks });
 			await screen.findByText(getChipLabel(shares[0].share_target as SharedTarget));
@@ -174,7 +177,8 @@ describe('Node Sharing', () => {
 			node.owner = populateUser();
 			const mocks = [
 				mockGetShares(getSharesVariables(node.id), node),
-				mockGetNodeLinks({ node_id: node.id }, node)
+				mockGetNodeLinks({ node_id: node.id }, node),
+				mockGetNodeCollaborationLinks({ node_id: node.id }, node)
 			];
 			render(<NodeSharing node={node} />, { mocks });
 			await screen.findByText(getChipLabel(shares[0].share_target as SharedTarget));
@@ -191,6 +195,7 @@ describe('Node Sharing', () => {
 			const mocks = [
 				mockGetShares(getSharesVariables(node.id), node),
 				mockGetNodeLinks({ node_id: node.id }, node),
+				mockGetNodeCollaborationLinks({ node_id: node.id }, node),
 				mockDeleteShare(
 					{ node_id: node.id, share_target_id: (share.share_target as SharedTarget).id },
 					true
@@ -233,6 +238,7 @@ describe('Node Sharing', () => {
 			const mocks = [
 				mockGetShares(getSharesVariables(node.id), node),
 				mockGetNodeLinks({ node_id: node.id }, node),
+				mockGetNodeCollaborationLinks({ node_id: node.id }, node),
 				mockUpdateShare(
 					{
 						share_target_id: shareToUpdate.share_target.id,
@@ -244,9 +250,14 @@ describe('Node Sharing', () => {
 			];
 			render(<NodeSharing node={node} />, { mocks });
 			await screen.findByText(getChipLabel(shareToUpdate.share_target));
+			const collaboratorsContainer = screen.getByTestId('node-sharing-collaborators');
 			// all shares are set to be read-only so all chips should show EyeOutline icon
-			expect(screen.getAllByTestId('icon: EyeOutline')).toHaveLength(shares.length);
-			expect(screen.queryByTestId('icon: Edit2Outline')).not.toBeInTheDocument();
+			expect(within(collaboratorsContainer).getAllByTestId('icon: EyeOutline')).toHaveLength(
+				shares.length
+			);
+			expect(
+				within(collaboratorsContainer).queryByTestId('icon: Edit2Outline')
+			).not.toBeInTheDocument();
 			expect(screen.queryByTestId('icon: Share')).not.toBeInTheDocument();
 			// open on chip to open popover
 			userEvent.click(screen.getAllByTestId('icon: EyeOutline')[0]);
@@ -270,9 +281,11 @@ describe('Node Sharing', () => {
 			await screen.findByTestId('icon: Edit2Outline');
 			await screen.findByTestId('icon: Share');
 			expect(screen.queryByRole('button', { name: /save/i })).not.toBeInTheDocument();
-			expect(screen.getAllByTestId('icon: EyeOutline')).toHaveLength(shares.length - 1);
-			expect(screen.getByTestId('icon: Edit2Outline')).toBeVisible();
-			expect(screen.getByTestId('icon: Share')).toBeVisible();
+			expect(within(collaboratorsContainer).getAllByTestId('icon: EyeOutline')).toHaveLength(
+				shares.length - 1
+			);
+			expect(within(collaboratorsContainer).getByTestId('icon: Edit2Outline')).toBeVisible();
+			expect(within(collaboratorsContainer).getByTestId('icon: Share')).toBeVisible();
 		});
 
 		test('add of a collaborator render the new chip in the collaborators list', async () => {
@@ -299,6 +312,7 @@ describe('Node Sharing', () => {
 			const mocks = [
 				mockGetShares(getSharesVariables(node.id), node),
 				mockGetNodeLinks({ node_id: node.id }, node),
+				mockGetNodeCollaborationLinks({ node_id: node.id }, node),
 				mockGetAccountByEmail({ email: user.email }, user),
 				mockCreateShare(
 					{
@@ -320,12 +334,13 @@ describe('Node Sharing', () => {
 			});
 			render(<NodeSharing node={node} />, { mocks, initialRouterEntries: [`/?node=${node.id}`] });
 			await screen.findByText(getChipLabel(share.share_target as SharedTarget));
-			await screen.findByTestId('icon: EyeOutline');
+			const collaboratorsContainer = screen.getByTestId('node-sharing-collaborators');
+			await within(collaboratorsContainer).findByTestId('icon: EyeOutline');
 			expect(screen.getByText(/Add new people or groups/i)).toBeVisible();
 			expect(screen.getByRole('button', { name: /share/i })).toBeVisible();
 			expect(screen.getByRole('button', { name: /share/i })).toHaveAttribute('disabled', '');
 			// only 1 icon EyeOutline is visible, the one of the existing share
-			expect(screen.getByTestId('icon: EyeOutline')).toBeVisible();
+			expect(within(collaboratorsContainer).getByTestId('icon: EyeOutline')).toBeVisible();
 			const chipInput = screen.getByRole('textbox', { name: /Add new people or groups/i });
 			// type just the first character because the network search is requested only one time with first character.
 			// All characters typed after the first one are just used to filter out the result obtained before
@@ -348,9 +363,11 @@ describe('Node Sharing', () => {
 			expect(screen.queryByText(/other-contact/i)).not.toBeInTheDocument();
 			expect(screen.getByText(user.full_name)).toBeVisible();
 			// new share is created with read-only permissions by default so now there are 2 icons EyeOutline
-			expect(screen.getAllByTestId('icon: EyeOutline')).toHaveLength(2);
+			expect(within(collaboratorsContainer).getAllByTestId('icon: EyeOutline')).toHaveLength(2);
 			// no one has the edit icon for now
-			expect(screen.queryByTestId('icon: Edit2Outline')).not.toBeInTheDocument();
+			expect(
+				within(collaboratorsContainer).queryByTestId('icon: Edit2Outline')
+			).not.toBeInTheDocument();
 			// share button is enabled
 			expect(screen.getByRole('button', { name: /share/i })).not.toHaveAttribute('disabled');
 			// change permissions on the new share
@@ -367,18 +384,19 @@ describe('Node Sharing', () => {
 			expect(screen.getByTestId('icon: Square')).toBeVisible();
 			// save button is not present since the changes on the chip are immediate
 			expect(screen.queryByRole('button', { name: /save/i })).not.toBeInTheDocument();
-			// now there are 3 icons EyeOutline because one is inside the popover, one is on the already existing share chip
-			// and one in the new share chip
-			expect(screen.getAllByTestId('icon: EyeOutline')).toHaveLength(3);
-			// while for now we have 1 icon Edit2Outline, the one inside the popover
-			expect(screen.getByTestId('icon: Edit2Outline')).toBeVisible();
+			// now there are 2 icons EyeOutline because one is on the already existing share chip
+			// and one in the new share chip.
+			// The one inside the popover is not count because we are finding in collaboratorsContainer.
+			expect(within(collaboratorsContainer).getAllByTestId('icon: EyeOutline')).toHaveLength(2);
 			expect(screen.getByTestId('exclusive-selection-editor')).not.toHaveAttribute('disabled');
 			// click on editor
 			userEvent.click(screen.getByText(/editor/i));
 			// icon on chip is immediately updated, so the edit icons become 2
-			await waitFor(() => expect(screen.getAllByTestId('icon: Edit2Outline')).toHaveLength(2));
-			// so now we have 2 icons EyeOutline, one inside the popover and one in the existing share chip
-			expect(screen.getAllByTestId('icon: EyeOutline')).toHaveLength(2);
+			await waitFor(() =>
+				expect(within(collaboratorsContainer).getByTestId('icon: Edit2Outline')).toBeInTheDocument()
+			);
+			// so now we have 1 icons EyeOutline, the one in the existing share chip
+			expect(within(collaboratorsContainer).getByTestId('icon: EyeOutline')).toBeInTheDocument();
 			// give share permissions to the new share
 			act(() => {
 				userEvent.click(screen.getByTestId('icon: Square'));
@@ -394,6 +412,8 @@ describe('Node Sharing', () => {
 			expect(screen.queryByText(/viewer/i)).not.toBeInTheDocument();
 			// click on share button to complete the creation of the new share
 			userEvent.click(screen.getByRole('button', { name: /share/i }));
+			// chip is removed from the add section
+			expect(screen.queryByText(user.full_name)).not.toBeInTheDocument();
 			// and then a new chip is created in the collaborators list
 			await screen.findByText(user.full_name);
 			// popover is closed
@@ -401,7 +421,7 @@ describe('Node Sharing', () => {
 			expect(screen.queryByText(/editor/i)).not.toBeInTheDocument();
 			// share is created with read, write and share permissions, so edit and share icons are visible
 			expect(screen.getByText(user.full_name)).toBeVisible();
-			expect(screen.getByTestId('icon: Edit2Outline')).toBeVisible();
+			expect(within(collaboratorsContainer).getByTestId('icon: Edit2Outline')).toBeVisible();
 			expect(screen.getByTestId('icon: Share')).toBeVisible();
 			// in the collaborators list now there are 2 close icons, one for each collaborator
 			expect(screen.getAllByTestId('icon: Close')).toHaveLength(2);
@@ -443,6 +463,7 @@ describe('Node Sharing', () => {
 			const mocks = [
 				mockGetShares(getSharesVariables(node.id), node),
 				mockGetNodeLinks({ node_id: node.id }, node),
+				mockGetNodeCollaborationLinks({ node_id: node.id }, node),
 				mockGetAccountByEmail({ email: user1.email }, user1),
 				mockGetAccountByEmail({ email: user2.email }, user2),
 				mockCreateShare(
@@ -473,12 +494,13 @@ describe('Node Sharing', () => {
 			});
 			render(<NodeSharing node={node} />, { mocks, initialRouterEntries: [`/?node=${node.id}`] });
 			await screen.findByText(getChipLabel(share.share_target as SharedTarget));
-			await screen.findByTestId('icon: EyeOutline');
+			const collaboratorsContainer = screen.getByTestId('node-sharing-collaborators');
+			await within(collaboratorsContainer).findByTestId('icon: EyeOutline');
 			expect(screen.getByText(/Add new people or groups/i)).toBeVisible();
 			expect(screen.getByRole('button', { name: /share/i })).toBeVisible();
 			expect(screen.getByRole('button', { name: /share/i })).toHaveAttribute('disabled', '');
 			// 1 icon EyeOutline is visible, from the existing share
-			expect(screen.getByTestId('icon: EyeOutline')).toBeVisible();
+			expect(within(collaboratorsContainer).getByTestId('icon: EyeOutline')).toBeVisible();
 			const chipInput = screen.getByRole('textbox', { name: /Add new people or groups/i });
 			// type just the first character because the network search is requested only one time with first character.
 			// All characters typed after the first one are just used to filter out the result obtained before
@@ -498,7 +520,7 @@ describe('Node Sharing', () => {
 			await screen.findByText(user1.full_name);
 			expect(screen.getByText(user1.full_name)).toBeVisible();
 			// new share is created with read-only permissions by default so now there are 2 icons EyeOutline
-			expect(screen.getAllByTestId('icon: EyeOutline')).toHaveLength(2);
+			expect(within(collaboratorsContainer).getAllByTestId('icon: EyeOutline')).toHaveLength(2);
 			// change permissions on the new share
 			act(() => {
 				userEvent.click(screen.getAllByTestId('icon: EyeOutline')[1]);
@@ -515,8 +537,10 @@ describe('Node Sharing', () => {
 			expect(screen.getByTestId('exclusive-selection-editor')).not.toHaveAttribute('disabled');
 			// click on editor to set read and write share permissions
 			userEvent.click(screen.getByText(/editor/i));
-			// icon on chip is immediately updated, so the edit icons become 2
-			await waitFor(() => expect(screen.getAllByTestId('icon: Edit2Outline')).toHaveLength(2));
+			// icon on chip is immediately updated, so the edit icons become 1
+			await waitFor(() =>
+				expect(within(collaboratorsContainer).getByTestId('icon: Edit2Outline')).toBeInTheDocument()
+			);
 			// now create the second share
 			// type just the first character because the network search is requested only one time with first character.
 			// All characters typed after the first one are just used to filter out the result obtained before
@@ -538,7 +562,7 @@ describe('Node Sharing', () => {
 			expect(screen.getByText(user2.full_name)).toBeVisible();
 			// new share is created with read-only permissions by default so there are again two icon EyeOutline
 			// because the other share is set on editor
-			expect(screen.getAllByTestId('icon: EyeOutline')).toHaveLength(2);
+			expect(within(collaboratorsContainer).getAllByTestId('icon: EyeOutline')).toHaveLength(2);
 			// change permissions on the new share
 			userEvent.click(screen.getAllByTestId('icon: EyeOutline')[1], undefined, { skipHover: true });
 			// the popover to change permission is shown
@@ -565,9 +589,9 @@ describe('Node Sharing', () => {
 			expect(screen.queryByText(/viewer/i)).not.toBeInTheDocument();
 			expect(screen.queryByText(/editor/i)).not.toBeInTheDocument();
 			// so now we have 1 share with write permissions (editor icon is shown)
-			expect(screen.getByTestId('icon: Edit2Outline')).toBeVisible();
+			expect(within(collaboratorsContainer).getByTestId('icon: Edit2Outline')).toBeVisible();
 			// 2 with read permission (the second one created and the already existing share)
-			expect(screen.getAllByTestId('icon: EyeOutline')).toHaveLength(2);
+			expect(within(collaboratorsContainer).getAllByTestId('icon: EyeOutline')).toHaveLength(2);
 			// and 1 with share permissions
 			expect(screen.getByTestId('icon: Share')).toBeVisible();
 			// click on share button to complete the creation of the new share
@@ -580,11 +604,11 @@ describe('Node Sharing', () => {
 			await screen.findByText(user2.full_name);
 			// shares are created with previously set permissions
 			// share 1 with write
-			expect(screen.getByTestId('icon: Edit2Outline')).toBeVisible();
+			expect(within(collaboratorsContainer).getByTestId('icon: Edit2Outline')).toBeVisible();
 			// share 2 with share
 			expect(screen.getByTestId('icon: Share')).toBeVisible();
 			// and share 2 and pre-existing one with read
-			expect(screen.getAllByTestId('icon: EyeOutline')).toHaveLength(2);
+			expect(within(collaboratorsContainer).getAllByTestId('icon: EyeOutline')).toHaveLength(2);
 			// in the collaborators list now there are 3 close icons, one for each collaborator
 			expect(screen.getAllByTestId('icon: Close')).toHaveLength(3);
 		});

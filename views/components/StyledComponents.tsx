@@ -149,3 +149,7 @@ export const ShimmerText = styled(Shimmer.Text).attrs<{
 	height: css`calc(${theme.sizes.font[$size]} * 1.2)`,
 	'data-testid': 'shimmer-text'
 }))``;
+
+export const TextWithLineHeight = styled(Text)`
+	line-height: 1.5;
+`;

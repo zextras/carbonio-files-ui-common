@@ -22,6 +22,7 @@ import {
 	getFindNodesVariables,
 	mockFindNodes,
 	mockFlagNodes,
+	mockGetChild,
 	mockGetChildren,
 	mockGetPermissions
 } from '../../utils/mockUtils';
@@ -159,6 +160,7 @@ describe('Filter list', () => {
 			const mocks = [
 				mockFindNodes(getFindNodesVariables({ flagged: true }), nodes),
 				mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+				mockGetChild({ node_id: currentFolder.id }, currentFolder),
 				mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
 				mockFlagNodes(
 					{
@@ -231,7 +233,7 @@ describe('Filter list', () => {
 				];
 				render(
 					<Route path="/filter/:filter">
-						<FilterList trashed cascade={false} />
+						<FilterList folderId={ROOTS.TRASH} cascade={false} />
 					</Route>,
 					{ mocks, initialRouterEntries: ['/filter/myTrash'] }
 				);

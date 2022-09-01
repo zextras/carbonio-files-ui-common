@@ -17,8 +17,11 @@ import {
 } from '../constants';
 import CLONE_VERSION from '../graphql/mutations/cloneVersion.graphql';
 import COPY_NODES from '../graphql/mutations/copyNodes.graphql';
+import CREATE_COLLABORATION_LINK from '../graphql/mutations/createCollaborationLink.graphql';
 import CREATE_FOLDER from '../graphql/mutations/createFolder.graphql';
+import CREATE_LINK from '../graphql/mutations/createLink.graphql';
 import CREATE_SHARE from '../graphql/mutations/createShare.graphql';
+import DELETE_COLLABORATION_LINKS from '../graphql/mutations/deleteCollaborationLinks.graphql';
 import DELETE_NODES from '../graphql/mutations/deleteNodes.graphql';
 import DELETE_SHARE from '../graphql/mutations/deleteShare.graphql';
 import DELETE_VERSIONS from '../graphql/mutations/deleteVersions.graphql';
@@ -27,6 +30,7 @@ import KEEP_VERSIONS from '../graphql/mutations/keepVersions.graphql';
 import MOVE_NODES from '../graphql/mutations/moveNodes.graphql';
 import RESTORE_NODES from '../graphql/mutations/restoreNodes.graphql';
 import TRASH_NODES from '../graphql/mutations/trashNodes.graphql';
+import UPDATE_LINK from '../graphql/mutations/updateLink.graphql';
 import UPDATE_NODE from '../graphql/mutations/updateNode.graphql';
 import UPDATE_NODE_DESCRIPTION from '../graphql/mutations/updateNodeDescription.graphql';
 import UPDATE_SHARE from '../graphql/mutations/updateShare.graphql';
@@ -34,9 +38,11 @@ import FIND_NODES from '../graphql/queries/findNodes.graphql';
 import GET_ACCOUNT_BY_EMAIL from '../graphql/queries/getAccountByEmail.graphql';
 import GET_ACCOUNTS_BY_EMAIL from '../graphql/queries/getAccountsByEmail.graphql';
 import GET_BASE_NODE from '../graphql/queries/getBaseNode.graphql';
+import GET_CHILD from '../graphql/queries/getChild.graphql';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import GET_CONFIGS from '../graphql/queries/getConfigs.graphql';
 import GET_NODE from '../graphql/queries/getNode.graphql';
+import GET_NODE_COLLABORATION_LINKS from '../graphql/queries/getNodeCollaborationLinks.graphql';
 import GET_NODE_LINKS from '../graphql/queries/getNodeLinks.graphql';
 import GET_PARENT from '../graphql/queries/getParent.graphql';
 import GET_PATH from '../graphql/queries/getPath.graphql';
@@ -110,7 +116,21 @@ import {
 	GetConfigsQuery,
 	GetConfigsQueryVariables,
 	GetAccountsByEmailQueryVariables,
-	GetAccountsByEmailQuery
+	GetAccountsByEmailQuery,
+	GetNodeCollaborationLinksQueryVariables,
+	GetNodeCollaborationLinksQuery,
+	CollaborationLink,
+	CreateCollaborationLinkMutationVariables,
+	CreateCollaborationLinkMutation,
+	DeleteCollaborationLinksMutationVariables,
+	DeleteCollaborationLinksMutation,
+	GetChildQuery,
+	GetChildQueryVariables,
+	CreateLinkMutationVariables,
+	Link,
+	CreateLinkMutation,
+	UpdateLinkMutationVariables,
+	UpdateLinkMutation
 } from '../types/graphql/types';
 
 type Id = string;
@@ -139,8 +159,13 @@ type MockVariablePossibleType =
 	| GetAccountByEmailQueryVariables
 	| GetAccountsByEmailQueryVariables
 	| GetNodeLinksQueryVariables
+	| GetNodeCollaborationLinksQueryVariables
+	| DeleteCollaborationLinksMutationVariables
 	| DeleteVersionsMutationVariables
-	| GetVersionsQueryVariables;
+	| GetVersionsQueryVariables
+	| GetChildQueryVariables
+	| CreateLinkMutationVariables
+	| UpdateLinkMutationVariables;
 
 export interface Mock<
 	TData = Record<string, unknown>,
@@ -285,18 +310,35 @@ export function mockUpdateNodeError(
  */
 export function mockUpdateNodeDescription(
 	variables: UpdateNodeDescriptionMutationVariables,
-	updateNode: Node
+	updateNode: Node,
+	callback?: () => void
 ): Mock<UpdateNodeDescriptionMutation, UpdateNodeDescriptionMutationVariables> {
 	return {
 		request: {
 			query: UPDATE_NODE_DESCRIPTION,
 			variables
 		},
-		result: {
-			data: {
-				updateNode
-			}
+		result: (): { data: UpdateNodeDescriptionMutation } => {
+			callback && callback();
+			return {
+				data: {
+					updateNode
+				}
+			};
 		}
+	};
+}
+
+export function mockUpdateNodeDescriptionError(
+	variables: UpdateNodeDescriptionMutationVariables,
+	error: ServerError | ApolloError
+): Mock<UpdateNodeDescriptionMutation, UpdateNodeDescriptionMutationVariables> {
+	return {
+		request: {
+			query: UPDATE_NODE_DESCRIPTION,
+			variables
+		},
+		error
 	};
 }
 
@@ -634,6 +676,19 @@ export function mockCreateShare(
 	};
 }
 
+export function mockCreateShareError(
+	variables: CreateShareMutationVariables,
+	error: ApolloError | ServerError
+): Mock<CreateShareMutation, CreateShareMutationVariables> {
+	return {
+		request: {
+			query: CREATE_SHARE,
+			variables
+		},
+		error
+	};
+}
+
 /**
  * Create share mock
  */
@@ -655,6 +710,19 @@ export function mockUpdateShare(
 				}
 			};
 		}
+	};
+}
+
+export function mockUpdateShareError(
+	variables: UpdateShareMutationVariables,
+	error: ApolloError | ServerError
+): Mock<UpdateShareMutation, UpdateShareMutationVariables> {
+	return {
+		request: {
+			query: UPDATE_SHARE,
+			variables
+		},
+		error
 	};
 }
 
@@ -713,10 +781,71 @@ export function mockGetNodeLinks(
 		},
 		result: {
 			data: {
+				getNode: node
+			}
+		}
+	};
+}
+
+/**
+ * Get Node Links mock
+ */
+export function mockGetNodeCollaborationLinks(
+	variables: GetNodeCollaborationLinksQueryVariables,
+	node: Node,
+	collaborationLinks?: Array<Maybe<CollaborationLink>>
+): Mock<GetNodeCollaborationLinksQuery, GetNodeCollaborationLinksQueryVariables> {
+	return {
+		request: {
+			query: GET_NODE_COLLABORATION_LINKS,
+			variables
+		},
+		result: {
+			data: {
 				getNode: {
 					...node,
-					links: []
+					collaboration_links: collaborationLinks || []
 				}
+			}
+		}
+	};
+}
+
+/**
+ * Create collaboration link mock
+ */
+export function mockCreateCollaborationLink(
+	variables: CreateCollaborationLinkMutationVariables,
+	createCollaborationLink: CollaborationLink
+): Mock<CreateCollaborationLinkMutation, CreateCollaborationLinkMutationVariables> {
+	return {
+		request: {
+			query: CREATE_COLLABORATION_LINK,
+			variables
+		},
+		result: {
+			data: {
+				createCollaborationLink
+			}
+		}
+	};
+}
+
+/**
+ * Delete collaboration links mock
+ */
+export function mockDeleteCollaborationLinks(
+	variables: DeleteCollaborationLinksMutationVariables,
+	deleteCollaborationLinks: Array<string>
+): Mock<DeleteCollaborationLinksMutation, DeleteCollaborationLinksMutationVariables> {
+	return {
+		request: {
+			query: DELETE_COLLABORATION_LINKS,
+			variables
+		},
+		result: {
+			data: {
+				deleteCollaborationLinks
 			}
 		}
 	};
@@ -835,5 +964,95 @@ export function mockGetConfigs(
 				getConfigs: configs
 			}
 		}
+	};
+}
+
+/**
+ * Get Child mock
+ */
+
+export function mockGetChild(
+	variables: GetChildQueryVariables,
+	node: GetChildQuery['getNode']
+): Mock<GetChildQuery, GetChildQueryVariables> {
+	return {
+		request: {
+			query: GET_CHILD,
+			variables: {
+				node_id: variables.node_id,
+				shares_limit: variables?.shares_limit || 1
+			}
+		},
+		result: {
+			data: {
+				getNode: node
+			}
+		}
+	};
+}
+
+/**
+ * Create link mock
+ */
+export function mockCreateLink(
+	variables: CreateLinkMutationVariables,
+	link: Link
+): Mock<CreateLinkMutation, CreateLinkMutationVariables> {
+	return {
+		request: {
+			query: CREATE_LINK,
+			variables
+		},
+		result: {
+			data: {
+				createLink: link
+			}
+		}
+	};
+}
+
+export function mockCreateLinkError(
+	variables: CreateLinkMutationVariables,
+	error: ApolloError | ServerError
+): Mock<CreateLinkMutation, CreateLinkMutationVariables> {
+	return {
+		request: {
+			query: CREATE_LINK,
+			variables
+		},
+		error
+	};
+}
+
+/**
+ * Update link mock
+ */
+export function mockUpdateLink(
+	variables: UpdateLinkMutationVariables,
+	link: Link
+): Mock<UpdateLinkMutation, UpdateLinkMutationVariables> {
+	return {
+		request: {
+			query: UPDATE_LINK,
+			variables
+		},
+		result: {
+			data: {
+				updateLink: link
+			}
+		}
+	};
+}
+
+export function mockUpdateLinkError(
+	variables: UpdateLinkMutationVariables,
+	error: ApolloError | ServerError
+): Mock<UpdateLinkMutation, UpdateLinkMutationVariables> {
+	return {
+		request: {
+			query: UPDATE_LINK,
+			variables
+		},
+		error
 	};
 }

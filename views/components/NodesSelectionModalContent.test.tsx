@@ -991,7 +991,8 @@ describe('Nodes Selection Modal Content', () => {
 					mockFindNodes(
 						getFindNodesVariables({
 							shared_with_me: true,
-							cascade: false,
+							cascade: true,
+							direct_share: true,
 							folder_id: ROOTS.LOCAL_ROOT
 						}),
 						sharedWithMeFilter
@@ -1053,7 +1054,8 @@ describe('Nodes Selection Modal Content', () => {
 					mockFindNodes(
 						getFindNodesVariables({
 							shared_with_me: true,
-							cascade: false,
+							cascade: true,
+							direct_share: true,
 							folder_id: ROOTS.LOCAL_ROOT
 						}),
 						filter
@@ -2662,7 +2664,8 @@ describe('Nodes Selection Modal Content', () => {
 					getFindNodesVariables({
 						shared_with_me: true,
 						folder_id: ROOTS.LOCAL_ROOT,
-						cascade: false
+						cascade: true,
+						direct_share: true
 					}),
 					nodes
 				),
@@ -2725,7 +2728,8 @@ describe('Nodes Selection Modal Content', () => {
 					getFindNodesVariables({
 						shared_with_me: true,
 						folder_id: ROOTS.LOCAL_ROOT,
-						cascade: false
+						cascade: true,
+						direct_share: true
 					}),
 					nodes
 				),

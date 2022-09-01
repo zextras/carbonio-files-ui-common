@@ -14,7 +14,7 @@ import { useLocation, useParams } from 'react-router-dom';
 import { ACTION_IDS, ACTION_TYPES } from '../../constants';
 import { useCreateOptions } from '../../hooks/useCreateOptions';
 import { useNavigation } from '../../hooks/useNavigation';
-import { DISPLAYER_WIDTH, FILES_APP_ID, LIST_WIDTH, ROOTS } from '../constants';
+import { DISPLAYER_WIDTH, FILES_APP_ID, FILTER_PARAMS, LIST_WIDTH, ROOTS } from '../constants';
 import { ListContext } from '../contexts';
 import { useUpload } from '../hooks/useUpload';
 import { URLParams } from '../types/common';
@@ -151,18 +151,12 @@ const FilterView: React.VFC = () => {
 
 	const ListComponent = useMemo(
 		() =>
-			(isFlaggedFilter && <FilterList flagged trashed={false} canUploadFile cascade />) ||
-			(isSharedByMeFilter && (
-				<FilterList sharedByMe trashed={false} canUploadFile cascade directShare />
-			)) ||
-			(isSharedWithMeFilter && (
-				<FilterList sharedWithMe trashed={false} canUploadFile cascade directShare />
-			)) ||
-			(isMyTrashFilter && (
-				<FilterList trashed sharedWithMe={false} canUploadFile={false} cascade={false} />
-			)) ||
+			(isFlaggedFilter && <FilterList canUploadFile {...FILTER_PARAMS.flagged} />) ||
+			(isSharedByMeFilter && <FilterList canUploadFile {...FILTER_PARAMS.sharedByMe} />) ||
+			(isSharedWithMeFilter && <FilterList canUploadFile {...FILTER_PARAMS.sharedWithMe} />) ||
+			(isMyTrashFilter && <FilterList canUploadFile={false} {...FILTER_PARAMS.myTrash} />) ||
 			(isSharedTrashFilter && (
-				<FilterList trashed sharedWithMe canUploadFile={false} cascade={false} />
+				<FilterList canUploadFile={false} {...FILTER_PARAMS.sharedTrash} />
 			)) || <Container>Missing Filter</Container>,
 		[
 			isFlaggedFilter,

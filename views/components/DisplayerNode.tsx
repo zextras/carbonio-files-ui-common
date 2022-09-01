@@ -114,6 +114,7 @@ export const DisplayerNode: React.VFC<DisplayerNodeProps> = ({
 				background="gray5"
 				padding={{ horizontal: 'large' }}
 				mainAlignment="flex-start"
+				data-testid="displayer-content"
 			>
 				<Container mainAlignment="flex-start" height="fill">
 					<TabBar

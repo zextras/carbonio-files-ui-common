@@ -11,6 +11,7 @@ import userEvent from '@testing-library/user-event';
 import map from 'lodash/map';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
+import GET_CHILD from '../graphql/queries/getChild.graphql';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import GET_NODE from '../graphql/queries/getNode.graphql';
 import GET_PATH from '../graphql/queries/getPath.graphql';
@@ -18,6 +19,8 @@ import GET_PERMISSIONS from '../graphql/queries/getPermissions.graphql';
 import { populateFolder, populateNode, populateParents } from '../mocks/mockUtils';
 import { Node } from '../types/common';
 import {
+	GetChildQuery,
+	GetChildQueryVariables,
 	GetChildrenQuery,
 	GetChildrenQueryVariables,
 	GetNodeQuery,
@@ -141,6 +144,16 @@ describe('Folder View', () => {
 					getNode: currentFolder
 				}
 			});
+			global.apolloClient.writeQuery<GetChildQuery, GetChildQueryVariables>({
+				query: GET_CHILD,
+				variables: {
+					node_id: currentFolder.id,
+					shares_limit: 1
+				},
+				data: {
+					getNode: currentFolder
+				}
+			});
 			global.apolloClient.writeQuery<GetNodeQuery, GetNodeQueryVariables>({
 				query: GET_NODE,
 				variables: getNodeVariables((currentFolder.children.nodes[0] as Node).id),
@@ -190,6 +203,16 @@ describe('Folder View', () => {
 			global.apolloClient.writeQuery<GetChildrenQuery, GetChildrenQueryVariables>({
 				query: GET_CHILDREN,
 				variables: getChildrenVariables(currentFolder.id),
+				data: {
+					getNode: currentFolder
+				}
+			});
+			global.apolloClient.writeQuery<GetChildQuery, GetChildQueryVariables>({
+				query: GET_CHILD,
+				variables: {
+					node_id: currentFolder.id,
+					shares_limit: 1
+				},
 				data: {
 					getNode: currentFolder
 				}
@@ -278,6 +301,16 @@ describe('Folder View', () => {
 					getNode: currentFolder
 				}
 			});
+			global.apolloClient.writeQuery<GetChildQuery, GetChildQueryVariables>({
+				query: GET_CHILD,
+				variables: {
+					node_id: currentFolder.id,
+					shares_limit: 1
+				},
+				data: {
+					getNode: currentFolder
+				}
+			});
 			const mockedGetParentQuery = mockGetParent({ node_id: currentFolder.id }, currentFolder);
 			global.apolloClient.writeQuery<GetParentQuery, GetParentQueryVariables>({
 				...mockedGetParentQuery.request,
@@ -316,6 +349,16 @@ describe('Folder View', () => {
 			);
 			global.apolloClient.writeQuery<GetChildrenQuery, GetChildrenQueryVariables>({
 				...mockedGetChildrenQuery.request,
+				data: {
+					getNode: currentFolder
+				}
+			});
+			global.apolloClient.writeQuery<GetChildQuery, GetChildQueryVariables>({
+				query: GET_CHILD,
+				variables: {
+					node_id: currentFolder.id,
+					shares_limit: 1
+				},
 				data: {
 					getNode: currentFolder
 				}
