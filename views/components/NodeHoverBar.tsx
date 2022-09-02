@@ -28,7 +28,7 @@ interface NodeHoverBarProps {
 
 export const NodeHoverBar: React.VFC<NodeHoverBarProps> = ({ actions }) => {
 	const clickHandler = useCallback<
-		(clickCallback: ActionItem['click']) => (event: React.MouseEvent<HTMLElement>) => void
+		(clickCallback: ActionItem['click']) => (event: React.MouseEvent | KeyboardEvent) => void
 	>(
 		(clickCallback) =>
 			(event): void => {

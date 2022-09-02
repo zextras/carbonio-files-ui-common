@@ -15,7 +15,8 @@ import {
 	Padding,
 	Text,
 	Tooltip,
-	useModal
+	useModal,
+	useSnackbar
 } from '@zextras/carbonio-design-system';
 import find from 'lodash/find';
 import { useTranslation } from 'react-i18next';
@@ -24,10 +25,9 @@ import styled from 'styled-components';
 import { useCreateCollaborationLinkMutation } from '../../../../hooks/graphql/mutations/useCreateCollaborationLinkMutation';
 import { useDeleteCollaborationLinksMutation } from '../../../../hooks/graphql/mutations/useDeleteCollaborationLinksMutation';
 import { useGetNodeCollaborationLinksQuery } from '../../../../hooks/graphql/queries/useGetNodeCollaborationLinksQuery';
-import { useCreateSnackbar } from '../../../../hooks/useCreateSnackbar';
 import { SharePermission } from '../../../../types/graphql/types';
 import { copyToClipboard } from '../../../../utils/utils';
-import { FlexContainer, TextWithLineHeight } from '../../StyledComponents';
+import { TextWithLineHeight } from '../../StyledComponents';
 
 const CustomButton = styled(Button)`
 	margin-left: auto;
@@ -47,7 +47,7 @@ export const CollaborationLinks: React.FC<CollaborationLinksProps> = ({
 	nodeName
 }) => {
 	const [t] = useTranslation();
-	const createSnackbar = useCreateSnackbar();
+	const createSnackbar = useSnackbar();
 	const createModal = useModal();
 
 	const { data: getCollaborationLinksQueryData, loading } =
@@ -209,7 +209,7 @@ export const CollaborationLinks: React.FC<CollaborationLinksProps> = ({
 				</TextWithLineHeight>
 			</Container>
 			<Padding vertical="small" />
-			<FlexContainer
+			<Container
 				orientation="horizontal"
 				mainAlignment="flex-start"
 				crossAlignment="flex-start"
@@ -250,7 +250,7 @@ export const CollaborationLinks: React.FC<CollaborationLinksProps> = ({
 				</Container>
 				{readAndShareCollaborationLink ? (
 					<CustomButton
-						isSmall
+						size="small"
 						type="outlined"
 						color="error"
 						label={t('collaborationLinks.button.revoke', 'Revoke')}
@@ -259,17 +259,17 @@ export const CollaborationLinks: React.FC<CollaborationLinksProps> = ({
 					/>
 				) : (
 					<CustomButton
-						isSmall
+						size="small"
 						type="outlined"
 						label={t('collaborationLinks.button.generateLink', 'Generate Link')}
 						onClick={createReadAndShareCollaborationLinkCallback}
 						disabled={loading}
 					/>
 				)}
-			</FlexContainer>
+			</Container>
 			<Padding vertical="extrasmall" />
 			{canWrite && (
-				<FlexContainer
+				<Container
 					orientation="horizontal"
 					mainAlignment="flex-start"
 					crossAlignment="flex-start"
@@ -313,7 +313,7 @@ export const CollaborationLinks: React.FC<CollaborationLinksProps> = ({
 					</Container>
 					{readWriteAndShareCollaborationLink ? (
 						<CustomButton
-							isSmall
+							size="small"
 							type="outlined"
 							color="error"
 							label={t('collaborationLinks.button.revoke', 'Revoke')}
@@ -322,14 +322,14 @@ export const CollaborationLinks: React.FC<CollaborationLinksProps> = ({
 						/>
 					) : (
 						<CustomButton
-							isSmall
+							size="small"
 							type="outlined"
 							label={t('collaborationLinks.button.generateLink', 'Generate Link')}
 							onClick={createReadWriteAndShareCollaborationLinkCallback}
 							disabled={loading}
 						/>
 					)}
-				</FlexContainer>
+				</Container>
 			)}
 		</Container>
 	);

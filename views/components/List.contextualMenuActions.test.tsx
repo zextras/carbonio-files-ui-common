@@ -8,10 +8,10 @@ import React from 'react';
 import { act, fireEvent, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import forEach from 'lodash/forEach';
-import includes from 'lodash/includes';
 
 import { populateFolder, populateNode } from '../../mocks/mockUtils';
 import { Node } from '../../types/common';
+import { mockGetChild } from '../../utils/mockUtils';
 import { actionRegexp, render, selectNodes } from '../../utils/testUtils';
 import { EmptySpaceFiller } from './EmptySpaceFiller';
 import { List } from './List';
@@ -65,6 +65,8 @@ describe('Contextual menu actions', () => {
 					}
 				];
 
+				const mocks = [mockGetChild({ node_id: currentFolder.id, shares_limit: 1 }, currentFolder)];
+
 				render(
 					<List
 						folderId={currentFolder.id}
@@ -72,7 +74,8 @@ describe('Contextual menu actions', () => {
 						nodes={currentFolder.children.nodes as Array<Node>}
 						mainList
 						emptyListMessage={'hint'}
-					/>
+					/>,
+					{ mocks }
 				);
 
 				const fillerContainer = await screen.findByTestId(`fillerContainer`);
@@ -83,9 +86,7 @@ describe('Contextual menu actions', () => {
 				// new Folder
 				const newFolderActionItem = await screen.findByText(/\bNew Folder\b/i);
 				expect(newFolderActionItem).toBeVisible();
-				expect(
-					includes((newFolderActionItem.parentElement as Element).getAttributeNames(), 'disabled')
-				).toBeFalsy();
+				expect(newFolderActionItem).not.toHaveAttribute('disabled', '');
 				userEvent.click(newFolderActionItem);
 				expect(createFolderAction).toBeCalledTimes(1);
 
@@ -95,9 +96,7 @@ describe('Contextual menu actions', () => {
 				// new Document
 				const newDocumentActionItem = await screen.findByText(/\bNew Document\b/i);
 				expect(newDocumentActionItem).toBeVisible();
-				expect(
-					includes((newDocumentActionItem.parentElement as Element).getAttributeNames(), 'disabled')
-				).toBeFalsy();
+				expect(newDocumentActionItem).not.toHaveAttribute('disabled', '');
 				userEvent.click(newDocumentActionItem);
 				expect(createDocumentAction).toBeCalledTimes(1);
 
@@ -107,12 +106,7 @@ describe('Contextual menu actions', () => {
 				// New Spreadsheet
 				const newSpreadsheetActionItem = await screen.findByText(/\bNew Spreadsheet\b/i);
 				expect(newSpreadsheetActionItem).toBeVisible();
-				expect(
-					includes(
-						(newSpreadsheetActionItem.parentElement as Element).getAttributeNames(),
-						'disabled'
-					)
-				).toBeFalsy();
+				expect(newSpreadsheetActionItem).not.toHaveAttribute('disabled', '');
 				userEvent.click(newSpreadsheetActionItem);
 				expect(createSpreadsheetAction).toBeCalledTimes(1);
 
@@ -122,17 +116,11 @@ describe('Contextual menu actions', () => {
 				// New Presentation
 				const newPresentationActionItem = await screen.findByText(/\bNew Presentation\b/i);
 				expect(newPresentationActionItem).toBeVisible();
-				expect(
-					includes(
-						(newPresentationActionItem.parentElement as Element).getAttributeNames(),
-						'disabled'
-					)
-				).toBeFalsy();
+				expect(newPresentationActionItem).not.toHaveAttribute('disabled', '');
 				userEvent.click(newPresentationActionItem);
 				expect(createPresentationAction).toBeCalledTimes(1);
-
-				expect.assertions(12);
 			});
+
 			test('when isCanCreateFolder and isCanCreateFolder are false', async () => {
 				const currentFolder = populateFolder();
 				const node1 = populateNode();
@@ -179,6 +167,8 @@ describe('Contextual menu actions', () => {
 					}
 				];
 
+				const mocks = [mockGetChild({ node_id: currentFolder.id, shares_limit: 1 }, currentFolder)];
+
 				render(
 					<List
 						folderId={currentFolder.id}
@@ -186,7 +176,8 @@ describe('Contextual menu actions', () => {
 						nodes={currentFolder.children.nodes as Array<Node>}
 						mainList
 						emptyListMessage={'hint'}
-					/>
+					/>,
+					{ mocks }
 				);
 
 				const fillerContainer = await screen.findByTestId(`fillerContainer`);
@@ -197,10 +188,7 @@ describe('Contextual menu actions', () => {
 				// new Folder
 				const newFolderActionItem = await screen.findByText(/\bNew Folder\b/i);
 				expect(newFolderActionItem).toBeVisible();
-				expect(
-					includes((newFolderActionItem.parentElement as Element).getAttributeNames(), 'disabled')
-				).toBeTruthy();
-				expect(newFolderActionItem.parentElement).toHaveAttribute('disabled', '');
+				expect(newFolderActionItem).toHaveAttribute('disabled', '');
 				userEvent.click(newFolderActionItem);
 				expect(createFolderAction).not.toBeCalled();
 
@@ -210,10 +198,7 @@ describe('Contextual menu actions', () => {
 				// new Document
 				const newDocumentActionItem = await screen.findByText(/\bNew Document\b/i);
 				expect(newDocumentActionItem).toBeVisible();
-				expect(
-					includes((newDocumentActionItem.parentElement as Element).getAttributeNames(), 'disabled')
-				).toBeTruthy();
-				expect(newDocumentActionItem.parentElement).toHaveAttribute('disabled', '');
+				expect(newDocumentActionItem).toHaveAttribute('disabled', '');
 				userEvent.click(newDocumentActionItem);
 				expect(createDocumentAction).not.toBeCalled();
 
@@ -223,13 +208,7 @@ describe('Contextual menu actions', () => {
 				// New Spreadsheet
 				const newSpreadsheetActionItem = await screen.findByText(/\bNew Spreadsheet\b/i);
 				expect(newSpreadsheetActionItem).toBeVisible();
-				expect(
-					includes(
-						(newSpreadsheetActionItem.parentElement as Element).getAttributeNames(),
-						'disabled'
-					)
-				).toBeTruthy();
-				expect(newSpreadsheetActionItem.parentElement).toHaveAttribute('disabled', '');
+				expect(newSpreadsheetActionItem).toHaveAttribute('disabled', '');
 				userEvent.click(newSpreadsheetActionItem);
 				expect(createSpreadsheetAction).not.toBeCalled();
 
@@ -239,19 +218,12 @@ describe('Contextual menu actions', () => {
 				// New Presentation
 				const newPresentationActionItem = await screen.findByText(/\bNew Presentation\b/i);
 				expect(newPresentationActionItem).toBeVisible();
-				expect(
-					includes(
-						(newPresentationActionItem.parentElement as Element).getAttributeNames(),
-						'disabled'
-					)
-				).toBeTruthy();
-				expect(newPresentationActionItem.parentElement).toHaveAttribute('disabled', '');
+				expect(newPresentationActionItem).toHaveAttribute('disabled', '');
 				userEvent.click(newPresentationActionItem);
 				expect(createPresentationAction).not.toBeCalled();
-
-				expect.assertions(16);
 			});
 		});
+
 		describe('Contextual menu on empty space in a folder with no nodes', () => {
 			test('when isCanCreateFolder and isCanCreateFolder are true', async () => {
 				const currentFolder = populateFolder();
@@ -294,6 +266,8 @@ describe('Contextual menu actions', () => {
 					}
 				];
 
+				const mocks = [mockGetChild({ node_id: currentFolder.id, shares_limit: 1 }, currentFolder)];
+
 				render(
 					<List
 						folderId={currentFolder.id}
@@ -301,7 +275,8 @@ describe('Contextual menu actions', () => {
 						nodes={currentFolder.children.nodes as Array<Node>}
 						mainList
 						emptyListMessage={'hint'}
-					/>
+					/>,
+					{ mocks }
 				);
 
 				const emptySpaceFiller = await screen.findByTestId(`emptyFolder`);
@@ -312,9 +287,7 @@ describe('Contextual menu actions', () => {
 				// new Folder
 				const newFolderActionItem = await screen.findByText(/\bNew Folder\b/i);
 				expect(newFolderActionItem).toBeVisible();
-				expect(
-					includes((newFolderActionItem.parentElement as Element).getAttributeNames(), 'disabled')
-				).toBeFalsy();
+				expect(newFolderActionItem).not.toHaveAttribute('disabled', '');
 				userEvent.click(newFolderActionItem);
 				expect(createFolderAction).toBeCalledTimes(1);
 
@@ -324,9 +297,7 @@ describe('Contextual menu actions', () => {
 				// new Document
 				const newDocumentActionItem = await screen.findByText(/\bNew Document\b/i);
 				expect(newDocumentActionItem).toBeVisible();
-				expect(
-					includes((newDocumentActionItem.parentElement as Element).getAttributeNames(), 'disabled')
-				).toBeFalsy();
+				expect(newDocumentActionItem).not.toHaveAttribute('disabled', '');
 				userEvent.click(newDocumentActionItem);
 				expect(createDocumentAction).toBeCalledTimes(1);
 
@@ -336,12 +307,7 @@ describe('Contextual menu actions', () => {
 				// New Spreadsheet
 				const newSpreadsheetActionItem = await screen.findByText(/\bNew Spreadsheet\b/i);
 				expect(newSpreadsheetActionItem).toBeVisible();
-				expect(
-					includes(
-						(newSpreadsheetActionItem.parentElement as Element).getAttributeNames(),
-						'disabled'
-					)
-				).toBeFalsy();
+				expect(newSpreadsheetActionItem).not.toHaveAttribute('disabled', '');
 				userEvent.click(newSpreadsheetActionItem);
 				expect(createSpreadsheetAction).toBeCalledTimes(1);
 
@@ -351,17 +317,11 @@ describe('Contextual menu actions', () => {
 				// New Presentation
 				const newPresentationActionItem = await screen.findByText(/\bNew Presentation\b/i);
 				expect(newPresentationActionItem).toBeVisible();
-				expect(
-					includes(
-						(newPresentationActionItem.parentElement as Element).getAttributeNames(),
-						'disabled'
-					)
-				).toBeFalsy();
+				expect(newPresentationActionItem).not.toHaveAttribute('disabled', '');
 				userEvent.click(newPresentationActionItem);
 				expect(createPresentationAction).toBeCalledTimes(1);
-
-				expect.assertions(12);
 			});
+
 			test('when isCanCreateFolder and isCanCreateFolder are false', async () => {
 				const currentFolder = populateFolder();
 
@@ -403,6 +363,8 @@ describe('Contextual menu actions', () => {
 					}
 				];
 
+				const mocks = [mockGetChild({ node_id: currentFolder.id, shares_limit: 1 }, currentFolder)];
+
 				render(
 					<List
 						folderId={currentFolder.id}
@@ -410,7 +372,8 @@ describe('Contextual menu actions', () => {
 						nodes={currentFolder.children.nodes as Array<Node>}
 						mainList
 						emptyListMessage={'hint'}
-					/>
+					/>,
+					{ mocks }
 				);
 
 				const emptySpaceFiller = await screen.findByTestId(`emptyFolder`);
@@ -421,10 +384,7 @@ describe('Contextual menu actions', () => {
 				// new Folder
 				const newFolderActionItem = await screen.findByText(/\bNew Folder\b/i);
 				expect(newFolderActionItem).toBeVisible();
-				expect(
-					includes((newFolderActionItem.parentElement as Element).getAttributeNames(), 'disabled')
-				).toBeTruthy();
-				expect(newFolderActionItem.parentElement).toHaveAttribute('disabled', '');
+				expect(newFolderActionItem).toHaveAttribute('disabled', '');
 				userEvent.click(newFolderActionItem);
 				expect(createFolderAction).not.toBeCalled();
 
@@ -434,10 +394,7 @@ describe('Contextual menu actions', () => {
 				// new Document
 				const newDocumentActionItem = await screen.findByText(/\bNew Document\b/i);
 				expect(newDocumentActionItem).toBeVisible();
-				expect(
-					includes((newDocumentActionItem.parentElement as Element).getAttributeNames(), 'disabled')
-				).toBeTruthy();
-				expect(newDocumentActionItem.parentElement).toHaveAttribute('disabled', '');
+				expect(newDocumentActionItem).toHaveAttribute('disabled', '');
 				userEvent.click(newDocumentActionItem);
 				expect(createDocumentAction).not.toBeCalled();
 
@@ -447,13 +404,7 @@ describe('Contextual menu actions', () => {
 				// New Spreadsheet
 				const newSpreadsheetActionItem = await screen.findByText(/\bNew Spreadsheet\b/i);
 				expect(newSpreadsheetActionItem).toBeVisible();
-				expect(
-					includes(
-						(newSpreadsheetActionItem.parentElement as Element).getAttributeNames(),
-						'disabled'
-					)
-				).toBeTruthy();
-				expect(newSpreadsheetActionItem.parentElement).toHaveAttribute('disabled', '');
+				expect(newSpreadsheetActionItem).toHaveAttribute('disabled', '');
 				userEvent.click(newSpreadsheetActionItem);
 				expect(createSpreadsheetAction).not.toBeCalled();
 
@@ -463,17 +414,9 @@ describe('Contextual menu actions', () => {
 				// New Presentation
 				const newPresentationActionItem = await screen.findByText(/\bNew Presentation\b/i);
 				expect(newPresentationActionItem).toBeVisible();
-				expect(
-					includes(
-						(newPresentationActionItem.parentElement as Element).getAttributeNames(),
-						'disabled'
-					)
-				).toBeTruthy();
-				expect(newPresentationActionItem.parentElement).toHaveAttribute('disabled', '');
+				expect(newPresentationActionItem).toHaveAttribute('disabled', '');
 				userEvent.click(newPresentationActionItem);
 				expect(createPresentationAction).not.toBeCalled();
-
-				expect.assertions(16);
 			});
 		});
 	});
@@ -491,6 +434,8 @@ describe('Contextual menu actions', () => {
 			const element0 = currentFolder.children.nodes[0] as Node;
 			const element1 = currentFolder.children.nodes[1] as Node;
 
+			const mocks = [mockGetChild({ node_id: currentFolder.id, shares_limit: 1 }, currentFolder)];
+
 			render(
 				<List
 					folderId={currentFolder.id}
@@ -498,7 +443,8 @@ describe('Contextual menu actions', () => {
 					nodes={currentFolder.children.nodes as Array<Node>}
 					mainList
 					emptyListMessage={'hint'}
-				/>
+				/>,
+				{ mocks }
 			);
 
 			selectNodes([element0.id, element1.id]);
@@ -521,6 +467,7 @@ describe('Contextual menu actions', () => {
 			const flagAction = await screen.findByText(actionRegexp.flag);
 			expect(flagAction).toBeVisible();
 		});
+
 		test('Contextual menu works only on selected nodes', async () => {
 			const currentFolder = populateFolder(5);
 			currentFolder.permissions.can_write_file = true;
@@ -537,6 +484,8 @@ describe('Contextual menu actions', () => {
 			const element1 = currentFolder.children.nodes[1] as Node;
 			const element2 = currentFolder.children.nodes[2] as Node;
 
+			const mocks = [mockGetChild({ node_id: currentFolder.id, shares_limit: 1 }, currentFolder)];
+
 			render(
 				<List
 					folderId={currentFolder.id}
@@ -544,7 +493,8 @@ describe('Contextual menu actions', () => {
 					nodes={currentFolder.children.nodes as Array<Node>}
 					mainList
 					emptyListMessage={'hint'}
-				/>
+				/>,
+				{ mocks }
 			);
 
 			selectNodes([element0.id, element1.id]);
@@ -565,6 +515,11 @@ describe('Contextual menu actions', () => {
 			const flagAction = await screen.findByText(actionRegexp.flag);
 			expect(flagAction).toBeVisible();
 
+			act(() => {
+				// run dropdown timers
+				jest.runOnlyPendingTimers();
+			});
+
 			expect(screen.queryByText(actionRegexp.openDocument)).not.toBeInTheDocument();
 			expect(screen.queryByText(actionRegexp.rename)).not.toBeInTheDocument();
 			expect(screen.queryByText(actionRegexp.download)).not.toBeInTheDocument();
@@ -580,7 +535,7 @@ describe('Contextual menu actions', () => {
 		});
 	});
 
-	test('right click on node open the contextual menu for the node, closing a previously opened one. Left click close it', async () => {
+	test.skip('right click on node open the contextual menu for the node, closing a previously opened one. Left click close it', async () => {
 		const currentFolder = populateFolder();
 		const node1 = populateNode();
 		// set the node not flagged so that we can search by flag action in the contextual menu of first node
@@ -591,6 +546,8 @@ describe('Contextual menu actions', () => {
 		node2.flagged = true;
 		currentFolder.children.nodes.push(node2);
 
+		const mocks = [mockGetChild({ node_id: currentFolder.id, shares_limit: 1 }, currentFolder)];
+
 		render(
 			<List
 				folderId={currentFolder.id}
@@ -598,7 +555,8 @@ describe('Contextual menu actions', () => {
 				nodes={currentFolder.children.nodes as Array<Node>}
 				mainList
 				emptyListMessage={'hint'}
-			/>
+			/>,
+			{ mocks }
 		);
 
 		// right click to open contextual menu
@@ -619,6 +577,7 @@ describe('Contextual menu actions', () => {
 		act(() => {
 			userEvent.click(node2Item);
 		});
+		// FIXME: decide whether the dropdown as contextual menu should close or not with left click on trigger item
 		expect(unflagAction).not.toBeInTheDocument();
 		expect(flagAction).not.toBeInTheDocument();
 	});

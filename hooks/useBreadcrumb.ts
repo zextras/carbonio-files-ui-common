@@ -26,7 +26,7 @@ import { buildCrumbs } from '../utils/utils';
 export type UseBreadcrumbType = (
 	folderId?: string,
 	labels?: Crumb[],
-	crumbAction?: (id: string, event?: React.SyntheticEvent) => void
+	crumbAction?: (id: string, event?: React.SyntheticEvent | KeyboardEvent) => void
 ) => {
 	data: Crumb[] | undefined;
 	toggleExpanded: () => void;

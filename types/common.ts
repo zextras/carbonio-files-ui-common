@@ -6,6 +6,8 @@
 
 import React, { DragEventHandler } from 'react';
 
+import { BreadcrumbsProps, ChipItem } from '@zextras/carbonio-design-system';
+
 import {
 	BaseNodeFragment,
 	ChildFragment,
@@ -16,7 +18,8 @@ import {
 	MakeOptional,
 	Maybe,
 	Permissions,
-	Share
+	Share,
+	User
 } from './graphql/types';
 import { SnakeToCamelCase } from './utils';
 
@@ -61,11 +64,7 @@ export type GetNodeParentType = {
 	>;
 };
 
-export type Crumb = {
-	id: string;
-	label: string;
-	click?: (event: React.SyntheticEvent) => void;
-};
+export type Crumb = BreadcrumbsProps['crumbs'][number];
 
 export type CrumbNode = Pick<Node, 'id' | 'name' | 'type'> & {
 	parent?: Maybe<
@@ -135,26 +134,7 @@ export interface ChipAction {
 	type: 'icon' | 'button';
 }
 
-export interface ChipProps {
-	label?: string | React.ReactElement;
-	background?: string;
-	color?: string;
-	hasAvatar?: boolean;
-	error?: boolean;
-	avatarPicture?: string;
-	closable?: boolean;
-	onClose?: (event?: React.SyntheticEvent) => void;
-	avatarIcon?: string;
-	avatarBackground?: string;
-	avatarColor?: string;
-	avatarLabel?: string;
-	onClick?: (event: React.SyntheticEvent) => void;
-	size?: string;
-	actions?: ChipAction[];
-	maxWidth?: string;
-}
-
-export type SearchChip = ChipProps;
+export type SearchChip = ChipItem;
 
 export enum OrderTrend {
 	Ascending = 'Ascending',
@@ -356,4 +336,16 @@ export enum Action {
 	RetryUpload = 'RETRY_UPLOAD',
 	GoToFolder = 'GO_TO_FOLDER'
 	// CreateFolder = 'CREATE_FOLDER',
+}
+
+export interface ShareChip extends ChipItem {
+	value: {
+		id: string | undefined;
+		sharingAllowed: boolean;
+		role: Role;
+		onUpdate: (
+			id: string | undefined,
+			updatedPartialObject: Partial<Omit<ShareChip['value'], 'onUpdate'>>
+		) => void;
+	} & (Contact | User);
 }

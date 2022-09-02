@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-/* eslint-disable no-nested-ternary */
 import React, { useCallback, useMemo } from 'react';
 
 import {
@@ -14,34 +13,19 @@ import {
 	Padding,
 	Divider,
 	Checkbox,
-	Button
+	Button,
+	pseudoClasses
 } from '@zextras/carbonio-design-system';
 import includes from 'lodash/includes';
 import noop from 'lodash/noop';
 import { useTranslation } from 'react-i18next';
-import styled, { css, FlattenSimpleInterpolation } from 'styled-components';
+import styled, { SimpleInterpolation } from 'styled-components';
 
-const ExclusiveSelectionContainer = styled(Container)`
-	cursor: ${(props): string => (!props.disabled ? 'pointer' : 'default')};
+const ExclusiveSelectionContainer = styled(Container)<{ $disabled?: boolean; background: string }>`
+	cursor: ${({ $disabled }): string => (!$disabled ? 'pointer' : 'default')};
 	max-width: 256px;
-	${({ theme, background, disabled }): FlattenSimpleInterpolation | string =>
-		(!disabled &&
-			css`
-				transition: background 0.2s ease-out;
-				&:focus {
-					outline: none;
-					background: ${theme.palette[background].focus};
-				}
-				&:hover {
-					outline: none;
-					background: ${theme.palette[background].hover};
-				}
-				&:active {
-					outline: none;
-					background: ${theme.palette[background].active};
-				}
-			`) ||
-		''};
+	${({ theme, background, $disabled }): SimpleInterpolation =>
+		!$disabled && pseudoClasses(theme, background, 'background')};
 `;
 
 const CheckboxContainer = styled(Container)`
@@ -86,7 +70,7 @@ export const EditShareChipPopoverContainer: React.FC<EditShareChipPopoverContain
 	return (
 		<Container orientation="vertical" padding={{ all: 'extralarge' }}>
 			<ExclusiveSelectionContainer
-				disabled={row0disabled}
+				$disabled={row0disabled}
 				onClick={container0Click}
 				padding={{ vertical: 'large', horizontal: 'small' }}
 				orientation="horizontal"
@@ -98,13 +82,13 @@ export const EditShareChipPopoverContainer: React.FC<EditShareChipPopoverContain
 					<Icon
 						icon="EyeOutline"
 						size="large"
-						color={row0disabled ? 'secondary' : activeRow === 0 ? 'primary' : 'gray0'}
+						color={(row0disabled && 'secondary') || (activeRow === 0 && 'primary') || 'gray0'}
 					/>
 				</Padding>
 				<Container orientation="vertical" crossAlignment="flex-start">
 					<Text
 						weight={activeRow === 0 ? 'bold' : 'regular'}
-						color={row0disabled ? 'secondary' : activeRow === 0 ? 'primary' : 'text'}
+						color={(row0disabled && 'secondary') || (activeRow === 0 && 'primary') || 'text'}
 						size="medium"
 					>
 						{t('displayer.share.chip.popover.role.viewer', 'Viewer')}
@@ -119,7 +103,7 @@ export const EditShareChipPopoverContainer: React.FC<EditShareChipPopoverContain
 			</ExclusiveSelectionContainer>
 
 			<ExclusiveSelectionContainer
-				disabled={row1disabled}
+				$disabled={row1disabled}
 				onClick={container1Click}
 				padding={{ vertical: 'large', horizontal: 'small' }}
 				orientation="horizontal"
@@ -131,13 +115,13 @@ export const EditShareChipPopoverContainer: React.FC<EditShareChipPopoverContain
 					<Icon
 						icon="Edit2Outline"
 						size="large"
-						color={row1disabled ? 'secondary' : activeRow === 1 ? 'primary' : 'gray0'}
+						color={(row1disabled && 'secondary') || (activeRow === 1 && 'primary') || 'gray0'}
 					/>
 				</Padding>
 				<Container orientation="vertical" crossAlignment="flex-start">
 					<Text
 						weight={activeRow === 1 ? 'bold' : 'regular'}
-						color={row1disabled ? 'secondary' : activeRow === 1 ? 'primary' : 'text'}
+						color={(row1disabled && 'secondary') || (activeRow === 1 && 'primary') || 'text'}
 						size="medium"
 					>
 						{t('displayer.share.chip.popover.role.editor', 'Editor')}
@@ -161,9 +145,9 @@ export const EditShareChipPopoverContainer: React.FC<EditShareChipPopoverContain
 			>
 				<Padding right="large">
 					<Checkbox
-						size="large"
+						size="medium"
 						value={checkboxValue}
-						onClick={(ev: React.SyntheticEvent): void => {
+						onClick={(ev: Event): void => {
 							ev.stopPropagation();
 							if (checkboxOnClick) {
 								checkboxOnClick();

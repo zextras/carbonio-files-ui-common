@@ -7,6 +7,7 @@
 import { useCallback } from 'react';
 
 import { FetchResult, useMutation } from '@apollo/client';
+import { useSnackbar } from '@zextras/carbonio-design-system';
 import filter from 'lodash/filter';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
@@ -29,7 +30,6 @@ import {
 	RestoreNodesMutationVariables
 } from '../../../types/graphql/types';
 import { isSearchView } from '../../../utils/utils';
-import { useCreateSnackbar } from '../../useCreateSnackbar';
 import { useErrorHandler } from '../../useErrorHandler';
 import { useUpdateFilterContent } from '../useUpdateFilterContent';
 import { isQueryResult } from '../utils';
@@ -46,7 +46,7 @@ export type RestoreType = (
  * Can return error: ErrorCode.NODE_WRITE_ERROR
  */
 export function useRestoreNodesMutation(): RestoreType {
-	const createSnackbar = useCreateSnackbar();
+	const createSnackbar = useSnackbar();
 	const [t] = useTranslation();
 	const { navigateToFolder } = useNavigation();
 	const location = useLocation();

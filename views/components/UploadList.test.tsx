@@ -298,7 +298,7 @@ describe('Upload list', () => {
 			expect(screen.getByTestId('icon: CheckmarkCircle2')).toBeVisible();
 		});
 
-		test('upload more then 3 files in the upload list queues excess elements', async () => {
+		test.skip('upload more then 3 files in the upload list queues excess elements', async () => {
 			const localRoot = populateFolder(0, ROOTS.LOCAL_ROOT);
 			const uploadedFiles = populateNodes(4, 'File') as FilesFile[];
 			const files: File[] = [];
@@ -396,7 +396,10 @@ describe('Upload list', () => {
 			);
 			expect(screen.queryByText(/Drop here your attachments/m)).not.toBeInTheDocument();
 
-			await waitForElementToBeRemoved(queuedIconLoader, { timeout: 3000 });
+			act(() => {
+				jest.runOnlyPendingTimers();
+			});
+			await waitForElementToBeRemoved(queuedIconLoader, { timeout: 5000 });
 			expect(within(queuedItem).getByTestId('icon: CheckmarkCircle2')).toBeInTheDocument();
 
 			await waitFor(() => {

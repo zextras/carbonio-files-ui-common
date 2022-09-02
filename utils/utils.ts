@@ -96,7 +96,7 @@ export const getIconByFileType = (type: NodeType, subType?: Maybe<string>): stri
 
 const buildCrumbsRecursive = (
 	node: CrumbNode,
-	clickHandler?: (id: string, event: React.SyntheticEvent) => void,
+	clickHandler?: (id: string, event: React.SyntheticEvent | KeyboardEvent) => void,
 	t?: TFunction,
 	nodeClickCondition: (node: Pick<Node, 'id' | 'name' | 'type'>) => boolean = (): boolean => true
 ): Crumb[] => {
@@ -107,7 +107,8 @@ const buildCrumbsRecursive = (
 
 	let handlerFunction;
 	if (clickHandler && node && nodeClickCondition(node)) {
-		handlerFunction = (event: React.SyntheticEvent): void => clickHandler(node.id, event);
+		handlerFunction = (event: React.SyntheticEvent | KeyboardEvent): void =>
+			clickHandler(node.id, event);
 	}
 	if (node.name) {
 		result.push({
@@ -130,7 +131,7 @@ const buildCrumbsRecursive = (
  */
 export const buildCrumbs = (
 	nodes: CrumbNode | Array<Maybe<Pick<Node, 'id' | 'name' | 'type'>> | undefined>,
-	clickHandler?: (id: string, event: React.SyntheticEvent) => void,
+	clickHandler?: (id: string, event: React.SyntheticEvent | KeyboardEvent) => void,
 	t?: TFunction,
 	nodeClickCondition: (node: Pick<Node, 'id' | 'name' | 'type'>) => boolean = (): boolean => true
 ): Crumb[] => {
@@ -147,7 +148,7 @@ export const buildCrumbs = (
 					label: (t && t('node.alias.name', $node.name, { context: $node.id })) || $node.name,
 					click:
 						node && clickHandler && nodeClickCondition(node)
-							? (event: React.SyntheticEvent): void => clickHandler($node.id, event)
+							? (event: React.SyntheticEvent | KeyboardEvent): void => clickHandler($node.id, event)
 							: undefined
 				};
 			})

@@ -6,15 +6,21 @@
 
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
-import { Chip, Dropdown, Text, Tooltip, useCombinedRefs } from '@zextras/carbonio-design-system';
+import {
+	Chip,
+	Dropdown,
+	Text,
+	Tooltip,
+	useCombinedRefs,
+	useKeyboard,
+	getKeyboardPreset
+} from '@zextras/carbonio-design-system';
 import debounce from 'lodash/debounce';
 import filter from 'lodash/filter';
 import isEmpty from 'lodash/isEmpty';
 import map from 'lodash/map';
 import slice from 'lodash/slice';
 import styled from 'styled-components';
-
-import { getKeyboardPreset, useKeyboard } from './useKeyboard';
 
 const InputDiv = styled.div``;
 const InputContainer = styled.div`

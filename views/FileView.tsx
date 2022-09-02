@@ -163,7 +163,7 @@ const FileView: React.VFC = () => {
 				borderRadius="none"
 				maxHeight="100%"
 			>
-				<Responsive mode="desktop" target={window.top}>
+				<Responsive mode="desktop">
 					<Container
 						width={LIST_WIDTH}
 						mainAlignment="flex-start"
@@ -183,7 +183,7 @@ const FileView: React.VFC = () => {
 						<Displayer translationKey="displayer.generic" />
 					</Container>
 				</Responsive>
-				<Responsive mode="mobile" target={window.top}>
+				<Responsive mode="mobile">
 					<FileList fileId={fileId || ''} canUploadFile={false} />
 				</Responsive>
 			</Container>

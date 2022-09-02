@@ -122,11 +122,8 @@ describe('Upload List Item Wrapper', () => {
 		fireEvent.contextMenu(screen.getByText(file.file.name));
 		await screen.findByText(/go to destination folder/i);
 		expect(screen.queryByText(/retry upload/i)).not.toBeInTheDocument();
-		expect(screen.getByText(/remove upload/i).parentElement).not.toHaveAttribute('disabled', '');
-		expect(screen.getByText(/go to destination folder/i).parentElement).not.toHaveAttribute(
-			'disabled',
-			''
-		);
+		expect(screen.getByText(/remove upload/i)).not.toHaveAttribute('disabled', '');
+		expect(screen.getByText(/go to destination folder/i)).not.toHaveAttribute('disabled', '');
 	});
 
 	test('File name, destination folder, queued label and size are visible', async () => {

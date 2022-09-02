@@ -25,7 +25,7 @@ import {
 import { Folder, NodeType, QueryGetPathArgs } from '../../types/graphql/types';
 import { canUpsertDescription } from '../../utils/ActionsFactory';
 import { mockGetPath } from '../../utils/mockUtils';
-import { buildBreadCrumbRegExp, render } from '../../utils/testUtils';
+import { buildBreadCrumbRegExp, render, waitForNetworkResponse } from '../../utils/testUtils';
 import { formatDate, formatTime, humanFileSize, previewHandledMimeTypes } from '../../utils/utils';
 import { NodeDetails } from './NodeDetails';
 
@@ -222,6 +222,7 @@ describe('Node Details', () => {
 		const showPathButton = screen.getByRole('button', { name: /show path/i });
 		expect(showPathButton).toBeVisible();
 		userEvent.click(showPathButton);
+		await waitForNetworkResponse();
 		await screen.findByText((node.parent as Folder).name, { exact: false });
 		expect(
 			getByTextWithMarkup(buildBreadCrumbRegExp(...map(path, (parent) => parent.name)))
@@ -233,6 +234,7 @@ describe('Node Details', () => {
 			args: getPathArgs
 		});
 		const newBreadcrumb = buildBreadCrumbRegExp(...map(path2, (parent) => parent.name));
+		await waitForNetworkResponse();
 		await findByTextWithMarkup(newBreadcrumb);
 		expect(getByTextWithMarkup(newBreadcrumb)).toBeVisible();
 		expect(

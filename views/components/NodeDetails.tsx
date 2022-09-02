@@ -9,12 +9,14 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ApolloError, useLazyQuery } from '@apollo/client';
 import {
 	Avatar,
+	Button,
 	Container,
 	Padding,
 	Row,
 	Shimmer,
 	Text,
-	Tooltip
+	Tooltip,
+	useSnackbar
 } from '@zextras/carbonio-design-system';
 import reduce from 'lodash/reduce';
 import { useTranslation } from 'react-i18next';
@@ -27,7 +29,6 @@ import { useInternalLink } from '../../../hooks/useInternalLink';
 import { useNavigation } from '../../../hooks/useNavigation';
 import { DISPLAYER_TABS, LIST_ITEM_HEIGHT_DETAILS, ROOTS } from '../../constants';
 import GET_PATH from '../../graphql/queries/getPath.graphql';
-import { useCreateSnackbar } from '../../hooks/useCreateSnackbar';
 import useQueryParam from '../../hooks/useQueryParam';
 import { HoverSwitchComponent } from '../../HoverSwitchComponent';
 import { Crumb, Node, URLParams } from '../../types/common';
@@ -55,12 +56,7 @@ import { DisplayerPreview } from './DisplayerPreview';
 import { EmptyFolder } from './EmptyFolder';
 import { NodeDetailsDescription } from './NodeDetailsDescription';
 import { NodeDetailsList } from './NodeDetailsList';
-import {
-	DisplayerContentContainer,
-	FlexContainer,
-	RoundedButton,
-	ShimmerText
-} from './StyledComponents';
+import { DisplayerContentContainer, ShimmerText } from './StyledComponents';
 
 interface NodeDetailsProps {
 	typeName: Node['__typename'];
@@ -149,9 +145,9 @@ const ShimmerNodeDetailsItem = (): JSX.Element => (
 		<Padding horizontal="small">
 			<ShimmerText $size="small" width="150px" />
 		</Padding>
-		<FlexContainer orientation="horizontal" mainAlignment="flex-end">
+		<Container orientation="horizontal" mainAlignment="flex-end">
 			<ShimmerText $size="small" width="60px" />
-		</FlexContainer>
+		</Container>
 	</Container>
 );
 
@@ -305,7 +301,7 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 	);
 
 	const [crumbsRequested, setCrumbsRequested] = useState<boolean>(false);
-	const createSnackbar = useCreateSnackbar();
+	const createSnackbar = useSnackbar();
 
 	// use a lazy query to load full path only when requested
 	const [getPathQuery, { data: getPathData }] = useLazyQuery<GetPathQuery, GetPathQueryVariables>(
@@ -422,19 +418,21 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 						{internalLink && (
 							<HoverSwitchComponent
 								visibleToHiddenComponent={
-									<RoundedButton
+									<Button
 										label={t('displayer.details.copyShortcut', "copy item's shortcut")}
 										type="outlined"
 										icon="CopyOutline"
 										onClick={copyShortcut}
+										shape="round"
 									/>
 								}
 								hiddenToVisibleComponent={
-									<RoundedButton
+									<Button
 										label={t('displayer.details.copyShortcut', "copy item's shortcut")}
 										type="outlined"
 										icon="Copy"
 										onClick={copyShortcut}
+										shape="round"
 									/>
 								}
 							/>
@@ -460,11 +458,12 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 								<InteractiveBreadcrumbs crumbs={crumbs} />
 							</Row>
 							{!crumbsRequested && (
-								<RoundedButton
+								<Button
 									label={t('displayer.details.showPath', 'Show path')}
 									type="outlined"
 									color="secondary"
 									onClick={loadPath}
+									shape="round"
 								/>
 							)}
 						</Row>

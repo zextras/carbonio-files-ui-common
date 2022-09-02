@@ -41,7 +41,7 @@ export const ListHeader: React.VFC<ListHeaderProps> = ({
 	selectAll,
 	isAllSelected,
 	exitSelectionMode,
-	permittedSelectionModeActionsItems,
+	permittedSelectionModeActionsItems = [],
 	hide = false,
 	firstCustomComponent,
 	secondCustomComponent,
@@ -57,7 +57,7 @@ export const ListHeader: React.VFC<ListHeaderProps> = ({
 						icon={actionItem.icon}
 						size="large"
 						iconColor="primary"
-						onClick={actionItem.click}
+						onClick={actionItem.click || ((): void => undefined)}
 						disabled={actionItem.disabled}
 					/>
 				</Tooltip>
@@ -132,7 +132,12 @@ export const ListHeader: React.VFC<ListHeaderProps> = ({
 					{permittedSelectionModePrimaryActionsIconButtons}
 					{size(drop(permittedSelectionModeActionsItems, 3)) > 0 && (
 						<Dropdown items={drop(permittedSelectionModeActionsItems, 3)} placement="bottom-end">
-							<IconButton icon="MoreVertical" size="large" iconColor="primary" />
+							<IconButton
+								icon="MoreVertical"
+								size="large"
+								iconColor="primary"
+								onClick={(): void => undefined}
+							/>
 						</Dropdown>
 					)}
 				</Row>

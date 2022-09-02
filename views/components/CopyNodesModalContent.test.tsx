@@ -6,7 +6,14 @@
 
 import React from 'react';
 
-import { act, fireEvent, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/react';
+import {
+	act,
+	fireEvent,
+	screen,
+	waitFor,
+	waitForElementToBeRemoved,
+	within
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
@@ -71,8 +78,12 @@ describe('Copy Nodes Modal', () => {
 			mockGetPath({ node_id: parentFolder.id }, [parentFolder]),
 			mockGetChildren(getChildrenVariables(parentFolder.id), parentFolder)
 		];
-		render(<CopyNodesModalContent nodesToCopy={nodesToCopy} />, { mocks });
+		const { findByTextWithMarkup } = render(<CopyNodesModalContent nodesToCopy={nodesToCopy} />, {
+			mocks
+		});
 		await screen.findByText((parentFolder.children.nodes[0] as File | Folder).name);
+		await waitForNetworkResponse();
+		await findByTextWithMarkup(buildBreadCrumbRegExp('Files', parentFolder.name));
 		expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
 			parentFolder.children.nodes.length
 		);
@@ -92,6 +103,7 @@ describe('Copy Nodes Modal', () => {
 			mocks
 		});
 		await screen.findByText((parentFolder.children.nodes[0] as File | Folder).name);
+		await waitForNetworkResponse();
 		expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
 			parentFolder.children.nodes.length
 		);
@@ -240,6 +252,7 @@ describe('Copy Nodes Modal', () => {
 		// navigate inside local root
 		userEvent.dblClick(filesHome);
 		await screen.findByText((localRoot.children.nodes[0] as Node).name);
+		await waitForNetworkResponse();
 		expect(screen.getByText((localRoot.children.nodes[0] as Node).name)).toBeVisible();
 		expect(screen.getByText((localRoot.children.nodes[1] as Node).name)).toBeVisible();
 		let breadcrumb = await findByTextWithMarkup(buildBreadCrumbRegExp('Files', localRoot.name));
@@ -582,6 +595,7 @@ describe('Copy Nodes Modal', () => {
 		);
 
 		await screen.findByText(nodesToCopy[0].name);
+		await waitForNetworkResponse();
 		await findByTextWithMarkup(buildBreadCrumbRegExp('Files', currentFolder.name));
 		const mockedGetChildrenQuery = mockGetChildren(getChildrenVariables(localRoot.id), localRoot);
 		let cachedData = global.apolloClient.readQuery<GetChildrenQuery, GetChildrenQueryVariables>(
@@ -594,22 +608,26 @@ describe('Copy Nodes Modal', () => {
 		await screen.findByText('Home');
 		await waitForNetworkResponse();
 		const confirmButton = screen.getByRole('button', { name: actionRegexp.copy });
+		const confirmButtonLabel = within(confirmButton).getByText(actionRegexp.copy);
 		expect(screen.getByText('Home')).toBeVisible();
 		expect(screen.getByText(/shared with me/i)).toBeVisible();
 		expect(confirmButton).toHaveAttribute('disabled');
-		userEvent.hover(confirmButton);
+		userEvent.hover(confirmButtonLabel);
 		const tooltip = await screen.findByText(/you can't perform this action here/i);
 		expect(tooltip).toBeVisible();
 		act(() => {
-			userEvent.unhover(confirmButton);
+			userEvent.unhover(confirmButtonLabel);
 		});
 		expect(tooltip).not.toBeInTheDocument();
 		userEvent.click(screen.getByText('Home'));
 		expect(confirmButton).not.toHaveAttribute('disabled');
-		userEvent.hover(confirmButton);
+		userEvent.hover(confirmButtonLabel);
+		act(() => {
+			jest.runOnlyPendingTimers();
+		});
 		expect(screen.queryByText(/you can't perform this action here/i)).not.toBeInTheDocument();
 		act(() => {
-			userEvent.click(confirmButton);
+			userEvent.click(confirmButtonLabel);
 		});
 		await waitFor(() => expect(closeAction).toHaveBeenCalled());
 		const snackbar = await screen.findByText(/item copied/i);
@@ -659,6 +677,7 @@ describe('Copy Nodes Modal', () => {
 		);
 
 		await screen.findByText(nodesToCopy[0].name);
+		await waitForNetworkResponse();
 		await findByTextWithMarkup(buildBreadCrumbRegExp('Files', currentFolder.name));
 		userEvent.click(screen.getByText('Files'));
 		await screen.findByText('Home');
@@ -706,7 +725,9 @@ describe('Copy Nodes Modal', () => {
 			{ mocks }
 		);
 
+		await screen.findByText((currentFolder.children.nodes[0] as Node).name);
 		let breadcrumbRegexp = buildBreadCrumbRegExp('Files', ...map(path, (node) => node.name));
+		await waitForNetworkResponse();
 		await findByTextWithMarkup(breadcrumbRegexp);
 		// full path immediately visible
 		expect(getByTextWithMarkup(breadcrumbRegexp)).toBeVisible();
@@ -752,6 +773,7 @@ describe('Copy Nodes Modal', () => {
 			mocks
 		});
 		await screen.findByText((currentFolder.children.nodes[0] as File | Folder).name);
+		await waitForNetworkResponse();
 		expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(NODES_LOAD_LIMIT);
 		expect(screen.getByTestId('icon: Refresh')).toBeInTheDocument();
 		expect(screen.getByTestId('icon: Refresh')).toBeVisible();

@@ -4,9 +4,16 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { ChipInput, Container, CustomModal, getColor, Row } from '@zextras/carbonio-design-system';
+import {
+	ChipInput,
+	ChipInputProps,
+	ChipItem,
+	Container,
+	CustomModal,
+	Row
+} from '@zextras/carbonio-design-system';
 import every from 'lodash/every';
 import isArray from 'lodash/isArray';
 import isEmpty from 'lodash/isEmpty';
@@ -17,30 +24,17 @@ import styled from 'styled-components';
 
 import { useActiveNode } from '../../../hooks/useActiveNode';
 import { ROOTS } from '../../constants';
-import { AdvancedFilters, ChipProps } from '../../types/common';
+import { AdvancedFilters } from '../../types/common';
 import { Folder } from '../../types/graphql/types';
 import { AdvancedSwitch } from './AdvancedSwitch';
 import { FolderSelectionModalContent } from './FolderSelectionModalContent';
 import { ModalFooter } from './ModalFooter';
 import { ModalHeader } from './ModalHeader';
 
-const CustomChipInput = styled(ChipInput)`
-	& div[contenteditable] {
-		min-width: 1px;
-		width: fit-content;
-	}
-`;
-
-const FolderChipInput = styled(CustomChipInput)`
+const FolderChipInput = styled(ChipInput)`
 	cursor: pointer;
-`;
-
-const FolderChipInputContainer = styled(Container)`
-	&:hover {
-		& > div,
-		${FolderChipInput} {
-			background-color: ${getColor('gray5.hover')};
-		}
+	input {
+		cursor: pointer;
 	}
 `;
 
@@ -59,8 +53,9 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 	const [t] = useTranslation();
 	const [currentFilters, setCurrentFilters] = useState<AdvancedFilters>(filters);
 	const [keywordsHasTextContent, setKeywordsHasTextContent] = useState<boolean>(false);
+	const folderChipInputRef = useRef<HTMLInputElement>(null);
 
-	const keywords = useMemo(() => {
+	const keywords = useMemo<ChipItem[]>(() => {
 		if (currentFilters.keywords) {
 			return map(currentFilters.keywords, (k) => ({
 				...k,
@@ -70,7 +65,7 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 		return [];
 	}, [currentFilters.keywords]);
 
-	const folderId = useMemo(() => {
+	const folderId = useMemo<ChipItem[]>(() => {
 		if (currentFilters.folderId) {
 			return [{ ...currentFilters.folderId, background: 'gray2' }];
 		}
@@ -119,24 +114,30 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 	);
 
 	const keywordsOnChange = useCallback(
-		(newKeywords: AdvancedFilters['keywords']) => {
-			updateFilter('keywords', newKeywords);
+		(newKeywords: ChipItem[]) => {
+			// FIXME: fix types
+			updateFilter('keywords', newKeywords as AdvancedFilters['keywords']);
 			setKeywordsHasTextContent(false);
 		},
 		[updateFilter]
 	);
 
-	const keywordsOnAdd = useCallback<(keyword: string) => ChipProps>(
-		(keyword: string) => ({
-			label: keyword,
-			hasAvatar: false,
-			value: keyword
-		}),
+	const keywordsOnAdd = useCallback<NonNullable<ChipInputProps['onAdd']>>(
+		(keyword: string | unknown) => {
+			if (typeof keyword === 'string') {
+				return {
+					label: keyword,
+					hasAvatar: false,
+					value: keyword
+				};
+			}
+			throw new Error('invalid keywords received');
+		},
 		[]
 	);
 
-	const keywordsOnType = useCallback(
-		({ textContent }: React.KeyboardEvent & { textContent: string }) => {
+	const keywordsOnType = useCallback<NonNullable<ChipInputProps['onInputType']>>(
+		({ textContent }) => {
 			setKeywordsHasTextContent(!isEmpty(textContent));
 		},
 		[]
@@ -177,7 +178,7 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 	);
 
 	const folderOnChange = useCallback(
-		(folder: Pick<Folder, 'id' | 'name'> | never[], cascade?: boolean) => {
+		(folder: Pick<Folder, 'id' | 'name'> | ChipItem[], cascade?: boolean) => {
 			if (!isArray(folder) && !isEmpty(folder)) {
 				updateFilter('folderId', {
 					/* i18next-extract-disable-next-line */
@@ -218,6 +219,24 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 		setFolderSelectionModalOpen(false);
 	}, []);
 
+	const removeFocus = useCallback(() => {
+		if (folderChipInputRef.current) {
+			folderChipInputRef.current.blur();
+		}
+	}, []);
+
+	useEffect(() => {
+		const folderChipInputInputElement = folderChipInputRef.current;
+		if (folderChipInputInputElement) {
+			folderChipInputInputElement.addEventListener('focus', removeFocus);
+		}
+		return () => {
+			if (folderChipInputInputElement) {
+				folderChipInputInputElement.removeEventListener('focus', removeFocus);
+			}
+		};
+	}, [openFolderSelectionModal, removeFocus]);
+
 	return (
 		<>
 			<Container padding={{ bottom: 'medium' }}>
@@ -248,7 +267,7 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 					</Row>
 					<Row takeAvailableSpace wrap="nowrap" width="fill">
 						<Container padding={{ all: 'extrasmall' }}>
-							<CustomChipInput
+							<ChipInput
 								placeholder={t('search.advancedSearch.modal.keywords.label', 'Keywords')}
 								background="gray5"
 								value={keywords}
@@ -262,18 +281,17 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 					</Row>
 					<Row takeAvailableSpace wrap="nowrap" width="fill">
 						<Container padding={{ all: 'extrasmall' }}>
-							<FolderChipInputContainer>
-								<FolderChipInput
-									placeholder={t('search.advancedSearch.modal.folder.label', 'Select a folder')}
-									background="gray5"
-									value={folderId}
-									icon="FolderOutline"
-									onClick={openFolderSelectionModal}
-									iconAction={openFolderSelectionModal}
-									maxChips={1}
-									onChange={folderOnChange}
-								/>
-							</FolderChipInputContainer>
+							<FolderChipInput
+								placeholder={t('search.advancedSearch.modal.folder.label', 'Select a folder')}
+								background="gray5"
+								value={folderId}
+								icon="FolderOutline"
+								onClick={openFolderSelectionModal}
+								iconAction={openFolderSelectionModal}
+								maxChips={1}
+								onChange={folderOnChange}
+								inputRef={folderChipInputRef}
+							/>
 						</Container>
 					</Row>
 				</Container>

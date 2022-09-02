@@ -60,7 +60,8 @@ import {
 	buildBreadCrumbRegExp,
 	moveNode,
 	render,
-	selectNodes
+	selectNodes,
+	waitForNetworkResponse
 } from '../utils/testUtils';
 import FilterView from './FilterView';
 
@@ -364,6 +365,7 @@ describe('Filter view', () => {
 			const showPathButton = screen.getByRole('button', { name: /show path/i });
 			expect(showPathButton).toBeVisible();
 			userEvent.click(showPathButton);
+			await waitForNetworkResponse();
 			await within(displayer).findByText(node.parent.name);
 			const fullPathOriginalRegexp = buildBreadCrumbRegExp(...map(path, (parent) => parent.name));
 			await findByTextWithMarkup(fullPathOriginalRegexp);
@@ -683,11 +685,10 @@ describe('Filter view', () => {
 			expect(within(sharingContent).getByText(node.owner.full_name)).toBeVisible();
 			// close button is visible on logged user chip
 			expect(within(sharingContent).getByTestId('icon: Close')).toBeVisible();
-			userEvent.click(within(sharingContent).getByTestId('icon: Close'), undefined, {
-				skipHover: true
-			});
+			userEvent.click(within(sharingContent).getByTestId('icon: Close'));
 			// confirmation modal
 			await screen.findByRole('button', { name: /remove/i });
+			await screen.findByText(/remove share/i);
 			userEvent.click(screen.getByRole('button', { name: /remove/i }));
 			await waitForElementToBeRemoved(screen.queryAllByText(node.name));
 			const snackbar = await screen.findByText(/success/i);

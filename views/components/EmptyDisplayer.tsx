@@ -92,7 +92,7 @@ export const EmptyDisplayer: React.VFC<EmptyDisplayerProps> = ({ icons, translat
 					{randomPlaceholder?.title || ''}
 				</CenteredText>
 			</Padding>
-			<CenteredText size="small" color="gray1" overflow="break-word" textAlign="center" width="60%">
+			<CenteredText size="small" color="gray1" overflow="break-word" $width="60%">
 				{randomPlaceholder?.message || ''}
 			</CenteredText>
 		</Container>

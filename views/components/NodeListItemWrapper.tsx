@@ -7,6 +7,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useReactiveVar } from '@apollo/client';
+import { useSnackbar } from '@zextras/carbonio-design-system';
 import isEmpty from 'lodash/isEmpty';
 import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
@@ -18,7 +19,6 @@ import { DRAG_TYPES, ROOTS } from '../../constants';
 import { DeleteNodesType } from '../../hooks/graphql/mutations/useDeleteNodesMutation';
 import { useMoveNodesMutation } from '../../hooks/graphql/mutations/useMoveNodesMutation';
 import { useDeletePermanentlyModal } from '../../hooks/modals/useDeletePermanentlyModal';
-import { useCreateSnackbar } from '../../hooks/useCreateSnackbar';
 import { useUpload } from '../../hooks/useUpload';
 import { Action, NodeListItemType, URLParams } from '../../types/common';
 import {
@@ -51,7 +51,7 @@ interface NodeListItemWrapperProps {
 	isActive?: boolean;
 	setActive?: (node: NodeListItemType, event: React.SyntheticEvent) => void;
 	compact?: boolean;
-	navigateTo?: (id: string, event?: React.SyntheticEvent) => void;
+	navigateTo?: (id: string, event?: React.SyntheticEvent | Event) => void;
 	selectionContextualMenuActionsItems?: ActionItem[];
 }
 
@@ -81,7 +81,7 @@ export const NodeListItemWrapper: React.VFC<NodeListItemWrapperProps> = ({
 	const [dropzoneEnabled, setDropzoneEnabled] = useState(isFolder(node));
 	const { moveNodes: moveNodesMutation } = useMoveNodesMutation();
 	const { add } = useUpload();
-	const createSnackbar = useCreateSnackbar();
+	const createSnackbar = useSnackbar();
 
 	// timer to start navigation
 	const navigationTimerRef = useRef<NodeJS.Timer | null>(null);

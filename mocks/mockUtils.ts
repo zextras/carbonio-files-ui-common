@@ -336,7 +336,10 @@ export function populateContact(
 ): MakeRequired<Match, 'id' | 'email' | 'full'> {
 	return {
 		id: faker.datatype.uuid(),
-		email: email || faker.internet.exampleEmail(fullName),
+		email:
+			email ||
+			(fullName && `${fullName.replace(/\s+/i, '.')}@example.com`) ||
+			faker.internet.exampleEmail(fullName),
 		full: fullName || faker.name.findName()
 	};
 }

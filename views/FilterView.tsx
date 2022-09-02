@@ -179,7 +179,7 @@ const FilterView: React.VFC = () => {
 				borderRadius="none"
 				maxHeight="100%"
 			>
-				<Responsive mode="desktop" target={window.top}>
+				<Responsive mode="desktop">
 					<Container
 						width={LIST_WIDTH}
 						mainAlignment="flex-start"
@@ -199,9 +199,7 @@ const FilterView: React.VFC = () => {
 						<Displayer translationKey={displayerPlaceholdersKey} />
 					</Container>
 				</Responsive>
-				<Responsive mode="mobile" target={window.top}>
-					{ListComponent}
-				</Responsive>
+				<Responsive mode="mobile">{ListComponent}</Responsive>
 			</Container>
 			<Snackbar
 				open={showUploadSnackbar}
@@ -210,7 +208,6 @@ const FilterView: React.VFC = () => {
 				label={t('uploads.destination.home', "Upload occurred in Files' Home")}
 				actionLabel={t('snackbar.upload.goToFolder', 'Go to folder')}
 				onActionClick={uploadSnackbarAction}
-				replace={false}
 			/>
 		</ListContext.Provider>
 	);

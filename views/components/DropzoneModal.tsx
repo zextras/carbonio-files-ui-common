@@ -18,12 +18,12 @@ const BackDropLayoutInnerBox = styled(Container)`
 	border-radius: 20px;
 `;
 
-const BackDropLayoutContentBox = styled(Container)`
+const BackDropLayoutContentBox = styled(Container)<{ $disabled?: boolean }>`
 	border-radius: 10px;
 	box-sizing: border-box;
 	//box-sizing: border-box;
-	background-image: ${({ disabled }): FlattenSimpleInterpolation =>
-		disabled
+	background-image: ${({ $disabled }): FlattenSimpleInterpolation =>
+		$disabled
 			? css`url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='10' ry='10' stroke='%23828282FF' stroke-width='3' stroke-dasharray='8%2c 8' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e")`
 			: css`url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='10' ry='10' stroke='%232B73D2FF' stroke-width='3' stroke-dasharray='8%2c 8' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e")`};
 `;
@@ -87,7 +87,7 @@ export const DropzoneModal: React.VFC<DropzoneModalProps> = ({
 				<BackDropLayoutContentBox
 					padding={{ vertical: 'large', horizontal: 'extralarge' }}
 					color={color}
-					disabled={disabled}
+					$disabled={disabled}
 				>
 					<Container mainAlignment="center">
 						<DropBoxIconGroup mainAlignment="center" orientation="horizontal">

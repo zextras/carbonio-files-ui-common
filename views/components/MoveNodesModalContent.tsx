@@ -42,7 +42,7 @@ export const MoveNodesModalContent: React.VFC<MoveNodesModalContentProps> = ({
 		loading,
 		error
 	} = useGetChildrenQuery(openedFolder);
-	const mainContainerRef = useRef<HTMLDivElement>();
+	const mainContainerRef = useRef<HTMLDivElement>(null);
 
 	/** Mutation to move nodes * */
 	const { moveNodes, loading: moveNodesMutationLoading } = useMoveNodesMutation();
@@ -117,7 +117,7 @@ export const MoveNodesModalContent: React.VFC<MoveNodesModalContentProps> = ({
 		}
 	}, [destinationFolder, currentFolder, nodes, moveNodes, nodesToMove, closeHandler]);
 
-	const navigateTo = useCallback((id: string, event?: React.SyntheticEvent) => {
+	const navigateTo = useCallback((id: string, event?: React.SyntheticEvent | Event) => {
 		setOpenedFolder(id);
 		setDestinationFolder(id);
 		event && event.stopPropagation();

@@ -60,7 +60,7 @@ describe('Filter List', () => {
 
 				const copyAction = await screen.findByTestId(iconRegexp.copy);
 				expect(copyAction).toBeVisible();
-				expect(copyAction.parentElement).not.toHaveAttribute('disabled', '');
+				expect(copyAction).not.toHaveAttribute('disabled', '');
 			});
 
 			test('Copy open modal showing parent folder content. Confirm action close the modal and clear cached data for destination folder', async () => {
