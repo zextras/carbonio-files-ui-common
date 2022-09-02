@@ -20,7 +20,6 @@ import {
 } from '@zextras/carbonio-design-system';
 import find from 'lodash/find';
 import { useTranslation } from 'react-i18next';
-import styled from 'styled-components';
 
 import { useCreateCollaborationLinkMutation } from '../../../../hooks/graphql/mutations/useCreateCollaborationLinkMutation';
 import { useDeleteCollaborationLinksMutation } from '../../../../hooks/graphql/mutations/useDeleteCollaborationLinksMutation';
@@ -28,10 +27,6 @@ import { useGetNodeCollaborationLinksQuery } from '../../../../hooks/graphql/que
 import { SharePermission } from '../../../../types/graphql/types';
 import { copyToClipboard } from '../../../../utils/utils';
 import { TextWithLineHeight } from '../../StyledComponents';
-
-const CustomButton = styled(Button)`
-	margin-left: auto;
-`;
 
 interface CollaborationLinksProps {
 	nodeTypename: 'File' | 'Folder' | undefined;
@@ -218,7 +213,7 @@ export const CollaborationLinks: React.FC<CollaborationLinksProps> = ({
 				data-testid="read-share-collaboration-link-container"
 			>
 				<Icon icon="EyeOutline" size="medium" />
-				<Container crossAlignment="flex-start" width="fit">
+				<Container crossAlignment="flex-start" width="fit" flexGrow={1}>
 					<TextWithLineHeight size="small">
 						{t('collaborationLinks.row.title.ReadAndShare', 'Read and Share')}
 					</TextWithLineHeight>
@@ -249,7 +244,7 @@ export const CollaborationLinks: React.FC<CollaborationLinksProps> = ({
 					)}
 				</Container>
 				{readAndShareCollaborationLink ? (
-					<CustomButton
+					<Button
 						size="small"
 						type="outlined"
 						color="error"
@@ -258,7 +253,7 @@ export const CollaborationLinks: React.FC<CollaborationLinksProps> = ({
 						icon={'SlashOutline'}
 					/>
 				) : (
-					<CustomButton
+					<Button
 						size="small"
 						type="outlined"
 						label={t('collaborationLinks.button.generateLink', 'Generate Link')}
@@ -278,7 +273,7 @@ export const CollaborationLinks: React.FC<CollaborationLinksProps> = ({
 					data-testid="read-write-share-collaboration-link-container"
 				>
 					<Icon icon="Edit2Outline" size="medium" />
-					<Container crossAlignment="flex-start" width="fit">
+					<Container crossAlignment="flex-start" width="fit" flexGrow={1}>
 						<TextWithLineHeight size="small">
 							{t('collaborationLinks.row.title.writeAndShare', 'Write and Share')}
 						</TextWithLineHeight>
@@ -312,7 +307,7 @@ export const CollaborationLinks: React.FC<CollaborationLinksProps> = ({
 						)}
 					</Container>
 					{readWriteAndShareCollaborationLink ? (
-						<CustomButton
+						<Button
 							size="small"
 							type="outlined"
 							color="error"
@@ -321,7 +316,7 @@ export const CollaborationLinks: React.FC<CollaborationLinksProps> = ({
 							icon={'SlashOutline'}
 						/>
 					) : (
-						<CustomButton
+						<Button
 							size="small"
 							type="outlined"
 							label={t('collaborationLinks.button.generateLink', 'Generate Link')}
