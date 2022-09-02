@@ -60,7 +60,8 @@ import {
 	buildBreadCrumbRegExp,
 	moveNode,
 	render,
-	selectNodes
+	selectNodes,
+	waitForNetworkResponse
 } from '../utils/testUtils';
 import FilterView from './FilterView';
 
@@ -364,6 +365,7 @@ describe('Filter view', () => {
 			const showPathButton = screen.getByRole('button', { name: /show path/i });
 			expect(showPathButton).toBeVisible();
 			userEvent.click(showPathButton);
+			await waitForNetworkResponse();
 			await within(displayer).findByText(node.parent.name);
 			const fullPathOriginalRegexp = buildBreadCrumbRegExp(...map(path, (parent) => parent.name));
 			await findByTextWithMarkup(fullPathOriginalRegexp);

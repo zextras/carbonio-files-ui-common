@@ -35,10 +35,16 @@ import {
 import {
 	getChildrenVariables,
 	getNodeVariables,
+	mockGetChild,
 	mockGetChildren,
 	mockGetParent
 } from '../utils/mockUtils';
-import { buildBreadCrumbRegExp, moveNode, render } from '../utils/testUtils';
+import {
+	buildBreadCrumbRegExp,
+	moveNode,
+	render,
+	waitForNetworkResponse
+} from '../utils/testUtils';
 import FolderView from './FolderView';
 
 let mockedCreateOptions: CreateOptionsContent['createOptions'];
@@ -63,6 +69,7 @@ describe('Folder View', () => {
 		test('Create folder option is disabled if current folder has not can_write_folder permission', async () => {
 			const currentFolder = populateFolder();
 			currentFolder.permissions.can_write_folder = false;
+			currentFolder.permissions.can_write_file = false;
 			// prepare cache so that apollo client read data from the cache
 			const getChildrenMockedQuery = mockGetChildren(
 				getChildrenVariables(currentFolder.id),
@@ -70,6 +77,16 @@ describe('Folder View', () => {
 			);
 			global.apolloClient.writeQuery<GetChildrenQuery, GetChildrenQueryVariables>({
 				...getChildrenMockedQuery.request,
+				data: {
+					getNode: currentFolder
+				}
+			});
+			const mockGetChildQuery = mockGetChild(
+				{ node_id: currentFolder.id, shares_limit: 1 },
+				currentFolder
+			);
+			global.apolloClient.writeQuery<GetChildQuery, GetChildQueryVariables>({
+				...mockGetChildQuery.request,
 				data: {
 					getNode: currentFolder
 				}
@@ -88,8 +105,12 @@ describe('Folder View', () => {
 					getNode: currentFolder
 				}
 			});
-			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`] });
+			const { findByTextWithMarkup } = render(<FolderView />, {
+				initialRouterEntries: [`/?folder=${currentFolder.id}`]
+			});
 			await screen.findByText(/nothing here/i);
+			await findByTextWithMarkup(buildBreadCrumbRegExp(currentFolder.name));
+			await waitForNetworkResponse();
 			expect(map(mockedCreateOptions, (createOption) => createOption.action({}))).toEqual(
 				expect.arrayContaining([expect.objectContaining({ id: 'create-folder', disabled: true })])
 			);
@@ -105,6 +126,16 @@ describe('Folder View', () => {
 			);
 			global.apolloClient.writeQuery<GetChildrenQuery, GetChildrenQueryVariables>({
 				...getChildrenMockedQuery.request,
+				data: {
+					getNode: currentFolder
+				}
+			});
+			const mockGetChildQuery = mockGetChild(
+				{ node_id: currentFolder.id, shares_limit: 1 },
+				currentFolder
+			);
+			global.apolloClient.writeQuery<GetChildQuery, GetChildQueryVariables>({
+				...mockGetChildQuery.request,
 				data: {
 					getNode: currentFolder
 				}

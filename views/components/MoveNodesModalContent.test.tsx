@@ -44,7 +44,8 @@ import {
 	buildBreadCrumbRegExp,
 	render,
 	selectNodes,
-	triggerLoadMore
+	triggerLoadMore,
+	waitForNetworkResponse
 } from '../../utils/testUtils';
 import { MoveNodesModalContent } from './MoveNodesModalContent';
 
@@ -401,7 +402,9 @@ describe('Move Nodes Modal', () => {
 			{ mocks }
 		);
 
+		await screen.findByText(nodesToMove[0].name);
 		let breadcrumbRegexp = buildBreadCrumbRegExp(...map(path, (node) => node.name));
+		await waitForNetworkResponse();
 		await findByTextWithMarkup(breadcrumbRegexp);
 		// full path immediately visible
 		expect(getByTextWithMarkup(breadcrumbRegexp)).toBeVisible();
