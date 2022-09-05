@@ -8,6 +8,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
 	AccordionItem,
+	AccordionItemType,
 	getColor,
 	IconButton,
 	Padding,
@@ -17,6 +18,7 @@ import {
 import every from 'lodash/every';
 import find from 'lodash/find';
 import map from 'lodash/map';
+import noop from 'lodash/noop';
 import uniq from 'lodash/uniq';
 import styled from 'styled-components';
 
@@ -41,42 +43,21 @@ import {
 import { Dropzone } from './Dropzone';
 
 // TODO: replace with updated DS Accordion once available
-const CustomAccordionItem = styled(AccordionItem)`
+const CustomAccordionItem = styled(AccordionItem)<{ $dragging: boolean }>`
 	flex-basis: auto !important;
-	background-color: ${({ theme, dragging }): string =>
-		dragging ? getColor('gray5', theme) : 'inherit'};
+	background-color: ${({ theme, $dragging }): string =>
+		$dragging ? getColor('gray5', theme) : 'inherit'};
 	height: 40px;
 `;
 
-export type BadgeType = 'read' | 'unread' | undefined;
-
-export interface AccordionItemShape {
-	id: string;
-	label: string;
-	items?: AccordionItemShape[];
-	onClick?: (event: React.SyntheticEvent) => void;
-	icon?: string;
-	CustomComponent?: React.ReactNode;
-	iconCustomColor?: string;
-	iconColor?: string;
-	divider?: boolean;
-	badgeType?: BadgeType;
-	badgeCounter?: number;
-	open?: boolean;
-	background?: string;
-	active?: boolean;
-	canUpload?: boolean;
-	priority?: number;
-}
-
 interface SecondaryBarItemProps {
-	item: AccordionItemShape;
+	item: AccordionItemType;
 	expanded: boolean;
 }
 
 export const SecondaryBarItem: React.VFC<SecondaryBarItemProps> = ({ item, expanded }) => {
 	const { add } = useUpload();
-	const accordionItemRef = useRef<HTMLDivElement>();
+	const accordionItemRef = useRef<HTMLDivElement>(null);
 	const { data } = useGetRootsListQuery();
 	const [rootId, setRootId] = useState<string>();
 	const [dropEnabled, setDropEnabled] = useState(false);
@@ -205,15 +186,15 @@ export const SecondaryBarItem: React.VFC<SecondaryBarItemProps> = ({ item, expan
 		>
 			{(dragging): JSX.Element =>
 				expanded ? (
-					<CustomAccordionItem item={item} ref={accordionItemRef} dragging={dragging} />
+					<CustomAccordionItem item={item} ref={accordionItemRef} $dragging={dragging} />
 				) : (
 					<Row mainAlignment="flex-start" takeAvailableSpace>
 						<Tooltip label={item.label} placement="right">
 							<Padding all="extrasmall">
 								<IconButton
 									customSize={{ iconSize: 'large', paddingSize: 'small' }}
-									icon={item.icon}
-									onClick={item.onClick}
+									icon={item.icon || ''}
+									onClick={item.onClick || noop}
 									backgroundColor={(item.active && 'highlight') || undefined}
 									iconColor={item.iconCustomColor || item.iconColor}
 								/>
@@ -227,9 +208,9 @@ export const SecondaryBarItem: React.VFC<SecondaryBarItemProps> = ({ item, expan
 };
 
 export const SecondaryBarItemExpanded: React.VFC<{
-	item: AccordionItemShape;
+	item: AccordionItemType;
 }> = ({ item }) => <SecondaryBarItem item={item} expanded />;
 
 export const SecondaryBarItemNotExpanded: React.VFC<{
-	item: AccordionItemShape;
+	item: AccordionItemType;
 }> = ({ item }) => <SecondaryBarItem item={item} expanded={false} />;

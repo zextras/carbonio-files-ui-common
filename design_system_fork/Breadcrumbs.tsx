@@ -4,21 +4,14 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { Breadcrumbs as DsBreadcrumbs, getColor } from '@zextras/carbonio-design-system';
-import styled, { css } from 'styled-components';
+import { Breadcrumbs as DsBreadcrumbs, getColor, TextProps } from '@zextras/carbonio-design-system';
+import styled, { css, SimpleInterpolation } from 'styled-components';
 
-export type DropdownProps = Record<string, unknown> & {
-	onOpen?: () => void;
-	onClose?: () => void;
-};
-
-export type CollapserProps = Record<string, unknown>;
-
-export const Breadcrumbs = styled(DsBreadcrumbs)`
+export const Breadcrumbs = styled(DsBreadcrumbs)<{ $size?: TextProps['size']; color?: string }>`
 	[class^='Text'] {
-		font-size: ${({ theme, size = 'medium' }): string => theme.sizes.font[size]};
+		font-size: ${({ theme, $size = 'medium' }): string => theme.sizes.font[$size]};
 
-		${({ theme, color }): string =>
+		${({ theme, color }): SimpleInterpolation =>
 			color &&
 			css`
 				color: ${getColor(color, theme)};

@@ -7,6 +7,7 @@
 import { useCallback } from 'react';
 
 import { FetchResult, useMutation } from '@apollo/client';
+import { useSnackbar } from '@zextras/carbonio-design-system';
 import find from 'lodash/find';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
@@ -31,7 +32,6 @@ import {
 	QueryGetPathArgs
 } from '../../../types/graphql/types';
 import { isFolder } from '../../../utils/ActionsFactory';
-import { useCreateSnackbar } from '../../useCreateSnackbar';
 import { useErrorHandler } from '../../useErrorHandler';
 import useQueryParam from '../../useQueryParam';
 import { useUpdateFolderContent } from '../useUpdateFolderContent';
@@ -47,7 +47,7 @@ export type MoveNodesType = (
  */
 export function useMoveNodesMutation(): { moveNodes: MoveNodesType; loading: boolean } {
 	const [t] = useTranslation();
-	const createSnackbar = useCreateSnackbar();
+	const createSnackbar = useSnackbar();
 	const { activeNodeId, removeActiveNode } = useActiveNode();
 	const folderIdQueryParam = useQueryParam('folder');
 	const { rootId } = useParams<URLParams>();

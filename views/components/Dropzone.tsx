@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Container } from '@zextras/carbonio-design-system';
 import { throttle } from 'lodash';
 import intersection from 'lodash/intersection';
-import styled from 'styled-components';
+import styled, { DefaultTheme } from 'styled-components';
 
 import { DropzoneModal } from './DropzoneModal';
 
@@ -31,17 +31,19 @@ const DropzoneContainer = styled(Container)`
 	position: relative;
 `;
 
-const ContentContainer = styled(Container)`
-	opacity: ${({ dragging, disabled }): number => (dragging && disabled ? 0.6 : 1)};
+const ContentContainer = styled(Container)<{ $dragging?: boolean; $disabled?: boolean }>`
+	opacity: ${({ $dragging, $disabled }): number => ($dragging && $disabled ? 0.6 : 1)};
 `;
 
-const DropzoneOverlay = styled(Container)`
+const DropzoneOverlay = styled(Container)<{ $borderSize: keyof DefaultTheme['sizes']['padding'] }>`
 	position: absolute;
 	opacity: 0.4;
 	border-radius: 4px;
-	height: calc(100% - (${({ theme, borderSize }): string => theme.sizes.padding[borderSize]} * 2));
-	width: calc(100% - (${({ theme, borderSize }): string => theme.sizes.padding[borderSize]} * 2));
-	top: ${({ theme, borderSize }): string => theme.sizes.padding[borderSize]};
+	height: calc(
+		100% - (${({ theme, $borderSize }): string => theme.sizes.padding[$borderSize]} * 2)
+	);
+	width: calc(100% - (${({ theme, $borderSize }): string => theme.sizes.padding[$borderSize]} * 2));
+	top: ${({ theme, $borderSize }): string => theme.sizes.padding[$borderSize]};
 	pointer-events: none;
 `;
 
@@ -59,7 +61,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
 	types
 }) => {
 	const [dragging, setDragging] = useState(false);
-	const dropzoneRef = useRef<HTMLDivElement>();
+	const dropzoneRef = useRef<HTMLDivElement>(null);
 	const showDropzoneTimer = useRef<NodeJS.Timeout | null>(null);
 	const hideDropzoneTimer = useRef<NodeJS.Timeout | null>(null);
 
@@ -202,14 +204,14 @@ export const Dropzone: React.FC<DropzoneProps> = ({
 			mainAlignment="flex-start"
 			ref={dropzoneRef}
 		>
-			<ContentContainer disabled={disabled} dragging={dragging} mainAlignment="flex-start">
+			<ContentContainer $disabled={disabled} $dragging={dragging} mainAlignment="flex-start">
 				{children(dragging)}
 			</ContentContainer>
 			{dragging && (
 				<>
 					<DropzoneOverlay
 						background={disabled ? 'secondary' : 'primary'}
-						borderSize={title || message ? 'small' : 'extrasmall'}
+						$borderSize={title || message ? 'small' : 'extrasmall'}
 						data-testid="dropzone-overlay"
 					/>
 					{(title || message) && (

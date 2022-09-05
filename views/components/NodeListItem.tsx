@@ -6,7 +6,7 @@
 
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
-import { Container, Icon, Padding, Row, Text } from '@zextras/carbonio-design-system';
+import { Container, Icon, Padding, Row, Text, useSnackbar } from '@zextras/carbonio-design-system';
 import { PreviewsManagerContext } from '@zextras/carbonio-ui-preview';
 import debounce from 'lodash/debounce';
 import includes from 'lodash/includes';
@@ -28,7 +28,6 @@ import {
 	PREVIEW_TYPE,
 	ROOTS
 } from '../../constants';
-import { useCreateSnackbar } from '../../hooks/useCreateSnackbar';
 import { Action } from '../../types/common';
 import { NodeType, User } from '../../types/graphql/types';
 import { ActionItem, buildActionItems } from '../../utils/ActionsFactory';
@@ -48,12 +47,7 @@ import {
 import { ContextualMenu } from './ContextualMenu';
 import { NodeAvatarIcon } from './NodeAvatarIcon';
 import { NodeHoverBar } from './NodeHoverBar';
-import {
-	FlexContainer,
-	HoverBarContainer,
-	HoverContainer,
-	ListItemContainer
-} from './StyledComponents';
+import { HoverBarContainer, HoverContainer, ListItemContainer } from './StyledComponents';
 
 const CustomText = styled(Text)`
 	text-transform: uppercase;
@@ -90,7 +84,7 @@ interface NodeListItemProps {
 	isActive?: boolean;
 	setActive?: (event: React.SyntheticEvent) => void;
 	compact?: boolean;
-	navigateTo?: (id: string, event?: React.SyntheticEvent) => void;
+	navigateTo?: (id: string, event?: React.SyntheticEvent | Event) => void;
 	disabled?: boolean;
 	selectable?: boolean;
 	trashed?: boolean;
@@ -156,7 +150,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 		[id, selectId]
 	);
 
-	const createSnackbar = useCreateSnackbar();
+	const createSnackbar = useSnackbar();
 
 	const { sendViaMail } = useSendViaMail();
 
@@ -175,7 +169,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 	>(() => isSupportedByPreview(mimeType), [mimeType]);
 
 	const openNode = useCallback(
-		(event: React.SyntheticEvent) => {
+		(event: React.SyntheticEvent | KeyboardEvent) => {
 			// remove text selection on double click
 			if (window.getSelection) {
 				const selection = window.getSelection();
@@ -461,9 +455,9 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 					onDoubleClick={doubleClickHandler}
 					data-testid={`node-item-${id}`}
 					crossAlignment="flex-end"
-					contextualMenuActive={isContextualMenuActive}
-					disableHover={isContextualMenuActive || dragging || disabled}
-					disabled={disabled}
+					$contextualMenuActive={isContextualMenuActive}
+					$disableHover={isContextualMenuActive || dragging || disabled}
+					$disabled={disabled}
 					onMouseDown={preventTextSelection}
 				>
 					<HoverContainer
@@ -545,10 +539,10 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 									wrap="nowrap"
 									mainAlignment="flex-start"
 								>
-									<FlexContainer
-										$flexShrink={0}
-										$flexGrow={1}
-										$flexBasis="auto"
+									<Container
+										flexShrink={0}
+										flexGrow={1}
+										flexBasis="auto"
 										mainAlignment="flex-start"
 										orientation="horizontal"
 										width="fit"
@@ -564,14 +558,14 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 												</CustomText>
 											</Padding>
 										)}
-									</FlexContainer>
+									</Container>
 									{displayName && (
-										<FlexContainer
+										<Container
 											width="fit"
 											minWidth={0}
-											$flexShrink={1}
-											$flexGrow={1}
-											$flexBasis="auto"
+											flexShrink={1}
+											flexGrow={1}
+											flexBasis="auto"
 											orientation="horizontal"
 											mainAlignment="flex-end"
 											padding={{ left: 'small' }}
@@ -579,7 +573,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 											<Text size="extrasmall" overflow="ellipsis">
 												{displayName}
 											</Text>
-										</FlexContainer>
+										</Container>
 									)}
 								</Row>
 							)}

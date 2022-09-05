@@ -262,6 +262,7 @@ describe('Search view', () => {
 			const showPathButton = screen.getByRole('button', { name: /show path/i });
 			expect(showPathButton).toBeVisible();
 			userEvent.click(showPathButton);
+			await waitForNetworkResponse();
 			const fullPathOrig = await findByTextWithMarkup(
 				buildBreadCrumbRegExp(...map(path, (parent) => parent.name))
 			);

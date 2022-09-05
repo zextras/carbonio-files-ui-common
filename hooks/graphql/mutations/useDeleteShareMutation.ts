@@ -7,6 +7,7 @@
 import { useCallback } from 'react';
 
 import { FetchResult, useMutation } from '@apollo/client';
+import { useSnackbar } from '@zextras/carbonio-design-system';
 import filter from 'lodash/filter';
 import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
@@ -34,7 +35,6 @@ import {
 } from '../../../types/graphql/types';
 import { isFolder } from '../../../utils/ActionsFactory';
 import { isSearchView } from '../../../utils/utils';
-import { useCreateSnackbar } from '../../useCreateSnackbar';
 import { useErrorHandler } from '../../useErrorHandler';
 import { useUpdateFilterContent } from '../useUpdateFilterContent';
 import { useUpdateFolderContent } from '../useUpdateFolderContent';
@@ -48,7 +48,7 @@ export function useDeleteShareMutation(): (
 	node: PickIdNodeType,
 	shareTargetId: string
 ) => Promise<FetchResult<DeleteShareMutation>> {
-	const createSnackbar = useCreateSnackbar();
+	const createSnackbar = useSnackbar();
 	const { removeNodesFromFolder } = useUpdateFolderContent();
 	const { removeNodesFromFilter } = useUpdateFilterContent();
 	const [t] = useTranslation();

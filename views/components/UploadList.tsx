@@ -7,7 +7,7 @@
 import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 
 import { useReactiveVar } from '@apollo/client';
-import { Container } from '@zextras/carbonio-design-system';
+import { Button, Container, useSnackbar } from '@zextras/carbonio-design-system';
 import filter from 'lodash/filter';
 import includes from 'lodash/includes';
 import map from 'lodash/map';
@@ -19,7 +19,6 @@ import { useNavigation } from '../../../hooks/useNavigation';
 import { uploadVar } from '../../apollo/uploadVar';
 import { DRAG_TYPES, ROOTS } from '../../constants';
 import { ListContext } from '../../contexts';
-import { useCreateSnackbar } from '../../hooks/useCreateSnackbar';
 import useSelection from '../../hooks/useSelection';
 import { useUpload } from '../../hooks/useUpload';
 import { Action, UploadType } from '../../types/common';
@@ -31,7 +30,6 @@ import {
 import { Dropzone } from './Dropzone';
 import { EmptyFolder } from './EmptyFolder';
 import { ScrollContainer } from './ScrollContainer';
-import { RoundedButton } from './StyledComponents';
 import { UploadListItemWrapper } from './UploadListItemWrapper';
 
 export const UploadList: React.VFC = () => {
@@ -139,7 +137,7 @@ export const UploadList: React.VFC = () => {
 		[itemsMap, permittedUploadActions]
 	);
 
-	const createSnackbar = useCreateSnackbar();
+	const createSnackbar = useSnackbar();
 
 	const uploadWithDragAndDrop = useCallback(
 		(event) => {
@@ -174,11 +172,13 @@ export const UploadList: React.VFC = () => {
 	const headerAction = useMemo(
 		() =>
 			items.length > 0 && (
-				<RoundedButton
+				<Button
 					type="outlined"
 					label={t('uploads.clean.completed', 'Clean completed uploads')}
 					icon="CloseOutline"
 					onClick={removeAllCompleted}
+					shape="round"
+					backgroundColor="transparent"
 				/>
 			),
 		[items.length, removeAllCompleted, t]

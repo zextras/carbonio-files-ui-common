@@ -26,7 +26,10 @@ import { ScrollContainer } from './ScrollContainer';
 
 interface RootsListProps {
 	activeNodes?: OneOrMany<string>;
-	setActiveNode: (node: NodeListItemType | RootListItemType, event: React.SyntheticEvent) => void;
+	setActiveNode: (
+		node: NodeListItemType | RootListItemType,
+		event: React.SyntheticEvent | Event
+	) => void;
 	navigateTo: (id: string, event?: React.SyntheticEvent | Event) => void;
 	showTrash?: boolean;
 	checkDisabled: (node: NodeListItemType | RootListItemType) => boolean;
@@ -66,7 +69,7 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 		$crumbs.push({
 			id: ROOTS.ENTRY_POINT,
 			label: t('modal.roots.rootsList', 'Files'),
-			click: (event: React.SyntheticEvent) => {
+			click: (event: React.SyntheticEvent | KeyboardEvent) => {
 				setFilterQueryParam({});
 				navigateTo('', event);
 			}
@@ -77,7 +80,7 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 				$crumbs.push({
 					id: 'sharedWithMe',
 					label: t('modal.roots.sharedWitMe', 'Shared with me'),
-					click: (event: React.SyntheticEvent) => {
+					click: (event: React.SyntheticEvent | KeyboardEvent) => {
 						setFilterQueryParam(FILTER_PARAMS.sharedWithMe);
 						setActiveNode(
 							{
@@ -213,7 +216,7 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 				{crumbs && <InteractiveBreadcrumbs crumbs={crumbs} />}
 				{loading && (
 					<Row mainAlignment="flex-end" wrap="nowrap" flexGrow={1}>
-						<LoadingIcon icon="Refresh" color="primary" />
+						<LoadingIcon icon="Refresh" iconColor="primary" type="ghost" />
 					</Row>
 				)}
 			</Row>

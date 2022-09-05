@@ -8,7 +8,14 @@
 
 import React, { useCallback, useContext, useMemo } from 'react';
 
-import { Container, Dropdown, IconButton, Padding, Tooltip } from '@zextras/carbonio-design-system';
+import {
+	Container,
+	Dropdown,
+	DropdownItem,
+	IconButton,
+	Padding,
+	Tooltip
+} from '@zextras/carbonio-design-system';
 import { PreviewsManagerContext } from '@zextras/carbonio-ui-preview';
 import drop from 'lodash/drop';
 import includes from 'lodash/includes';
@@ -328,28 +335,32 @@ export const DisplayerActions: React.VFC<DisplayerActionsParams> = ({ node }) =>
 	const permittedDisplayerPrimaryActionsIconButtons = map(
 		take(permittedDisplayerActions, 3),
 		(value: Action) => {
+			const item = itemsMap[value];
 			return (
-				<Padding left="extrasmall" key={itemsMap[value]?.label}>
-					<Tooltip label={itemsMap[value]?.label}>
-						<IconButton
-							icon={itemsMap[value]?.icon}
-							size="medium"
-							key={value}
-							onClick={(ev: React.MouseEvent<HTMLButtonElement>): void => {
-								if (ev) ev.preventDefault();
-								if (itemsMap && itemsMap[value]?.click) {
-									const clickFn = itemsMap[value]?.click as () => void;
-									clickFn();
-								}
-							}}
-						/>
-					</Tooltip>
-				</Padding>
+				(item && (
+					<Padding left="extrasmall" key={item.label}>
+						<Tooltip label={item.label}>
+							<IconButton
+								icon={item.icon}
+								size="medium"
+								key={value}
+								onClick={(ev: React.MouseEvent<HTMLButtonElement> | KeyboardEvent): void => {
+									if (ev) ev.preventDefault();
+									if (itemsMap && item.click) {
+										const clickFn = item.click as () => void;
+										clickFn();
+									}
+								}}
+							/>
+						</Tooltip>
+					</Padding>
+				)) ||
+				null
 			);
 		}
 	);
 
-	const permittedDisplayerSecondaryActionsItems = useMemo(
+	const permittedDisplayerSecondaryActionsItems = useMemo<DropdownItem[]>(
 		() => buildActionItems(itemsMap, drop(permittedDisplayerActions, 3)),
 		[itemsMap, permittedDisplayerActions]
 	);
@@ -368,7 +379,7 @@ export const DisplayerActions: React.VFC<DisplayerActionsParams> = ({ node }) =>
 			{permittedDisplayerSecondaryActionsItems.length > 0 && (
 				<Padding left="extrasmall">
 					<Dropdown placement="bottom-end" items={permittedDisplayerSecondaryActionsItems}>
-						<IconButton size="medium" icon="MoreVertical" />
+						<IconButton size="medium" icon="MoreVertical" onClick={(): void => undefined} />
 					</Dropdown>
 				</Padding>
 			)}

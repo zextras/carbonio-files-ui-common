@@ -32,7 +32,7 @@ interface ModalListProps {
 	setActiveNode: (node: NodeListItemType, event: React.SyntheticEvent) => void;
 	loadMore: () => void;
 	hasMore: boolean;
-	navigateTo: (id: string, event?: React.SyntheticEvent) => void;
+	navigateTo: (id: string, event?: React.SyntheticEvent | Event) => void;
 	loading: boolean;
 	writingFile?: boolean;
 	writingFolder?: boolean;
@@ -89,7 +89,7 @@ export const ModalList: React.VFC<ModalListProps> = ({
 			$crumbs.push({
 				id: ROOTS.ENTRY_POINT,
 				label: t('modal.roots.rootsList', 'Files'),
-				click: (event: React.SyntheticEvent) => {
+				click: (event: React.SyntheticEvent | KeyboardEvent) => {
 					navigateTo('', event);
 				}
 			});
@@ -143,7 +143,7 @@ export const ModalList: React.VFC<ModalListProps> = ({
 				{crumbs && <InteractiveBreadcrumbs crumbs={crumbs} />}
 				{(loading || loadingPath) && (
 					<Row mainAlignment="flex-end" wrap="nowrap" flexGrow={1}>
-						<LoadingIcon icon="Refresh" color="primary" />
+						<LoadingIcon icon="Refresh" iconColor="primary" type="ghost" />
 					</Row>
 				)}
 			</Row>

@@ -6,7 +6,14 @@
 
 import React from 'react';
 
-import { act, fireEvent, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/react';
+import {
+	act,
+	fireEvent,
+	screen,
+	waitFor,
+	waitForElementToBeRemoved,
+	within
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
@@ -37,7 +44,8 @@ import {
 	buildBreadCrumbRegExp,
 	render,
 	selectNodes,
-	triggerLoadMore
+	triggerLoadMore,
+	waitForNetworkResponse
 } from '../../utils/testUtils';
 import { MoveNodesModalContent } from './MoveNodesModalContent';
 
@@ -219,22 +227,23 @@ describe('Move Nodes Modal', () => {
 		const folderItem = await screen.findByText(folder.name);
 		const confirmButton = screen.getByRole('button', { name: actionRegexp.move });
 		expect(confirmButton).toHaveAttribute('disabled', '');
+		const confirmButtonLabel = within(confirmButton).getByText(actionRegexp.move);
 		act(() => {
-			userEvent.hover(confirmButton);
+			userEvent.hover(confirmButtonLabel);
 		});
 		await screen.findByText(/you can't perform this action here/i);
 		expect(screen.getByText(/you can't perform this action here/i)).toBeVisible();
 		act(() => {
-			userEvent.unhover(confirmButton);
+			userEvent.unhover(confirmButtonLabel);
 		});
 		expect(screen.queryByText(/you can't perform this action here/i)).not.toBeInTheDocument();
 		userEvent.click(folderItem);
-		expect(confirmButton).not.toHaveAttribute('disabled', '');
+		expect(confirmButtonLabel).not.toHaveAttribute('disabled', '');
 		userEvent.dblClick(folderItem);
 		await screen.findByText(/It looks like there's nothing here./i);
-		expect(confirmButton).not.toHaveAttribute('disabled', '');
+		expect(confirmButtonLabel).not.toHaveAttribute('disabled', '');
 		act(() => {
-			userEvent.click(confirmButton);
+			userEvent.click(confirmButtonLabel);
 		});
 		await waitFor(() => expect(closeAction).toHaveBeenCalled());
 		const snackbar = await screen.findByText(/item moved/i);
@@ -393,7 +402,9 @@ describe('Move Nodes Modal', () => {
 			{ mocks }
 		);
 
+		await screen.findByText(nodesToMove[0].name);
 		let breadcrumbRegexp = buildBreadCrumbRegExp(...map(path, (node) => node.name));
+		await waitForNetworkResponse();
 		await findByTextWithMarkup(breadcrumbRegexp);
 		// full path immediately visible
 		expect(getByTextWithMarkup(breadcrumbRegexp)).toBeVisible();

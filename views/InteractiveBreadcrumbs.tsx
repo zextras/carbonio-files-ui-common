@@ -4,14 +4,13 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import React, { PropsWithRef, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
-import { Dropdown, getColor, Text } from '@zextras/carbonio-design-system';
+import { BreadcrumbsProps, getColor } from '@zextras/carbonio-design-system';
 import map from 'lodash/map';
 import styled from 'styled-components';
 
 import { Breadcrumbs } from '../design_system_fork/Breadcrumbs';
-import { Crumb } from '../types/common';
 
 const CustomBreadcrumbs = styled(Breadcrumbs)`
 	.breadcrumbCrumb {
@@ -40,14 +39,7 @@ const CustomBreadcrumbs = styled(Breadcrumbs)`
 	}
 `;
 
-// TODO: replace with DS types
-interface InteractiveBreadcrumbs {
-	crumbs: Array<Crumb & Partial<typeof Text>>;
-	collapserProps?: Partial<PropsWithRef<HTMLElement>>;
-	dropdownProps?: Partial<PropsWithRef<typeof Dropdown>>;
-}
-
-export const InteractiveBreadcrumbs: React.VFC<InteractiveBreadcrumbs> = ({ crumbs, ...props }) => {
+export const InteractiveBreadcrumbs: React.VFC<BreadcrumbsProps> = ({ crumbs, ...props }) => {
 	const interactiveCrumbs = useMemo(
 		() =>
 			map(crumbs, (crumb) => ({

@@ -194,7 +194,7 @@ export const CopyNodesModalContent: React.VFC<CopyNodesModalContentProps> = ({
 	const setDestinationFolderHandler = useCallback(
 		(
 			node: Pick<NodeListItemType, 'id' | '__typename' | 'disabled'> | RootListItemType,
-			event: React.SyntheticEvent
+			event: React.SyntheticEvent | Event
 		) => {
 			const destinationId =
 				(node && !isRoot(node) && !node.disabled && node.id) || currentFolder?.getNode?.id;

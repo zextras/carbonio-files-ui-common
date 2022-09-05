@@ -26,9 +26,9 @@ import { docsHandledMimeTypes, isSupportedByPreview } from './utils';
 export interface ActionItem {
 	id: string;
 	label: string;
-	icon?: string;
-	click?: (event: React.SyntheticEvent, ...args: unknown[]) => unknown;
-	selected?: string;
+	icon: string;
+	click?: (event: React.SyntheticEvent | KeyboardEvent, ...args: unknown[]) => unknown;
+	selected?: boolean;
 	customComponent?: React.ReactNode;
 	disabled?: boolean;
 }

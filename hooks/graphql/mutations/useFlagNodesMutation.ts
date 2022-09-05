@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { useCallback, useContext } from 'react';
+import { useCallback } from 'react';
 
 import { FetchResult, useMutation } from '@apollo/client';
-import { SnackbarManagerContext } from '@zextras/carbonio-design-system';
+import { useSnackbar } from '@zextras/carbonio-design-system';
 import find from 'lodash/find';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
@@ -41,19 +41,10 @@ export type FlagNodesType = (
  *
  */
 
-type CreateSnackbarObjectType = {
-	key: string;
-	type: string;
-	label: string;
-	replace: boolean;
-	hideButton: boolean;
-};
-type CreateSnackbarFunctionType = (createSnackbarObject: CreateSnackbarObjectType) => void;
-
 export function useFlagNodesMutation(): FlagNodesType {
 	const location = useLocation();
 	const [t] = useTranslation();
-	const createSnackbar = useContext<CreateSnackbarFunctionType>(SnackbarManagerContext);
+	const createSnackbar = useSnackbar();
 	const { activeNodeId, removeActiveNode } = useActiveNode();
 	const { removeNodesFromFilter } = useUpdateFilterContent();
 	const [flagNodesMutation, { error }] = useMutation<FlagNodesMutation, FlagNodesMutationVariables>(

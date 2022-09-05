@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 
 import { getColor, Icon, Row, Tooltip } from '@zextras/carbonio-design-system';
 import { useTranslation } from 'react-i18next';
-import styled, { css, FlattenSimpleInterpolation } from 'styled-components';
+import styled, { css, SimpleInterpolation } from 'styled-components';
 
 import { useNavigation } from '../../../hooks/useNavigation';
 import useBreadcrumb from '../../hooks/useBreadcrumb';
@@ -17,16 +17,15 @@ import { Crumb } from '../../types/common';
 import { InteractiveBreadcrumbs } from '../InteractiveBreadcrumbs';
 import { OverFlowHiddenRow } from './StyledComponents';
 
-const Cta = styled(Row)`
-	${({ disabled }): FlattenSimpleInterpolation | string =>
-		(!disabled &&
-			css`
-				&:hover {
-					cursor: pointer;
-					background-color: ${getColor('gray3')};
-				}
-			`) ||
-		''}
+const Cta = styled(Row)<{ $disabled?: boolean }>`
+	${({ $disabled, theme }): SimpleInterpolation =>
+		!$disabled &&
+		css`
+			&:hover {
+				cursor: pointer;
+				background-color: ${getColor('gray3', theme)};
+			}
+		`}
 `;
 
 export interface HeaderBreadcrumbsProps {

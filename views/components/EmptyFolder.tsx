@@ -18,41 +18,43 @@ interface EmptyFolderProps {
 	message: string;
 }
 
-export const EmptyFolder: React.VFC<EmptyFolderProps> = React.forwardRef(function EmptyFolderFn(
-	{ mainList = false, size = 'medium', weight = 'bold', message, ...rest },
-	ref
-) {
-	const [t] = useTranslation();
-	return (
-		<Container
-			data-testid="emptyFolder"
-			ref={ref}
-			mainAlignment="space-evenly"
-			maxHeight="fill"
-			{...rest}
-		>
-			<Row
-				flexGrow={1}
-				flexBasis="auto"
-				minHeight="0"
-				wrap="nowrap"
-				orientation="vertical"
-				mainAlignment="center"
-				padding={{ vertical: 'extralarge' }}
+export const EmptyFolder = React.forwardRef<HTMLDivElement, EmptyFolderProps>(
+	function EmptyFolderFn(
+		{ mainList = false, size = 'medium', weight = 'bold', message, ...rest },
+		ref
+	) {
+		const [t] = useTranslation();
+		return (
+			<Container
+				data-testid="emptyFolder"
+				ref={ref}
+				mainAlignment="space-evenly"
+				maxHeight="fill"
+				{...rest}
 			>
-				{mainList && (
+				<Row
+					flexGrow={1}
+					flexBasis="auto"
+					minHeight="0"
+					wrap="nowrap"
+					orientation="vertical"
+					mainAlignment="center"
+					padding={{ vertical: 'extralarge' }}
+				>
+					{mainList && (
+						<Padding horizontal="small" vertical="extrasmall">
+							<CenteredText size={size} color="gray1" overflow="break-word">
+								{t('empty.folder.state', 'Drag a file or create a new one clicking "NEW"')}
+							</CenteredText>
+						</Padding>
+					)}
 					<Padding horizontal="small" vertical="extrasmall">
-						<CenteredText size={size} color="gray1" overflow="break-word">
-							{t('empty.folder.state', 'Drag a file or create a new one clicking "NEW"')}
+						<CenteredText size={size} color="gray1" weight={weight} overflow="break-word">
+							{message}
 						</CenteredText>
 					</Padding>
-				)}
-				<Padding horizontal="small" vertical="extrasmall">
-					<CenteredText size={size} color="gray1" weight={weight} overflow="break-word">
-						{message}
-					</CenteredText>
-				</Padding>
-			</Row>
-		</Container>
-	);
-});
+				</Row>
+			</Container>
+		);
+	}
+);

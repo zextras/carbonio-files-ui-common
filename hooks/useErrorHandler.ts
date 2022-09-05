@@ -7,11 +7,11 @@
 import { useEffect } from 'react';
 
 import { ApolloError } from '@apollo/client';
+import { SnackbarProps, useSnackbar } from '@zextras/carbonio-design-system';
 import { useTranslation } from 'react-i18next';
 
 import { captureException } from '../../utils/utils';
 import { decodeError } from '../utils/utils';
-import { SnackbarProps, useCreateSnackbar } from './useCreateSnackbar';
 
 export type ErrorHandlerOptions = {
 	type?: SnackbarProps['type'];
@@ -27,7 +27,7 @@ export function useErrorHandler(
 	}
 ): void {
 	const [t] = useTranslation();
-	const createSnackbar = useCreateSnackbar();
+	const createSnackbar = useSnackbar();
 
 	useEffect(() => {
 		if (error) {

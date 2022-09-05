@@ -179,7 +179,7 @@ describe('Rename', () => {
 			fireEvent.contextMenu(nodeItem);
 			renameAction = await screen.findByText(actionRegexp.rename);
 			expect(renameAction).toBeVisible();
-			expect(renameAction.parentElement).not.toHaveAttribute('disabled', '');
+			expect(renameAction).not.toHaveAttribute('disabled', '');
 		});
 	});
 });

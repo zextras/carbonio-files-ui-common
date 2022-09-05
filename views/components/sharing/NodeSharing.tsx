@@ -108,7 +108,7 @@ export const NodeSharing: React.VFC<NodeSharingProps> = ({ node }) => {
 				maxWidth={SHARE_CHIP_MAX_WIDTH}
 				label={
 					<Row wrap="nowrap">
-						<Tooltip label={getChipTooltip(node.owner)} overflowTooltip maxWidth="100%">
+						<Tooltip label={getChipTooltip(node.owner)} maxWidth="100%">
 							<Text size={SHARE_CHIP_SIZE} weight="light">
 								{label}
 							</Text>

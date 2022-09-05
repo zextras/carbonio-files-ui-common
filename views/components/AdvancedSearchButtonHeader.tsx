@@ -44,7 +44,7 @@ export const AdvancedSearchButtonHeader: React.VFC = () => {
 					}
 					icon="Options2Outline"
 					iconPlacement="right"
-					size="fill"
+					width="fill"
 					onClick={openAdvancedSearchModal}
 				/>
 			</Container>

@@ -7,7 +7,7 @@
 import React, { DragEventHandler, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { gql, useApolloClient } from '@apollo/client';
-import { getColor } from '@zextras/carbonio-design-system';
+import { BreadcrumbsProps, getColor, useSnackbar } from '@zextras/carbonio-design-system';
 import forEach from 'lodash/forEach';
 import isEmpty from 'lodash/isEmpty';
 import map from 'lodash/map';
@@ -20,14 +20,12 @@ import useUserInfo from '../../hooks/useUserInfo';
 import { draggedItemsVar } from '../apollo/dragAndDropVar';
 import { selectionModeVar } from '../apollo/selectionVar';
 import { DRAG_TYPES } from '../constants';
-import { CollapserProps, DropdownProps } from '../design_system_fork/Breadcrumbs';
 import BASE_NODE from '../graphql/fragments/baseNode.graphql';
 import { Crumb, DroppableCrumb, NodeListItemType } from '../types/common';
 import { BaseNodeFragment, NodeType } from '../types/graphql/types';
 import { canBeMoveDestination, canUploadFile, isFolder } from '../utils/ActionsFactory';
 import { hexToRGBA } from '../utils/utils';
 import { useMoveNodesMutation } from './graphql/mutations/useMoveNodesMutation';
-import { useCreateSnackbar } from './useCreateSnackbar';
 import { useUpload } from './useUpload';
 
 const NODE_OWNER = gql`
@@ -40,8 +38,10 @@ const NODE_OWNER = gql`
 	}
 `;
 
+function setDropzoneActive(color: string, element: HTMLElement, theme: DefaultTheme): void;
+function setDropzoneActive(color: '', element: HTMLElement): void;
 function setDropzoneActive(color: string, element: HTMLElement, theme?: DefaultTheme): void {
-	element.style.backgroundColor = color ? hexToRGBA(getColor(color, theme), 0.4) : '';
+	element.style.backgroundColor = color && theme ? hexToRGBA(getColor(color, theme), 0.4) : '';
 }
 
 export function useDroppableCrumbs(
@@ -49,22 +49,22 @@ export function useDroppableCrumbs(
 	currentFolderId?: string
 ): {
 	data: DroppableCrumb[];
-	collapserProps: CollapserProps;
-	dropdownProps: DropdownProps;
-	containerRef: React.MutableRefObject<HTMLElement | undefined>;
+	collapserProps: NonNullable<BreadcrumbsProps['collapserProps']>;
+	dropdownProps: NonNullable<BreadcrumbsProps['dropdownProps']>;
+	containerRef: React.RefObject<HTMLDivElement>;
 } {
 	const [t] = useTranslation();
 	const theme = useTheme();
 	const openRef = useRef<boolean>(false);
-	const collapserRef = useRef<HTMLElement>();
-	const containerRef = useRef<HTMLElement>();
-	const dropdownRef = useRef<HTMLElement>();
-	const dropdownListRef = useRef<HTMLElement>();
+	const collapserRef = useRef<HTMLElement | null>(null);
+	const containerRef = useRef<HTMLDivElement>(null);
+	const dropdownRef = useRef<HTMLDivElement>(null);
+	const dropdownListRef = useRef<HTMLDivElement>(null);
 	const apolloClient = useApolloClient();
 	const { me } = useUserInfo();
 	const { moveNodes: moveNodesMutation } = useMoveNodesMutation();
 	const { add } = useUpload();
-	const createSnackbar = useCreateSnackbar();
+	const createSnackbar = useSnackbar();
 	const { navigateToFolder } = useNavigation();
 	// timers
 	const actionTimer = useRef<NodeJS.Timeout>();
@@ -346,7 +346,7 @@ export function useDroppableCrumbs(
 		currentFolderId
 	]);
 
-	const collapserProps = useMemo(
+	const collapserProps = useMemo<NonNullable<BreadcrumbsProps['collapserProps']>>(
 		() => ({
 			onDragEnter: collapserDragEnterHandler,
 			onDragLeave: collapserDragLeaveHandler,
@@ -402,7 +402,7 @@ export function useDroppableCrumbs(
 		}
 	}, []);
 
-	const dropdownProps = useMemo(
+	const dropdownProps = useMemo<NonNullable<BreadcrumbsProps['dropdownProps']>>(
 		() => ({
 			onDragEnter: dropdownDragEnterHandler,
 			onDragOver: preventDropdownClose,

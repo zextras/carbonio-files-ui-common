@@ -3,8 +3,9 @@
  *
  * SPDX-License-Identifier: AGPL-3.0-only
  */
+import React from 'react';
 
-import { IconButton } from '@zextras/carbonio-design-system';
+import { IconButton, IconButtonProps } from '@zextras/carbonio-design-system';
 import styled, { keyframes } from 'styled-components';
 
 const rotate = keyframes`
@@ -16,7 +17,24 @@ const rotate = keyframes`
   }
 `;
 
-export const LoadingIcon = styled(IconButton)`
+const StyledIconButton = styled(IconButton)`
 	animation: ${rotate} 1s linear infinite;
-	border-radius: 50%;
 `;
+
+interface LoadingIconButtonProps extends Omit<IconButtonProps, 'onClick'> {
+	onClick?: IconButtonProps['onClick'];
+}
+
+export const LoadingIcon = React.forwardRef<HTMLButtonElement, LoadingIconButtonProps>(
+	function LoadingIconFn({ onClick, type = 'ghost', shape = 'round', ...rest }, ref) {
+		return (
+			<StyledIconButton
+				onClick={onClick || ((): void => undefined)}
+				type={type}
+				shape={shape}
+				{...rest}
+				ref={ref}
+			/>
+		);
+	}
+);

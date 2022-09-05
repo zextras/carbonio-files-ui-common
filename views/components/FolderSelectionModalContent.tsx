@@ -137,7 +137,10 @@ export const FolderSelectionModalContent: React.VFC<FolderSelectionModalContentP
 	);
 
 	const setDestinationFolderHandler = useCallback(
-		(node: Pick<NodeListItemType, 'id' | 'name' | 'disabled'>, event: React.SyntheticEvent) => {
+		(
+			node: Pick<NodeListItemType, 'id' | 'name' | 'disabled'>,
+			event: React.SyntheticEvent | Event
+		) => {
 			const destination =
 				(node && !node.disabled && node) ||
 				(openedFolder === currentFolder?.getNode?.id && currentFolder.getNode) ||
@@ -152,7 +155,7 @@ export const FolderSelectionModalContent: React.VFC<FolderSelectionModalContentP
 		setSelectedFolder(currentFolder?.getNode);
 	}, [currentFolder]);
 
-	const toggleCascade = useCallback((event: React.SyntheticEvent) => {
+	const toggleCascade = useCallback((event: React.SyntheticEvent | Event) => {
 		setCascade((prevState) => !prevState);
 		event.stopPropagation();
 	}, []);

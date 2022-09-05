@@ -6,17 +6,11 @@
 
 import React from 'react';
 
-import { Text } from '@zextras/carbonio-design-system';
+import { Text, TextProps } from '@zextras/carbonio-design-system';
 import { TOptions } from 'i18next';
 import { Trans, useTranslation } from 'react-i18next';
 
-interface TransTextProps {
-	// DS Text props
-	weight?: string;
-	size?: string;
-	color?: string;
-	overflow?: string;
-	disabled?: boolean;
+interface TransTextProps extends TextProps {
 	// i18next Trans props
 	i18nKey: string;
 	components?: readonly React.ReactNode[] | { readonly [tagName: string]: React.ReactNode };

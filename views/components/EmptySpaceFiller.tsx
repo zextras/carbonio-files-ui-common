@@ -6,20 +6,21 @@
 
 import React from 'react';
 
+import { Container } from '@zextras/carbonio-design-system';
 import noop from 'lodash/noop';
 
 import { ActionItem } from '../../utils/ActionsFactory';
 import { ContextualMenu } from './ContextualMenu';
-import { FlexContainer } from './StyledComponents';
 
 interface EmptySpaceFillerProps {
 	actions: Array<ActionItem>;
+	children?: React.ReactElement;
 }
 
-export const EmptySpaceFiller: React.FC<EmptySpaceFillerProps> = ({ actions, children }) => (
-	<FlexContainer height="unset" $flexGrow={1}>
+export const EmptySpaceFiller: React.VFC<EmptySpaceFillerProps> = ({ actions, children }) => (
+	<Container height="unset" flexGrow={1}>
 		<ContextualMenu actions={actions} onClose={noop} onOpen={noop} disableRestoreFocus>
-			{children}
+			{children || <></>}
 		</ContextualMenu>
-	</FlexContainer>
+	</Container>
 );

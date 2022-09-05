@@ -54,25 +54,25 @@ describe('Add Sharing', () => {
 		});
 
 		render(<AddSharing node={node} />, { mocks });
-		const chipInput = screen.getByText(/add new people or groups/i);
+		const chipInput = screen.getByRole('textbox', { name: /add new people or groups/i });
 		expect(chipInput).toBeVisible();
 		// type just the first character because the network search is requested only one time with first character.
 		// All characters typed after the first one are just used to filter out the result obtained before
 		userEvent.type(chipInput, user.full_name[0]);
-		// wait for the single character to be typed
-		await screen.findByText(user.full_name[0]);
+		expect(chipInput).toHaveValue(user.full_name[0]);
 		// wait for the dropdown to be shown
 		await screen.findByText(user.email);
 		expect(screen.getByText(user.full_name)).toBeVisible();
 		expect(screen.getByText(user.email)).toBeVisible();
 		userEvent.click(screen.getByText(user.email));
+		// dropdown is closed
+		await waitForElementToBeRemoved(screen.queryByText(user.email));
+		expect(screen.queryByText(user.email)).not.toBeInTheDocument();
 		// chip is created
 		await screen.findByText(user.full_name);
-		// dropdown is closed
-		expect(screen.queryByText(user.email)).not.toBeInTheDocument();
 		// now try to add a new share with the same email
 		userEvent.type(chipInput, user.full_name[0]);
-		await screen.findByText(RegExp(`^${user.full_name[0]}$`, 'i'));
+		expect(chipInput).toHaveValue(user.full_name[0]);
 		await screen.findAllByText(/other-contact/i);
 		// email of previously added contact is not shown because this contact is filtered out from the dropdown
 		expect(screen.queryByText(user.email)).not.toBeInTheDocument();
@@ -97,13 +97,12 @@ describe('Add Sharing', () => {
 		});
 
 		render(<AddSharing node={node} />, { mocks });
-		const chipInput = screen.getByText(/add new people or groups/i);
+		const chipInput = screen.getByRole('textbox', { name: /add new people or groups/i });
 		expect(chipInput).toBeVisible();
 		// type just the first character because the network search is requested only one time with first character.
 		// All characters typed after the first one are just used to filter out the result obtained before
 		userEvent.type(chipInput, user.full_name[0]);
-		// wait for the single character to be typed
-		await screen.findByText(user.full_name[0]);
+		expect(chipInput).toHaveValue(user.full_name[0]);
 		// wait for the dropdown to be shown
 		await screen.findAllByText(/other-contact/i);
 		// other contacts are visible
@@ -131,13 +130,12 @@ describe('Add Sharing', () => {
 		});
 
 		render(<AddSharing node={node} />, { mocks: [] });
-		const chipInput = screen.getByText(/add new people or groups/i);
+		const chipInput = screen.getByRole('textbox', { name: /add new people or groups/i });
 		expect(chipInput).toBeVisible();
 		// type just the first character because the network search is requested only one time with first character.
 		// All characters typed after the first one are just used to filter out the result obtained before
 		userEvent.type(chipInput, user.full_name[0]);
-		// wait for the single character to be typed
-		await screen.findByText(user.full_name[0]);
+		expect(chipInput).toHaveValue(user.full_name[0]);
 		// wait for the dropdown to be shown
 		await screen.findAllByText(/other-contact/i);
 		// other contacts are visible
@@ -162,18 +160,17 @@ describe('Add Sharing', () => {
 		});
 
 		render(<AddSharing node={node} />, { mocks: [] });
-		const chipInput = screen.getByText(/add new people or groups/i);
+		const chipInput = screen.getByRole('textbox', { name: /add new people or groups/i });
 		expect(chipInput).toBeVisible();
 		userEvent.type(chipInput, 'c');
-		// wait for the single character to be typed
-		await screen.findByText('c');
+		expect(chipInput).toHaveValue('c');
 		// wait for the dropdown to be shown
 		await screen.findAllByText(/contact/i);
 		expect(screen.getByText('contact1@example.com')).toBeVisible();
 		// with the getBy query we assume there is just one entry
 		expect(screen.getByText('contactsamemail@example.com')).toBeVisible();
 		expect(screen.getByText('contact4@example.com')).toBeVisible();
-		expect(screen.getAllByText(/contact-[0-9]/)).toHaveLength(3);
+		expect(screen.getAllByText(/contact-\d/)).toHaveLength(3);
 		expect(screen.queryByText('contact-3')).not.toBeInTheDocument();
 	});
 
@@ -190,11 +187,10 @@ describe('Add Sharing', () => {
 		});
 
 		render(<AddSharing node={node} />, { mocks: [] });
-		const chipInput = screen.getByText(/add new people or groups/i);
+		const chipInput = screen.getByRole('textbox', { name: /add new people or groups/i });
 		expect(chipInput).toBeVisible();
 		userEvent.type(chipInput, 'c');
-		// wait for the single character to be typed
-		await screen.findByText('c');
+		expect(chipInput).toHaveValue('c');
 		// wait for the dropdown to be shown
 		await screen.findAllByText(/contact/i);
 		// dropdown contains 3 entries
@@ -237,22 +233,22 @@ describe('Add Sharing', () => {
 		});
 
 		render(<AddSharing node={node} />, { mocks });
-		const chipInput = screen.getByText(/add new people or groups/i);
+		const chipInput = screen.getByRole('textbox', { name: /add new people or groups/i });
 		expect(chipInput).toBeVisible();
 		// type just the first character because the network search is requested only one time with first character.
 		// All characters typed after the first one are just used to filter out the result obtained before
 		userEvent.type(chipInput, user.full_name[0]);
-		// wait for the single character to be typed
-		await screen.findByText(user.full_name[0]);
+		expect(chipInput).toHaveValue(user.full_name[0]);
 		// wait for the dropdown to be shown
 		await screen.findByText(user.email);
 		expect(screen.getByText(user.full_name)).toBeVisible();
 		expect(screen.getByText(user.email)).toBeVisible();
 		userEvent.click(screen.getByText(user.email));
+		// dropdown is closed
+		await waitForElementToBeRemoved(screen.queryByText(user.email));
+		expect(screen.queryByText(user.email)).not.toBeInTheDocument();
 		// chip is created
 		await screen.findByText(user.full_name);
-		// dropdown is closed
-		expect(screen.queryByText(user.email)).not.toBeInTheDocument();
 		// chip is created with read-only permissions
 		expect(screen.getByTestId('icon: EyeOutline')).toBeVisible();
 		expect(screen.queryByTestId('icon: Edit2Outline')).not.toBeInTheDocument();
@@ -271,22 +267,24 @@ describe('Add Sharing', () => {
 		user.email = user.email.toLowerCase();
 		const mocks = [mockGetAccountByEmail({ email: user.email }, user)];
 		// mock soap fetch implementation
+		const contact = populateGalContact(user.full_name, user.email);
 		mockedSoapFetch.mockReturnValue({
 			match: [
 				populateGalContact(`${user.full_name[0]}-other-contact-1`),
-				populateGalContact(user.full_name, user.email),
+				contact,
 				populateGalContact(`${user.full_name[0]}-other-contact-2`)
 			]
 		});
 
 		render(<AddSharing node={node} />, { mocks });
-		const chipInput = screen.getByText(/add new people or groups/i);
+		const chipInput = screen.getByRole('textbox', { name: /add new people or groups/i });
 		expect(chipInput).toBeVisible();
 		// type just the first character because the network search is requested only one time with first character.
 		// All characters typed after the first one are just used to filter out the result obtained before
 		userEvent.type(chipInput, user.full_name[0]);
+		expect(chipInput).toHaveValue(user.full_name[0]);
 		// wait for the single character to be typed
-		await screen.findByText(user.full_name[0]);
+		// await screen.findByText(user.full_name[0]);
 		// wait for the dropdown to be shown
 		await screen.findByText(user.email);
 		expect(screen.getByText(user.full_name)).toBeVisible();
@@ -296,6 +294,7 @@ describe('Add Sharing', () => {
 		await screen.findByText(user.full_name);
 		// dropdown is closed
 		expect(screen.queryByText(user.email)).not.toBeInTheDocument();
+		await screen.findByText(user.full_name);
 		// click on the chip to open the popover
 		userEvent.click(screen.getByTestId('icon: EyeOutline'), undefined, { skipHover: true });
 		await screen.findByText(/viewer/i);
@@ -311,7 +310,7 @@ describe('Add Sharing', () => {
 		expect(screen.getByText(/sharing allowed/i)).toBeVisible();
 		// click outside to close popover
 		act(() => {
-			userEvent.click(screen.getByText(/add new people or groups/i));
+			userEvent.click(screen.getByRole('textbox', { name: /add new people or groups/i }));
 		});
 		expect(screen.queryByText(/viewer/i)).not.toBeInTheDocument();
 		expect(screen.queryByText(/editor/i)).not.toBeInTheDocument();
@@ -359,22 +358,22 @@ describe('Add Sharing', () => {
 		});
 
 		render(<AddSharing node={node} />, { mocks, initialRouterEntries: [`/?node=${node.id}`] });
-		const chipInput = screen.getByText(/add new people or groups/i);
+		const chipInput = screen.getByRole('textbox', { name: /add new people or groups/i });
 		expect(chipInput).toBeVisible();
 		// type just the first character because the network search is requested only one time with first character.
 		// All characters typed after the first one are just used to filter out the result obtained before
 		userEvent.type(chipInput, user.full_name[0]);
-		// wait for the single character to be typed
-		await screen.findByText(user.full_name[0]);
+		expect(chipInput).toHaveValue(user.full_name[0]);
 		// wait for the dropdown to be shown
 		await screen.findByText(user.email);
 		expect(screen.getByText(user.full_name)).toBeVisible();
 		expect(screen.getByText(user.email)).toBeVisible();
 		userEvent.click(screen.getByText(user.email));
+		// dropdown is closed
+		await waitForElementToBeRemoved(screen.queryByText(user.email));
+		expect(screen.queryByText(user.email)).not.toBeInTheDocument();
 		// chip is created
 		await screen.findByText(user.full_name);
-		// dropdown is closed
-		expect(screen.queryByText(user.email)).not.toBeInTheDocument();
 		// chip is created with read-only permissions
 		expect(screen.getByTestId('icon: EyeOutline')).toBeVisible();
 		expect(screen.queryByTestId('icon: Edit2Outline')).not.toBeInTheDocument();
@@ -419,7 +418,7 @@ describe('Add Sharing', () => {
 		expect(screen.getByTestId('icon: CheckmarkSquare')).toBeVisible();
 		// close popover
 		act(() => {
-			userEvent.click(screen.getByText(/add new people or groups/i));
+			userEvent.click(screen.getByRole('textbox', { name: /add new people or groups/i }));
 		});
 		expect(screen.queryByText(/viewer/i)).not.toBeInTheDocument();
 		// now only the chip is shown, so we have 1 editor icon, 1 share and no viewer
@@ -472,22 +471,22 @@ describe('Add Sharing', () => {
 		});
 
 		render(<AddSharing node={node} />, { mocks, initialRouterEntries: [`/?node=${node.id}`] });
-		const chipInput = screen.getByText(/add new people or groups/i);
+		const chipInput = screen.getByRole('textbox', { name: /add new people or groups/i });
 		expect(chipInput).toBeVisible();
 		// type just the first character because the network search is requested only one time with first character.
 		// All characters typed after the first one are just used to filter out the result obtained before
 		userEvent.type(chipInput, user.full_name[0]);
-		// wait for the single character to be typed
-		await screen.findByText(user.full_name[0]);
+		expect(chipInput).toHaveValue(user.full_name[0]);
 		// wait for the dropdown to be shown
 		await screen.findByText(user.email);
 		expect(screen.getByText(user.full_name)).toBeVisible();
 		expect(screen.getByText(user.email)).toBeVisible();
 		userEvent.click(screen.getByText(user.email));
+		// dropdown is closed
+		await waitForElementToBeRemoved(screen.queryByText(user.email));
+		expect(screen.queryByText(user.email)).not.toBeInTheDocument();
 		// chip is created
 		await screen.findByText(user.full_name);
-		// dropdown is closed
-		expect(screen.queryByText(user.email)).not.toBeInTheDocument();
 		// chip is created with read-only permissions
 		expect(screen.getByTestId('icon: EyeOutline')).toBeVisible();
 		expect(screen.queryByTestId('icon: Edit2Outline')).not.toBeInTheDocument();
@@ -505,8 +504,6 @@ describe('Add Sharing', () => {
 		expect(screen.getByText(/editor/i)).toBeVisible();
 		expect(screen.getByText(/sharing allowed/i)).toBeVisible();
 		expect(screen.getByTestId('icon: Square')).toBeVisible();
-		// editor item is disabled
-		expect(screen.getByTestId('exclusive-selection-editor')).toHaveAttribute('disabled', '');
 		expect(screen.getByTestId('icon: Square')).not.toHaveAttribute('disabled');
 		// click on editor shouldn't do anything
 		userEvent.click(screen.getByText(/editor/i));
@@ -518,7 +515,7 @@ describe('Add Sharing', () => {
 		await screen.findByTestId('icon: Share');
 		// close popover
 		act(() => {
-			userEvent.click(screen.getByText(/add new people or groups/i));
+			userEvent.click(screen.getByRole('textbox', { name: /add new people or groups/i }));
 		});
 		expect(screen.queryByText(/viewer/i)).not.toBeInTheDocument();
 		// chip has read and share permissions since click on editor did nothing
@@ -561,22 +558,22 @@ describe('Add Sharing', () => {
 		});
 
 		render(<AddSharing node={node} />, { mocks });
-		const chipInput = screen.getByText(/add new people or groups/i);
+		const chipInput = screen.getByRole('textbox', { name: /add new people or groups/i });
 		expect(chipInput).toBeVisible();
 		// type just the first character because the network search is requested only one time with first character.
 		// All characters typed after the first one are just used to filter out the result obtained before
 		userEvent.type(chipInput, user.full_name[0]);
-		// wait for the single character to be typed
-		await screen.findByText(user.full_name[0]);
+		expect(chipInput).toHaveValue(user.full_name[0]);
 		// wait for the dropdown to be shown
 		await screen.findByText(user.email);
 		expect(screen.getByText(user.full_name)).toBeVisible();
 		expect(screen.getByText(user.email)).toBeVisible();
 		userEvent.click(screen.getByText(user.email));
+		// dropdown is closed
+		await waitForElementToBeRemoved(screen.queryByText(user.email));
+		expect(screen.queryByText(user.email)).not.toBeInTheDocument();
 		// chip is created
 		await screen.findByText(user.full_name);
-		// dropdown is closed
-		expect(screen.queryByText(user.email)).not.toBeInTheDocument();
 		// chip is created with read-only permissions
 		expect(screen.getByTestId('icon: EyeOutline')).toBeVisible();
 		expect(screen.queryByTestId('icon: Edit2Outline')).not.toBeInTheDocument();
@@ -631,7 +628,7 @@ describe('Add Sharing', () => {
 		});
 
 		render(<AddSharing node={node} />, { mocks });
-		const chipInput = screen.getByText(/add new people or groups/i);
+		const chipInput = screen.getByRole('textbox', { name: /add new people or groups/i });
 		expect(chipInput).toBeVisible();
 		// share button is disabled
 		expect(screen.getByRole('button', { name: /share/i })).toHaveAttribute('disabled', '');
@@ -646,17 +643,17 @@ describe('Add Sharing', () => {
 		// type just the first character because the network search is requested only one time with first character.
 		// All characters typed after the first one are just used to filter out the result obtained before
 		userEvent.type(chipInput, user.full_name[0]);
-		// wait for the single character to be typed
-		await screen.findByText(user.full_name[0]);
+		expect(chipInput).toHaveValue(user.full_name[0]);
 		// wait for the dropdown to be shown
 		await screen.findByText(user.email);
 		expect(screen.getByText(user.full_name)).toBeVisible();
 		expect(screen.getByText(user.email)).toBeVisible();
 		userEvent.click(screen.getByText(user.email));
+		// dropdown is closed
+		await waitForElementToBeRemoved(screen.queryByText(user.email));
+		expect(screen.queryByText(user.email)).not.toBeInTheDocument();
 		// chip is created
 		await screen.findByText(user.full_name);
-		// dropdown is closed
-		expect(screen.queryByText(user.email)).not.toBeInTheDocument();
 		// share button is now active
 		expect(screen.getByRole('button', { name: /share/i })).not.toHaveAttribute('disabled');
 
@@ -692,15 +689,14 @@ describe('Add Sharing', () => {
 		});
 
 		render(<AddSharing node={node} />, { mocks });
-		const chipInput = screen.getByText(/add new people or groups/i);
+		const chipInput = screen.getByRole('textbox', { name: /add new people or groups/i });
 		expect(chipInput).toBeVisible();
 		// share button is disabled
 		expect(screen.getByRole('button', { name: /share/i })).toHaveAttribute('disabled', '');
 		// type just the first character because the network search is requested only one time with first character.
 		// All characters typed after the first one are just used to filter out the result obtained before
 		userEvent.type(chipInput, user.full_name[0]);
-		// wait for the single character to be typed
-		await screen.findByText(user.full_name[0]);
+		expect(chipInput).toHaveValue(user.full_name[0]);
 		// wait for the dropdown to be shown
 		await screen.findByText(user.email);
 		expect(screen.getByText(user.full_name)).toBeVisible();
@@ -779,36 +775,37 @@ describe('Add Sharing', () => {
 		});
 
 		render(<AddSharing node={node} />, { mocks, initialRouterEntries: [`/?node=${node.id}`] });
-		const chipInput = screen.getByText(/add new people or groups/i);
+		const chipInput = screen.getByRole('textbox', { name: /add new people or groups/i });
 		expect(chipInput).toBeVisible();
 		// type just the first character because the network search is requested only one time with first character.
 		// All characters typed after the first one are just used to filter out the result obtained before
 		userEvent.type(chipInput, user1.full_name[0]);
-		// wait for the single character to be typed
-		await screen.findByText(user1.full_name[0]);
+		expect(chipInput).toHaveValue(user1.full_name[0]);
 		// wait for the dropdown to be shown
 		await screen.findByText(user1.email);
 		expect(screen.getByText(user1.full_name)).toBeVisible();
 		expect(screen.getByText(user1.email)).toBeVisible();
 		userEvent.click(screen.getByText(user1.email));
+		// dropdown is closed
+		await waitForElementToBeRemoved(screen.queryByText(user1.email));
+		expect(screen.queryByText(user1.email)).not.toBeInTheDocument();
 		// chip is created
 		await screen.findByText(user1.full_name);
-		// dropdown is closed
-		expect(screen.queryByText(user1.email)).not.toBeInTheDocument();
 		// chip is created with read-only permissions
 		expect(screen.getByTestId('icon: EyeOutline')).toBeVisible();
 		expect(screen.queryByTestId('icon: Edit2Outline')).not.toBeInTheDocument();
 		expect(screen.queryByTestId('icon: Share')).not.toBeInTheDocument();
 		// create second chip
 		userEvent.type(chipInput, user2.full_name[0]);
-		await screen.findByText(user2.full_name[0]);
+		expect(chipInput).toHaveValue(user2.full_name[0]);
 		await screen.findByText(user2.email);
 		expect(screen.getByText(user2.full_name)).toBeVisible();
 		userEvent.click(screen.getByText(user2.full_name));
+		// dropdown is closed
+		await waitForElementToBeRemoved(screen.queryByText(user2.email));
+		expect(screen.queryByText(user2.email)).not.toBeInTheDocument();
 		// chip is created
 		await screen.findByText(user2.full_name);
-		// dropdown is closed
-		expect(screen.queryByText(user2.email)).not.toBeInTheDocument();
 		// chip is created with read-only permissions, so now we have 2 chips in read-only
 		expect(screen.getAllByTestId('icon: EyeOutline')).toHaveLength(2);
 		expect(screen.getAllByTestId('icon: Close')).toHaveLength(2);
@@ -857,7 +854,7 @@ describe('Add Sharing', () => {
 		await screen.findByTestId('icon: Share');
 		// close popover
 		act(() => {
-			userEvent.click(screen.getByText(/add new people or groups/i));
+			userEvent.click(screen.getByRole('textbox', { name: /add new people or groups/i }));
 		});
 		expect(screen.queryByText(/viewer/i)).not.toBeInTheDocument();
 

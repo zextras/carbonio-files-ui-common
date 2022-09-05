@@ -158,7 +158,7 @@ export const UploadListItem: React.VFC<UploadListItemProps> = React.memo(
 				<ListItemContainer
 					height="fit"
 					crossAlignment="flex-end"
-					contextualMenuActive={isContextualMenuActive}
+					$contextualMenuActive={isContextualMenuActive}
 					data-testid={`node-item-${id}`}
 				>
 					<HoverContainer
@@ -188,7 +188,7 @@ export const UploadListItem: React.VFC<UploadListItemProps> = React.memo(
 								</Text>
 							</Row>
 							<Row wrap="nowrap" height="fit" mainAlignment="flex-start" width="fill">
-								<CustomBreadcrumbs crumbs={crumbs} size="small" color="secondary" />
+								<CustomBreadcrumbs crumbs={crumbs} $size="small" color="secondary" />
 							</Row>
 						</Container>
 						<Container orientation="vertical" mainAlignment="space-around" width="fit">

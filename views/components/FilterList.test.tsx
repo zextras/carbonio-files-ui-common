@@ -31,7 +31,8 @@ import {
 	iconRegexp,
 	render,
 	selectNodes,
-	triggerLoadMore
+	triggerLoadMore,
+	waitForNetworkResponse
 } from '../../utils/testUtils';
 import FolderView from '../FolderView';
 import { DisplayerProps } from './Displayer';
@@ -201,6 +202,7 @@ describe('Filter list', () => {
 			expect(screen.getByTestId('node-item', { exact: false })).toBeInTheDocument();
 			// navigate to folder
 			userEvent.click(screen.getByRole('link', { name: 'Go to folder' }));
+			await waitForNetworkResponse();
 			// folder list, first load
 			await screen.findByTestId(`node-item-${node.id}`);
 			expect(screen.getByTestId('node-item', { exact: false })).toBeInTheDocument();
@@ -210,7 +212,9 @@ describe('Filter list', () => {
 			});
 			await screen.findByTestId('icon: Flag');
 			// navigate to filter again
-			userEvent.click(screen.getByRole('link', { name: 'Go to filter' }));
+			act(() => {
+				userEvent.click(screen.getByRole('link', { name: 'Go to filter' }));
+			});
 			// filter list, second load but with a new network request. Wait for loading icon to be removed
 			const listHeader = screen.getByTestId('list-header');
 			await waitForElementToBeRemoved(within(listHeader).queryByTestId('icon: Refresh'));
@@ -222,7 +226,7 @@ describe('Filter list', () => {
 
 	describe('Trash filter', () => {
 		describe('Selection mode', () => {
-			test('if there is no element selected, trash actions are visible and disabled', async () => {
+			test('if there is no element selected, trash actions are hidden', async () => {
 				const nodes = populateNodes(10);
 				forEach(nodes, (mockedNode) => {
 					mockedNode.rootId = ROOTS.TRASH;
@@ -256,9 +260,12 @@ describe('Filter list', () => {
 				expect(screen.queryByTestId(iconRegexp.moveToTrash)).not.toBeInTheDocument();
 
 				expect(screen.getByTestId('icon: ArrowBackOutline')).toBeVisible();
-				userEvent.click(screen.getByTestId('icon: ArrowBackOutline'));
+				act(() => {
+					userEvent.click(screen.getByTestId('icon: ArrowBackOutline'));
+				});
+				// await waitForElementToBeRemoved(screen.queryByTestId('icon: ArrowBackOutline'));
+				expect(screen.queryByTestId('icon: ArrowBackOutline')).not.toBeInTheDocument();
 				const listHeader = screen.getByTestId('list-header', { exact: false });
-				await waitForElementToBeRemoved(screen.queryByTestId('icon: ArrowBackOutline'));
 				expect(within(listHeader).queryByTestId('icon: RestoreOutline')).not.toBeInTheDocument();
 				expect(
 					within(listHeader).queryByTestId('icon: DeletePermanentlyOutline')

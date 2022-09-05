@@ -7,6 +7,7 @@
 import { useCallback } from 'react';
 
 import { FetchResult, useMutation } from '@apollo/client';
+import { useSnackbar } from '@zextras/carbonio-design-system';
 import map from 'lodash/map';
 import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
@@ -20,7 +21,6 @@ import {
 	DeleteNodesMutationVariables,
 	FindNodesQuery
 } from '../../../types/graphql/types';
-import { useCreateSnackbar } from '../../useCreateSnackbar';
 import { useErrorHandler } from '../../useErrorHandler';
 import { useUpdateFilterContent } from '../useUpdateFilterContent';
 import { isQueryResult } from '../utils';
@@ -35,7 +35,7 @@ export type DeleteNodesType = (
  * Can return error: ErrorCode.FILE_VERSION_NOT_FOUND, ErrorCode.NODE_NOT_FOUND
  */
 export function useDeleteNodesMutation(): DeleteNodesType {
-	const createSnackbar = useCreateSnackbar();
+	const createSnackbar = useSnackbar();
 	const [t] = useTranslation();
 	const [deleteNodesMutation, { error }] = useMutation<
 		DeleteNodesMutation,

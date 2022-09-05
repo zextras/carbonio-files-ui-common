@@ -26,7 +26,6 @@ import {
 	humanFileSize,
 	openNodeWithDocs
 } from '../../utils/utils';
-import { FlexContainer } from './StyledComponents';
 
 const ImgContainer = styled(Container)`
 	overflow: hidden;
@@ -240,15 +239,15 @@ export const DisplayerPreview: React.VFC<DisplayerPreviewProps> = ({
 				<Img ref={imgRef} src={previewSrc} alt="" onDoubleClick={openPreview} />
 			)}
 			{loading && !error && (
-				<FlexContainer orientation="vertical" gap="8px">
+				<Container orientation="vertical" gap="8px">
 					<Icon icon="AnimatedLoader" size="large" />
 					<Text size="extrasmall" overflow="break-word">
 						{t('preview.loading.file', 'Loading file preview, please wait...')}
 					</Text>
-				</FlexContainer>
+				</Container>
 			)}
 			{error && (
-				<FlexContainer orientation="vertical" gap="8px">
+				<Container orientation="vertical" gap="8px">
 					<Icon icon={getIconByFileType(type, mimeType)} size="large" color="secondary" />
 					<Text size="extrasmall" overflow="break-word">
 						{loading
@@ -266,7 +265,7 @@ export const DisplayerPreview: React.VFC<DisplayerPreviewProps> = ({
 						/>
 					)}
 					{loading && <Icon icon="AnimatedLoader" size="large" />}
-				</FlexContainer>
+				</Container>
 			)}
 		</ImgContainer>
 	);

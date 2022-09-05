@@ -49,7 +49,6 @@ import { ModalFooter } from './ModalFooter';
 import { ModalHeader } from './ModalHeader';
 import { ModalList } from './ModalList';
 import { ModalRootsList } from './ModalRootsList';
-import { FlexContainer } from './StyledComponents';
 
 interface NodesSelectionModalContentProps {
 	title: string;
@@ -230,7 +229,7 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 	const setSelectedNodeHandler = useCallback(
 		(
 			node: Pick<NodeListItemType | RootListItemType, 'id' | '__typename'> | null | undefined,
-			event?: React.SyntheticEvent,
+			event?: React.SyntheticEvent | Event,
 			reset?: boolean
 		) => {
 			/**
@@ -482,15 +481,15 @@ export const NodesSelectionModalContent: React.VFC<NodesSelectionModalContentPro
 							showTrash={false}
 						/>
 					)) || (
-						<FlexContainer
+						<Container
 							mainAlignment="flex-end"
 							crossAlignment="flex-start"
 							orientation="horizontal"
-							$flexGrow={1}
-							$flexBasis="100%"
+							flexGrow={1}
+							flexBasis="100%"
 						>
-							<LoadingIcon icon="Refresh" color="primary" />
-						</FlexContainer>
+							<LoadingIcon icon="Refresh" iconColor="primary" />
+						</Container>
 					)
 				)}
 			</NodeAvatarIconContext.Provider>

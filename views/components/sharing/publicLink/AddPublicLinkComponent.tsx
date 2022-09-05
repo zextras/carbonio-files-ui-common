@@ -13,7 +13,8 @@ import {
 	Input,
 	Padding,
 	Text,
-	Row
+	Row,
+	DateTimePickerProps
 } from '@zextras/carbonio-design-system';
 import { useTranslation } from 'react-i18next';
 
@@ -57,13 +58,16 @@ export const AddPublicLinkComponent: React.FC<AddPublicLinkComponentProps> = ({
 		[date, linkDescriptionValue.length]
 	);
 
-	const handleChange = useCallback((d: string | Date) => {
-		if (typeof d === 'string' && d.length === 0) {
-			setDate(undefined);
-		} else if (d instanceof Date) {
-			setDate(d);
-		}
-	}, []);
+	const handleChange = useCallback<NonNullable<DateTimePickerProps['onChange']>>(
+		(d: Date | null) => {
+			if (d instanceof Date) {
+				setDate(d);
+			} else {
+				setDate(undefined);
+			}
+		},
+		[]
+	);
 
 	const onGenerateCallback = useCallback(() => {
 		const expirationDate = initExpirationDate(date);
@@ -136,7 +140,7 @@ export const AddPublicLinkComponent: React.FC<AddPublicLinkComponentProps> = ({
 						{status === PublicLinkRowStatus.OPEN && (
 							<>
 								<Button
-									isSmall
+									size="small"
 									type="outlined"
 									color="secondary"
 									label={t('publicLink.addLink.undo', 'Undo')}
@@ -144,7 +148,7 @@ export const AddPublicLinkComponent: React.FC<AddPublicLinkComponentProps> = ({
 								/>
 								<Padding right="small" />
 								<Button
-									isSmall
+									size="small"
 									type="outlined"
 									label={t('publicLink.addLink.generateLink', 'Generate Link')}
 									onClick={onGenerateCallback}
@@ -155,7 +159,7 @@ export const AddPublicLinkComponent: React.FC<AddPublicLinkComponentProps> = ({
 						{status !== PublicLinkRowStatus.OPEN && (
 							<Button
 								disabled={status === PublicLinkRowStatus.DISABLED}
-								isSmall
+								size="small"
 								type="outlined"
 								label={t('publicLink.addLink.addLink', 'Add Link')}
 								onClick={onAddLink}

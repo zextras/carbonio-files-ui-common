@@ -7,6 +7,7 @@
 import { useCallback } from 'react';
 
 import { FetchResult, useMutation, useReactiveVar } from '@apollo/client';
+import { useSnackbar } from '@zextras/carbonio-design-system';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 import { useTranslation } from 'react-i18next';
@@ -24,7 +25,6 @@ import {
 	GetChildrenQuery,
 	GetChildrenQueryVariables
 } from '../../../types/graphql/types';
-import { useCreateSnackbar } from '../../useCreateSnackbar';
 import { useErrorHandler } from '../../useErrorHandler';
 import useQueryParam from '../../useQueryParam';
 import { useUpdateFolderContent } from '../useUpdateFolderContent';
@@ -39,7 +39,7 @@ export type CopyNodesType = (
  */
 export function useCopyNodesMutation(): { copyNodes: CopyNodesType; loading: boolean } {
 	const [t] = useTranslation();
-	const createSnackbar = useCreateSnackbar();
+	const createSnackbar = useSnackbar();
 	const { rootId } = useParams<{ rootId: string }>();
 	const folderId = useQueryParam('folder');
 	const { navigateToFolder } = useNavigation();

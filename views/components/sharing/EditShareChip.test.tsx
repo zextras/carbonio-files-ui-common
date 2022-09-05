@@ -377,9 +377,10 @@ describe('Edit Share Chip', () => {
 			expect(screen.getByText('Editor')).toBeVisible();
 			expect(screen.getByText('Sharing allowed')).toBeVisible();
 			expect(screen.getByRole('button', { name: /save/i })).toBeVisible();
+			expect(screen.getByRole('button', { name: /save/i })).toBeDisabled();
 
-			expect(screen.getByTestId('exclusive-selection-viewer')).not.toHaveAttribute('disabled');
-			expect(screen.getByTestId('exclusive-selection-editor')).toHaveAttribute('disabled', '');
+			userEvent.click(screen.getByTestId('exclusive-selection-editor'));
+			expect(screen.getByRole('button', { name: /save/i })).toBeDisabled();
 		});
 	});
 
@@ -686,9 +687,7 @@ describe('Edit Share Chip', () => {
 			expect(screen.getByRole('button', { name: /save/i })).toBeVisible();
 			expect(screen.getByRole('button', { name: /save/i })).toHaveAttribute('disabled', '');
 			expect(screen.getByText(/viewer/i)).toBeVisible();
-			expect(screen.getByTestId('exclusive-selection-viewer')).not.toHaveAttribute('disabled');
 			expect(screen.getByText(/editor/i)).toBeVisible();
-			expect(screen.getByTestId('exclusive-selection-editor')).toHaveAttribute('disabled');
 			userEvent.click(screen.getByText(/editor/i));
 			expect(screen.getByRole('button', { name: /save/i })).toHaveAttribute('disabled', '');
 			expect(updateShareMutationFn).not.toHaveBeenCalled();

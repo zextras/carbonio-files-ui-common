@@ -65,7 +65,7 @@ describe('Move', () => {
 			userEvent.click(screen.getByTestId('icon: MoreVertical'));
 			moveAction = await screen.findByText(actionRegexp.move);
 			expect(moveAction).toBeVisible();
-			expect(moveAction.parentElement).not.toHaveAttribute('disabled', '');
+			expect(moveAction).not.toHaveAttribute('disabled', '');
 		});
 
 		test('Move is enabled when multiple files are selected', async () => {

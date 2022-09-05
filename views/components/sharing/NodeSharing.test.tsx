@@ -261,8 +261,8 @@ describe('Node Sharing', () => {
 			expect(screen.queryByTestId('icon: Share')).not.toBeInTheDocument();
 			// open on chip to open popover
 			userEvent.click(screen.getAllByTestId('icon: EyeOutline')[0]);
-			await screen.findByText(/edit .+ collaboration/i);
 			await screen.findByText(/viewer/i);
+			// await screen.findByText(/edit collaboration/i);
 			expect(screen.getByText(/viewer/i)).toBeVisible();
 			expect(screen.getByText(/editor/i)).toBeVisible();
 			expect(screen.getByText(/sharing allowed/i)).toBeVisible();
@@ -341,11 +341,14 @@ describe('Node Sharing', () => {
 			expect(screen.getByRole('button', { name: /share/i })).toHaveAttribute('disabled', '');
 			// only 1 icon EyeOutline is visible, the one of the existing share
 			expect(within(collaboratorsContainer).getByTestId('icon: EyeOutline')).toBeVisible();
-			const chipInput = screen.getByText(/Add new people or groups/i);
+			const chipInput = screen.getByRole('textbox', { name: /Add new people or groups/i });
 			// type just the first character because the network search is requested only one time with first character.
 			// All characters typed after the first one are just used to filter out the result obtained before
-			userEvent.type(chipInput, user.full_name[0]);
+			act(() => {
+				userEvent.type(chipInput, user.full_name[0]);
+			});
 			// wanted contact is shown in the dropdown
+			await screen.findByTestId('dropdown-popper-list');
 			await screen.findByText(user.full_name);
 			expect(screen.getByText(user.full_name)).toBeVisible();
 			expect(screen.getByText(user.email)).toBeVisible();
@@ -356,11 +359,11 @@ describe('Node Sharing', () => {
 			// now click on the dropdown element to create the chip
 			userEvent.click(screen.getByText(user.full_name));
 			// first contacts dropdown is closed
-			expect(screen.queryByText(user.full_name)).not.toBeInTheDocument();
-			expect(screen.queryByText(user.email)).not.toBeInTheDocument();
-			expect(screen.queryByText(/other-contact/i)).not.toBeInTheDocument();
+			await waitForElementToBeRemoved(screen.queryByText(user.email));
 			// and then the new share is created as a chip
 			await screen.findByText(user.full_name);
+			expect(screen.queryByText(user.email)).not.toBeInTheDocument();
+			expect(screen.queryByText(/other-contact/i)).not.toBeInTheDocument();
 			expect(screen.getByText(user.full_name)).toBeVisible();
 			// new share is created with read-only permissions by default so now there are 2 icons EyeOutline
 			expect(within(collaboratorsContainer).getAllByTestId('icon: EyeOutline')).toHaveLength(2);
@@ -390,11 +393,11 @@ describe('Node Sharing', () => {
 			expect(within(collaboratorsContainer).getAllByTestId('icon: EyeOutline')).toHaveLength(2);
 			expect(screen.getByTestId('exclusive-selection-editor')).not.toHaveAttribute('disabled');
 			// click on editor
-			userEvent.click(screen.getByText(/editor/i));
+			act(() => {
+				userEvent.click(screen.getByText(/editor/i));
+			});
 			// icon on chip is immediately updated, so the edit icons become 2
-			await waitFor(() =>
-				expect(within(collaboratorsContainer).getByTestId('icon: Edit2Outline')).toBeInTheDocument()
-			);
+			await within(collaboratorsContainer).findByTestId('icon: Edit2Outline');
 			// so now we have 1 icons EyeOutline, the one in the existing share chip
 			expect(within(collaboratorsContainer).getByTestId('icon: EyeOutline')).toBeInTheDocument();
 			// give share permissions to the new share
@@ -501,20 +504,22 @@ describe('Node Sharing', () => {
 			expect(screen.getByRole('button', { name: /share/i })).toHaveAttribute('disabled', '');
 			// 1 icon EyeOutline is visible, from the existing share
 			expect(within(collaboratorsContainer).getByTestId('icon: EyeOutline')).toBeVisible();
-			const chipInput = screen.getByText(/Add new people or groups/i);
+			const chipInput = screen.getByRole('textbox', { name: /Add new people or groups/i });
 			// type just the first character because the network search is requested only one time with first character.
 			// All characters typed after the first one are just used to filter out the result obtained before
 			act(() => {
 				userEvent.type(chipInput, user1.full_name[0]);
 			});
 			// wanted contact is shown in the dropdown
+			await screen.findByTestId('dropdown-popper-list');
 			await screen.findByText(user1.full_name);
 			expect(screen.getByText(user1.full_name)).toBeVisible();
 			expect(screen.getByText(user1.email)).toBeVisible();
 			// now click on the dropdown element to create the chip
 			userEvent.click(screen.getByText(user1.full_name));
 			// first contacts dropdown is closed
-			expect(screen.queryByText(user1.full_name)).not.toBeInTheDocument();
+			await waitForElementToBeRemoved(screen.queryByText(user1.email));
+			expect(screen.queryByText(user1.email)).not.toBeInTheDocument();
 			// and then the new share is created as a chip
 			await screen.findByText(user1.full_name);
 			expect(screen.getByText(user1.full_name)).toBeVisible();
@@ -535,11 +540,11 @@ describe('Node Sharing', () => {
 			);
 			expect(screen.getByTestId('exclusive-selection-editor')).not.toHaveAttribute('disabled');
 			// click on editor to set read and write share permissions
-			userEvent.click(screen.getByText(/editor/i));
+			act(() => {
+				userEvent.click(screen.getByText(/editor/i));
+			});
 			// icon on chip is immediately updated, so the edit icons become 1
-			await waitFor(() =>
-				expect(within(collaboratorsContainer).getByTestId('icon: Edit2Outline')).toBeInTheDocument()
-			);
+			await within(collaboratorsContainer).findByTestId('icon: Edit2Outline');
 			// now create the second share
 			// type just the first character because the network search is requested only one time with first character.
 			// All characters typed after the first one are just used to filter out the result obtained before
@@ -547,6 +552,7 @@ describe('Node Sharing', () => {
 				userEvent.type(chipInput, user2.full_name[0]);
 			});
 			// wanted contact is shown in the dropdown
+			await screen.findByTestId('dropdown-popper-list');
 			await screen.findByText(user2.full_name);
 			// popover is closed
 			expect(screen.getByText(user2.full_name)).toBeVisible();
@@ -554,7 +560,8 @@ describe('Node Sharing', () => {
 			// now click on the dropdown element to create the chip
 			userEvent.click(screen.getByText(user2.full_name));
 			// first contacts dropdown is closed
-			expect(screen.queryByText(user2.full_name)).not.toBeInTheDocument();
+			await waitForElementToBeRemoved(screen.queryByText(user2.email));
+			expect(screen.queryByText(user2.email)).not.toBeInTheDocument();
 			// and then the new share is created as a chip
 			await screen.findByText(user2.full_name);
 			expect(screen.getByText(user2.full_name)).toBeVisible();

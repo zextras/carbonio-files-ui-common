@@ -39,7 +39,7 @@ export const UpdateNodeNameModalContent = <T extends UpdateNameMutation>({
 	const [t] = useTranslation();
 	const [newName, setNewName] = useState(nodeName || '');
 	const [errorMsg, setErrorMsg] = useState<string>();
-	const inputRef = useRef<HTMLInputElement>();
+	const inputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
 		const timer = window.setTimeout(() => {

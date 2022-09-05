@@ -311,7 +311,7 @@ describe('Filter List', () => {
 				fireEvent.contextMenu(nodeItem);
 				const moveAction = await screen.findByText(actionRegexp.move);
 				expect(moveAction).toBeVisible();
-				expect(moveAction.parentElement).not.toHaveAttribute('disabled', '');
+				expect(moveAction).not.toHaveAttribute('disabled', '');
 			});
 
 			test('Move open modal showing parent folder content. Confirm action close the modal, leave moved items in filter list and clear cached data for destination folder', async () => {

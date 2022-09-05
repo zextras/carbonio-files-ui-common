@@ -7,7 +7,7 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { useReactiveVar } from '@apollo/client';
-import { Container } from '@zextras/carbonio-design-system';
+import { Container, useSnackbar } from '@zextras/carbonio-design-system';
 import { PreviewsManagerContext } from '@zextras/carbonio-ui-preview';
 import filter from 'lodash/filter';
 import find from 'lodash/find';
@@ -52,7 +52,6 @@ import { OpenCopyModal, useCopyModal } from '../../hooks/modals/useCopyModal';
 import { useDeletePermanentlyModal } from '../../hooks/modals/useDeletePermanentlyModal';
 import { OpenMoveModal, useMoveModal } from '../../hooks/modals/useMoveModal';
 import { OpenRenameModal, useRenameModal } from '../../hooks/modals/useRenameModal';
-import { useCreateSnackbar } from '../../hooks/useCreateSnackbar';
 import useSelection from '../../hooks/useSelection';
 import { useUpload } from '../../hooks/useUpload';
 import { Action, Crumb, NodeListItemType } from '../../types/common';
@@ -292,7 +291,7 @@ export const List: React.VFC<ListProps> = ({
 		exitSelectionMode
 	);
 
-	const createSnackbar = useCreateSnackbar();
+	const createSnackbar = useSnackbar();
 
 	const downloadSelection = useCallback(() => {
 		const nodeToDownload = find(nodes, (node) => node.id === selectedIDs[0]);
