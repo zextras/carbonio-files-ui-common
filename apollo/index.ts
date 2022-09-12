@@ -7,10 +7,15 @@
 import {
 	ApolloClient,
 	FieldFunctionOptions,
+	HttpLink,
 	InMemoryCache,
 	NormalizedCacheObject,
-	Reference
+	Reference,
+	split
 } from '@apollo/client';
+import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
+import { getMainDefinition } from '@apollo/client/utilities';
+import { createClient } from 'graphql-ws';
 import find from 'lodash/find';
 import keyBy from 'lodash/keyBy';
 
@@ -232,11 +237,35 @@ let apolloClient: ApolloClient<NormalizedCacheObject>;
 const buildClient: () => ApolloClient<NormalizedCacheObject> = () => {
 	const uri = process.env.NODE_ENV === 'test' ? 'http://localhost:9000' : '';
 	if (apolloClient == null) {
-		apolloClient = new ApolloClient<NormalizedCacheObject>({
+		const httpLink = new HttpLink({
 			uri: `${uri}${GRAPHQL_ENDPOINT}`,
+			credentials: 'same-origin'
+		});
+
+		const wsLink = new GraphQLWsLink(
+			createClient({
+				url: `wss://${window.location.hostname}/services/files/graphql-ws`,
+				keepAlive: 10000
+			})
+		);
+
+		// The split function takes three parameters:
+		// * A function that's called for each operation to execute
+		// * The Link to use for an operation if the function returns a "truthy" value
+		// * The Link to use for an operation if the function returns a "falsy" value
+		const splitLink = split(
+			({ query }) => {
+				const definition = getMainDefinition(query);
+				return definition.kind === 'OperationDefinition' && definition.operation === 'subscription';
+			},
+			wsLink,
+			httpLink
+		);
+
+		apolloClient = new ApolloClient<NormalizedCacheObject>({
 			cache,
-			credentials: 'same-origin',
-			connectToDevTools: true
+			connectToDevTools: true,
+			link: splitLink
 		});
 	}
 	return apolloClient;

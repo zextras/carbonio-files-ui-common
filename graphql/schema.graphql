@@ -409,6 +409,17 @@ interface Node {
   updated_at: DateTime!
 }
 
+type NodeEvent {
+  action: NodeEventType!
+  node: Node!
+}
+
+enum NodeEventType {
+  ADDED
+  DELETED
+  UPDATED
+}
+
 type NodePage {
   """The list of nodes of the requested page"""
   nodes: [Node]!
@@ -635,6 +646,11 @@ enum ShareSort {
 }
 
 union SharedTarget = DistributionList | User
+
+type Subscription {
+  folderContentSubscribe(node_id: ID!): Node!
+  folderContentUpdated(folder_id: ID!): NodeEvent!
+}
 
 """ Definition of the User type"""
 type User {

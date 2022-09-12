@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: 2022 Zextras <https://www.zextras.com>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
+fragment ChildWithoutComplexData on Node {
+	id
+	name
+	description
+	type
+	... on File {
+		size
+		mime_type
+		extension
+		version
+	}
+	flagged
+	rootId
+	updated_at
+	created_at
+}

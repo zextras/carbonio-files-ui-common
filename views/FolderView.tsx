@@ -14,6 +14,7 @@ import { useParams } from 'react-router-dom';
 import { ACTION_IDS, ACTION_TYPES } from '../../constants';
 import { useActiveNode } from '../../hooks/useActiveNode';
 import { useCreateOptions } from '../../hooks/useCreateOptions';
+import { subscribeToFolderContent } from '../apollo/subscriptionCollector';
 import { DISPLAYER_WIDTH, FILES_APP_ID, LIST_WIDTH, ROOTS } from '../constants';
 import { ListContext } from '../contexts';
 import { useCreateFolderMutation } from '../hooks/graphql/mutations/useCreateFolderMutation';
@@ -64,6 +65,10 @@ const FolderView: React.VFC = () => {
 	);
 
 	const { data: currentFolder, loading, hasMore, loadMore } = useGetChildrenQuery(currentFolderId);
+
+	useEffect(() => {
+		subscribeToFolderContent(currentFolderId);
+	}, [currentFolderId]);
 
 	const { data: permissionsData } = useGetPermissionsQuery(currentFolderId);
 

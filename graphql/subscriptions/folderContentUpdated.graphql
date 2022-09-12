@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2022 Zextras <https://www.zextras.com>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
+#import "../fragments/childWithoutComplexData.graphql"
+
+subscription folderContentUpdated($folder_id: ID!) {
+	folderContentUpdated(folder_id: $folder_id) {
+		action
+		node {
+			...ChildWithoutComplexData
+		}
+	}
+}

@@ -438,6 +438,18 @@ export type NodeSharesArgs = {
 	sorts?: InputMaybe<Array<ShareSort>>;
 };
 
+export type NodeEvent = {
+	__typename?: 'NodeEvent';
+	action: NodeEventType;
+	node: Node;
+};
+
+export enum NodeEventType {
+	Added = 'ADDED',
+	Deleted = 'DELETED',
+	Updated = 'UPDATED'
+}
+
 export type NodePage = {
 	__typename?: 'NodePage';
 	/** The list of nodes of the requested page */
@@ -656,6 +668,20 @@ export enum ShareSort {
 
 export type SharedTarget = DistributionList | User;
 
+export type Subscription = {
+	__typename?: 'Subscription';
+	folderContentSubscribe: Node;
+	folderContentUpdated: NodeEvent;
+};
+
+export type SubscriptionFolderContentSubscribeArgs = {
+	node_id: Scalars['ID'];
+};
+
+export type SubscriptionFolderContentUpdatedArgs = {
+	folder_id: Scalars['ID'];
+};
+
 /**  Definition of the User type */
 export type User = {
 	__typename?: 'User';
@@ -872,6 +898,38 @@ type Child_Folder_Fragment = {
 };
 
 export type ChildFragment = Child_File_Fragment | Child_Folder_Fragment;
+
+type ChildWithoutComplexData_File_Fragment = {
+	__typename?: 'File';
+	size: number;
+	mime_type: string;
+	extension?: string | null;
+	version: number;
+	id: string;
+	name: string;
+	description: string;
+	type: NodeType;
+	flagged: boolean;
+	rootId?: string | null;
+	updated_at: number;
+	created_at: number;
+};
+
+type ChildWithoutComplexData_Folder_Fragment = {
+	__typename?: 'Folder';
+	id: string;
+	name: string;
+	description: string;
+	type: NodeType;
+	flagged: boolean;
+	rootId?: string | null;
+	updated_at: number;
+	created_at: number;
+};
+
+export type ChildWithoutComplexDataFragment =
+	| ChildWithoutComplexData_File_Fragment
+	| ChildWithoutComplexData_Folder_Fragment;
 
 export type CollaborationLinkFragment = {
 	__typename?: 'CollaborationLink';
@@ -3231,4 +3289,43 @@ export type GetVersionsQuery = {
 		cloned_from_version?: number | null;
 		last_editor?: { __typename?: 'User'; full_name: string; email: string; id: string } | null;
 	} | null>;
+};
+
+export type FolderContentUpdatedSubscriptionVariables = Exact<{
+	folder_id: Scalars['ID'];
+}>;
+
+export type FolderContentUpdatedSubscription = {
+	__typename?: 'Subscription';
+	folderContentUpdated: {
+		__typename?: 'NodeEvent';
+		action: NodeEventType;
+		node:
+			| {
+					__typename?: 'File';
+					size: number;
+					mime_type: string;
+					extension?: string | null;
+					version: number;
+					id: string;
+					name: string;
+					description: string;
+					type: NodeType;
+					flagged: boolean;
+					rootId?: string | null;
+					updated_at: number;
+					created_at: number;
+			  }
+			| {
+					__typename?: 'Folder';
+					id: string;
+					name: string;
+					description: string;
+					type: NodeType;
+					flagged: boolean;
+					rootId?: string | null;
+					updated_at: number;
+					created_at: number;
+			  };
+	};
 };
