@@ -91,7 +91,21 @@ const FileView: React.VFC = () => {
 					label: t('create.options.new.document', 'New Document'),
 					icon: 'FileTextOutline',
 					click: noop,
-					disabled: true
+					disabled: true,
+					items: [
+						{
+							id: `${ACTION_IDS.CREATE_DOCS_DOCUMENT}-libre`,
+							label: t('create.options.new.odfDocument', 'ODF Document'),
+							click: noop,
+							disabled: true
+						},
+						{
+							id: `${ACTION_IDS.CREATE_DOCS_DOCUMENT}-ms`,
+							label: t('create.options.new.msDocument', 'Microsoft Document'),
+							click: noop,
+							disabled: true
+						}
+					]
 				})
 			},
 			{
@@ -104,7 +118,21 @@ const FileView: React.VFC = () => {
 					label: t('create.options.new.spreadsheet', 'New Spreadsheet'),
 					icon: 'FileCalcOutline',
 					click: noop,
-					disabled: true
+					disabled: true,
+					items: [
+						{
+							id: `${ACTION_IDS.CREATE_DOCS_SPREADSHEET}-libre`,
+							label: t('create.options.new.odfDocument', 'ODF Document'),
+							click: noop,
+							disabled: true
+						},
+						{
+							id: `${ACTION_IDS.CREATE_DOCS_SPREADSHEET}-ms`,
+							label: t('create.options.new.msDocument', 'Microsoft Document'),
+							click: noop,
+							disabled: true
+						}
+					]
 				})
 			},
 			{
@@ -117,7 +145,21 @@ const FileView: React.VFC = () => {
 					label: t('create.options.new.presentation', 'New Presentation'),
 					icon: 'FilePresentationOutline',
 					click: noop,
-					disabled: true
+					disabled: true,
+					items: [
+						{
+							id: `${ACTION_IDS.CREATE_DOCS_PRESENTATION}-libre`,
+							label: t('create.options.new.odfDocument', 'ODF Document'),
+							click: noop,
+							disabled: true
+						},
+						{
+							id: `${ACTION_IDS.CREATE_DOCS_PRESENTATION}-ms`,
+							label: t('create.options.new.msDocument', 'Microsoft Document'),
+							click: noop,
+							disabled: true
+						}
+					]
 				})
 			}
 		);

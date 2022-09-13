@@ -31,6 +31,7 @@ import {
 	sortNodes
 } from '../mocks/mockUtils';
 import { Folder, GetNodeQuery, GetNodeQueryVariables } from '../types/graphql/types';
+import { ActionItem } from '../utils/ActionsFactory';
 import {
 	getChildrenVariables,
 	mockGetChild,
@@ -69,7 +70,12 @@ jest.mock('./components/Displayer', () => ({
 						(element) => element.id === 'create-docs-document'
 					);
 					if (createDocsDocument) {
-						createDocsDocument.action('target').click(ev);
+						const createLibreDocsDocument = (
+							createDocsDocument.action('target').items as ActionItem[]
+						).find((item) => item.id === 'create-docs-document-libre');
+						if (createLibreDocsDocument?.click) {
+							createLibreDocsDocument.click(ev);
+						}
 					}
 				}
 			}}
@@ -130,14 +136,10 @@ describe('Create docs file', () => {
 			(option) => option.id === 'create-docs-document'
 		);
 		expect(createDocsDocument).toBeDefined();
-		if (createDocsDocument) {
-			act(() => {
-				const createDocsDocumentElement = screen.getByTestId('create-docs-document-test-id');
-				userEvent.click(createDocsDocumentElement);
-			});
-		} else {
-			fail();
-		}
+		const createDocsDocumentElement = screen.getByTestId('create-docs-document-test-id');
+		act(() => {
+			userEvent.click(createDocsDocumentElement);
+		});
 
 		await createNode(node2);
 		const error = await screen.findByText(/Error! Name already assigned/);
