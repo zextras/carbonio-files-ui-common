@@ -7,6 +7,7 @@
 /* eslint-disable no-else-return */
 import React from 'react';
 
+import { DropdownItem } from '@zextras/carbonio-design-system';
 import every from 'lodash/every';
 import find from 'lodash/find';
 import forEach from 'lodash/forEach';
@@ -31,6 +32,7 @@ export interface ActionItem {
 	selected?: boolean;
 	customComponent?: React.ReactNode;
 	disabled?: boolean;
+	items?: DropdownItem['items'];
 }
 
 export type ActionsFactoryNodeType = Pick<
