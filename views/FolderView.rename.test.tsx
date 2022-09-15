@@ -7,7 +7,6 @@
 import React from 'react';
 
 import { fireEvent, screen, waitForElementToBeRemoved, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import findIndex from 'lodash/findIndex';
 import forEach from 'lodash/forEach';
 import last from 'lodash/last';
@@ -27,7 +26,7 @@ import {
 	mockTrashNodes,
 	mockUpdateNode
 } from '../utils/mockUtils';
-import { actionRegexp, renameNode, render, selectNodes, triggerLoadMore } from '../utils/testUtils';
+import { actionRegexp, renameNode, setup, selectNodes, triggerLoadMore } from '../utils/testUtils';
 import { DisplayerProps } from './components/Displayer';
 import FolderView from './FolderView';
 
@@ -85,21 +84,24 @@ describe('Rename', () => {
 				)
 			];
 
-			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+			const { user } = setup(<FolderView />, {
+				initialRouterEntries: [`/?folder=${currentFolder.id}`],
+				mocks
+			});
 
 			// wait for the load to be completed
 			await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 
 			// activate selection mode by selecting items
-			selectNodes([element.id]);
+			await selectNodes([element.id], user);
 			// check that all wanted items are selected
 			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-			userEvent.click(screen.getByTestId('icon: MoreVertical'));
+			await user.click(screen.getByTestId('icon: MoreVertical'));
 			// check that the rename action becomes visible
-			await renameNode(newName);
+			await renameNode(newName, user);
 			// wait for the modal to be closed
-			await waitForElementToBeRemoved(screen.queryByTestId('input-name'));
+			expect(screen.queryByTestId('input-name')).not.toBeInTheDocument();
 			// check the node. It should have the new name and be at the end of the updated list
 			const nodeItem = screen.getByTestId(`node-item-${element.id}`);
 			expect(nodeItem).toBeVisible();
@@ -110,7 +112,6 @@ describe('Rename', () => {
 			// selection mode is de-activate
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 			expect(screen.queryByTestId('icon: MoreVertical')).not.toBeInTheDocument();
-			expect.assertions(9);
 		});
 	});
 
@@ -151,7 +152,10 @@ describe('Rename', () => {
 				)
 			];
 
-			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+			const { user } = setup(<FolderView />, {
+				initialRouterEntries: [`/?folder=${currentFolder.id}`],
+				mocks
+			});
 
 			// wait for the load to be completed
 			await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -160,9 +164,9 @@ describe('Rename', () => {
 			const nodeItem = screen.getByTestId(`node-item-${element.id}`);
 			// open context menu
 			fireEvent.contextMenu(nodeItem);
-			await renameNode(newName);
+			await renameNode(newName, user);
 			// wait for the modal to be closed
-			await waitForElementToBeRemoved(screen.queryByTestId('input-name'));
+			expect(screen.queryByTestId('input-name')).not.toBeInTheDocument();
 			// check the new item. It has the new name and its located as last element of the updated list
 			const updatedNodeItem = screen.getByTestId(`node-item-${element.id}`);
 			expect(updatedNodeItem).toBeVisible();
@@ -262,7 +266,10 @@ describe('Rename', () => {
 				)
 			];
 
-			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+			const { user } = setup(<FolderView />, {
+				initialRouterEntries: [`/?folder=${currentFolder.id}`],
+				mocks
+			});
 
 			// wait for the load to be completed
 			await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -273,9 +280,9 @@ describe('Rename', () => {
 			const nodeItem = screen.getByTestId(`node-item-${element.id}`);
 			// open context menu
 			fireEvent.contextMenu(nodeItem);
-			await renameNode(newName);
+			await renameNode(newName, user);
 			// wait that the modal close
-			await waitForElementToBeRemoved(screen.queryByTestId('input-name'));
+			expect(screen.queryByTestId('input-name')).not.toBeInTheDocument();
 			// contextual menu is closed
 			expect(screen.queryByText(actionRegexp.rename)).not.toBeInTheDocument();
 			// check the new item. It has the new name and it's located as last element of the updated list
@@ -362,7 +369,10 @@ describe('Rename', () => {
 				)
 			];
 
-			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+			const { user } = setup(<FolderView />, {
+				initialRouterEntries: [`/?folder=${currentFolder.id}`],
+				mocks
+			});
 
 			await screen.findByText(firstPage[0].name);
 			expect(screen.getByText(firstPage[0].name)).toBeVisible();
@@ -370,8 +380,8 @@ describe('Rename', () => {
 			expect(screen.queryByText(secondPage[0].name)).not.toBeInTheDocument();
 			// rename node to put it in the unordered list
 			fireEvent.contextMenu(screen.getByText(nodeToRename.name));
-			await renameNode(newName);
-			await waitForElementToBeRemoved(screen.queryByRole('button', { name: actionRegexp.rename }));
+			await renameNode(newName, user);
+			expect(screen.queryByRole('button', { name: actionRegexp.rename })).not.toBeInTheDocument();
 			await screen.findByText(newName);
 			expect(screen.queryByText(nodeToRename.name)).not.toBeInTheDocument();
 			expect(screen.getByText(newName)).toBeVisible();
@@ -427,7 +437,10 @@ describe('Rename', () => {
 				)
 			];
 
-			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+			const { user } = setup(<FolderView />, {
+				initialRouterEntries: [`/?folder=${currentFolder.id}`],
+				mocks
+			});
 
 			await screen.findByText(firstPage[0].name);
 			expect(screen.getByText(firstPage[0].name)).toBeVisible();
@@ -435,28 +448,27 @@ describe('Rename', () => {
 			expect(screen.queryByText(secondPage[0].name)).not.toBeInTheDocument();
 			// rename node to put it in the unordered list
 			fireEvent.contextMenu(screen.getByText(nodeToRename.name));
-			await renameNode(newName);
+			await renameNode(newName, user);
 			await screen.findByText(newName);
 			expect(screen.getByText(newName)).toBeVisible();
 			expect(screen.queryByText(secondPage[0].name)).not.toBeInTheDocument();
 			// select all ordered items (all but the renamed node)
-			selectNodes(nodesToTrash);
+			await selectNodes(nodesToTrash, user);
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length - 1);
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-			userEvent.click(screen.getByTestId('icon: MoreVertical'));
+			await user.click(screen.getByTestId('icon: MoreVertical'));
 			const trashAction = await screen.findByText(actionRegexp.moveToTrash);
 			expect(trashAction).toBeVisible();
 			expect(trashAction.parentNode).not.toHaveAttribute('disabled', '');
-			userEvent.click(trashAction);
-			const snackbar = await screen.findByText(/Item moved to trash/i);
-			await waitForElementToBeRemoved(snackbar);
+			await user.click(trashAction);
+			await screen.findByText(/Item moved to trash/i);
 			expect(screen.getByTestId('icon: Refresh')).toBeVisible();
 			await triggerLoadMore();
 			await screen.findByText(secondPage[0].name);
 			expect(screen.getByText(secondPage[0].name)).toBeVisible();
 			expect(screen.queryByText(firstPage[0].name)).not.toBeInTheDocument();
 			expect(screen.getByText(newName)).toBeInTheDocument();
-		}, 60000);
+		});
 	});
 });

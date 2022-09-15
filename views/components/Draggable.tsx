@@ -8,14 +8,14 @@ import React, { useCallback, useRef } from 'react';
 
 import { Container } from '@zextras/carbonio-design-system';
 
+import { TIMERS } from '../../constants';
+
 interface DraggableProps {
 	onDragStart: React.DragEventHandler<HTMLElement>;
 	onDragEnd: (event: React.DragEvent<HTMLElement> | MouseEvent) => void;
 	draggable?: boolean;
 	effect: typeof DataTransfer.prototype.effectAllowed;
 }
-
-const MOUSE_MOVE_TIMEOUT = 1000;
 
 export const Draggable: React.FC<DraggableProps> = ({
 	children,
@@ -57,7 +57,7 @@ export const Draggable: React.FC<DraggableProps> = ({
 			mouseMoveTimeoutRef.current && clearTimeout(mouseMoveTimeoutRef.current);
 			mouseMoveTimeoutRef.current = setTimeout(() => {
 				window.addEventListener('mousemove', mouseMoveAfterDragListener, { once: true });
-			}, MOUSE_MOVE_TIMEOUT);
+			}, TIMERS.MOUSE_MOVE_TIMEOUT);
 		},
 		[draggable, effect, mouseMoveAfterDragListener, onDragStart]
 	);

@@ -17,18 +17,18 @@ import {
 	queries,
 	QueryBy,
 	queryHelpers,
-	render as reactRender,
+	render,
 	RenderOptions,
 	RenderResult,
 	screen,
 	waitFor,
-	waitForElementToBeRemoved,
 	within
 } from '@testing-library/react';
 import { renderHook, RenderHookResult } from '@testing-library/react-hooks';
 import userEvent from '@testing-library/user-event';
 import { ModalManager, SnackbarManager } from '@zextras/carbonio-design-system';
 import { PreviewManager } from '@zextras/carbonio-ui-preview';
+import { EventEmitter } from 'events';
 import { GraphQLError } from 'graphql';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
@@ -40,6 +40,8 @@ import StyledWrapper from '../../StyledWrapper';
 import { AdvancedFilters } from '../types/common';
 import { Folder } from '../types/graphql/types';
 import { Mock } from './mockUtils';
+
+export type UserEvent = ReturnType<typeof userEvent['setup']>;
 
 /**
  * Matcher function to search a string in more html elements and not just in a single element.
@@ -124,7 +126,7 @@ export const buildBreadCrumbRegExp = (...nodesNames: string[]): RegExp => {
 	return RegExp(regExp, 'g');
 };
 
-export interface WrapperProps {
+export interface HookWrapperProps {
 	children: React.ReactElement;
 }
 
@@ -136,8 +138,8 @@ export interface WrapperProps {
 export function getApolloHookWrapper(
 	client: ApolloClient<NormalizedCacheObject>,
 	hook: () => unknown
-): RenderHookResult<WrapperProps, unknown> {
-	const wrapper: React.VFC<WrapperProps> = ({ children }) => (
+): RenderHookResult<HookWrapperProps, unknown> {
+	const wrapper: React.VFC<HookWrapperProps> = ({ children }) => (
 		<ApolloProvider client={client}>{children}</ApolloProvider>
 	);
 
@@ -152,58 +154,84 @@ export function generateError(message: string): GraphQLError {
 	return new GraphQLError(`Controlled error: ${message}`);
 }
 
-export const render = (
-	ui: ReactElement,
+interface WrapperProps {
+	children?: React.ReactElement;
+	initialRouterEntries?: string[];
+	mocks?: Mock[];
+}
+
+const Wrapper = ({ mocks, initialRouterEntries, children }: WrapperProps): JSX.Element => {
+	const i18n = useMemo(() => {
+		const i18nFactory = new I18nFactory();
+		return i18nFactory.getAppI18n();
+	}, []);
+
+	const ApolloProviderWrapper: React.FC = ({ children: apolloChildren }) =>
+		mocks ? (
+			<MockedProvider mocks={mocks} cache={global.apolloClient.cache}>
+				{apolloChildren}
+			</MockedProvider>
+		) : (
+			<ApolloProvider client={global.apolloClient}>{apolloChildren}</ApolloProvider>
+		);
+
+	return (
+		<ApolloProviderWrapper>
+			<MemoryRouter
+				initialEntries={initialRouterEntries}
+				initialIndex={(initialRouterEntries?.length || 1) - 1}
+			>
+				<StyledWrapper>
+					<I18nextProvider i18n={i18n}>
+						<SnackbarManager>
+							<ModalManager>
+								<PreviewManager>{children}</PreviewManager>
+							</ModalManager>
+						</SnackbarManager>
+					</I18nextProvider>
+				</StyledWrapper>
+			</MemoryRouter>
+		</ApolloProviderWrapper>
+	);
+};
+
+function customRender(
+	ui: React.ReactElement,
 	{
 		initialRouterEntries = ['/'],
 		mocks,
 		...options
-	}: {
-		initialRouterEntries?: string[];
-		mocks?: Mock[];
+	}: WrapperProps & {
 		options?: Omit<RenderOptions, 'queries' | 'wrapper'>;
 	} = {}
-): RenderResult<typeof queries & CustomByTextWithMarkupQueries> => {
-	const Wrapper: React.FC = ({ children }) => {
-		const i18n = useMemo(() => {
-			const i18nFactory = new I18nFactory();
-			return i18nFactory.getAppI18n();
-		}, []);
-
-		const ApolloProviderWrapper: React.FC = ({ children: apolloChildren }) =>
-			mocks ? (
-				<MockedProvider mocks={mocks} cache={global.apolloClient.cache}>
-					{apolloChildren}
-				</MockedProvider>
-			) : (
-				<ApolloProvider client={global.apolloClient}>{apolloChildren}</ApolloProvider>
-			);
-
-		return (
-			<ApolloProviderWrapper>
-				<MemoryRouter
-					initialEntries={initialRouterEntries}
-					initialIndex={(initialRouterEntries?.length || 1) - 1}
-				>
-					<StyledWrapper>
-						<I18nextProvider i18n={i18n}>
-							<SnackbarManager>
-								<ModalManager>
-									<PreviewManager>{children}</PreviewManager>
-								</ModalManager>
-							</SnackbarManager>
-						</I18nextProvider>
-					</StyledWrapper>
-				</MemoryRouter>
-			</ApolloProviderWrapper>
-		);
-	};
-	return reactRender(ui, {
-		wrapper: Wrapper,
+): RenderResult<typeof queries & CustomByTextWithMarkupQueries> {
+	return render(ui, {
+		wrapper: ({ children }: { children: React.ReactElement }) => (
+			<Wrapper initialRouterEntries={initialRouterEntries} mocks={mocks}>
+				{children}
+			</Wrapper>
+		),
 		queries: { ...queries, ...customQueryByTextWithMarkup },
 		...options
 	});
+}
+
+type SetupOptions = Pick<WrapperProps, 'initialRouterEntries' | 'mocks'> & {
+	renderOptions?: Omit<RenderOptions, 'queries' | 'wrapper'>;
+	setupOptions?: Parameters<typeof userEvent['setup']>[0];
 };
+
+export const setup = (
+	ui: ReactElement,
+	options?: SetupOptions
+): { user: UserEvent } & ReturnType<typeof customRender> => ({
+	user: userEvent.setup({ advanceTimers: jest.advanceTimersByTime, ...options?.setupOptions }),
+	...customRender(ui, {
+		initialRouterEntries: options?.initialRouterEntries,
+		mocks: options?.mocks,
+		...options?.renderOptions
+	})
+});
 
 export async function triggerLoadMore(): Promise<void> {
 	expect(screen.getByTestId('icon: Refresh')).toBeVisible();
@@ -221,7 +249,7 @@ export async function triggerLoadMore(): Promise<void> {
 	);
 }
 
-export function selectNodes(nodesToSelect: string[]): void {
+export async function selectNodes(nodesToSelect: string[], user: UserEvent): Promise<void> {
 	for (let i = 0; i < nodesToSelect.length; i += 1) {
 		const id = nodesToSelect[i];
 		const node = within(screen.getByTestId(`node-item-${id}`));
@@ -232,44 +260,50 @@ export function selectNodes(nodesToSelect: string[]): void {
 		if (clickableItem == null) {
 			clickableItem = node.queryByTestId('checkedAvatar');
 		}
-		act(() => {
-			if (clickableItem) {
-				userEvent.click(clickableItem, undefined, { skipHover: true });
-			}
-		});
+		if (clickableItem) {
+			// eslint-disable-next-line no-await-in-loop
+			await user.click(clickableItem);
+		}
 	}
 }
 
-export async function renameNode(newName: string): Promise<void> {
+export async function renameNode(newName: string, user: UserEvent): Promise<void> {
 	// check that the rename action becomes visible and click on it
 	await screen.findByText(/\brename\b/i);
-	userEvent.click(screen.getByText(/\brename\b/i));
+	await user.click(screen.getByText(/\brename\b/i));
 	// fill new name in modal input field
 	const inputFieldDiv = await screen.findByTestId('input-name');
+	act(() => {
+		// run timers of modal
+		jest.advanceTimersToNextTimer();
+	});
 	const inputField = within(inputFieldDiv).getByRole('textbox');
-	userEvent.clear(inputField);
-	userEvent.type(inputField, newName);
+	await user.clear(inputField);
+	await user.type(inputField, newName);
 	expect(inputField).toHaveValue(newName);
 	// click on confirm button (rename)
 	const button = screen.getByRole('button', { name: /rename/i });
-	userEvent.click(button);
+	await user.click(button);
 }
 
-export async function moveNode(destinationFolder: Folder): Promise<void> {
+export async function moveNode(destinationFolder: Folder, user: UserEvent): Promise<void> {
 	const moveAction = await screen.findByText('Move');
 	expect(moveAction).toBeVisible();
-	userEvent.click(moveAction);
+	await user.click(moveAction);
 	const modalList = await screen.findByTestId('modal-list-', { exact: false });
+	act(() => {
+		// run timers of modal
+		jest.runOnlyPendingTimers();
+	});
 	const destinationFolderItem = await within(modalList).findByText(destinationFolder.name);
-	userEvent.click(destinationFolderItem);
+	await user.click(destinationFolderItem);
 	await waitFor(() =>
 		expect(screen.getByRole('button', { name: /move/i })).not.toHaveAttribute('disabled', '')
 	);
-	act(() => {
-		userEvent.click(screen.getByRole('button', { name: /move/i }));
-	});
-	await waitForElementToBeRemoved(screen.queryByRole('button', { name: /move/i }));
-	expect(screen.queryByRole('button', { name: /move/i })).not.toBeInTheDocument();
+	await user.click(screen.getByRole('button', { name: /move/i }));
+	await waitFor(() =>
+		expect(screen.queryByRole('button', { name: /move/i })).not.toBeInTheDocument()
+	);
 	expect(screen.queryByText('Move')).not.toBeInTheDocument();
 }
 
@@ -308,14 +342,21 @@ export const iconRegexp = {
 	trash: /^icon: Trash2Outline$/i
 } as const;
 
-export function waitForNetworkResponse(): Promise<void> {
-	// wait a tick to let the mutation complete. This is necessary because with the optimistic response
-	// the ui is updated immediately, but a second rerender occurs after the server response
-	// @see https://www.apollographql.com/docs/react/recipes/testing/#testing-final-state
-	return waitFor(
-		() =>
-			new Promise((resolve) => {
-				setTimeout(resolve, 0);
-			})
-	);
+export function getFirstOfNextMonth(from: Date | number = Date.now()): Date {
+	const startingDate = new Date(from);
+	let chosenDate: Date;
+	if (startingDate.getMonth() === 11) {
+		chosenDate = new Date(startingDate.getFullYear() + 1, 0, 1);
+	} else {
+		chosenDate = new Date(startingDate.getFullYear(), startingDate.getMonth() + 1, 1);
+	}
+	return chosenDate;
+}
+
+// utility to make msw respond in a controlled way
+// see https://github.com/mswjs/msw/discussions/1307
+export async function delayUntil(emitter: EventEmitter, event: string): Promise<void> {
+	return new Promise((resolve) => {
+		emitter.once(event, resolve);
+	});
 }

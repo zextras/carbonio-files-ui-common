@@ -7,8 +7,7 @@
 import React from 'react';
 
 import { ApolloError } from '@apollo/client';
-import { act, screen, waitFor, waitForElementToBeRemoved, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { screen, waitForElementToBeRemoved, within } from '@testing-library/react';
 import find from 'lodash/find';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
@@ -24,7 +23,7 @@ import {
 	mockGetParent,
 	mockGetPermissions
 } from '../utils/mockUtils';
-import { generateError, render, triggerLoadMore } from '../utils/testUtils';
+import { generateError, setup, triggerLoadMore, UserEvent } from '../utils/testUtils';
 import { addNodeInSortedList } from '../utils/utils';
 import { DisplayerProps } from './components/Displayer';
 import FolderView from './FolderView';
@@ -67,15 +66,15 @@ jest.mock('./components/Displayer', () => ({
 }));
 
 describe('Create folder', () => {
-	async function createNode(newNode: { name: string }): Promise<void> {
+	async function createNode(newNode: { name: string }, user: UserEvent): Promise<void> {
 		// wait for the creation modal to be opened
 		const inputFieldDiv = await screen.findByTestId('input-name');
 		const inputField = within(inputFieldDiv).getByRole('textbox');
 		expect(inputField).toHaveValue('');
-		userEvent.type(inputField, newNode.name);
+		await user.type(inputField, newNode.name);
 		expect(inputField).toHaveValue(newNode.name);
 		const button = screen.getByRole('button', { name: /create/i });
-		userEvent.click(button);
+		await user.click(button);
 	}
 
 	test('Create folder operation fail shows an error in the modal and does not close it', async () => {
@@ -101,7 +100,10 @@ describe('Create folder', () => {
 			)
 		];
 
-		render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+		const { user } = setup(<FolderView />, {
+			initialRouterEntries: [`/?folder=${currentFolder.id}`],
+			mocks
+		});
 
 		// wait for the load to be completed
 		await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -112,27 +114,19 @@ describe('Create folder', () => {
 		const createFolder = find(mockedCreateOptions, (option) => option.id === 'create-folder');
 		expect(createFolder).toBeDefined();
 		if (createFolder) {
-			act(() => {
-				const createFolderElement = screen.getByTestId('create-folder-test-id');
-				userEvent.click(createFolderElement);
-			});
+			const createFolderElement = screen.getByTestId('create-folder-test-id');
+			await user.click(createFolderElement);
 		} else {
 			fail();
 		}
 
-		await createNode(node2);
-		await waitFor(() =>
-			expect(screen.getAllByText(/Error! Name already assigned/i)).toHaveLength(2)
-		);
-		await waitFor(() =>
-			// eslint-disable-next-line jest-dom/prefer-in-document
-			expect(screen.getAllByText(/Error! Name already assigned/i)).toHaveLength(1)
-		);
-		const error = screen.getByText(/Error! Name already assigned/i);
-		expect(error).toBeVisible();
+		await createNode(node2, user);
+		await within(screen.getByTestId('modal')).findByText(/Error! Name already assigned/i);
+		const error = within(screen.getByTestId('modal')).getByText(/Error! Name already assigned/i);
+		expect(error).toBeInTheDocument();
 		const inputFieldDiv = screen.getByTestId('input-name');
 		const inputField = within(inputFieldDiv).getByRole('textbox');
-		expect(inputField).toBeVisible();
+		expect(inputField).toBeInTheDocument();
 		expect(inputField).toHaveValue(newName);
 		expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
 			currentFolder.children.nodes.length
@@ -162,7 +156,10 @@ describe('Create folder', () => {
 			)
 		];
 
-		render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+		const { user } = setup(<FolderView />, {
+			initialRouterEntries: [`/?folder=${currentFolder.id}`],
+			mocks
+		});
 
 		// wait for the load to be completed
 		await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -173,16 +170,14 @@ describe('Create folder', () => {
 		const createFolder = find(mockedCreateOptions, (option) => option.id === 'create-folder');
 		expect(createFolder).toBeDefined();
 		if (createFolder) {
-			act(() => {
-				const createFolderElement = screen.getByTestId('create-folder-test-id');
-				userEvent.click(createFolderElement);
-			});
+			const createFolderElement = screen.getByTestId('create-folder-test-id');
+			await user.click(createFolderElement);
 		} else {
 			fail();
 		}
 
 		// create action
-		await createNode(node2);
+		await createNode(node2, user);
 		await screen.findByTestId(`node-item-${node2.id}`);
 
 		const nodeItem = await screen.findByTestId(`node-item-${node2.id}`);
@@ -239,7 +234,10 @@ describe('Create folder', () => {
 			)
 		];
 
-		render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+		const { user } = setup(<FolderView />, {
+			initialRouterEntries: [`/?folder=${currentFolder.id}`],
+			mocks
+		});
 
 		// wait for the load to be completed
 		await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -249,16 +247,14 @@ describe('Create folder', () => {
 		const createFolder = find(mockedCreateOptions, (option) => option.id === 'create-folder');
 		expect(createFolder).toBeDefined();
 		if (createFolder) {
-			act(() => {
-				const createFolderElement = screen.getByTestId('create-folder-test-id');
-				userEvent.click(createFolderElement);
-			});
+			const createFolderElement = screen.getByTestId('create-folder-test-id');
+			await user.click(createFolderElement);
 		} else {
 			fail();
 		}
 
 		// create action
-		await createNode(node2);
+		await createNode(node2, user);
 		await screen.findByTestId(`node-item-${node2.id}`);
 		expect(screen.getByText(node2.name)).toBeVisible();
 
@@ -271,13 +267,11 @@ describe('Create folder', () => {
 		// node2 is last element of the list
 		expect(nodes[nodes.length - 1]).toBe(node2Item);
 
-		act(() => {
-			const createFolderElement = screen.getByTestId('create-folder-test-id');
-			userEvent.click(createFolderElement);
-		});
+		const createFolderElement = screen.getByTestId('create-folder-test-id');
+		await user.click(createFolderElement);
 
 		// create action
-		await createNode(node1);
+		await createNode(node1, user);
 		await screen.findByTestId(`node-item-${node1.id}`);
 		expect(screen.getByText(node1.name)).toBeVisible();
 
@@ -326,7 +320,10 @@ describe('Create folder', () => {
 			)
 		];
 
-		render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+		const { user } = setup(<FolderView />, {
+			initialRouterEntries: [`/?folder=${currentFolder.id}`],
+			mocks
+		});
 
 		// wait for the load to be completed
 		await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -337,16 +334,14 @@ describe('Create folder', () => {
 		const createFolder = find(mockedCreateOptions, (option) => option.id === 'create-folder');
 		expect(createFolder).toBeDefined();
 		if (createFolder) {
-			act(() => {
-				const createFolderElement = screen.getByTestId('create-folder-test-id');
-				userEvent.click(createFolderElement);
-			});
+			const createFolderElement = screen.getByTestId('create-folder-test-id');
+			await user.click(createFolderElement);
 		} else {
 			fail();
 		}
 
 		// create action
-		await createNode(newNode);
+		await createNode(newNode, user);
 		await screen.findByTestId(`node-item-${newNode.id}`);
 		expect(screen.getByText(newNode.name)).toBeVisible();
 		const nodeItem = await screen.findByTestId(`node-item-${newNode.id}`);

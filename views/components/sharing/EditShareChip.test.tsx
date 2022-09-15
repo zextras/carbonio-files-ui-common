@@ -6,28 +6,26 @@
 
 import React from 'react';
 
-import { act, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { act, screen, waitFor } from '@testing-library/react';
 
 import { populateNode, populateShare, populateUser } from '../../../mocks/mockUtils';
 import { SharedTarget, SharePermission } from '../../../types/graphql/types';
 import { mockDeleteShare, mockUpdateShare } from '../../../utils/mockUtils';
-import { render } from '../../../utils/testUtils';
+import { setup } from '../../../utils/testUtils';
 import { EditShareChip } from './EditShareChip';
 
 describe('Edit Share Chip', () => {
 	describe('From a node with read-only permissions', () => {
-		const node = populateNode();
-		node.permissions.can_write_folder = false;
-		node.permissions.can_write_file = false;
-		node.permissions.can_share = false;
-		const user = populateUser();
-
 		test('render a chip of a read-only share', () => {
-			const share = populateShare(node, 'abc', user);
+			const node = populateNode();
+			node.permissions.can_write_folder = false;
+			node.permissions.can_write_file = false;
+			node.permissions.can_share = false;
+			const userAccount = populateUser();
+			const share = populateShare(node, 'abc', userAccount);
 			share.permission = SharePermission.ReadOnly;
 			const deleteShare = jest.fn();
-			render(
+			setup(
 				<EditShareChip
 					share={share}
 					permissions={node.permissions}
@@ -36,7 +34,7 @@ describe('Edit Share Chip', () => {
 				/>
 			);
 
-			expect(screen.getByText(user.full_name)).toBeVisible();
+			expect(screen.getByText(userAccount.full_name)).toBeVisible();
 			expect(screen.getByTestId('icon: EyeOutline')).toBeVisible();
 			expect(screen.queryByTestId('icon: Edit2Outline')).not.toBeInTheDocument();
 			expect(screen.queryByTestId('icon: Share')).not.toBeInTheDocument();
@@ -44,10 +42,15 @@ describe('Edit Share Chip', () => {
 		});
 
 		test('render a chip of a read-and-write share', () => {
-			const share = populateShare(node, 'abc', user);
+			const node = populateNode();
+			node.permissions.can_write_folder = false;
+			node.permissions.can_write_file = false;
+			node.permissions.can_share = false;
+			const userAccount = populateUser();
+			const share = populateShare(node, 'abc', userAccount);
 			share.permission = SharePermission.ReadAndWrite;
 			const deleteShare = jest.fn();
-			render(
+			setup(
 				<EditShareChip
 					share={share}
 					permissions={node.permissions}
@@ -56,7 +59,7 @@ describe('Edit Share Chip', () => {
 				/>
 			);
 
-			expect(screen.getByText(user.full_name)).toBeVisible();
+			expect(screen.getByText(userAccount.full_name)).toBeVisible();
 			expect(screen.queryByTestId('icon: EyeOutline')).not.toBeInTheDocument();
 			expect(screen.getByTestId('icon: Edit2Outline')).toBeVisible();
 			expect(screen.queryByTestId('icon: Share')).not.toBeInTheDocument();
@@ -64,10 +67,15 @@ describe('Edit Share Chip', () => {
 		});
 
 		test('render a chip of a read-and-share share', () => {
-			const share = populateShare(node, 'abc', user);
+			const node = populateNode();
+			node.permissions.can_write_folder = false;
+			node.permissions.can_write_file = false;
+			node.permissions.can_share = false;
+			const userAccount = populateUser();
+			const share = populateShare(node, 'abc', userAccount);
 			share.permission = SharePermission.ReadAndShare;
 			const deleteShare = jest.fn();
-			render(
+			setup(
 				<EditShareChip
 					deleteShare={deleteShare}
 					share={share}
@@ -76,7 +84,7 @@ describe('Edit Share Chip', () => {
 				/>
 			);
 
-			expect(screen.getByText(user.full_name)).toBeVisible();
+			expect(screen.getByText(userAccount.full_name)).toBeVisible();
 			expect(screen.getByTestId('icon: EyeOutline')).toBeVisible();
 			expect(screen.queryByTestId('icon: Edit2Outline')).not.toBeInTheDocument();
 			expect(screen.getByTestId('icon: Share')).toBeVisible();
@@ -84,10 +92,15 @@ describe('Edit Share Chip', () => {
 		});
 
 		test('render a chip of a read-write-and-share share', () => {
-			const share = populateShare(node, 'abc', user);
+			const node = populateNode();
+			node.permissions.can_write_folder = false;
+			node.permissions.can_write_file = false;
+			node.permissions.can_share = false;
+			const userAccount = populateUser();
+			const share = populateShare(node, 'abc', userAccount);
 			share.permission = SharePermission.ReadWriteAndShare;
 			const deleteShare = jest.fn();
-			render(
+			setup(
 				<EditShareChip
 					deleteShare={deleteShare}
 					share={share}
@@ -96,18 +109,23 @@ describe('Edit Share Chip', () => {
 				/>
 			);
 
-			expect(screen.getByText(user.full_name)).toBeVisible();
+			expect(screen.getByText(userAccount.full_name)).toBeVisible();
 			expect(screen.queryByTestId('icon: EyeOutline')).not.toBeInTheDocument();
 			expect(screen.getByTestId('icon: Edit2Outline')).toBeVisible();
 			expect(screen.getByTestId('icon: Share')).toBeVisible();
 			expect(screen.queryByTestId('icon: Close')).not.toBeInTheDocument();
 		});
 
-		test('click on chip does not open popover', () => {
-			const share = populateShare(node, 'abc', user);
+		test('click on chip does not open popover', async () => {
+			const node = populateNode();
+			node.permissions.can_write_folder = false;
+			node.permissions.can_write_file = false;
+			node.permissions.can_share = false;
+			const userAccount = populateUser();
+			const share = populateShare(node, 'abc', userAccount);
 			share.permission = SharePermission.ReadOnly;
 			const deleteShare = jest.fn();
-			render(
+			const { user } = setup(
 				<EditShareChip
 					deleteShare={deleteShare}
 					share={share}
@@ -116,10 +134,8 @@ describe('Edit Share Chip', () => {
 				/>
 			);
 
-			expect(screen.getByText(user.full_name)).toBeVisible();
-			act(() => {
-				userEvent.click(screen.getByText(user.full_name));
-			});
+			expect(screen.getByText(userAccount.full_name)).toBeVisible();
+			await user.click(screen.getByText(userAccount.full_name));
 			expect(screen.queryByText('Viewer')).not.toBeInTheDocument();
 			expect(screen.queryByText('Editor')).not.toBeInTheDocument();
 			expect(screen.queryByText('Sharing allowed')).not.toBeInTheDocument();
@@ -127,17 +143,16 @@ describe('Edit Share Chip', () => {
 	});
 
 	describe('From a node with read and write permissions', () => {
-		const node = populateNode();
-		node.permissions.can_write_folder = true;
-		node.permissions.can_write_file = true;
-		node.permissions.can_share = false;
-		const user = populateUser();
-
 		test('render a chip of a read-only share', () => {
-			const share = populateShare(node, 'abc', user);
+			const node = populateNode();
+			node.permissions.can_write_folder = true;
+			node.permissions.can_write_file = true;
+			node.permissions.can_share = false;
+			const userAccount = populateUser();
+			const share = populateShare(node, 'abc', userAccount);
 			share.permission = SharePermission.ReadOnly;
 			const deleteShare = jest.fn();
-			render(
+			setup(
 				<EditShareChip
 					deleteShare={deleteShare}
 					share={share}
@@ -146,7 +161,7 @@ describe('Edit Share Chip', () => {
 				/>
 			);
 
-			expect(screen.getByText(user.full_name)).toBeVisible();
+			expect(screen.getByText(userAccount.full_name)).toBeVisible();
 			expect(screen.getByTestId('icon: EyeOutline')).toBeVisible();
 			expect(screen.queryByTestId('icon: Edit2Outline')).not.toBeInTheDocument();
 			expect(screen.queryByTestId('icon: Share')).not.toBeInTheDocument();
@@ -154,10 +169,15 @@ describe('Edit Share Chip', () => {
 		});
 
 		test('render a chip of a read-and-write share', () => {
-			const share = populateShare(node, 'abc', user);
+			const node = populateNode();
+			node.permissions.can_write_folder = true;
+			node.permissions.can_write_file = true;
+			node.permissions.can_share = false;
+			const userAccount = populateUser();
+			const share = populateShare(node, 'abc', userAccount);
 			share.permission = SharePermission.ReadAndWrite;
 			const deleteShare = jest.fn();
-			render(
+			setup(
 				<EditShareChip
 					deleteShare={deleteShare}
 					share={share}
@@ -166,7 +186,7 @@ describe('Edit Share Chip', () => {
 				/>
 			);
 
-			expect(screen.getByText(user.full_name)).toBeVisible();
+			expect(screen.getByText(userAccount.full_name)).toBeVisible();
 			expect(screen.queryByTestId('icon: EyeOutline')).not.toBeInTheDocument();
 			expect(screen.getByTestId('icon: Edit2Outline')).toBeVisible();
 			expect(screen.queryByTestId('icon: Share')).not.toBeInTheDocument();
@@ -174,10 +194,15 @@ describe('Edit Share Chip', () => {
 		});
 
 		test('render a chip of a read-and-share share', () => {
-			const share = populateShare(node, 'abc', user);
+			const node = populateNode();
+			node.permissions.can_write_folder = true;
+			node.permissions.can_write_file = true;
+			node.permissions.can_share = false;
+			const userAccount = populateUser();
+			const share = populateShare(node, 'abc', userAccount);
 			share.permission = SharePermission.ReadAndShare;
 			const deleteShare = jest.fn();
-			render(
+			setup(
 				<EditShareChip
 					deleteShare={deleteShare}
 					share={share}
@@ -186,7 +211,7 @@ describe('Edit Share Chip', () => {
 				/>
 			);
 
-			expect(screen.getByText(user.full_name)).toBeVisible();
+			expect(screen.getByText(userAccount.full_name)).toBeVisible();
 			expect(screen.getByTestId('icon: EyeOutline')).toBeVisible();
 			expect(screen.queryByTestId('icon: Edit2Outline')).not.toBeInTheDocument();
 			expect(screen.getByTestId('icon: Share')).toBeVisible();
@@ -194,10 +219,15 @@ describe('Edit Share Chip', () => {
 		});
 
 		test('render a chip of a read-write-and-share share', () => {
-			const share = populateShare(node, 'abc', user);
+			const node = populateNode();
+			node.permissions.can_write_folder = true;
+			node.permissions.can_write_file = true;
+			node.permissions.can_share = false;
+			const userAccount = populateUser();
+			const share = populateShare(node, 'abc', userAccount);
 			share.permission = SharePermission.ReadWriteAndShare;
 			const deleteShare = jest.fn();
-			render(
+			setup(
 				<EditShareChip
 					deleteShare={deleteShare}
 					share={share}
@@ -206,18 +236,23 @@ describe('Edit Share Chip', () => {
 				/>
 			);
 
-			expect(screen.getByText(user.full_name)).toBeVisible();
+			expect(screen.getByText(userAccount.full_name)).toBeVisible();
 			expect(screen.queryByTestId('icon: EyeOutline')).not.toBeInTheDocument();
 			expect(screen.getByTestId('icon: Edit2Outline')).toBeVisible();
 			expect(screen.getByTestId('icon: Share')).toBeVisible();
 			expect(screen.queryByTestId('icon: Close')).not.toBeInTheDocument();
 		});
 
-		test('click on chip does not open popover', () => {
-			const share = populateShare(node, 'abc', user);
+		test('click on chip does not open popover', async () => {
+			const node = populateNode();
+			node.permissions.can_write_folder = true;
+			node.permissions.can_write_file = true;
+			node.permissions.can_share = false;
+			const userAccount = populateUser();
+			const share = populateShare(node, 'abc', userAccount);
 			share.permission = SharePermission.ReadOnly;
 			const deleteShare = jest.fn();
-			render(
+			const { user } = setup(
 				<EditShareChip
 					deleteShare={deleteShare}
 					share={share}
@@ -226,10 +261,8 @@ describe('Edit Share Chip', () => {
 				/>
 			);
 
-			expect(screen.getByText(user.full_name)).toBeVisible();
-			act(() => {
-				userEvent.click(screen.getByText(user.full_name));
-			});
+			expect(screen.getByText(userAccount.full_name)).toBeVisible();
+			await user.click(screen.getByText(userAccount.full_name));
 			expect(screen.queryByText('Viewer')).not.toBeInTheDocument();
 			expect(screen.queryByText('Editor')).not.toBeInTheDocument();
 			expect(screen.queryByText('Sharing allowed')).not.toBeInTheDocument();
@@ -237,17 +270,16 @@ describe('Edit Share Chip', () => {
 	});
 
 	describe('From a node with read and share permissions', () => {
-		const node = populateNode();
-		node.permissions.can_write_folder = false;
-		node.permissions.can_write_file = false;
-		node.permissions.can_share = true;
-		const user = populateUser();
-
 		test('render a chip of a read-only share', () => {
-			const share = populateShare(node, 'abc', user);
+			const node = populateNode();
+			node.permissions.can_write_folder = false;
+			node.permissions.can_write_file = false;
+			node.permissions.can_share = true;
+			const userAccount = populateUser();
+			const share = populateShare(node, 'abc', userAccount);
 			share.permission = SharePermission.ReadOnly;
 			const deleteShare = jest.fn();
-			render(
+			setup(
 				<EditShareChip
 					deleteShare={deleteShare}
 					share={share}
@@ -256,7 +288,7 @@ describe('Edit Share Chip', () => {
 				/>
 			);
 
-			expect(screen.getByText(user.full_name)).toBeVisible();
+			expect(screen.getByText(userAccount.full_name)).toBeVisible();
 			expect(screen.getByTestId('icon: EyeOutline')).toBeVisible();
 			expect(screen.queryByTestId('icon: Edit2Outline')).not.toBeInTheDocument();
 			expect(screen.queryByTestId('icon: Share')).not.toBeInTheDocument();
@@ -264,10 +296,15 @@ describe('Edit Share Chip', () => {
 		});
 
 		test('render a chip of a read-and-write share', () => {
-			const share = populateShare(node, 'abc', user);
+			const node = populateNode();
+			node.permissions.can_write_folder = false;
+			node.permissions.can_write_file = false;
+			node.permissions.can_share = true;
+			const userAccount = populateUser();
+			const share = populateShare(node, 'abc', userAccount);
 			share.permission = SharePermission.ReadAndWrite;
 			const deleteShare = jest.fn();
-			render(
+			setup(
 				<EditShareChip
 					deleteShare={deleteShare}
 					share={share}
@@ -276,7 +313,7 @@ describe('Edit Share Chip', () => {
 				/>
 			);
 
-			expect(screen.getByText(user.full_name)).toBeVisible();
+			expect(screen.getByText(userAccount.full_name)).toBeVisible();
 			expect(screen.queryByTestId('icon: EyeOutline')).not.toBeInTheDocument();
 			expect(screen.getByTestId('icon: Edit2Outline')).toBeVisible();
 			expect(screen.queryByTestId('icon: Share')).not.toBeInTheDocument();
@@ -284,10 +321,15 @@ describe('Edit Share Chip', () => {
 		});
 
 		test('render a chip of a read-and-share share', () => {
-			const share = populateShare(node, 'abc', user);
+			const node = populateNode();
+			node.permissions.can_write_folder = false;
+			node.permissions.can_write_file = false;
+			node.permissions.can_share = true;
+			const userAccount = populateUser();
+			const share = populateShare(node, 'abc', userAccount);
 			share.permission = SharePermission.ReadAndShare;
 			const deleteShare = jest.fn();
-			render(
+			setup(
 				<EditShareChip
 					deleteShare={deleteShare}
 					share={share}
@@ -296,7 +338,7 @@ describe('Edit Share Chip', () => {
 				/>
 			);
 
-			expect(screen.getByText(user.full_name)).toBeVisible();
+			expect(screen.getByText(userAccount.full_name)).toBeVisible();
 			expect(screen.getByTestId('icon: EyeOutline')).toBeVisible();
 			expect(screen.queryByTestId('icon: Edit2Outline')).not.toBeInTheDocument();
 			expect(screen.getByTestId('icon: Share')).toBeVisible();
@@ -304,10 +346,15 @@ describe('Edit Share Chip', () => {
 		});
 
 		test('render a chip of a read-write-and-share share', () => {
-			const share = populateShare(node, 'abc', user);
+			const node = populateNode();
+			node.permissions.can_write_folder = false;
+			node.permissions.can_write_file = false;
+			node.permissions.can_share = true;
+			const userAccount = populateUser();
+			const share = populateShare(node, 'abc', userAccount);
 			share.permission = SharePermission.ReadWriteAndShare;
 			const deleteShare = jest.fn();
-			render(
+			setup(
 				<EditShareChip
 					deleteShare={deleteShare}
 					share={share}
@@ -316,7 +363,7 @@ describe('Edit Share Chip', () => {
 				/>
 			);
 
-			expect(screen.getByText(user.full_name)).toBeVisible();
+			expect(screen.getByText(userAccount.full_name)).toBeVisible();
 			expect(screen.queryByTestId('icon: EyeOutline')).not.toBeInTheDocument();
 			expect(screen.getByTestId('icon: Edit2Outline')).toBeVisible();
 			expect(screen.getByTestId('icon: Share')).toBeVisible();
@@ -324,7 +371,12 @@ describe('Edit Share Chip', () => {
 		});
 
 		test('click on close action open confirmation dialog and then delete share', async () => {
-			const share = populateShare(node, 'abc', user);
+			const node = populateNode();
+			node.permissions.can_write_folder = false;
+			node.permissions.can_write_file = false;
+			node.permissions.can_share = true;
+			const userAccount = populateUser();
+			const share = populateShare(node, 'abc', userAccount);
 			share.permission = SharePermission.ReadAndShare;
 			const mocks = [
 				mockDeleteShare(
@@ -333,7 +385,7 @@ describe('Edit Share Chip', () => {
 				)
 			];
 			const deleteShare = jest.fn(() => Promise.resolve({ data: { deleteShare: true } }));
-			render(
+			const { user } = setup(
 				<EditShareChip
 					deleteShare={deleteShare}
 					share={share}
@@ -345,22 +397,29 @@ describe('Edit Share Chip', () => {
 				}
 			);
 
-			expect(screen.getByText(user.full_name)).toBeVisible();
+			expect(screen.getByText(userAccount.full_name)).toBeVisible();
 			expect(screen.getByTestId('icon: Close')).toBeVisible();
-			act(() => {
-				userEvent.click(screen.getByTestId('icon: Close'));
-			});
+			await user.click(screen.getByTestId('icon: Close'));
 			await screen.findByRole('button', { name: /remove/i });
-			userEvent.click(screen.getByRole('button', { name: /remove/i }));
-			await waitForElementToBeRemoved(screen.queryByRole('button', { name: /remove/i }));
+			// run timers of modal
+			act(() => {
+				jest.advanceTimersToNextTimer();
+			});
+			await user.click(screen.getByRole('button', { name: /remove/i }));
+			expect(screen.queryByRole('button', { name: /remove/i })).not.toBeInTheDocument();
 			expect(deleteShare).toBeCalled();
 		});
 
-		test('click on chip open popover with Editor item disabled', () => {
-			const share = populateShare(node, 'abc', user);
+		test('click on chip open popover with Editor item disabled', async () => {
+			const node = populateNode();
+			node.permissions.can_write_folder = false;
+			node.permissions.can_write_file = false;
+			node.permissions.can_share = true;
+			const userAccount = populateUser();
+			const share = populateShare(node, 'abc', userAccount);
 			share.permission = SharePermission.ReadOnly;
 			const deleteShare = jest.fn();
-			render(
+			const { user } = setup(
 				<EditShareChip
 					deleteShare={deleteShare}
 					share={share}
@@ -369,33 +428,30 @@ describe('Edit Share Chip', () => {
 				/>
 			);
 
-			expect(screen.getByText(user.full_name)).toBeVisible();
-			act(() => {
-				userEvent.click(screen.getByTestId('icon: EyeOutline'));
-			});
+			expect(screen.getByText(userAccount.full_name)).toBeVisible();
+			await user.click(screen.getByTestId('icon: EyeOutline'));
 			expect(screen.getByText('Viewer')).toBeVisible();
 			expect(screen.getByText('Editor')).toBeVisible();
 			expect(screen.getByText('Sharing allowed')).toBeVisible();
 			expect(screen.getByRole('button', { name: /save/i })).toBeVisible();
 			expect(screen.getByRole('button', { name: /save/i })).toBeDisabled();
 
-			userEvent.click(screen.getByTestId('exclusive-selection-editor'));
+			await user.click(screen.getByTestId('exclusive-selection-editor'));
 			expect(screen.getByRole('button', { name: /save/i })).toBeDisabled();
 		});
 	});
 
 	describe('From a node with read, write and share permissions', () => {
-		const node = populateNode();
-		node.permissions.can_write_folder = true;
-		node.permissions.can_write_file = true;
-		node.permissions.can_share = true;
-		const user = populateUser();
-
 		test('render a chip of a read-only share', () => {
-			const share = populateShare(node, 'abc', user);
+			const node = populateNode();
+			node.permissions.can_write_folder = true;
+			node.permissions.can_write_file = true;
+			node.permissions.can_share = true;
+			const userAccount = populateUser();
+			const share = populateShare(node, 'abc', userAccount);
 			share.permission = SharePermission.ReadOnly;
 			const deleteShare = jest.fn();
-			render(
+			setup(
 				<EditShareChip
 					deleteShare={deleteShare}
 					share={share}
@@ -404,7 +460,7 @@ describe('Edit Share Chip', () => {
 				/>
 			);
 
-			expect(screen.getByText(user.full_name)).toBeVisible();
+			expect(screen.getByText(userAccount.full_name)).toBeVisible();
 			expect(screen.getByTestId('icon: EyeOutline')).toBeVisible();
 			expect(screen.queryByTestId('icon: Edit2Outline')).not.toBeInTheDocument();
 			expect(screen.queryByTestId('icon: Share')).not.toBeInTheDocument();
@@ -412,10 +468,15 @@ describe('Edit Share Chip', () => {
 		});
 
 		test('render a chip of a read-and-write share', () => {
-			const share = populateShare(node, 'abc', user);
+			const node = populateNode();
+			node.permissions.can_write_folder = true;
+			node.permissions.can_write_file = true;
+			node.permissions.can_share = true;
+			const userAccount = populateUser();
+			const share = populateShare(node, 'abc', userAccount);
 			share.permission = SharePermission.ReadAndWrite;
 			const deleteShare = jest.fn();
-			render(
+			setup(
 				<EditShareChip
 					deleteShare={deleteShare}
 					share={share}
@@ -424,7 +485,7 @@ describe('Edit Share Chip', () => {
 				/>
 			);
 
-			expect(screen.getByText(user.full_name)).toBeVisible();
+			expect(screen.getByText(userAccount.full_name)).toBeVisible();
 			expect(screen.queryByTestId('icon: EyeOutline')).not.toBeInTheDocument();
 			expect(screen.getByTestId('icon: Edit2Outline')).toBeVisible();
 			expect(screen.queryByTestId('icon: Share')).not.toBeInTheDocument();
@@ -432,10 +493,15 @@ describe('Edit Share Chip', () => {
 		});
 
 		test('render a chip of a read-and-share share', () => {
-			const share = populateShare(node, 'abc', user);
+			const node = populateNode();
+			node.permissions.can_write_folder = true;
+			node.permissions.can_write_file = true;
+			node.permissions.can_share = true;
+			const userAccount = populateUser();
+			const share = populateShare(node, 'abc', userAccount);
 			share.permission = SharePermission.ReadAndShare;
 			const deleteShare = jest.fn();
-			render(
+			setup(
 				<EditShareChip
 					deleteShare={deleteShare}
 					share={share}
@@ -444,7 +510,7 @@ describe('Edit Share Chip', () => {
 				/>
 			);
 
-			expect(screen.getByText(user.full_name)).toBeVisible();
+			expect(screen.getByText(userAccount.full_name)).toBeVisible();
 			expect(screen.getByTestId('icon: EyeOutline')).toBeVisible();
 			expect(screen.queryByTestId('icon: Edit2Outline')).not.toBeInTheDocument();
 			expect(screen.getByTestId('icon: Share')).toBeVisible();
@@ -452,10 +518,15 @@ describe('Edit Share Chip', () => {
 		});
 
 		test('render a chip of a read-write-and-share share', () => {
-			const share = populateShare(node, 'abc', user);
+			const node = populateNode();
+			node.permissions.can_write_folder = true;
+			node.permissions.can_write_file = true;
+			node.permissions.can_share = true;
+			const userAccount = populateUser();
+			const share = populateShare(node, 'abc', userAccount);
 			share.permission = SharePermission.ReadWriteAndShare;
 			const deleteShare = jest.fn();
-			render(
+			setup(
 				<EditShareChip
 					deleteShare={deleteShare}
 					share={share}
@@ -464,18 +535,23 @@ describe('Edit Share Chip', () => {
 				/>
 			);
 
-			expect(screen.getByText(user.full_name)).toBeVisible();
+			expect(screen.getByText(userAccount.full_name)).toBeVisible();
 			expect(screen.queryByTestId('icon: EyeOutline')).not.toBeInTheDocument();
 			expect(screen.getByTestId('icon: Edit2Outline')).toBeVisible();
 			expect(screen.getByTestId('icon: Share')).toBeVisible();
 			expect(screen.getByTestId('icon: Close')).toBeVisible();
 		});
 
-		test('click on chip open popover with all items enabled', () => {
-			const share = populateShare(node, 'abc', user);
+		test('click on chip open popover with all items enabled', async () => {
+			const node = populateNode();
+			node.permissions.can_write_folder = true;
+			node.permissions.can_write_file = true;
+			node.permissions.can_share = true;
+			const userAccount = populateUser();
+			const share = populateShare(node, 'abc', userAccount);
 			share.permission = SharePermission.ReadOnly;
 			const deleteShare = jest.fn();
-			render(
+			const { user } = setup(
 				<EditShareChip
 					deleteShare={deleteShare}
 					share={share}
@@ -484,10 +560,8 @@ describe('Edit Share Chip', () => {
 				/>
 			);
 
-			expect(screen.getByText(user.full_name)).toBeVisible();
-			act(() => {
-				userEvent.click(screen.getByTestId('icon: EyeOutline'));
-			});
+			expect(screen.getByText(userAccount.full_name)).toBeVisible();
+			await user.click(screen.getByTestId('icon: EyeOutline'));
 			expect(screen.getByText('Viewer')).toBeVisible();
 			expect(screen.getByText('Editor')).toBeVisible();
 			expect(screen.getByText('Sharing allowed')).toBeVisible();
@@ -501,8 +575,8 @@ describe('Edit Share Chip', () => {
 
 	test('render a chip of the logged user share. Click on close action open confirmation modal and then delete share', async () => {
 		const node = populateNode();
-		const user = populateUser(mockedUserLogged.id, mockedUserLogged.name);
-		const share = populateShare(node, 'abc', user);
+		const userAccount = populateUser(mockedUserLogged.id, mockedUserLogged.name);
+		const share = populateShare(node, 'abc', userAccount);
 		const mocks = [
 			mockDeleteShare(
 				{ node_id: node.id, share_target_id: (share.share_target as SharedTarget).id },
@@ -510,7 +584,7 @@ describe('Edit Share Chip', () => {
 			)
 		];
 		const deleteShare = jest.fn(() => Promise.resolve({ data: { deleteShare: true } }));
-		render(
+		const { user } = setup(
 			<EditShareChip
 				deleteShare={deleteShare}
 				share={share}
@@ -522,13 +596,15 @@ describe('Edit Share Chip', () => {
 			}
 		);
 
-		expect(screen.queryByText(user.full_name)).not.toBeInTheDocument();
+		expect(screen.queryByText(userAccount.full_name)).not.toBeInTheDocument();
 		expect(screen.getByText(/you/i)).toBeVisible();
 		expect(screen.getByTestId('icon: Close')).toBeVisible();
-		act(() => {
-			userEvent.click(screen.getByTestId('icon: Close'));
-		});
+		await user.click(screen.getByTestId('icon: Close'));
 		await screen.findByRole('button', { name: /remove/i });
+		// run timers of modal
+		act(() => {
+			jest.advanceTimersToNextTimer();
+		});
 		expect(
 			screen.getByText(/Are you sure to remove yourself from this collaboration/i)
 		).toBeInTheDocument();
@@ -536,20 +612,20 @@ describe('Edit Share Chip', () => {
 			screen.getByText(/All the access permission previously given to you will be lost/i)
 		).toBeInTheDocument();
 		const regexp = RegExp(
-			`Are you sure to remove all the access permission previously given to ${user.full_name}?`,
+			`Are you sure to remove all the access permission previously given to ${userAccount.full_name}?`,
 			'i'
 		);
 		expect(screen.queryByText(regexp)).not.toBeInTheDocument();
-		userEvent.click(screen.getByRole('button', { name: /remove/i }));
-		await waitForElementToBeRemoved(screen.queryByRole('button', { name: /remove/i }));
+		await user.click(screen.getByRole('button', { name: /remove/i }));
+		expect(screen.queryByRole('button', { name: /remove/i })).not.toBeInTheDocument();
 		expect(deleteShare).toBeCalled();
 	});
 
 	test('click on close action open confirmation dialog and then delete share', async () => {
 		const node = populateNode();
 		node.permissions.can_share = true;
-		const user = populateUser();
-		const share = populateShare(node, 'abc', user);
+		const userAccount = populateUser();
+		const share = populateShare(node, 'abc', userAccount);
 		share.permission = SharePermission.ReadAndShare;
 		const mocks = [
 			mockDeleteShare(
@@ -558,7 +634,7 @@ describe('Edit Share Chip', () => {
 			)
 		];
 		const deleteShare = jest.fn(() => Promise.resolve({ data: { deleteShare: true } }));
-		const { getByTextWithMarkup } = render(
+		const { getByTextWithMarkup, user } = setup(
 			<EditShareChip
 				deleteShare={deleteShare}
 				share={share}
@@ -570,12 +646,14 @@ describe('Edit Share Chip', () => {
 			}
 		);
 
-		expect(screen.getByText(user.full_name)).toBeVisible();
+		expect(screen.getByText(userAccount.full_name)).toBeVisible();
 		expect(screen.getByTestId('icon: Close')).toBeVisible();
-		act(() => {
-			userEvent.click(screen.getByTestId('icon: Close'));
-		});
+		await user.click(screen.getByTestId('icon: Close'));
 		await screen.findByRole('button', { name: /remove/i });
+		// run timers of modal
+		act(() => {
+			jest.advanceTimersToNextTimer();
+		});
 		expect(
 			screen.queryByText(/Are you sure to remove yourself from this collaboration/i)
 		).not.toBeInTheDocument();
@@ -583,12 +661,12 @@ describe('Edit Share Chip', () => {
 			screen.queryByText(/All the access permission previously given to you will be lost/i)
 		).not.toBeInTheDocument();
 		const regexp = RegExp(
-			`Are you sure to remove all the access permission previously given to\\s*${user.full_name}\\s*?`,
+			`Are you sure to remove all the access permission previously given to\\s*${userAccount.full_name}\\s*?`,
 			'i'
 		);
 		expect(getByTextWithMarkup(regexp)).toBeInTheDocument();
-		userEvent.click(screen.getByRole('button', { name: /remove/i }));
-		await waitForElementToBeRemoved(screen.queryByRole('button', { name: /remove/i }));
+		await user.click(screen.getByRole('button', { name: /remove/i }));
+		expect(screen.queryByRole('button', { name: /remove/i })).not.toBeInTheDocument();
 		expect(deleteShare).toBeCalled();
 	});
 
@@ -598,15 +676,15 @@ describe('Edit Share Chip', () => {
 			node.permissions.can_write_file = true;
 			node.permissions.can_write_folder = true;
 			node.permissions.can_share = true;
-			const user = populateUser();
-			const share = populateShare(node, 'abc', user);
+			const userAccount = populateUser();
+			const share = populateShare(node, 'abc', userAccount);
 			share.permission = SharePermission.ReadOnly;
 			const updateShareMutationFn = jest.fn();
 
 			const mocks = [
 				mockUpdateShare(
 					{
-						share_target_id: user.id,
+						share_target_id: userAccount.id,
 						node_id: node.id,
 						permission: SharePermission.ReadAndWrite
 					},
@@ -615,7 +693,7 @@ describe('Edit Share Chip', () => {
 				)
 			];
 			const deleteShare = jest.fn();
-			render(
+			const { user } = setup(
 				<EditShareChip
 					deleteShare={deleteShare}
 					share={share}
@@ -627,10 +705,8 @@ describe('Edit Share Chip', () => {
 				}
 			);
 
-			expect(screen.getByText(user.full_name)).toBeVisible();
-			act(() => {
-				userEvent.click(screen.getByTestId('icon: EyeOutline'));
-			});
+			expect(screen.getByText(userAccount.full_name)).toBeVisible();
+			await user.click(screen.getByTestId('icon: EyeOutline'));
 			await screen.findByRole('button', { name: /save/i });
 			expect(screen.getByRole('button', { name: /save/i })).toBeVisible();
 			expect(screen.getByRole('button', { name: /save/i })).toHaveAttribute('disabled', '');
@@ -638,7 +714,7 @@ describe('Edit Share Chip', () => {
 			expect(screen.getByTestId('exclusive-selection-viewer')).not.toHaveAttribute('disabled');
 			expect(screen.getByText(/editor/i)).toBeVisible();
 			expect(screen.getByTestId('exclusive-selection-editor')).not.toHaveAttribute('disabled');
-			userEvent.click(screen.getByText(/editor/i));
+			await user.click(screen.getByText(/editor/i));
 			await waitFor(() =>
 				expect(screen.getByRole('button', { name: /save/i })).not.toHaveAttribute('disabled')
 			);
@@ -650,15 +726,15 @@ describe('Edit Share Chip', () => {
 			node.permissions.can_write_file = false;
 			node.permissions.can_write_folder = false;
 			node.permissions.can_share = true;
-			const user = populateUser();
-			const share = populateShare(node, 'abc', user);
+			const userAccount = populateUser();
+			const share = populateShare(node, 'abc', userAccount);
 			share.permission = SharePermission.ReadOnly;
 			const updateShareMutationFn = jest.fn();
 
 			const mocks = [
 				mockUpdateShare(
 					{
-						share_target_id: user.id,
+						share_target_id: userAccount.id,
 						node_id: node.id,
 						permission: SharePermission.ReadAndWrite
 					},
@@ -667,7 +743,7 @@ describe('Edit Share Chip', () => {
 				)
 			];
 			const deleteShare = jest.fn();
-			render(
+			const { user } = setup(
 				<EditShareChip
 					deleteShare={deleteShare}
 					share={share}
@@ -679,16 +755,14 @@ describe('Edit Share Chip', () => {
 				}
 			);
 
-			expect(screen.getByText(user.full_name)).toBeVisible();
-			act(() => {
-				userEvent.click(screen.getByTestId('icon: EyeOutline'));
-			});
+			expect(screen.getByText(userAccount.full_name)).toBeVisible();
+			await user.click(screen.getByTestId('icon: EyeOutline'));
 			await screen.findByRole('button', { name: /save/i });
 			expect(screen.getByRole('button', { name: /save/i })).toBeVisible();
 			expect(screen.getByRole('button', { name: /save/i })).toHaveAttribute('disabled', '');
 			expect(screen.getByText(/viewer/i)).toBeVisible();
 			expect(screen.getByText(/editor/i)).toBeVisible();
-			userEvent.click(screen.getByText(/editor/i));
+			await user.click(screen.getByText(/editor/i));
 			expect(screen.getByRole('button', { name: /save/i })).toHaveAttribute('disabled', '');
 			expect(updateShareMutationFn).not.toHaveBeenCalled();
 		});
@@ -698,15 +772,15 @@ describe('Edit Share Chip', () => {
 			node.permissions.can_write_file = true;
 			node.permissions.can_write_folder = true;
 			node.permissions.can_share = true;
-			const user = populateUser();
-			const share = populateShare(node, 'abc', user);
+			const userAccount = populateUser();
+			const share = populateShare(node, 'abc', userAccount);
 			share.permission = SharePermission.ReadOnly;
 			const updateShareMutationFn = jest.fn();
 
 			const mocks = [
 				mockUpdateShare(
 					{
-						share_target_id: user.id,
+						share_target_id: userAccount.id,
 						node_id: node.id,
 						permission: SharePermission.ReadAndWrite
 					},
@@ -715,7 +789,7 @@ describe('Edit Share Chip', () => {
 				)
 			];
 			const deleteShare = jest.fn();
-			render(
+			const { user } = setup(
 				<EditShareChip
 					deleteShare={deleteShare}
 					share={share}
@@ -727,10 +801,8 @@ describe('Edit Share Chip', () => {
 				}
 			);
 
-			expect(screen.getByText(user.full_name)).toBeVisible();
-			act(() => {
-				userEvent.click(screen.getByTestId('icon: EyeOutline'));
-			});
+			expect(screen.getByText(userAccount.full_name)).toBeVisible();
+			await user.click(screen.getByTestId('icon: EyeOutline'));
 			await screen.findByRole('button', { name: /save/i });
 			expect(screen.getByRole('button', { name: /save/i })).toBeVisible();
 			expect(screen.getByRole('button', { name: /save/i })).toHaveAttribute('disabled', '');
@@ -738,12 +810,7 @@ describe('Edit Share Chip', () => {
 			expect(screen.getByText(/sharing allowed/i)).toBeVisible();
 			expect(screen.getByTestId('icon: Square')).toBeVisible();
 			expect(screen.queryByTestId('icon: CheckmarkSquare')).not.toBeInTheDocument();
-			// FIXME: I can't understand why this click cause a
-			//   Warning: An update to EditShareChip inside a test was not wrapped in act(...).
-			//   even if there are the await statements after the click
-			act(() => {
-				userEvent.click(screen.getByTestId('icon: Square'));
-			});
+			await user.click(screen.getByTestId('icon: Square'));
 			await waitFor(() =>
 				expect(screen.getByRole('button', { name: /save/i })).not.toHaveAttribute('disabled')
 			);
@@ -759,15 +826,15 @@ describe('Edit Share Chip', () => {
 			node.permissions.can_write_file = true;
 			node.permissions.can_write_folder = true;
 			node.permissions.can_share = true;
-			const user = populateUser();
-			const share = populateShare(node, 'abc', user);
+			const userAccount = populateUser();
+			const share = populateShare(node, 'abc', userAccount);
 			share.permission = SharePermission.ReadOnly;
 			const updateShareMutationFn = jest.fn();
 
 			const mocks = [
 				mockUpdateShare(
 					{
-						share_target_id: user.id,
+						share_target_id: userAccount.id,
 						node_id: node.id,
 						permission: SharePermission.ReadWriteAndShare
 					},
@@ -776,7 +843,7 @@ describe('Edit Share Chip', () => {
 				)
 			];
 			const deleteShare = jest.fn();
-			render(
+			const { user } = setup(
 				<EditShareChip
 					deleteShare={deleteShare}
 					share={share}
@@ -788,22 +855,18 @@ describe('Edit Share Chip', () => {
 				}
 			);
 
-			expect(screen.getByText(user.full_name)).toBeVisible();
-			act(() => {
-				userEvent.click(screen.getByTestId('icon: EyeOutline'));
-			});
+			expect(screen.getByText(userAccount.full_name)).toBeVisible();
+			await user.click(screen.getByTestId('icon: EyeOutline'));
 			await screen.findByRole('button', { name: /save/i });
 			expect(screen.getByTestId('icon: Square')).toBeVisible();
-			act(() => {
-				userEvent.click(screen.getByTestId('icon: Square'));
-			});
+			await user.click(screen.getByTestId('icon: Square'));
 			await waitFor(() =>
 				expect(screen.getByRole('button', { name: /save/i })).not.toHaveAttribute('disabled')
 			);
 			await screen.findByTestId('icon: CheckmarkSquare');
 
-			userEvent.click(screen.getByText(/editor/i));
-			userEvent.click(screen.getByRole('button', { name: /save/i }));
+			await user.click(screen.getByText(/editor/i));
+			await user.click(screen.getByRole('button', { name: /save/i }));
 			await waitFor(() => expect(updateShareMutationFn).toHaveBeenCalled());
 			expect(screen.queryByRole('button', { name: /save/i })).not.toBeInTheDocument();
 			expect(screen.queryByText(/viewer/i)).not.toBeInTheDocument();

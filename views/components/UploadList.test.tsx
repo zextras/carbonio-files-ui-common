@@ -15,7 +15,7 @@ import {
 	waitForElementToBeRemoved,
 	within
 } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { EventEmitter } from 'events';
 import filter from 'lodash/filter';
 import find from 'lodash/find';
 import forEach from 'lodash/forEach';
@@ -42,7 +42,7 @@ import {
 	Maybe
 } from '../../types/graphql/types';
 import { getChildrenVariables, mockGetBaseNode, mockGetChildren } from '../../utils/mockUtils';
-import { render } from '../../utils/testUtils';
+import { delayUntil, setup } from '../../utils/testUtils';
 import { UploadList } from './UploadList';
 
 describe('Upload list', () => {
@@ -52,7 +52,6 @@ describe('Upload list', () => {
 			const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
 			const files: File[] = [];
 			forEach(uploadedFiles, (file) => {
-				// eslint-disable-next-line no-param-reassign
 				file.parent = localRoot;
 				files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 			});
@@ -86,7 +85,7 @@ describe('Upload list', () => {
 
 			const mocks = [mockGetBaseNode({ node_id: localRoot.id }, localRoot)];
 
-			render(<UploadList />, { mocks });
+			setup(<UploadList />, { mocks });
 
 			await screen.findByText(/nothing here/i);
 
@@ -104,23 +103,25 @@ describe('Upload list', () => {
 			});
 
 			await screen.findByText(uploadedFiles[0].name);
-			const snackbar = await screen.findByText(/upload occurred in Files' home/i);
-			await waitForElementToBeRemoved(snackbar);
+			await screen.findByText(/upload occurred in Files' home/i);
 
 			expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
 				uploadedFiles.length
 			);
 			expect(screen.queryByText(/Drop here your attachments/m)).not.toBeInTheDocument();
 
-			await waitFor(() => {
-				const localRootCachedData = global.apolloClient.readQuery<
-					GetChildrenQuery,
-					GetChildrenQueryVariables
-				>(getChildrenMockedQuery.request);
-				return expect(
-					(localRootCachedData?.getNode as Maybe<Folder> | undefined)?.children.nodes || []
-				).toHaveLength(uploadedFiles.length);
-			});
+			await screen.findAllByTestId('icon: CheckmarkCircle2');
+
+			expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(uploadedFiles.length);
+
+			const localRootCachedData = global.apolloClient.readQuery<
+				GetChildrenQuery,
+				GetChildrenQueryVariables
+			>(getChildrenMockedQuery.request);
+
+			expect(
+				(localRootCachedData?.getNode as Maybe<Folder> | undefined)?.children.nodes || []
+			).toHaveLength(uploadedFiles.length);
 		});
 
 		test('Drag of a node is not permitted and does nothing', async () => {
@@ -128,7 +129,6 @@ describe('Upload list', () => {
 			const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
 			const files: File[] = [];
 			forEach(uploadedFiles, (file) => {
-				// eslint-disable-next-line no-param-reassign
 				file.parent = localRoot;
 				files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 			});
@@ -168,23 +168,11 @@ describe('Upload list', () => {
 
 			const mocks = [mockGetBaseNode({ node_id: localRoot.id }, localRoot)];
 
-			render(<UploadList />, { mocks });
+			setup(<UploadList />, { mocks });
 
 			const itemToDrag = await screen.findByText(nodesToDrag[0].name);
-			await waitFor(
-				() =>
-					new Promise((resolve) => {
-						setTimeout(resolve, 1);
-					})
-			);
 			fireEvent.dragStart(itemToDrag, { dataTransfer: dataTransfer() });
 			fireEvent.dragEnter(itemToDrag, { dataTransfer: dataTransfer() });
-			await waitFor(
-				() =>
-					new Promise((resolve) => {
-						setTimeout(resolve, 100);
-					})
-			);
 			// drag image item is not shown
 			const draggedNodeItem = screen.getByText(nodesToDrag[0].name);
 			expect(draggedNodeItem).toBeInTheDocument();
@@ -203,7 +191,8 @@ describe('Upload list', () => {
 			uploadedFiles[1].parent = localRoot;
 			files.push(new File(['(⌐□_□)'], uploadedFiles[1].name, { type: uploadedFiles[1].mime_type }));
 
-			let reqIndex = 0;
+			// uploaded file 0 should never be uploaded since it's a folder
+			let reqIndex = 1;
 
 			// write local root data in cache as if it was already loaded
 			const getChildrenMockedQuery = mockGetChildren(getChildrenVariables(localRoot.id), localRoot);
@@ -233,7 +222,7 @@ describe('Upload list', () => {
 
 			const mocks = [mockGetBaseNode({ node_id: localRoot.id }, localRoot)];
 
-			render(<UploadList />, { mocks });
+			const { user } = setup(<UploadList />, { mocks });
 
 			await screen.findByText(/nothing here/i);
 
@@ -252,19 +241,30 @@ describe('Upload list', () => {
 
 			// snackbar with action to open additional info modal is shown
 			await screen.findByText(uploadedFiles[0].name);
-			const snackbar = await screen.findByText(/some items have not been uploaded/i);
+			await screen.findByText(/some items have not been uploaded/i);
 			expect(screen.getByRole('button', { name: /more info/i })).toBeInTheDocument();
-			userEvent.click(screen.getByRole('button', { name: /more info/i }));
+			await user.click(screen.getByRole('button', { name: /more info/i }));
 			await screen.findByText(/additional info/i);
-			await waitForElementToBeRemoved(snackbar);
 
 			expect(screen.getByText(/additional info/i)).toBeInTheDocument();
 			expect(
 				screen.getByText(/Folders cannot be uploaded. Instead, if you are trying to upload a file/i)
 			).toBeInTheDocument();
 			expect(screen.getByTestId('icon: Close')).toBeInTheDocument();
-			userEvent.click(screen.getByTestId('icon: Close'));
+			await user.click(screen.getByTestId('icon: Close'));
 			expect(screen.queryByText(/additional info/i)).not.toBeInTheDocument();
+			// advance timers to close snackbar, make upload of valid item occur and show upload success
+			jest.advanceTimersToNextTimer();
+			await screen.findByText(/upload occurred in files' home/i);
+			expect(screen.queryByText(/some items have not been uploaded/i)).not.toBeInTheDocument();
+			// advance timers again to close also success snackbar
+			// FIXME: investigate on why there are 2 snackbars to close
+			act(() => {
+				jest.advanceTimersToNextTimer(2);
+			});
+			await waitFor(() =>
+				expect(screen.queryByText(/upload occurred in files' home/i)).not.toBeInTheDocument()
+			);
 
 			expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
 				uploadedFiles.length
@@ -288,26 +288,25 @@ describe('Upload list', () => {
 				'disabled',
 				''
 			);
-			act(() => {
-				userEvent.click(within(folderItem).getByTestId('icon: PlayCircleOutline'));
-			});
-			const snackbar2 = await screen.findByText(/folders cannot be uploaded/i);
+			await user.click(within(folderItem).getByTestId('icon: PlayCircleOutline'));
+			await screen.findByText(/folders cannot be uploaded/i);
 			expect(screen.getByRole('button', { name: /more info/i })).toBeInTheDocument();
-			await waitForElementToBeRemoved(snackbar2);
 			expect(screen.getByText(uploadedFiles[1].name)).toBeVisible();
 			expect(screen.getByTestId('icon: CheckmarkCircle2')).toBeVisible();
 		});
 
-		test.skip('upload more then 3 files in the upload list queues excess elements', async () => {
+		test('upload more then 3 files in the upload list queues excess elements', async () => {
 			const localRoot = populateFolder(0, ROOTS.LOCAL_ROOT);
 			const uploadedFiles = populateNodes(4, 'File') as FilesFile[];
 			const files: File[] = [];
 			forEach(uploadedFiles, (file) => {
-				// eslint-disable-next-line no-param-reassign
 				file.parent = localRoot;
 				const f = new File(['😂😂😂😂'], file.name, { type: file.mime_type });
 				files.push(f);
 			});
+
+			const emitter = new EventEmitter();
+
 			let reqIndex = 0;
 
 			// write local root data in cache as if it was already loaded
@@ -331,13 +330,14 @@ describe('Upload list', () => {
 				}),
 				rest.post<UploadRequestBody, UploadRequestParams, UploadResponse>(
 					`${REST_ENDPOINT}${UPLOAD_PATH}`,
-					(req, res, ctx) =>
-						res(
-							ctx.delay(1000),
+					async (req, res, ctx) => {
+						await delayUntil(emitter, 'resolve');
+						return res(
 							ctx.json({
 								nodeId: faker.datatype.uuid()
 							})
-						)
+						);
+					}
 				)
 			);
 
@@ -348,7 +348,7 @@ describe('Upload list', () => {
 
 			const mocks = [mockGetBaseNode({ node_id: localRoot.id }, localRoot)];
 
-			render(<UploadList />, { mocks });
+			setup(<UploadList />, { mocks });
 
 			await screen.findByText(/nothing here/i);
 
@@ -377,16 +377,12 @@ describe('Upload list', () => {
 			).toHaveLength(3);
 
 			const queuedElement = find(uploadStatus, ['status', UploadStatus.QUEUED]);
-			let queuedItem: HTMLElement;
-			let queuedIconLoader: HTMLElement;
-			if (queuedElement) {
-				queuedItem = await screen.findByTestId(`node-item-${queuedElement.id}`);
-				expect(within(queuedItem).getByText(/queued/i)).toBeInTheDocument();
-				queuedIconLoader = within(queuedItem).getByTestId('icon: AnimatedLoader');
-				expect(queuedIconLoader).toBeInTheDocument();
-			} else {
-				fail();
-			}
+			expect(queuedElement).toBeDefined();
+			expect(queuedElement).not.toBeNull();
+			const queuedItem = await screen.findByTestId(`node-item-${(queuedElement as UploadType).id}`);
+			expect(within(queuedItem).getByText(/queued/i)).toBeInTheDocument();
+			const queuedIconLoader = within(queuedItem).getByTestId('icon: AnimatedLoader');
+			expect(queuedIconLoader).toBeInTheDocument();
 
 			const loadingItems = await screen.findAllByText('0%');
 			expect(loadingItems).toHaveLength(3);
@@ -396,21 +392,23 @@ describe('Upload list', () => {
 			);
 			expect(screen.queryByText(/Drop here your attachments/m)).not.toBeInTheDocument();
 
-			act(() => {
-				jest.runOnlyPendingTimers();
-			});
-			await waitForElementToBeRemoved(queuedIconLoader, { timeout: 5000 });
-			expect(within(queuedItem).getByTestId('icon: CheckmarkCircle2')).toBeInTheDocument();
+			emitter.emit('resolve');
+			await screen.findAllByText('100%');
+			expect(screen.queryByText(/queued/i)).not.toBeInTheDocument();
+			expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(3);
+			expect(screen.getByTestId('icon: AnimatedLoader')).toBeVisible();
+			emitter.emit('resolve');
+			await waitForElementToBeRemoved(screen.queryByTestId('icon: AnimatedLoader'));
+			expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(4);
+			expect(screen.queryByTestId('icon: AnimatedLoader')).not.toBeInTheDocument();
 
-			await waitFor(() => {
-				const localRootCachedData = global.apolloClient.readQuery<
-					GetChildrenQuery,
-					GetChildrenQueryVariables
-				>(getChildrenMockedQuery.request);
-				return expect(
-					(localRootCachedData?.getNode as Maybe<Folder> | undefined)?.children.nodes || []
-				).toHaveLength(uploadedFiles.length);
-			});
+			const localRootCachedData = global.apolloClient.readQuery<
+				GetChildrenQuery,
+				GetChildrenQueryVariables
+			>(getChildrenMockedQuery.request);
+			expect(
+				(localRootCachedData?.getNode as Maybe<Folder> | undefined)?.children.nodes || []
+			).toHaveLength(uploadedFiles.length);
 		});
 
 		test('when an uploading item fails, the next in the queue is uploaded', async () => {
@@ -422,7 +420,11 @@ describe('Upload list', () => {
 				const f = new File(['😂😂😂😂'], file.name, { type: file.mime_type });
 				files.push(f);
 			});
-			let reqIndex = 0;
+
+			const emitter = new EventEmitter();
+
+			// first item fails
+			let reqIndex = 1;
 
 			server.use(
 				graphql.query<GetChildQuery, GetChildQueryVariables>('getChild', (req, res, ctx) => {
@@ -436,13 +438,15 @@ describe('Upload list', () => {
 				}),
 				rest.post<UploadRequestBody, UploadRequestParams, UploadResponse>(
 					`${REST_ENDPOINT}${UPLOAD_PATH}`,
-					(req, res, ctx) => {
+					async (req, res, ctx) => {
 						const fileName =
 							req.headers.get('filename') && window.atob(req.headers.get('filename') as string);
 						if (fileName === uploadedFiles[0].name) {
-							return res(ctx.delay(1000), ctx.status(500));
+							await delayUntil(emitter, 'done-fail');
+							return res(ctx.status(500));
 						}
-						return res(ctx.delay(1000), ctx.json({ nodeId: faker.datatype.uuid() }));
+						await delayUntil(emitter, 'done-success');
+						return res(ctx.json({ nodeId: faker.datatype.uuid() }));
 					}
 				)
 			);
@@ -454,7 +458,7 @@ describe('Upload list', () => {
 
 			const mocks = [mockGetBaseNode({ node_id: localRoot.id }, localRoot)];
 
-			render(<UploadList />, { mocks });
+			setup(<UploadList />, { mocks });
 
 			await screen.findByText(/nothing here/i);
 
@@ -471,16 +475,20 @@ describe('Upload list', () => {
 				dataTransfer: dataTransferObj
 			});
 
-			const snackbar = await screen.findByText(/Upload occurred in Files' Home/i);
+			await screen.findByText(/Upload occurred in Files' Home/i);
 			await screen.findAllByTestId('node-item-', { exact: false });
-			await waitForElementToBeRemoved(snackbar);
+
 			expect(screen.getAllByTestId('node-item-', { exact: false })).toHaveLength(
 				uploadedFiles.length
 			);
 			expect(screen.getAllByTestId('icon: AnimatedLoader')).toHaveLength(uploadedFiles.length);
 			expect(screen.getByText(/queued/i)).toBeVisible();
+			emitter.emit('done-fail');
 			// wait for the first request to fail
 			await screen.findByTestId('icon: AlertCircle');
+			// last item is removed from the queue and starts the upload
+			expect(screen.queryByText(/queued/i)).not.toBeInTheDocument();
+			emitter.emit('done-success');
 			// then wait for all other files to be uploaded
 			await waitFor(() => expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(3));
 			expect(screen.getByTestId('icon: AlertCircle')).toBeVisible();
@@ -489,8 +497,7 @@ describe('Upload list', () => {
 			expect(screen.queryByTestId('icon: AnimatedLoader')).not.toBeInTheDocument();
 		});
 
-		// FIXME: this test run by itself but fails when run with all other tests
-		test.skip('when an uploading item is aborted, the next in the queue is uploaded', async () => {
+		test('when an uploading item is aborted, the next in the queue is uploaded', async () => {
 			const localRoot = populateLocalRoot();
 			const uploadedFiles = populateNodes(4, 'File') as FilesFile[];
 			const files: File[] = [];
@@ -499,7 +506,11 @@ describe('Upload list', () => {
 				const f = new File(['😂😂😂😂'], file.name, { type: file.mime_type });
 				files.push(f);
 			});
-			let reqIndex = 0;
+
+			const emitter = new EventEmitter();
+
+			// first item is aborted
+			let reqIndex = 1;
 
 			server.use(
 				graphql.query<GetChildQuery, GetChildQueryVariables>('getChild', (req, res, ctx) => {
@@ -513,13 +524,15 @@ describe('Upload list', () => {
 				}),
 				rest.post<UploadRequestBody, UploadRequestParams, UploadResponse>(
 					`${REST_ENDPOINT}${UPLOAD_PATH}`,
-					(req, res, ctx) => {
+					async (req, res, ctx) => {
 						const fileName =
 							req.headers.get('filename') && window.atob(req.headers.get('filename') as string);
 						if (fileName === uploadedFiles[0].name) {
-							return res(ctx.delay(1000), ctx.status(0));
+							await delayUntil(emitter, 'abort');
+							return res(ctx.status(0));
 						}
-						return res(ctx.delay(1000), ctx.json({ nodeId: faker.datatype.uuid() }));
+						await delayUntil(emitter, 'done');
+						return res(ctx.json({ nodeId: faker.datatype.uuid() }));
 					}
 				)
 			);
@@ -531,7 +544,7 @@ describe('Upload list', () => {
 
 			const mocks = [mockGetBaseNode({ node_id: localRoot.id }, localRoot)];
 
-			render(<UploadList />, { mocks });
+			const { user } = setup(<UploadList />, { mocks });
 
 			await screen.findByText(/nothing here/i);
 
@@ -548,9 +561,16 @@ describe('Upload list', () => {
 				dataTransfer: dataTransferObj
 			});
 
-			const snackbar = await screen.findByText(/Upload occurred in Files' Home/i);
+			await screen.findByText(/Upload occurred in Files' Home/i);
+			// close snackbar
+			act(() => {
+				// run timers of snackbar
+				jest.runOnlyPendingTimers();
+			});
+			await waitFor(() =>
+				expect(screen.queryByText(/Upload occurred in Files' Home/i)).not.toBeInTheDocument()
+			);
 			await screen.findAllByTestId('node-item-', { exact: false });
-			await waitForElementToBeRemoved(snackbar);
 			expect(screen.getAllByTestId('node-item-', { exact: false })).toHaveLength(
 				uploadedFiles.length
 			);
@@ -559,10 +579,15 @@ describe('Upload list', () => {
 			const firstFileItem = screen.getAllByTestId('node-item-', { exact: false })[0];
 			expect(screen.getByText(uploadedFiles[0].name)).toBeVisible();
 			const cancelAction = within(firstFileItem).getByTestId('icon: CloseCircleOutline');
-			userEvent.click(cancelAction);
-			await screen.findByText(/cancel/i);
+			await user.click(cancelAction);
+			// first upload is aborted, element is removed from the list
+			expect(firstFileItem).not.toBeInTheDocument();
+			// last item upload is started, element is removed from the queue
+			expect(screen.queryByText(/queued/i)).not.toBeInTheDocument();
 			// then wait for all other files to be uploaded
-			await waitFor(() => expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(3));
+			emitter.emit('done');
+			await waitForElementToBeRemoved(screen.queryAllByTestId('icon: AnimatedLoader'));
+			expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(3);
 			expect(screen.getAllByTestId('node-item-', { exact: false })).toHaveLength(
 				uploadedFiles.length - 1
 			);
@@ -572,8 +597,7 @@ describe('Upload list', () => {
 			expect(screen.queryByTestId('icon: AnimatedLoader')).not.toBeInTheDocument();
 		});
 
-		// FIXME: this test run by itself but fails when run with all other tests
-		test.skip('the queue use FIFO strategy', async () => {
+		test('the queue use FIFO strategy', async () => {
 			const localRoot = populateLocalRoot();
 			const uploadedFiles = populateNodes(UPLOAD_QUEUE_LIMIT * 3, 'File') as FilesFile[];
 			const uploadedFilesMap = keyBy(uploadedFiles, 'id');
@@ -583,6 +607,8 @@ describe('Upload list', () => {
 				const f = new File(['😂😂😂😂'], file.name, { type: file.mime_type });
 				files.push(f);
 			});
+
+			const emitter = new EventEmitter();
 
 			server.use(
 				graphql.query<GetChildQuery, GetChildQueryVariables>('getChild', (req, res, ctx) => {
@@ -595,13 +621,14 @@ describe('Upload list', () => {
 				}),
 				rest.post<UploadRequestBody, UploadRequestParams, UploadResponse>(
 					`${REST_ENDPOINT}${UPLOAD_PATH}`,
-					(req, res, ctx) => {
+					async (req, res, ctx) => {
 						const fileName =
 							req.headers.get('filename') && window.atob(req.headers.get('filename') as string);
 						const result =
 							find(uploadedFiles, (uploadedFile) => uploadedFile.name === fileName)?.id ||
 							faker.datatype.uuid();
-						return res(ctx.delay(500), ctx.json({ nodeId: result }));
+						await delayUntil(emitter, 'done');
+						return res(ctx.json({ nodeId: result }));
 					}
 				)
 			);
@@ -618,7 +645,7 @@ describe('Upload list', () => {
 
 			const mocks = [mockGetBaseNode({ node_id: localRoot.id }, localRoot)];
 
-			render(<UploadList />, { mocks });
+			setup(<UploadList />, { mocks });
 
 			await screen.findByText(/nothing here/i);
 
@@ -647,9 +674,7 @@ describe('Upload list', () => {
 				dataTransfer: dataTransferObj2
 			});
 
-			// const snackbar = await screen.findByText(/Upload occurred in Files' Home/i);
 			await screen.findAllByTestId('node-item-', { exact: false });
-			// await waitForElementToBeRemoved(snackbar);
 			expect(screen.getAllByTestId('node-item-', { exact: false })).toHaveLength(
 				uploadedFiles.length
 			);
@@ -668,6 +693,7 @@ describe('Upload list', () => {
 					expect(within(nodeItem).queryByText(/\d+%/)).not.toBeInTheDocument();
 				}
 			});
+			emitter.emit('done');
 			await waitFor(() =>
 				expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(UPLOAD_QUEUE_LIMIT)
 			);
@@ -681,6 +707,7 @@ describe('Upload list', () => {
 			expect(within(nodeItems[UPLOAD_QUEUE_LIMIT]).getByText(/\d+%/i)).toBeVisible();
 			expect(within(nodeItems[UPLOAD_QUEUE_LIMIT * 2]).getByText(/queued/i)).toBeVisible();
 			expect(within(nodeItems[uploadedFiles.length - 1]).getByText(/queued/i)).toBeVisible();
+			emitter.emit('done');
 			await waitFor(() =>
 				expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(UPLOAD_QUEUE_LIMIT * 2)
 			);
@@ -692,6 +719,7 @@ describe('Upload list', () => {
 				within(nodeItems[uploadedFiles.length - 1]).queryByText(/queued/i)
 			).not.toBeInTheDocument();
 			expect(within(nodeItems[uploadedFiles.length - 1]).getByText(/\d+%/)).toBeVisible();
+			emitter.emit('done');
 			await waitFor(() =>
 				expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(uploadedFiles.length)
 			);

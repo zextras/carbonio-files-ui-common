@@ -14,7 +14,6 @@ import {
 	waitForElementToBeRemoved,
 	within
 } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import find from 'lodash/find';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
@@ -31,20 +30,14 @@ import {
 	mockUpdateNode,
 	mockUpdateNodeError
 } from '../../utils/mockUtils';
-import {
-	actionRegexp,
-	generateError,
-	renameNode,
-	render,
-	selectNodes
-} from '../../utils/testUtils';
+import { actionRegexp, generateError, renameNode, setup, selectNodes } from '../../utils/testUtils';
 import { addNodeInSortedList } from '../../utils/utils';
 import FilterList from './FilterList';
 
 describe('Filter List', () => {
 	describe('Rename', () => {
 		describe('Selection Mode', () => {
-			test('Rename is disabled when multiple files are selected', async () => {
+			test('Rename is hidden when multiple files are selected', async () => {
 				const nodes = [];
 				// enable permission to rename
 				for (let i = 0; i < 2; i += 1) {
@@ -55,13 +48,16 @@ describe('Filter List', () => {
 
 				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), nodes)];
 
-				render(<FilterList flagged />, { mocks });
+				const { user } = setup(<FilterList flagged />, { mocks });
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 
 				// activate selection mode by selecting items
-				selectNodes(map(nodes, (node) => node.id));
+				await selectNodes(
+					map(nodes, (node) => node.id),
+					user
+				);
 				// check that all wanted items are selected
 				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodes.length);
 
@@ -69,7 +65,7 @@ describe('Filter List', () => {
 
 				const moreIconButton = screen.queryByTestId('icon: MoreVertical');
 				if (moreIconButton) {
-					userEvent.click(moreIconButton);
+					await user.click(moreIconButton);
 					// wait for trash action to check that popper is open
 					const trashAction = await screen.findByText(actionRegexp.moveToTrash);
 					expect(trashAction).not.toHaveAttribute('disabled');
@@ -77,20 +73,20 @@ describe('Filter List', () => {
 				}
 			});
 
-			test('Rename is disabled if node does not have permissions', async () => {
+			test('Rename is hidden if node does not have permissions', async () => {
 				// disable permission to rename
 				const node = populateFile();
 				node.permissions.can_write_file = false;
 
 				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), [node])];
 
-				render(<FilterList flagged />, { mocks });
+				const { user } = setup(<FilterList flagged />, { mocks });
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 
 				// activate selection mode by selecting items
-				selectNodes([node.id]);
+				await selectNodes([node.id], user);
 				// check that all wanted items are selected
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 
@@ -98,7 +94,7 @@ describe('Filter List', () => {
 
 				const moreIconButton = screen.queryByTestId('icon: MoreVertical');
 				if (moreIconButton) {
-					userEvent.click(moreIconButton);
+					await user.click(moreIconButton);
 					// wait for trash action to check that popper is open
 					const trashAction = await screen.findByText(actionRegexp.copy);
 					expect(trashAction).not.toHaveAttribute('disabled');
@@ -130,29 +126,29 @@ describe('Filter List', () => {
 					)
 				];
 
-				render(<FilterList flagged />, { mocks });
+				const { user } = setup(<FilterList flagged />, { mocks });
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 
 				// activate selection mode by selecting items
-				selectNodes([element.id]);
+				await selectNodes([element.id], user);
 				// check that all wanted items are selected
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-				userEvent.click(screen.getByTestId('icon: MoreVertical'));
-				await renameNode(newName);
+				await user.click(screen.getByTestId('icon: MoreVertical'));
+				await renameNode(newName, user);
 				// following text is in the modal and in snackbar
 				await waitFor(() =>
 					expect(screen.getAllByText(/Error! Name already assigned/)).toHaveLength(2)
 				);
-				await waitFor(() =>
-					// eslint-disable-next-line jest-dom/prefer-in-document
-					expect(screen.getAllByText(/Error! Name already assigned/)).toHaveLength(1)
-				);
+				// close snackbar
+				act(() => {
+					// run timers of snackbar
+					jest.runOnlyPendingTimers();
+				});
 				// when find only 1 occurrence means that snackbar is hidden
-				const error = screen.getByText(/Error! Name already assigned/);
-				expect(error).toBeVisible();
+				expect(screen.getByText(/Error! Name already assigned/)).toBeVisible();
 				const inputFieldDiv = screen.getByTestId('input-name');
 				const inputField = within(inputFieldDiv).getByRole('textbox');
 				expect(inputField).toBeVisible();
@@ -187,21 +183,18 @@ describe('Filter List', () => {
 					)
 				];
 
-				render(<FilterList flagged />, { mocks });
+				const { user } = setup(<FilterList flagged />, { mocks });
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 
 				// activate selection mode by selecting items
-				selectNodes([element.id]);
+				await selectNodes([element.id], user);
 				// check that all wanted items are selected
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-				userEvent.click(screen.getByTestId('icon: MoreVertical'));
-				await renameNode(newName);
-				// wait for the modal to be closed
-				const inputFieldDiv = await screen.findByTestId('input-name');
-				await waitForElementToBeRemoved(inputFieldDiv);
+				await user.click(screen.getByTestId('icon: MoreVertical'));
+				await renameNode(newName, user);
 				// check the node. It should have the new name and be at same position
 				const nodeItem = screen.getByTestId(`node-item-${element.id}`);
 				expect(nodeItem).toBeVisible();
@@ -225,7 +218,7 @@ describe('Filter List', () => {
 
 				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), nodes)];
 
-				render(<FilterList flagged />, { mocks });
+				const { user } = setup(<FilterList flagged />, { mocks });
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -253,21 +246,19 @@ describe('Filter List', () => {
 				// check that the flag action becomes invisible (contextual menu of first node is closed)
 				expect(flagAction1).not.toBeInTheDocument();
 				// left click close all the contextual menu
-				act(() => {
-					userEvent.click(node2Item);
-				});
-				// FIXME: decide whether the dropdown as contextual menu should close or not with left click on trigger item
+				await user.click(node2Item);
+				// FIXME: waiting for CDS-72
 				expect(unflagAction2).not.toBeInTheDocument();
 				expect(flagAction1).not.toBeInTheDocument();
 			});
 
-			test('Rename is disabled if node does not have permissions', async () => {
+			test('Rename is hidden if node does not have permissions', async () => {
 				const node = populateFile();
 				node.permissions.can_write_file = false;
 
 				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), [node])];
 
-				render(<FilterList flagged />, { mocks });
+				setup(<FilterList flagged />, { mocks });
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -308,7 +299,7 @@ describe('Filter List', () => {
 					)
 				];
 
-				render(<FilterList flagged />, { mocks });
+				const { user } = setup(<FilterList flagged />, { mocks });
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -317,10 +308,7 @@ describe('Filter List', () => {
 				const nodeItem = screen.getByTestId(`node-item-${element.id}`);
 				// open context menu
 				fireEvent.contextMenu(nodeItem);
-				await renameNode(newName);
-				const inputFieldDiv = await screen.findByTestId('input-name');
-				// wait that the modal close
-				await waitForElementToBeRemoved(inputFieldDiv);
+				await renameNode(newName, user);
 				// check the new item. It has the new name and its located at same position
 				const updatedNodeItem = screen.getByTestId(`node-item-${element.id}`);
 				expect(updatedNodeItem).toBeVisible();
@@ -381,7 +369,7 @@ describe('Filter List', () => {
 					)
 				];
 
-				render(<FilterList flagged />, { mocks });
+				const { user } = setup(<FilterList flagged />, { mocks });
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -405,10 +393,7 @@ describe('Filter List', () => {
 				const nodeItem = screen.getByTestId(`node-item-${element.id}`);
 				// open context menu
 				fireEvent.contextMenu(nodeItem);
-				await renameNode(newName);
-				// wait that the modal close
-				const inputFieldDiv = await screen.findByTestId('input-name');
-				await waitForElementToBeRemoved(inputFieldDiv);
+				await renameNode(newName, user);
 				// check the new item. It has the new name and it is at same position in the filter list
 				const updatedNodeItem = screen.getByTestId(`node-item-${element.id}`);
 				expect(updatedNodeItem).toBeVisible();
@@ -480,7 +465,7 @@ describe('Filter List', () => {
 					)
 				];
 
-				render(<FilterList flagged />, { mocks });
+				const { user } = setup(<FilterList flagged />, { mocks });
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -508,10 +493,7 @@ describe('Filter List', () => {
 				const nodeItem = screen.getByTestId(`node-item-${element.id}`);
 				// open context menu
 				fireEvent.contextMenu(nodeItem);
-				await renameNode(newName);
-				// wait that the modal close
-				const inputFieldDiv = await screen.findByTestId('input-name');
-				await waitForElementToBeRemoved(inputFieldDiv);
+				await renameNode(newName, user);
 				// check the new item. It has the new name and its located at same position
 				const updatedNodeItem = screen.getByTestId(`node-item-${element.id}`);
 				expect(updatedNodeItem).toBeVisible();

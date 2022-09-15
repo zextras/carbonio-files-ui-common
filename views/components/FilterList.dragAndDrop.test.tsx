@@ -5,7 +5,7 @@
  */
 import React from 'react';
 
-import { fireEvent, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 import { graphql } from 'msw';
@@ -30,7 +30,7 @@ import {
 	mockGetChildren,
 	mockMoveNodes
 } from '../../utils/mockUtils';
-import { render, selectNodes } from '../../utils/testUtils';
+import { setup, selectNodes } from '../../utils/testUtils';
 import FilterList from './FilterList';
 
 describe('Filter List', () => {
@@ -41,7 +41,6 @@ describe('Filter List', () => {
 			const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
 			const files: File[] = [];
 			forEach(uploadedFiles, (file) => {
-				// eslint-disable-next-line no-param-reassign
 				file.parent = localRoot;
 				files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 			});
@@ -83,10 +82,9 @@ describe('Filter List', () => {
 				files
 			};
 
-			render(
-				<FilterList sharedWithMe folderId={ROOTS.LOCAL_ROOT} canUploadFile cascade={false} />,
-				{ mocks }
-			);
+			setup(<FilterList sharedWithMe folderId={ROOTS.LOCAL_ROOT} canUploadFile cascade={false} />, {
+				mocks
+			});
 
 			await screen.findByText(currentFilter[0].name);
 
@@ -103,8 +101,7 @@ describe('Filter List', () => {
 				dataTransfer: dataTransferObj
 			});
 
-			const snackbar = await screen.findByText(/upload occurred in Files' home/i);
-			await waitForElementToBeRemoved(snackbar);
+			await screen.findByText(/upload occurred in Files' home/i);
 
 			expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
 				currentFilter.length
@@ -128,7 +125,6 @@ describe('Filter List', () => {
 			const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
 			const files: File[] = [];
 			forEach(uploadedFiles, (file) => {
-				// eslint-disable-next-line no-param-reassign
 				file.parent = localRoot;
 				files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 			});
@@ -166,7 +162,7 @@ describe('Filter List', () => {
 				files
 			};
 
-			render(
+			setup(
 				<Route path="/filter/:filter">
 					<FilterList
 						sharedWithMe={false}
@@ -218,7 +214,6 @@ describe('Filter List', () => {
 			const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
 			const files: File[] = [];
 			forEach(uploadedFiles, (file) => {
-				// eslint-disable-next-line no-param-reassign
 				file.parent = destinationFolder;
 				files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 			});
@@ -251,7 +246,7 @@ describe('Filter List', () => {
 				files
 			};
 
-			render(<FilterList folderId={ROOTS.LOCAL_ROOT} sharedWithMe cascade canUploadFile />, {
+			setup(<FilterList folderId={ROOTS.LOCAL_ROOT} sharedWithMe cascade canUploadFile />, {
 				mocks
 			});
 
@@ -270,10 +265,7 @@ describe('Filter List', () => {
 				dataTransfer: dataTransferObj
 			});
 
-			const snackbar = await screen.findByText(
-				new RegExp(`Upload occurred in ${destinationFolder.name}`, 'i')
-			);
-			await waitForElementToBeRemoved(snackbar);
+			await screen.findByText(new RegExp(`Upload occurred in ${destinationFolder.name}`, 'i'));
 			expect(screen.queryByTestId('dropzone-overlay')).not.toBeInTheDocument();
 		});
 
@@ -285,7 +277,6 @@ describe('Filter List', () => {
 			const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
 			const files: File[] = [];
 			forEach(uploadedFiles, (file) => {
-				// eslint-disable-next-line no-param-reassign
 				file.parent = destinationFolder;
 				files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 			});
@@ -311,7 +302,7 @@ describe('Filter List', () => {
 				files
 			};
 
-			render(<FilterList flagged cascade canUploadFile />, { mocks });
+			setup(<FilterList flagged cascade canUploadFile />, { mocks });
 
 			await screen.findByText(destinationFolder.name);
 
@@ -341,7 +332,6 @@ describe('Filter List', () => {
 			const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
 			const files: File[] = [];
 			forEach(uploadedFiles, (file) => {
-				// eslint-disable-next-line no-param-reassign
 				file.parent = destinationFolder;
 				files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 			});
@@ -370,7 +360,7 @@ describe('Filter List', () => {
 				files
 			};
 
-			render(
+			setup(
 				<Route path="/filter/:filter">
 					<FilterList folderId={ROOTS.TRASH} cascade canUploadFile={false} />
 				</Route>,
@@ -435,7 +425,7 @@ describe('Filter List', () => {
 				})
 			});
 
-			render(
+			setup(
 				<FilterList
 					sharedWithMe={false}
 					folderId={ROOTS.TRASH}
@@ -520,7 +510,9 @@ describe('Filter List', () => {
 				})
 			});
 
-			render(<FilterList flagged folderId={ROOTS.LOCAL_ROOT} canUploadFile cascade />, { mocks });
+			setup(<FilterList flagged folderId={ROOTS.LOCAL_ROOT} canUploadFile cascade />, {
+				mocks
+			});
 
 			const itemToDrag = await screen.findByText(nodesToDrag[0].name);
 			fireEvent.dragStart(itemToDrag, { dataTransfer: dataTransfer() });
@@ -565,8 +557,7 @@ describe('Filter List', () => {
 			expect(screen.queryByText('Drag&Drop Mode')).not.toBeInTheDocument();
 			fireEvent.drop(destinationItem, { dataTransfer: dataTransfer() });
 			fireEvent.dragEnd(itemToDrag, { dataTransfer: dataTransfer() });
-			const snackbar = await screen.findByText(/item moved/i);
-			await waitForElementToBeRemoved(snackbar);
+			await screen.findByText(/item moved/i);
 			expect(screen.queryByTestId('dropzone-overlay')).not.toBeInTheDocument();
 			expect(screen.getByText(nodesToDrag[0].name)).toBeInTheDocument();
 			expect(screen.getByText(nodesToDrag[0].name)).toBeVisible();
@@ -615,7 +606,9 @@ describe('Filter List', () => {
 				})
 			});
 
-			render(<FilterList flagged folderId={ROOTS.LOCAL_ROOT} canUploadFile cascade />, { mocks });
+			setup(<FilterList flagged folderId={ROOTS.LOCAL_ROOT} canUploadFile cascade />, {
+				mocks
+			});
 
 			const itemToDrag = await screen.findByText(nodesToDrag[0].name);
 			fireEvent.dragStart(itemToDrag, { dataTransfer: dataTransfer() });
@@ -713,7 +706,7 @@ describe('Filter List', () => {
 				})
 			});
 
-			render(
+			const { user } = setup(
 				<Route path="/filter/:filter">
 					<FilterList flagged folderId={ROOTS.LOCAL_ROOT} canUploadFile cascade />
 				</Route>,
@@ -724,7 +717,10 @@ describe('Filter List', () => {
 			);
 
 			const itemToDrag = await screen.findByText(nodesToDrag[0].name);
-			await selectNodes(map(nodesToDrag, (node) => node.id));
+			await selectNodes(
+				map(nodesToDrag, (node) => node.id),
+				user
+			);
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToDrag.length);
 
@@ -787,7 +783,7 @@ describe('Filter List', () => {
 				})
 			});
 
-			render(<FilterList flagged folderId={ROOTS.LOCAL_ROOT} canUploadFile cascade />, { mocks });
+			setup(<FilterList flagged folderId={ROOTS.LOCAL_ROOT} canUploadFile cascade />, { mocks });
 
 			const itemToDrag = await screen.findByText(nodesToDrag[0].name);
 			fireEvent.dragStart(itemToDrag, { dataTransfer: dataTransfer() });

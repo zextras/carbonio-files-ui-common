@@ -7,14 +7,14 @@
 import React from 'react';
 
 import { gql } from '@apollo/client';
-import { act, fireEvent, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { fireEvent, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/react';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 import { graphql } from 'msw';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import server from '../../mocks/server';
+import { TIMERS } from '../constants';
 import {
 	populateFile,
 	populateFolder,
@@ -40,7 +40,7 @@ import {
 	mockGetPermissions,
 	mockMoveNodes
 } from '../utils/mockUtils';
-import { buildBreadCrumbRegExp, render, selectNodes } from '../utils/testUtils';
+import { buildBreadCrumbRegExp, setup, selectNodes } from '../utils/testUtils';
 import { DisplayerProps } from './components/Displayer';
 import FolderView from './FolderView';
 
@@ -66,11 +66,11 @@ describe('Drag and drop', () => {
 		const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
 		const files: File[] = [];
 		forEach(uploadedFiles, (file) => {
-			// eslint-disable-next-line no-param-reassign
 			file.parent = currentFolder;
 			files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 		});
 		let reqIndex = 0;
+		const mockedGetChildHandler = jest.fn();
 
 		server.use(
 			graphql.query<GetChildQuery, GetChildQueryVariables>('getChild', (req, res, ctx) => {
@@ -80,6 +80,7 @@ describe('Drag and drop', () => {
 					result.id = id;
 					reqIndex += 1;
 				}
+				mockedGetChildHandler(id);
 				return res(ctx.data({ getNode: result }));
 			})
 		);
@@ -94,7 +95,10 @@ describe('Drag and drop', () => {
 			files
 		};
 
-		render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+		setup(<FolderView />, {
+			initialRouterEntries: [`/?folder=${currentFolder.id}`],
+			mocks
+		});
 
 		await screen.findByText(/nothing here/i);
 
@@ -111,6 +115,7 @@ describe('Drag and drop', () => {
 			dataTransfer: dataTransferObj
 		});
 
+		await waitFor(() => expect(mockedGetChildHandler).toHaveBeenCalledTimes(uploadedFiles.length));
 		await screen.findByText(uploadedFiles[0].name);
 		await screen.findByText(uploadedFiles[1].name);
 		expect(screen.getByText(uploadedFiles[0].name)).toBeVisible();
@@ -129,11 +134,12 @@ describe('Drag and drop', () => {
 		const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
 		const files: File[] = [];
 		forEach(uploadedFiles, (file) => {
-			// eslint-disable-next-line no-param-reassign
 			file.parent = currentFolder;
 			files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 		});
 		let reqIndex = 0;
+
+		const mockedGetChildHandler = jest.fn();
 
 		server.use(
 			graphql.query<GetChildQuery, GetChildQueryVariables>('getChild', (req, res, ctx) => {
@@ -143,6 +149,7 @@ describe('Drag and drop', () => {
 					result.id = id;
 					reqIndex += 1;
 				}
+				mockedGetChildHandler(id);
 				return res(ctx.data({ getNode: result }));
 			})
 		);
@@ -157,7 +164,10 @@ describe('Drag and drop', () => {
 			files
 		};
 
-		render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+		setup(<FolderView />, {
+			initialRouterEntries: [`/?folder=${currentFolder.id}`],
+			mocks
+		});
 
 		await screen.findByText(/nothing here/i);
 
@@ -178,6 +188,7 @@ describe('Drag and drop', () => {
 		expect(
 			screen.queryByText(/You cannot drop an attachment in this area/m)
 		).not.toBeInTheDocument();
+		expect(mockedGetChildHandler).not.toHaveBeenCalled();
 	});
 
 	test('Drag of files in a folder node with right permissions inside a list shows upload dropzone of the list item. Drop triggers upload in list item folder', async () => {
@@ -190,7 +201,6 @@ describe('Drag and drop', () => {
 		const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
 		const files: File[] = [];
 		forEach(uploadedFiles, (file) => {
-			// eslint-disable-next-line no-param-reassign
 			file.parent = destinationFolder;
 			files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 		});
@@ -218,7 +228,10 @@ describe('Drag and drop', () => {
 			files
 		};
 
-		render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+		setup(<FolderView />, {
+			initialRouterEntries: [`/?folder=${currentFolder.id}`],
+			mocks
+		});
 
 		await screen.findByText(destinationFolder.name);
 
@@ -235,10 +248,7 @@ describe('Drag and drop', () => {
 			dataTransfer: dataTransferObj
 		});
 
-		const snackbar = await screen.findByText(
-			new RegExp(`Upload occurred in ${destinationFolder.name}`, 'i')
-		);
-		await waitForElementToBeRemoved(snackbar);
+		await screen.findByText(new RegExp(`Upload occurred in ${destinationFolder.name}`, 'i'));
 		expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
 			currentFolder.children.nodes.length
 		);
@@ -255,7 +265,6 @@ describe('Drag and drop', () => {
 		const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
 		const files: File[] = [];
 		forEach(uploadedFiles, (file) => {
-			// eslint-disable-next-line no-param-reassign
 			file.parent = destinationFolder;
 			files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 		});
@@ -283,7 +292,10 @@ describe('Drag and drop', () => {
 			files
 		};
 
-		render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+		setup(<FolderView />, {
+			initialRouterEntries: [`/?folder=${currentFolder.id}`],
+			mocks
+		});
 
 		await screen.findByText(destinationFolder.name);
 
@@ -318,11 +330,12 @@ describe('Drag and drop', () => {
 		const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
 		const files: File[] = [];
 		forEach(uploadedFiles, (file) => {
-			// eslint-disable-next-line no-param-reassign
 			file.parent = currentFolder;
 			files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 		});
 		let reqIndex = 0;
+
+		const mockedGetChildHandler = jest.fn();
 
 		server.use(
 			graphql.query<GetChildQuery, GetChildQueryVariables>('getChild', (req, res, ctx) => {
@@ -332,6 +345,7 @@ describe('Drag and drop', () => {
 					result.id = id;
 					reqIndex += 1;
 				}
+				mockedGetChildHandler(id);
 				return res(ctx.data({ getNode: result }));
 			})
 		);
@@ -346,7 +360,10 @@ describe('Drag and drop', () => {
 			files
 		};
 
-		render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+		setup(<FolderView />, {
+			initialRouterEntries: [`/?folder=${currentFolder.id}`],
+			mocks
+		});
 
 		await screen.findByText(destinationFile.name);
 
@@ -363,6 +380,7 @@ describe('Drag and drop', () => {
 			dataTransfer: dataTransferObj
 		});
 
+		await waitFor(() => expect(mockedGetChildHandler).toHaveBeenCalledTimes(uploadedFiles.length));
 		await screen.findByText(uploadedFiles[0].name);
 		await screen.findByText(uploadedFiles[1].name);
 		expect(screen.getByText(uploadedFiles[0].name)).toBeVisible();
@@ -424,17 +442,15 @@ describe('Drag and drop', () => {
 			})
 		});
 
-		render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+		setup(<FolderView />, {
+			initialRouterEntries: [`/?folder=${currentFolder.id}`],
+			mocks
+		});
 
 		const itemToDrag = await screen.findByText(nodesToDrag[0].name);
 		fireEvent.dragStart(itemToDrag, { dataTransfer: dataTransfer() });
 		fireEvent.dragEnter(itemToDrag, { dataTransfer: dataTransfer() });
-		await waitFor(
-			() =>
-				new Promise((resolve) => {
-					setTimeout(resolve, 100);
-				})
-		);
+		await screen.findByTestId('dropzone-overlay');
 		// two items are visible for the node, the one in the list is disabled, the other one is the one dragged and is not disabled
 		const draggedNodeItems = screen.getAllByText(nodesToDrag[0].name);
 		expect(draggedNodeItems).toHaveLength(2);
@@ -456,12 +472,7 @@ describe('Drag and drop', () => {
 		expect(screen.queryByText(/Drag&Drop Mode/i)).not.toBeInTheDocument();
 		fireEvent.drop(folderWithoutPermissionsItem, { dataTransfer: dataTransfer() });
 		fireEvent.dragEnd(itemToDrag, { dataTransfer: dataTransfer() });
-		await waitFor(
-			() =>
-				new Promise((resolve) => {
-					setTimeout(resolve, 100);
-				})
-		);
+		jest.advanceTimersByTime(TIMERS.HIDE_DROPZONE);
 		expect(screen.queryByTestId('dropzone-overlay')).not.toBeInTheDocument();
 		expect(itemToDrag).toBeVisible();
 		expect(itemToDrag).not.toHaveAttribute('disabled', '');
@@ -478,8 +489,7 @@ describe('Drag and drop', () => {
 		expect(screen.queryByTestId('dropzone-overlay')).not.toBeInTheDocument();
 		await waitForElementToBeRemoved(itemToDrag);
 		expect(screen.queryByText(nodesToDrag[0].name)).not.toBeInTheDocument();
-		const snackbar = await screen.findByText(/Item moved/i);
-		await waitForElementToBeRemoved(snackbar);
+		await screen.findByText(/Item moved/i);
 	});
 
 	test('Drag of a node without move permissions cause no dropzone to be shown', async () => {
@@ -524,17 +534,15 @@ describe('Drag and drop', () => {
 			})
 		});
 
-		render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+		setup(<FolderView />, {
+			initialRouterEntries: [`/?folder=${currentFolder.id}`],
+			mocks
+		});
 
 		const itemToDrag = await screen.findByText(nodesToDrag[0].name);
 		fireEvent.dragStart(itemToDrag, { dataTransfer: dataTransfer() });
 		fireEvent.dragEnter(itemToDrag, { dataTransfer: dataTransfer() });
-		await waitFor(
-			() =>
-				new Promise((resolve) => {
-					setTimeout(resolve, 100);
-				})
-		);
+		jest.advanceTimersByTime(TIMERS.SHOW_DROPZONE);
 		// two items are visible for the node, the one in the list is disabled, the other one is the one dragged and is not disabled
 		const draggedNodeItems = screen.getAllByText(nodesToDrag[0].name);
 		expect(draggedNodeItems).toHaveLength(2);
@@ -546,12 +554,7 @@ describe('Drag and drop', () => {
 		// drag and drop on folder without permissions. Overlay is not shown.
 		const folderWithoutPermissionsItem = screen.getByText(folderWithoutPermission.name);
 		fireEvent.dragEnter(folderWithoutPermissionsItem, { dataTransfer: dataTransfer() });
-		await waitFor(
-			() =>
-				new Promise((resolve) => {
-					setTimeout(resolve, 100);
-				})
-		);
+		jest.advanceTimersByTime(TIMERS.SHOW_DROPZONE);
 		expect(screen.queryByTestId('dropzone-overlay')).not.toBeInTheDocument();
 		fireEvent.drop(folderWithoutPermissionsItem, { dataTransfer: dataTransfer() });
 		fireEvent.dragEnd(itemToDrag, { dataTransfer: dataTransfer() });
@@ -562,12 +565,7 @@ describe('Drag and drop', () => {
 		const destinationItem = screen.getByText(destinationFolder.name);
 		fireEvent.dragStart(itemToDrag, { dataTransfer: dataTransfer() });
 		fireEvent.dragEnter(destinationItem, { dataTransfer: dataTransfer() });
-		await waitFor(
-			() =>
-				new Promise((resolve) => {
-					setTimeout(resolve, 100);
-				})
-		);
+		jest.advanceTimersByTime(TIMERS.SHOW_DROPZONE);
 		expect(screen.queryByTestId('dropzone-overlay')).not.toBeInTheDocument();
 		fireEvent.drop(destinationItem, { dataTransfer: dataTransfer() });
 		fireEvent.dragEnd(itemToDrag, { dataTransfer: dataTransfer() });
@@ -619,10 +617,16 @@ describe('Drag and drop', () => {
 			})
 		});
 
-		render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+		const { user } = setup(<FolderView />, {
+			initialRouterEntries: [`/?folder=${currentFolder.id}`],
+			mocks
+		});
 
 		const itemToDrag = await screen.findByText(nodesToDrag[0].name);
-		await selectNodes(map(nodesToDrag, (node) => node.id));
+		await selectNodes(
+			map(nodesToDrag, (node) => node.id),
+			user
+		);
 		// check that all wanted items are selected
 		expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToDrag.length);
 
@@ -642,8 +646,7 @@ describe('Drag and drop', () => {
 		fireEvent.drop(destinationItem, { dataTransfer: dataTransfer() });
 		fireEvent.dragEnd(itemToDrag, { dataTransfer: dataTransfer() });
 		expect(screen.queryByTestId('dropzone-overlay')).not.toBeInTheDocument();
-		const snackbar = await screen.findByText(/Item moved/i);
-		await waitForElementToBeRemoved(snackbar);
+		await screen.findByText(/Item moved/i);
 		forEach(nodesToDrag, (node) => {
 			const draggedImage = screen.queryByText(node.name);
 			expect(draggedImage).not.toBeInTheDocument();
@@ -704,15 +707,16 @@ describe('Drag and drop', () => {
 			})
 		});
 
-		render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+		const { user } = setup(<FolderView />, {
+			initialRouterEntries: [`/?folder=${currentFolder.id}`],
+			mocks
+		});
 
 		const itemToDrag = await screen.findByText(nodesToDrag[0].name);
 
 		// load full path
 		await screen.findByText((currentFolder.parent as Folder).name);
-		act(() => {
-			userEvent.click(screen.getByTestId('icon: ChevronRight'));
-		});
+		await user.click(screen.getByTestId('icon: ChevronRight'));
 		await screen.findByText(path[0].name);
 		// TODO: move fragment to graphql file and add type
 		// add missing data in cache
@@ -781,8 +785,7 @@ describe('Drag and drop', () => {
 			'background-color': ''
 		});
 		await waitForElementToBeRemoved(itemToDrag);
-		const snackbar = await screen.findByText(/Item moved/i);
-		await waitForElementToBeRemoved(snackbar);
+		await screen.findByText(/Item moved/i);
 		expect(screen.queryByText(nodesToDrag[0].name)).not.toBeInTheDocument();
 	});
 
@@ -838,7 +841,7 @@ describe('Drag and drop', () => {
 			})
 		});
 
-		const { findByTextWithMarkup } = render(<FolderView />, {
+		const { findByTextWithMarkup } = setup(<FolderView />, {
 			initialRouterEntries: [`/?folder=${currentFolder.id}`],
 			mocks
 		});
@@ -882,8 +885,8 @@ describe('Drag and drop', () => {
 			screen.getByText(/drop here your items to quickly move them to this folder/i)
 		).toBeVisible();
 		fireEvent.drop(screen.getByText(/nothing here/i), { dataTransfer: dataTransfer() });
-		const snackbar = await screen.findByText(/Item moved/i);
-		await waitForElementToBeRemoved(snackbar);
+		await screen.findByText(/Item moved/i);
+
 		await screen.findByText(draggedNode.name);
 		expect(screen.getByText(draggedNode.name)).toBeVisible();
 		expect(screen.queryByText(/nothing here/i)).not.toBeInTheDocument();

@@ -35,13 +35,7 @@ export const MoveNodesModalContent: React.VFC<MoveNodesModalContentProps> = ({
 	const [t] = useTranslation();
 	const [destinationFolder, setDestinationFolder] = useState<string>();
 	const [openedFolder, setOpenedFolder] = useState<string>(folderId || '');
-	const {
-		data: currentFolder,
-		loadMore,
-		hasMore,
-		loading,
-		error
-	} = useGetChildrenQuery(openedFolder);
+	const { data: currentFolder, loadMore, hasMore, loading } = useGetChildrenQuery(openedFolder);
 	const mainContainerRef = useRef<HTMLDivElement>(null);
 
 	/** Mutation to move nodes * */

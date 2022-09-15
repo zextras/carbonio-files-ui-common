@@ -6,15 +6,7 @@
 
 import React from 'react';
 
-import {
-	act,
-	fireEvent,
-	screen,
-	waitFor,
-	waitForElementToBeRemoved,
-	within
-} from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 
@@ -42,10 +34,9 @@ import {
 import {
 	actionRegexp,
 	buildBreadCrumbRegExp,
-	render,
+	setup,
 	selectNodes,
-	triggerLoadMore,
-	waitForNetworkResponse
+	triggerLoadMore
 } from '../../utils/testUtils';
 import { MoveNodesModalContent } from './MoveNodesModalContent';
 
@@ -57,7 +48,8 @@ describe('Move Nodes Modal', () => {
 			mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder)
 		];
-		render(<MoveNodesModalContent folderId={currentFolder.id} nodesToMove={nodesToMove} />, {
+
+		setup(<MoveNodesModalContent folderId={currentFolder.id} nodesToMove={nodesToMove} />, {
 			mocks
 		});
 		await screen.findByText((currentFolder.children.nodes[0] as File | Folder).name);
@@ -94,7 +86,7 @@ describe('Move Nodes Modal', () => {
 			mockGetPath({ node_id: folderWithWriteFolder.id }, [currentFolder, folderWithWriteFolder]),
 			mockGetChildren(getChildrenVariables(folderWithWriteFolder.id), folderWithWriteFolder)
 		];
-		const { rerender } = render(
+		const { rerender, user } = setup(
 			<MoveNodesModalContent folderId={currentFolder.id} nodesToMove={nodesToMove} />,
 			{ mocks }
 		);
@@ -106,7 +98,7 @@ describe('Move Nodes Modal', () => {
 		// folder without write file permission is disabled and not navigable
 		expect(folderWithWriteFolderItem).toHaveAttribute('disabled', '');
 		// double-click on a disabled folder does nothing
-		userEvent.dblClick(folderWithWriteFolderItem);
+		await user.dblClick(folderWithWriteFolderItem);
 		expect(folderWithWriteFolderItem).toBeVisible();
 		expect(folderWithWriteFolderItem).toHaveAttribute('disabled', '');
 		// folder is active
@@ -116,7 +108,7 @@ describe('Move Nodes Modal', () => {
 		// folder with write file permission is active and navigable
 		expect(folderWithWriteFileItem).toBeVisible();
 		expect(folderWithWriteFileItem).not.toHaveAttribute('disabled', '');
-		userEvent.dblClick(folderWithWriteFileItem);
+		await user.dblClick(folderWithWriteFileItem);
 		// navigate to sub-folder
 		await screen.findByText((folderWithWriteFile.children.nodes[0] as File | Folder).name);
 		expect(folderWithWriteFileItem).not.toBeInTheDocument();
@@ -132,7 +124,7 @@ describe('Move Nodes Modal', () => {
 		// folder without write folder permission is disabled and not navigable
 		expect(folderWithWriteFileItem).toHaveAttribute('disabled', '');
 		// double-click on a disabled folder does nothing
-		userEvent.dblClick(folderWithWriteFileItem);
+		await user.dblClick(folderWithWriteFileItem);
 		expect(folderWithWriteFileItem).toBeVisible();
 		expect(folderWithWriteFileItem).toHaveAttribute('disabled', '');
 		// moving folder is disabled
@@ -142,7 +134,7 @@ describe('Move Nodes Modal', () => {
 		// folder with write folder permission is active and navigable
 		expect(folderWithWriteFolderItem).toBeVisible();
 		expect(folderWithWriteFolderItem).not.toHaveAttribute('disabled', '');
-		userEvent.dblClick(folderWithWriteFolderItem);
+		await user.dblClick(folderWithWriteFolderItem);
 		// navigate to sub-folder
 		await screen.findByText((folderWithWriteFolder.children.nodes[0] as File | Folder).name);
 		expect(folderWithWriteFolderItem).not.toBeInTheDocument();
@@ -161,9 +153,12 @@ describe('Move Nodes Modal', () => {
 			mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder)
 		];
-		render(<MoveNodesModalContent folderId={currentFolder.id} nodesToMove={nodesToMove} />, {
-			mocks
-		});
+		const { user } = setup(
+			<MoveNodesModalContent folderId={currentFolder.id} nodesToMove={nodesToMove} />,
+			{
+				mocks
+			}
+		);
 		const folderItem = await screen.findByText(folder.name);
 		// context menu
 		fireEvent.contextMenu(folderItem);
@@ -178,7 +173,7 @@ describe('Move Nodes Modal', () => {
 		// hover bar
 		expect(screen.queryByTestId('icon: FlagOutline')).not.toBeInTheDocument();
 		// selection mode
-		selectNodes([folder.id]);
+		await selectNodes([folder.id], user);
 		// wait a tick to be sure eventual selection icon is shown
 		await waitFor(
 			() =>
@@ -215,7 +210,7 @@ describe('Move Nodes Modal', () => {
 
 		const closeAction = jest.fn();
 
-		render(
+		const { user } = setup(
 			<MoveNodesModalContent
 				folderId={currentFolder.id}
 				nodesToMove={nodesToMove}
@@ -228,26 +223,19 @@ describe('Move Nodes Modal', () => {
 		const confirmButton = screen.getByRole('button', { name: actionRegexp.move });
 		expect(confirmButton).toHaveAttribute('disabled', '');
 		const confirmButtonLabel = within(confirmButton).getByText(actionRegexp.move);
-		act(() => {
-			userEvent.hover(confirmButtonLabel);
-		});
+		await user.hover(confirmButtonLabel);
 		await screen.findByText(/you can't perform this action here/i);
 		expect(screen.getByText(/you can't perform this action here/i)).toBeVisible();
-		act(() => {
-			userEvent.unhover(confirmButtonLabel);
-		});
+		await user.unhover(confirmButtonLabel);
 		expect(screen.queryByText(/you can't perform this action here/i)).not.toBeInTheDocument();
-		userEvent.click(folderItem);
+		await user.click(folderItem);
 		expect(confirmButtonLabel).not.toHaveAttribute('disabled', '');
-		userEvent.dblClick(folderItem);
+		await user.dblClick(folderItem);
 		await screen.findByText(/It looks like there's nothing here./i);
 		expect(confirmButtonLabel).not.toHaveAttribute('disabled', '');
-		act(() => {
-			userEvent.click(confirmButtonLabel);
-		});
+		await user.click(confirmButtonLabel);
 		await waitFor(() => expect(closeAction).toHaveBeenCalled());
-		const snackbar = await screen.findByText(/item moved/i);
-		await waitForElementToBeRemoved(snackbar);
+		await screen.findByText(/item moved/i);
 		await waitFor(() => {
 			const currentFolderCachedData = global.apolloClient.readQuery<
 				GetChildrenQuery,
@@ -283,7 +271,7 @@ describe('Move Nodes Modal', () => {
 
 		const closeAction = jest.fn();
 
-		render(
+		const { user } = setup(
 			<MoveNodesModalContent
 				folderId={currentFolder.id}
 				nodesToMove={nodesToMove}
@@ -295,14 +283,11 @@ describe('Move Nodes Modal', () => {
 		const folderItem = await screen.findByText(folder.name);
 		const confirmButton = screen.getByRole('button', { name: actionRegexp.move });
 		expect(confirmButton).toHaveAttribute('disabled', '');
-		userEvent.click(folderItem);
+		await user.click(folderItem);
 		expect(confirmButton).not.toHaveAttribute('disabled', '');
-		act(() => {
-			userEvent.click(confirmButton);
-		});
+		await user.click(confirmButton);
 		await waitFor(() => expect(closeAction).toHaveBeenCalled());
-		const snackbar = await screen.findByText(/item moved/i);
-		await waitForElementToBeRemoved(snackbar);
+		await screen.findByText(/item moved/i);
 		await waitFor(() => {
 			const currentFolderCachedData = global.apolloClient.readQuery<
 				GetChildrenQuery,
@@ -337,7 +322,7 @@ describe('Move Nodes Modal', () => {
 
 		const closeAction = jest.fn();
 
-		render(
+		const { user } = setup(
 			<MoveNodesModalContent
 				folderId={currentFolder.id}
 				nodesToMove={nodesToMove}
@@ -351,23 +336,23 @@ describe('Move Nodes Modal', () => {
 		const confirmButton = screen.getByRole('button', { name: actionRegexp.move });
 		expect(confirmButton).toHaveAttribute('disabled', '');
 		// click on valid destination folder
-		userEvent.click(folderItem);
+		await user.click(folderItem);
 		// confirm button becomes active
 		await waitFor(() => expect(confirmButton).not.toHaveAttribute('disabled', ''));
 		// click on disabled node
-		userEvent.click(fileItem);
+		await user.click(fileItem);
 		// confirm button reset to opened folder and becomes disabled
 		expect(confirmButton).toHaveAttribute('disabled', '');
 		// click again on valid destination folder
-		userEvent.click(folderItem);
+		await user.click(folderItem);
 		// confirm button becomes active
 		await waitFor(() => expect(confirmButton).not.toHaveAttribute('disabled', ''));
 		// click on modal title
-		userEvent.click(screen.getByText(/move items/i));
+		await user.click(screen.getByText(/move items/i));
 		// confirm button reset to opened folder and becomes disabled
 		expect(confirmButton).toHaveAttribute('disabled', '');
 		// click again on valid destination folder
-		userEvent.click(folderItem);
+		await user.click(folderItem);
 		// confirm button becomes active
 		await waitFor(() => expect(confirmButton).not.toHaveAttribute('disabled', ''));
 	});
@@ -397,31 +382,30 @@ describe('Move Nodes Modal', () => {
 			mockGetChildren(getChildrenVariables(ancestor.id), ancestor)
 		];
 
-		const { getByTextWithMarkup, findByTextWithMarkup } = render(
+		const { getByTextWithMarkup, findByTextWithMarkup, user } = setup(
 			<MoveNodesModalContent folderId={currentFolder.id} nodesToMove={nodesToMove} />,
 			{ mocks }
 		);
 
 		await screen.findByText(nodesToMove[0].name);
 		let breadcrumbRegexp = buildBreadCrumbRegExp(...map(path, (node) => node.name));
-		await waitForNetworkResponse();
 		await findByTextWithMarkup(breadcrumbRegexp);
 		// full path immediately visible
 		expect(getByTextWithMarkup(breadcrumbRegexp)).toBeVisible();
 		// navigate to sub-folder
-		userEvent.dblClick(screen.getByText(folder.name));
+		await user.dblClick(screen.getByText(folder.name));
 		breadcrumbRegexp = buildBreadCrumbRegExp(...map(path.concat(folder), (node) => node.name));
 		const breadcrumbItem = await findByTextWithMarkup(breadcrumbRegexp);
 		expect(breadcrumbItem).toBeVisible();
 		// navigate to ancestor
-		userEvent.click(screen.getByText(ancestor.name));
+		await user.click(screen.getByText(ancestor.name));
 		// wait children to be loaded
 		breadcrumbRegexp = buildBreadCrumbRegExp(
 			...map(path.slice(0, ancestorIndex + 1), (node) => node.name)
 		);
 		await findByTextWithMarkup(breadcrumbRegexp);
 		expect(getByTextWithMarkup(breadcrumbRegexp)).toBeVisible();
-		expect(screen.queryByText(currentFolder.name, { exact: false })).not.toBeInTheDocument();
+		expect(screen.queryByText(currentFolder.name)).not.toBeInTheDocument();
 		expect.assertions(4);
 	});
 
@@ -474,7 +458,7 @@ describe('Move Nodes Modal', () => {
 			mockGetChildren(getChildrenVariables(sharedFolder.id), sharedFolder)
 		];
 
-		const { getByTextWithMarkup } = render(
+		const { getByTextWithMarkup } = setup(
 			<MoveNodesModalContent folderId={sharedFolder.id} nodesToMove={[nodeToMove]} />,
 			{ mocks }
 		);
@@ -515,7 +499,7 @@ describe('Move Nodes Modal', () => {
 			)
 		];
 
-		render(<MoveNodesModalContent folderId={currentFolder.id} nodesToMove={nodesToMove} />, {
+		setup(<MoveNodesModalContent folderId={currentFolder.id} nodesToMove={nodesToMove} />, {
 			mocks
 		});
 		await screen.findByText((currentFolder.children.nodes[0] as File | Folder).name);

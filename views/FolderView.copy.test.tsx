@@ -7,8 +7,7 @@
 import React from 'react';
 
 import { faker } from '@faker-js/faker';
-import { fireEvent, screen, waitForElementToBeRemoved, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { act, fireEvent, screen, within } from '@testing-library/react';
 import map from 'lodash/map';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
@@ -24,7 +23,7 @@ import {
 	mockGetPath,
 	mockGetPermissions
 } from '../utils/mockUtils';
-import { actionRegexp, iconRegexp, render, selectNodes } from '../utils/testUtils';
+import { actionRegexp, iconRegexp, setup, selectNodes } from '../utils/testUtils';
 import { DisplayerProps } from './components/Displayer';
 import FolderView from './FolderView';
 
@@ -61,10 +60,13 @@ describe('Copy', () => {
 				mockGetChild({ node_id: currentFolder.id }, currentFolder)
 			];
 
-			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+			const { user } = setup(<FolderView />, {
+				initialRouterEntries: [`/?folder=${currentFolder.id}`],
+				mocks
+			});
 
 			await screen.findByText(file.name);
-			selectNodes([file.id, folder.id]);
+			await selectNodes([file.id, folder.id], user);
 
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
@@ -103,7 +105,10 @@ describe('Copy', () => {
 				)
 			];
 
-			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+			const { user } = setup(<FolderView />, {
+				initialRouterEntries: [`/?folder=${currentFolder.id}`],
+				mocks
+			});
 
 			await screen.findByText(nodeToCopy.name);
 
@@ -119,28 +124,31 @@ describe('Copy', () => {
 			expect((destinationFolderCachedData?.getNode as Folder).id).toBe(destinationFolder.id);
 
 			// activate selection mode by selecting items
-			selectNodes([nodeToCopy.id]);
+			await selectNodes([nodeToCopy.id], user);
 			// check that all wanted items are selected
 			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
-			let CopyAction = screen.queryByTestId(iconRegexp.copy);
-			if (!CopyAction) {
+			let copyAction = screen.queryByTestId(iconRegexp.copy);
+			if (!copyAction) {
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-				userEvent.click(screen.getByTestId('icon: MoreVertical'));
-				CopyAction = await screen.findByText(actionRegexp.copy);
-				expect(CopyAction).toBeVisible();
+				await user.click(screen.getByTestId('icon: MoreVertical'));
+				copyAction = await screen.findByText(actionRegexp.copy);
+				expect(copyAction).toBeVisible();
 			}
-			userEvent.click(CopyAction);
+			await user.click(copyAction);
 
 			const modalList = await screen.findByTestId(`modal-list-${currentFolder.id}`);
 			const destinationFolderItem = await within(modalList).findByText(destinationFolder.name);
-			userEvent.click(destinationFolderItem);
+			await user.click(destinationFolderItem);
+			act(() => {
+				// run timers of modal
+				jest.advanceTimersToNextTimer();
+			});
 			expect(screen.getByRole('button', { name: actionRegexp.copy })).not.toHaveAttribute(
 				'disabled',
 				''
 			);
-			userEvent.click(screen.getByRole('button', { name: actionRegexp.copy }));
-			const snackbar = await screen.findByText(/Item copied/i);
-			await waitForElementToBeRemoved(snackbar);
+			await user.click(screen.getByRole('button', { name: actionRegexp.copy }));
+			await screen.findByText(/Item copied/i);
 			expect(screen.queryByRole('button', { name: actionRegexp.copy })).not.toBeInTheDocument();
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 
@@ -183,7 +191,10 @@ describe('Copy', () => {
 				)
 			];
 
-			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+			const { user } = setup(<FolderView />, {
+				initialRouterEntries: [`/?folder=${currentFolder.id}`],
+				mocks
+			});
 
 			await screen.findByText(nodesToCopy[0].name);
 
@@ -191,20 +202,27 @@ describe('Copy', () => {
 				currentFolder.children.nodes.length
 			);
 			// activate selection mode by selecting items
-			selectNodes(map(nodesToCopy, (node) => node.id));
+			await selectNodes(
+				map(nodesToCopy, (node) => node.id),
+				user
+			);
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToCopy.length);
 
-			let CopyAction = screen.queryByTestId(iconRegexp.copy);
-			if (!CopyAction) {
+			let copyAction = screen.queryByTestId(iconRegexp.copy);
+			if (!copyAction) {
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-				userEvent.click(screen.getByTestId('icon: MoreVertical'));
-				CopyAction = await screen.findByText(actionRegexp.copy);
-				expect(CopyAction).toBeVisible();
+				await user.click(screen.getByTestId('icon: MoreVertical'));
+				copyAction = await screen.findByText(actionRegexp.copy);
+				expect(copyAction).toBeVisible();
 			}
-			userEvent.click(CopyAction);
+			await user.click(copyAction);
 
 			const modalList = await screen.findByTestId(`modal-list-${currentFolder.id}`);
+			act(() => {
+				// run timers of modal
+				jest.runOnlyPendingTimers();
+			});
 			expect(within(modalList).getAllByTestId('node-item', { exact: false })).toHaveLength(
 				currentFolder.children.nodes.length
 			);
@@ -212,9 +230,8 @@ describe('Copy', () => {
 				'disabled',
 				''
 			);
-			userEvent.click(screen.getByRole('button', { name: actionRegexp.copy }));
-			const snackbar = await screen.findByText(/Item copied/i);
-			await waitForElementToBeRemoved(snackbar);
+			await user.click(screen.getByRole('button', { name: actionRegexp.copy }));
+			await screen.findByText(/Item copied/i);
 			expect(screen.queryByRole('button', { name: actionRegexp.copy })).not.toBeInTheDocument();
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 
@@ -260,7 +277,10 @@ describe('Copy', () => {
 				)
 			];
 
-			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+			const { user } = setup(<FolderView />, {
+				initialRouterEntries: [`/?folder=${currentFolder.id}`],
+				mocks
+			});
 
 			await screen.findByText(nodeToCopy.name);
 
@@ -280,18 +300,21 @@ describe('Copy', () => {
 			fireEvent.contextMenu(nodeToCopyItem);
 			const copyAction = await screen.findByText(actionRegexp.copy);
 			expect(copyAction).toBeVisible();
-			userEvent.click(copyAction);
+			await user.click(copyAction);
 
 			const modalList = await screen.findByTestId(`modal-list-${currentFolder.id}`);
 			const destinationFolderItem = await within(modalList).findByText(destinationFolder.name);
-			userEvent.click(destinationFolderItem);
+			await user.click(destinationFolderItem);
+			act(() => {
+				// run timers of modal
+				jest.advanceTimersToNextTimer();
+			});
 			expect(screen.getByRole('button', { name: actionRegexp.copy })).not.toHaveAttribute(
 				'disabled',
 				''
 			);
-			userEvent.click(screen.getByRole('button', { name: actionRegexp.copy }));
-			const snackbar = await screen.findByText(/Item copied/i);
-			await waitForElementToBeRemoved(snackbar);
+			await user.click(screen.getByRole('button', { name: actionRegexp.copy }));
+			await screen.findByText(/Item copied/i);
 			expect(screen.queryByRole('button', { name: actionRegexp.copy })).not.toBeInTheDocument();
 			// context menu is closed
 			expect(screen.queryByText(actionRegexp.copy)).not.toBeInTheDocument();

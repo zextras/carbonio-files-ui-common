@@ -7,7 +7,7 @@
 import React from 'react';
 
 import { ApolloError } from '@apollo/client';
-import { screen, waitForElementToBeRemoved, within } from '@testing-library/react';
+import { screen, waitFor, waitForElementToBeRemoved, within } from '@testing-library/react';
 import forEach from 'lodash/forEach';
 import { graphql } from 'msw';
 
@@ -32,7 +32,7 @@ import {
 	mockGetParent,
 	mockGetPermissions
 } from '../utils/mockUtils';
-import { generateError, render, triggerLoadMore } from '../utils/testUtils';
+import { generateError, setup, triggerLoadMore } from '../utils/testUtils';
 import { DisplayerProps } from './components/Displayer';
 import FolderView from './FolderView';
 
@@ -68,12 +68,14 @@ describe('Get children', () => {
 			)
 		];
 
-		render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+		setup(<FolderView />, {
+			initialRouterEntries: [`/?folder=${currentFolder.id}`],
+			mocks
+		});
 
 		await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 
 		const snackbar = await screen.findByText(/An error occurred/i);
-		await waitForElementToBeRemoved(snackbar);
 	});
 
 	test('first access to a folder show loading state and than show children', async () => {
@@ -89,13 +91,16 @@ describe('Get children', () => {
 			})
 		);
 
-		render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`] });
+		setup(<FolderView />, {
+			initialRouterEntries: [`/?folder=${currentFolder.id}`]
+		});
 
-		expect(screen.getByTestId('icon: Refresh')).toBeVisible();
-		await waitForElementToBeRemoved(
-			within(screen.getByTestId('list-header')).queryByTestId('icon: Refresh')
+		const listHeader = screen.getByTestId('list-header');
+		expect(within(listHeader).getByTestId('icon: Refresh')).toBeVisible();
+		await waitFor(() =>
+			expect(screen.getByTestId(`list-${currentFolder.id}`)).not.toBeEmptyDOMElement()
 		);
-		expect(screen.getByTestId(`list-${currentFolder.id}`)).not.toBeEmptyDOMElement();
+		expect(within(listHeader).queryByTestId('icon: Refresh')).not.toBeInTheDocument();
 		const queryResult = global.apolloClient.readQuery<GetChildrenQuery, GetChildrenQueryVariables>({
 			query: GET_CHILDREN,
 			variables: getChildrenVariables(currentFolder.id)
@@ -132,7 +137,10 @@ describe('Get children', () => {
 			)
 		];
 
-		render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+		setup(<FolderView />, {
+			initialRouterEntries: [`/?folder=${currentFolder.id}`],
+			mocks
+		});
 
 		// this is the loading refresh icon
 		expect(screen.getByTestId('list-header')).toContainElement(screen.getByTestId('icon: Refresh'));

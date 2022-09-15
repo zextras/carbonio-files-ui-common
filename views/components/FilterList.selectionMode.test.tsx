@@ -5,14 +5,13 @@
  */
 import React from 'react';
 
-import { screen, waitForElementToBeRemoved } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { screen } from '@testing-library/react';
 import { Route } from 'react-router-dom';
 
 import { ROOTS } from '../../constants';
 import { populateNodes } from '../../mocks/mockUtils';
 import { getFindNodesVariables, mockFindNodes } from '../../utils/mockUtils';
-import { iconRegexp, render, selectNodes } from '../../utils/testUtils';
+import { iconRegexp, setup, selectNodes } from '../../utils/testUtils';
 import FilterList from './FilterList';
 
 describe('Filter List', () => {
@@ -25,7 +24,7 @@ describe('Filter List', () => {
 					nodes
 				)
 			];
-			render(
+			const { user } = setup(
 				<Route path="/filter/:filter">
 					<FilterList flagged cascade folderId={ROOTS.LOCAL_ROOT} />
 				</Route>,
@@ -34,12 +33,12 @@ describe('Filter List', () => {
 			await screen.findByText(nodes[0].name);
 			expect(screen.getByText(nodes[0].name)).toBeVisible();
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
-			selectNodes([nodes[0].id]);
+			await selectNodes([nodes[0].id], user);
 			// check that all wanted items are selected
 			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 			expect(screen.getByText(/select all/i)).toBeVisible();
 			// deselect node. Selection mode remains active
-			selectNodes([nodes[0].id]);
+			await selectNodes([nodes[0].id], user);
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 			expect(screen.getAllByTestId('unCheckedAvatar')).toHaveLength(nodes.length);
 			expect(screen.getByText(/select all/i)).toBeVisible();
@@ -58,8 +57,7 @@ describe('Filter List', () => {
 
 			const arrowBack = screen.getByTestId('icon: ArrowBackOutline');
 			expect(arrowBack).toBeVisible();
-			userEvent.click(arrowBack);
-			await waitForElementToBeRemoved(arrowBack);
+			await user.click(arrowBack);
 			expect(screen.queryByTestId('unCheckedAvatar')).not.toBeInTheDocument();
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 			expect(screen.queryByText(/select all/i)).not.toBeInTheDocument();

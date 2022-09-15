@@ -7,7 +7,6 @@ import React from 'react';
 
 import { ApolloError } from '@apollo/client';
 import { fireEvent, screen, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 
@@ -20,14 +19,14 @@ import {
 	generateError,
 	iconRegexp,
 	renameNode,
-	render,
+	setup,
 	selectNodes
 } from '../../utils/testUtils';
 import { List } from './List';
 
 describe('Rename', () => {
 	describe('Selection mode', () => {
-		test('Rename is disabled when multiple files are selected', async () => {
+		test('Rename is hidden when multiple files are selected', async () => {
 			const children: Array<Node> = [];
 			// enable permission to rename
 			for (let i = 0; i < 2; i += 1) {
@@ -37,10 +36,13 @@ describe('Rename', () => {
 				children.push(node);
 			}
 
-			render(<List nodes={children} mainList emptyListMessage={'hint'} />);
+			const { user } = setup(<List nodes={children} mainList emptyListMessage={'hint'} />);
 
 			// activate selection mode by selecting items
-			selectNodes(map(children, (node) => (node as Node).id));
+			await selectNodes(
+				map(children, (node) => (node as Node).id),
+				user
+			);
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(children.length);
 
@@ -52,7 +54,7 @@ describe('Rename', () => {
 			}
 		});
 
-		test('Rename is disabled if node does not have permissions', async () => {
+		test('Rename is hidden if node does not have permissions', async () => {
 			const children: Array<Node> = [];
 			// disable permission to rename
 			const node = populateNode();
@@ -60,10 +62,10 @@ describe('Rename', () => {
 			node.permissions.can_write_folder = false;
 			children.push(node);
 
-			render(<List nodes={children} mainList emptyListMessage={'hint'} />);
+			const { user } = setup(<List nodes={children} mainList emptyListMessage={'hint'} />);
 
 			// activate selection mode by selecting items
-			selectNodes([node.id]);
+			await selectNodes([node.id], user);
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(children.length);
 
@@ -99,7 +101,7 @@ describe('Rename', () => {
 				)
 			];
 
-			render(
+			const { user } = setup(
 				<List
 					nodes={currentFolder.children.nodes as Array<Node>}
 					mainList
@@ -109,14 +111,16 @@ describe('Rename', () => {
 			);
 
 			// activate selection mode by selecting items
-			selectNodes([element.id]);
+			await selectNodes([element.id], user);
 			// check that all wanted items are selected
 			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-			userEvent.click(screen.getByTestId('icon: MoreVertical'));
+			await user.click(screen.getByTestId('icon: MoreVertical'));
 			// check that the rename action becomes visible
-			await renameNode(newName);
-			const error = await screen.findByText(/Error! Name already assigned/i);
+			await renameNode(newName, user);
+			const error = await within(screen.getByTestId('modal')).findByText(
+				/Error! Name already assigned/i
+			);
 			const inputFieldDiv = screen.getByTestId('input-name');
 			const inputField = within(inputFieldDiv).getByRole('textbox');
 			expect(error).toBeVisible();
@@ -126,14 +130,14 @@ describe('Rename', () => {
 	});
 
 	describe('Contextual menu actions', () => {
-		test('Rename is disabled if node does not have permissions', async () => {
+		test('Rename is hidden if node does not have permissions', async () => {
 			const currentFolder = populateFolder();
 			const node = populateNode();
 			node.permissions.can_write_file = false;
 			node.permissions.can_write_folder = false;
 			currentFolder.children.nodes.push(node);
 
-			render(
+			setup(
 				<List
 					nodes={currentFolder.children.nodes as Array<Node>}
 					mainList
@@ -148,7 +152,7 @@ describe('Rename', () => {
 			expect(screen.queryByText(actionRegexp.rename)).not.toBeInTheDocument();
 		});
 
-		test('Rename is disabled if select more than 1 node in selection mode', async () => {
+		test('Rename is hidden if select more than 1 node in selection mode', async () => {
 			const currentFolder = populateFolder(5);
 			// enable permission to Mfd
 			forEach(currentFolder.children.nodes, (mockedNode) => {
@@ -159,7 +163,7 @@ describe('Rename', () => {
 			const element0 = currentFolder.children.nodes[0] as Node;
 			const element1 = currentFolder.children.nodes[1] as Node;
 
-			render(
+			const { user } = setup(
 				<List
 					nodes={currentFolder.children.nodes as Array<Node>}
 					mainList
@@ -167,7 +171,7 @@ describe('Rename', () => {
 				/>
 			);
 
-			selectNodes([element0.id, element1.id]);
+			await selectNodes([element0.id, element1.id], user);
 
 			// right click to open contextual menu
 			const nodeItem = screen.getByTestId(`node-item-${element0.id}`);
@@ -175,7 +179,7 @@ describe('Rename', () => {
 			await screen.findByText(actionRegexp.copy);
 			let renameAction = screen.queryByText(actionRegexp.rename);
 			expect(renameAction).not.toBeInTheDocument();
-			selectNodes([element1.id]);
+			await selectNodes([element1.id], user);
 			fireEvent.contextMenu(nodeItem);
 			renameAction = await screen.findByText(actionRegexp.rename);
 			expect(renameAction).toBeVisible();

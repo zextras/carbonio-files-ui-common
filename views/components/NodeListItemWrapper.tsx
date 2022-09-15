@@ -15,7 +15,7 @@ import { useParams } from 'react-router-dom';
 
 import useUserInfo from '../../../hooks/useUserInfo';
 import { draggedItemsVar } from '../../apollo/dragAndDropVar';
-import { DRAG_TYPES, ROOTS } from '../../constants';
+import { DRAG_TYPES, ROOTS, TIMERS } from '../../constants';
 import { DeleteNodesType } from '../../hooks/graphql/mutations/useDeleteNodesMutation';
 import { useMoveNodesMutation } from '../../hooks/graphql/mutations/useMoveNodesMutation';
 import { useDeletePermanentlyModal } from '../../hooks/modals/useDeletePermanentlyModal';
@@ -171,7 +171,7 @@ export const NodeListItemWrapper: React.VFC<NodeListItemWrapperProps> = ({
 		if (draggedNodes && draggedNodes.length > 0 && canBeMoveDestination(node, draggedNodes, me)) {
 			navigationTimerRef.current = setTimeout(() => {
 				navigateTo(node.id);
-			}, 1500);
+			}, TIMERS.DRAG_NAVIGATION_TRIGGER);
 			return true;
 		}
 		return false;
@@ -180,7 +180,7 @@ export const NodeListItemWrapper: React.VFC<NodeListItemWrapperProps> = ({
 	const dragUploadHandler = useCallback(() => {
 		navigationTimerRef.current = setTimeout(() => {
 			navigateTo(node.id);
-		}, 1500);
+		}, TIMERS.DRAG_NAVIGATION_TRIGGER);
 		return canUploadFile(node);
 	}, [navigateTo, node]);
 

@@ -6,13 +6,12 @@
 import React from 'react';
 
 import { act, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 
 import { ROOTS } from '../../constants';
 import { populateFolder } from '../../mocks/mockUtils';
 import { AdvancedFilters } from '../../types/common';
 import { mockGetPath } from '../../utils/mockUtils';
-import { render } from '../../utils/testUtils';
+import { setup } from '../../utils/testUtils';
 import { AdvancedSearchModalContent } from './AdvancedSearchModalContent';
 
 describe('Advanced search modal content', () => {
@@ -20,7 +19,7 @@ describe('Advanced search modal content', () => {
 		const filters = {};
 		const closeAction = jest.fn();
 		const searchAdvancedFilters = jest.fn();
-		render(
+		setup(
 			<AdvancedSearchModalContent
 				filters={filters}
 				closeAction={closeAction}
@@ -86,7 +85,7 @@ describe('Advanced search modal content', () => {
 		};
 		const closeAction = jest.fn();
 		const searchAdvancedFilters = jest.fn();
-		render(
+		setup(
 			<AdvancedSearchModalContent
 				filters={filters}
 				closeAction={closeAction}
@@ -115,8 +114,9 @@ describe('Advanced search modal content', () => {
 		expect(screen.getByRole('button', { name: /search/i })).toHaveAttribute('disabled', '');
 
 		// check values
-		// TODO: check flagged select is on with new DS
-		// TODO: check shared select is on with new DS
+		// flag and shared switches are on
+		expect(screen.getAllByTestId('icon: ToggleRight')).toHaveLength(2);
+		expect(screen.queryByTestId('icon: ToggleLeftOutline')).not.toBeInTheDocument();
 		expect(screen.getByText(/\bkeyword1\b/)).toBeVisible();
 		expect(screen.getByText(/\bkeyword2\b/)).toBeVisible();
 		expect(screen.getByText(/\bHome\b/)).toBeVisible();
@@ -161,7 +161,7 @@ describe('Advanced search modal content', () => {
 		};
 		const closeAction = jest.fn();
 		const searchAdvancedFilters = jest.fn();
-		render(
+		const { user } = setup(
 			<AdvancedSearchModalContent
 				filters={filters}
 				closeAction={closeAction}
@@ -170,8 +170,9 @@ describe('Advanced search modal content', () => {
 			{ mocks: [] }
 		);
 		// check values
-		// TODO: check flagged select is on with new DS
-		// TODO: check shared select is on with new DS
+		// flag and shared switches are on
+		expect(screen.getAllByTestId('icon: ToggleRight')).toHaveLength(2);
+		expect(screen.queryByTestId('icon: ToggleLeftOutline')).not.toBeInTheDocument();
 		expect(screen.getByText(/\bkeyword1\b/)).toBeVisible();
 		expect(screen.getByText(/\bkeyword2\b/)).toBeVisible();
 		expect(screen.getByText(/\bHome\b/)).toBeVisible();
@@ -188,14 +189,13 @@ describe('Advanced search modal content', () => {
 		expect(searchButton).toHaveAttribute('disabled', '');
 
 		// change 1 param to enable search button
-		act(() => {
-			userEvent.click(screen.getByText(/^flagged/i));
-		});
+		await user.click(screen.getByText(/^flagged/i));
 		await waitFor(() => expect(searchButton).not.toHaveAttribute('disabled', ''));
-		userEvent.click(resetButton);
+		await user.click(resetButton);
 		await waitFor(() => expect(searchButton).toHaveAttribute('disabled', ''));
-		// TODO: check flagged select is off with new DS
-		// TODO: check shared select is off with new DS
+		// flag and shared switches are off
+		expect(screen.getAllByTestId('icon: ToggleLeftOutline')).toHaveLength(2);
+		expect(screen.queryByTestId('icon: ToggleRight')).not.toBeInTheDocument();
 		expect(screen.queryByText(/\bkeyword1\b/)).not.toBeInTheDocument();
 		expect(screen.queryByText(/\bkeyword2\b/)).not.toBeInTheDocument();
 		expect(screen.queryByText(/\bHome\b/)).not.toBeInTheDocument();
@@ -203,7 +203,7 @@ describe('Advanced search modal content', () => {
 
 		// 1 close icon: close modal
 		expect(screen.getByTestId('icon: Close')).toBeVisible();
-		userEvent.click(screen.getByRole('button', { name: /search/i }));
+		await user.click(screen.getByRole('button', { name: /search/i }));
 		expect(searchAdvancedFilters).not.toHaveBeenCalled();
 	});
 
@@ -211,7 +211,7 @@ describe('Advanced search modal content', () => {
 		const filters = {};
 		const closeAction = jest.fn();
 		const searchAdvancedFilters = jest.fn();
-		render(
+		const { user } = setup(
 			<AdvancedSearchModalContent
 				filters={filters}
 				closeAction={closeAction}
@@ -222,14 +222,10 @@ describe('Advanced search modal content', () => {
 		expect(screen.getByText(/^flagged/i)).toBeVisible();
 		const searchButton = screen.getByRole('button', { name: /search/i });
 		expect(searchButton).toHaveAttribute('disabled', '');
-		act(() => {
-			userEvent.click(screen.getByText(/^flagged/i));
-		});
+		await user.click(screen.getByText(/^flagged/i));
 		await waitFor(() => expect(searchButton).not.toHaveAttribute('disabled', ''));
 		expect(screen.getByTestId('icon: Close')).toBeVisible();
-		act(() => {
-			userEvent.click(screen.getByTestId('icon: Close'));
-		});
+		await user.click(screen.getByTestId('icon: Close'));
 		expect(closeAction).toHaveBeenCalled();
 		expect(searchAdvancedFilters).not.toHaveBeenCalled();
 	});
@@ -239,7 +235,7 @@ describe('Advanced search modal content', () => {
 			const filters = {};
 			const closeAction = jest.fn();
 			const searchAdvancedFilters = jest.fn();
-			render(
+			const { user } = setup(
 				<AdvancedSearchModalContent
 					filters={filters}
 					closeAction={closeAction}
@@ -255,39 +251,35 @@ describe('Advanced search modal content', () => {
 			const inputElement = screen.getByRole('textbox', { name: /keywords/i });
 			expect(screen.getByText(/keywords/i)).toBeVisible();
 			// create chip with comma
-			userEvent.type(inputElement, 'keyword1');
+			await user.type(inputElement, 'keyword1');
 			expect(inputElement).toHaveValue('keyword1');
-			act(() => {
-				userEvent.type(inputElement, ',');
-			});
+			await user.type(inputElement, ',');
 			// 2 close icons: 1 chip and modal
 			await waitFor(() => expect(screen.getAllByTestId('icon: Close')).toHaveLength(2));
 			// search button becomes enabled
 			await waitFor(() => expect(searchButton).not.toHaveAttribute('disabled', ''));
 			expect(screen.getByText('keyword1')).toBeVisible();
 			// space does not create a chip
-			userEvent.type(inputElement, 'keyword{space}2');
-			expect(inputElement).toHaveValue('keyword 2');
+			await user.type(inputElement, 'keyword[Space]2');
+			expect(inputElement).toHaveDisplayValue(['keyword 2']);
 			expect(screen.getAllByTestId('icon: Close')).toHaveLength(2);
 			// create chip with semicolon
-			act(() => {
-				userEvent.type(inputElement, ';');
-			});
+			await user.type(inputElement, ';');
 			// 3 close icons: 2 chips and modal
 			await waitFor(() => expect(screen.getAllByTestId('icon: Close')).toHaveLength(3));
 			expect(screen.getByText('keyword1')).toBeVisible();
 			expect(screen.getByText('keyword 2')).toBeVisible();
 			// create chip with tab
-			userEvent.type(inputElement, 'keyword3');
-			userEvent.tab();
+			await user.type(inputElement, 'keyword3');
+			await user.tab();
 			// 4 close icons: 3 chips and modal
 			await waitFor(() => expect(screen.getAllByTestId('icon: Close')).toHaveLength(4));
 			expect(screen.getByText('keyword1')).toBeVisible();
 			expect(screen.getByText('keyword 2')).toBeVisible();
 			expect(screen.getByText('keyword3')).toBeVisible();
 			// create chip with blur
-			userEvent.type(inputElement, 'keyword4');
-			userEvent.click(searchButton);
+			await user.type(inputElement, 'keyword4');
+			await user.click(searchButton);
 			// 5 close icons: 4 chips and modal
 			await waitFor(() => expect(screen.getAllByTestId('icon: Close')).toHaveLength(5));
 			expect(screen.getByText('keyword1')).toBeVisible();
@@ -311,7 +303,7 @@ describe('Advanced search modal content', () => {
 			const filters = {};
 			const closeAction = jest.fn();
 			const searchAdvancedFilters = jest.fn();
-			render(
+			const { user } = setup(
 				<AdvancedSearchModalContent
 					filters={filters}
 					closeAction={closeAction}
@@ -323,11 +315,9 @@ describe('Advanced search modal content', () => {
 			const searchButton = screen.getByRole('button', { name: /search/i });
 			expect(searchButton).toBeVisible();
 			expect(searchButton).toHaveAttribute('disabled', '');
-			act(() => {
-				userEvent.click(screen.getByText(/^flagged/i));
-			});
+			await user.click(screen.getByText(/^flagged/i));
 			await waitFor(() => expect(searchButton).not.toHaveAttribute('disabled', ''));
-			userEvent.click(searchButton);
+			await user.click(searchButton);
 			expect(searchAdvancedFilters).toHaveBeenCalledWith({
 				flagged: expect.objectContaining({ value: true, label: 'Flagged', avatarIcon: 'Flag' })
 			});
@@ -349,7 +339,7 @@ describe('Advanced search modal content', () => {
 			};
 			const closeAction = jest.fn();
 			const searchAdvancedFilters = jest.fn();
-			render(
+			const { user } = setup(
 				<AdvancedSearchModalContent
 					filters={filters}
 					closeAction={closeAction}
@@ -361,11 +351,9 @@ describe('Advanced search modal content', () => {
 			const searchButton = screen.getByRole('button', { name: /search/i });
 			expect(searchButton).toBeVisible();
 			expect(searchButton).toHaveAttribute('disabled', '');
-			act(() => {
-				userEvent.click(screen.getByText(/^flagged/i));
-			});
+			await user.click(screen.getByText(/^flagged/i));
 			await waitFor(() => expect(searchButton).not.toHaveAttribute('disabled', ''));
-			userEvent.click(searchButton);
+			await user.click(searchButton);
 			// flagged is not set because "select off" corresponds to "undefined"
 			expect(searchAdvancedFilters).toHaveBeenCalledWith({
 				sharedByMe: expect.objectContaining({ value: true, label: 'Shared', avatarIcon: 'Share' })
@@ -378,7 +366,7 @@ describe('Advanced search modal content', () => {
 			const filters = {};
 			const closeAction = jest.fn();
 			const searchAdvancedFilters = jest.fn();
-			render(
+			const { user } = setup(
 				<AdvancedSearchModalContent
 					filters={filters}
 					closeAction={closeAction}
@@ -390,11 +378,9 @@ describe('Advanced search modal content', () => {
 			const searchButton = screen.getByRole('button', { name: /search/i });
 			expect(searchButton).toBeVisible();
 			expect(searchButton).toHaveAttribute('disabled', '');
-			act(() => {
-				userEvent.click(screen.getByText(/^shared/i));
-			});
+			await user.click(screen.getByText(/^shared/i));
 			await waitFor(() => expect(searchButton).not.toHaveAttribute('disabled', ''));
-			userEvent.click(searchButton);
+			await user.click(searchButton);
 			expect(searchAdvancedFilters).toHaveBeenCalledWith({
 				sharedByMe: expect.objectContaining({ value: true, label: 'Shared', avatarIcon: 'Share' })
 			});
@@ -416,7 +402,7 @@ describe('Advanced search modal content', () => {
 			};
 			const closeAction = jest.fn();
 			const searchAdvancedFilters = jest.fn();
-			render(
+			const { user } = setup(
 				<AdvancedSearchModalContent
 					filters={filters}
 					closeAction={closeAction}
@@ -428,11 +414,9 @@ describe('Advanced search modal content', () => {
 			const searchButton = screen.getByRole('button', { name: /search/i });
 			expect(searchButton).toBeVisible();
 			expect(searchButton).toHaveAttribute('disabled', '');
-			act(() => {
-				userEvent.click(screen.getByText(/^shared/i));
-			});
+			await user.click(screen.getByText(/^shared/i));
 			await waitFor(() => expect(searchButton).not.toHaveAttribute('disabled', ''));
-			userEvent.click(searchButton);
+			await user.click(searchButton);
 			// flagged is not set because "select off" corresponds to "undefined"
 			expect(searchAdvancedFilters).toHaveBeenCalledWith({
 				flagged: expect.objectContaining({ value: true, label: 'Flagged', avatarIcon: 'Flag' })
@@ -445,7 +429,7 @@ describe('Advanced search modal content', () => {
 			const filters = {};
 			const closeAction = jest.fn();
 			const searchAdvancedFilters = jest.fn();
-			render(
+			const { user } = setup(
 				<AdvancedSearchModalContent
 					filters={filters}
 					closeAction={closeAction}
@@ -455,20 +439,14 @@ describe('Advanced search modal content', () => {
 			);
 			expect(screen.getByText(/select a folder/i)).toBeVisible();
 			expect(screen.getByTestId('icon: FolderOutline')).toBeVisible();
-			userEvent.type(screen.getByRole('textbox', { name: /select a folder/i }), 'something');
+			await user.type(screen.getByRole('textbox', { name: /select a folder/i }), 'something');
 			await screen.findByRole('button', { name: /go back/i });
 			act(() => {
 				// run timers of modal
 				jest.runOnlyPendingTimers();
 			});
 			expect(screen.queryByText(/something/i)).not.toBeInTheDocument();
-			act(() => {
-				userEvent.click(screen.getByRole('button', { name: /go back/i }));
-			});
-			act(() => {
-				// run timers of modal
-				jest.runOnlyPendingTimers();
-			});
+			await user.click(screen.getByRole('button', { name: /go back/i }));
 			expect(screen.queryByRole('button', { name: /go back/i })).not.toBeInTheDocument();
 			expect(screen.queryByText(/something/i)).not.toBeInTheDocument();
 			expect(screen.getByText(/select a folder/i)).toBeVisible();
@@ -478,7 +456,7 @@ describe('Advanced search modal content', () => {
 			const filters = {};
 			const closeAction = jest.fn();
 			const searchAdvancedFilters = jest.fn();
-			render(
+			const { user } = setup(
 				<AdvancedSearchModalContent
 					filters={filters}
 					closeAction={closeAction}
@@ -488,9 +466,10 @@ describe('Advanced search modal content', () => {
 			);
 			expect(screen.getByText(/select a folder/i)).toBeVisible();
 			expect(screen.getByTestId('icon: FolderOutline')).toBeVisible();
-			userEvent.click(screen.getByTestId('icon: FolderOutline'));
+			await user.click(screen.getByTestId('icon: FolderOutline'));
 			await screen.findByRole('button', { name: /choose folder/i });
 			act(() => {
+				// run timers of modal
 				jest.runOnlyPendingTimers();
 			});
 			expect(screen.getByText(/home/i)).toBeInTheDocument();
@@ -503,7 +482,7 @@ describe('Advanced search modal content', () => {
 			const filters = {};
 			const closeAction = jest.fn();
 			const searchAdvancedFilters = jest.fn();
-			render(
+			const { user } = setup(
 				<AdvancedSearchModalContent
 					filters={filters}
 					closeAction={closeAction}
@@ -513,39 +492,30 @@ describe('Advanced search modal content', () => {
 			);
 			expect(screen.getByText(/select a folder/i)).toBeVisible();
 			expect(screen.getByTestId('icon: FolderOutline')).toBeVisible();
-			userEvent.click(screen.getByTestId('icon: FolderOutline'));
+			await user.click(screen.getByTestId('icon: FolderOutline'));
 			await screen.findByRole('button', { name: /choose folder/i });
 			act(() => {
+				// run timers of modal
 				jest.runOnlyPendingTimers();
 			});
 			expect(screen.getByText(/trash/i)).toBeVisible();
-			userEvent.click(screen.getByText(/trash/i));
+			await user.click(screen.getByText(/trash/i));
 			await waitFor(() =>
 				expect(screen.getByRole('button', { name: /choose folder/i })).not.toHaveAttribute(
 					'disabled',
 					''
 				)
 			);
-			act(() => {
-				userEvent.click(screen.getByRole('button', { name: /choose folder/i }));
-			});
+			await user.click(screen.getByRole('button', { name: /choose folder/i }));
 			await waitFor(() =>
 				expect(screen.getByRole('button', { name: /search/i })).not.toHaveAttribute('disabled', '')
 			);
-			act(() => {
-				// run modal timers
-				jest.runOnlyPendingTimers();
-			});
 			expect(screen.queryByRole('button', { name: /choose folder/i })).not.toBeInTheDocument();
 			expect(screen.getByText(/trash/i)).toBeVisible();
 			expect(screen.getByTestId('icon: Folder')).toBeVisible();
 			// 2 close icon: folder chip and modal close
 			expect(screen.getAllByTestId('icon: Close')).toHaveLength(2);
-			userEvent.click(screen.getByRole('button', { name: /search/i }));
-			act(() => {
-				// run timers of tooltip
-				jest.runOnlyPendingTimers();
-			});
+			await user.click(screen.getByRole('button', { name: /search/i }));
 			expect(searchAdvancedFilters).toHaveBeenCalledWith({
 				folderId: expect.objectContaining({
 					value: ROOTS.TRASH,
@@ -560,7 +530,7 @@ describe('Advanced search modal content', () => {
 			const filters = {};
 			const closeAction = jest.fn();
 			const searchAdvancedFilters = jest.fn();
-			render(
+			const { user } = setup(
 				<AdvancedSearchModalContent
 					filters={filters}
 					closeAction={closeAction}
@@ -570,46 +540,33 @@ describe('Advanced search modal content', () => {
 			);
 			expect(screen.getByText(/select a folder/i)).toBeVisible();
 			expect(screen.getByTestId('icon: FolderOutline')).toBeVisible();
-			userEvent.click(screen.getByTestId('icon: FolderOutline'));
+			await user.click(screen.getByTestId('icon: FolderOutline'));
 			await screen.findByRole('button', { name: /choose folder/i });
 			act(() => {
+				// run timers of modal
 				jest.runOnlyPendingTimers();
 			});
 			expect(screen.getByText(/trash/i)).toBeVisible();
 			expect(screen.getByTestId('icon: CheckmarkSquare')).toBeVisible();
-			userEvent.click(screen.getByText(/trash/i));
+			await user.click(screen.getByText(/trash/i));
 			await waitFor(() =>
 				expect(screen.getByRole('button', { name: /choose folder/i })).not.toHaveAttribute(
 					'disabled',
 					''
 				)
 			);
-			act(() => {
-				userEvent.click(screen.getByText(/search also in contained folders/i));
-			});
+			await user.click(screen.getByText(/search also in contained folders/i));
 			await screen.findByTestId('icon: Square');
-			userEvent.click(screen.getByRole('button', { name: /choose folder/i }));
-			act(() => {
-				// run timers of tooltip
-				jest.runOnlyPendingTimers();
-			});
+			await user.click(screen.getByRole('button', { name: /choose folder/i }));
 			await waitFor(() =>
 				expect(screen.getByRole('button', { name: /search/i })).not.toHaveAttribute('disabled', '')
 			);
-			act(() => {
-				// run modal timers
-				jest.runOnlyPendingTimers();
-			});
 			expect(screen.queryByRole('button', { name: /choose folder/i })).not.toBeInTheDocument();
 			expect(screen.getByText(/trash/i)).toBeVisible();
 			expect(screen.getByTestId('icon: Folder')).toBeVisible();
 			// 2 close icon: folder chip and modal close
 			expect(screen.getAllByTestId('icon: Close')).toHaveLength(2);
-			userEvent.click(screen.getByRole('button', { name: /search/i }));
-			act(() => {
-				// run timers of tooltip
-				jest.runOnlyPendingTimers();
-			});
+			await user.click(screen.getByRole('button', { name: /search/i }));
 			expect(searchAdvancedFilters).toHaveBeenCalledWith({
 				folderId: expect.objectContaining({
 					value: ROOTS.TRASH,
@@ -629,7 +586,7 @@ describe('Advanced search modal content', () => {
 			const searchAdvancedFilters = jest.fn();
 			const trashRoot = populateFolder(0, ROOTS.TRASH, ROOTS.TRASH);
 			const mocks = [mockGetPath({ node_id: ROOTS.TRASH }, [trashRoot])];
-			render(
+			const { user } = setup(
 				<AdvancedSearchModalContent
 					filters={filters}
 					closeAction={closeAction}
@@ -639,28 +596,20 @@ describe('Advanced search modal content', () => {
 			);
 			expect(screen.getByText(/select a folder/i)).toBeVisible();
 			expect(screen.getByTestId('icon: FolderOutline')).toBeVisible();
-			userEvent.click(screen.getByTestId('icon: FolderOutline'));
+			await user.click(screen.getByTestId('icon: FolderOutline'));
 			await screen.findByRole('button', { name: /choose folder/i });
-			// wait a tick to let getPath query run
-			await waitFor(
-				() =>
-					new Promise((resolve) => {
-						setTimeout(resolve, 0);
-					})
-			);
 			act(() => {
+				// run timers of modal
 				jest.runOnlyPendingTimers();
 			});
 			expect(screen.getByText(/trash/i)).toBeVisible();
 			expect(screen.getByTestId('icon: CheckmarkSquare')).toBeVisible();
-			userEvent.click(screen.getByText(/trash/i));
+			await user.click(screen.getByText(/trash/i));
 			expect(screen.getByRole('button', { name: /choose folder/i })).toHaveAttribute(
 				'disabled',
 				''
 			);
-			act(() => {
-				userEvent.click(screen.getByRole('button', { name: /choose folder/i }));
-			});
+			await user.click(screen.getByRole('button', { name: /choose folder/i }));
 			expect(screen.getByRole('button', { name: /choose folder/i })).toBeVisible();
 			expect(screen.getByRole('button', { name: /choose folder/i })).toHaveAttribute(
 				'disabled',
@@ -672,7 +621,7 @@ describe('Advanced search modal content', () => {
 			const filters = {};
 			const closeAction = jest.fn();
 			const searchAdvancedFilters = jest.fn();
-			render(
+			const { user } = setup(
 				<AdvancedSearchModalContent
 					filters={filters}
 					closeAction={closeAction}
@@ -682,41 +631,30 @@ describe('Advanced search modal content', () => {
 			);
 			expect(screen.getByText(/select a folder/i)).toBeVisible();
 			expect(screen.getByTestId('icon: FolderOutline')).toBeVisible();
-			userEvent.click(screen.getByTestId('icon: FolderOutline'));
+			await user.click(screen.getByTestId('icon: FolderOutline'));
 			await screen.findByRole('button', { name: /choose folder/i });
 			act(() => {
+				// run timers of modal
 				jest.runOnlyPendingTimers();
 			});
 			expect(screen.getByText(/home/i)).toBeVisible();
-			userEvent.click(screen.getByText(/home/i));
+			await user.click(screen.getByText(/home/i));
 			await waitFor(() =>
 				expect(screen.getByRole('button', { name: /choose folder/i })).not.toHaveAttribute(
 					'disabled',
 					''
 				)
 			);
-			userEvent.click(screen.getByRole('button', { name: /choose folder/i }));
-			act(() => {
-				// run timers of tooltip
-				jest.runOnlyPendingTimers();
-			});
+			await user.click(screen.getByRole('button', { name: /choose folder/i }));
 			await waitFor(() =>
 				expect(screen.getByRole('button', { name: /search/i })).not.toHaveAttribute('disabled', '')
 			);
-			act(() => {
-				// run modal timers
-				jest.runOnlyPendingTimers();
-			});
 			expect(screen.queryByRole('button', { name: /choose folder/i })).not.toBeInTheDocument();
 			expect(screen.getByText(/home/i)).toBeVisible();
 			expect(screen.getByTestId('icon: Folder')).toBeVisible();
 			// 2 close icon: folder chip and modal close
 			expect(screen.getAllByTestId('icon: Close')).toHaveLength(2);
-			userEvent.click(screen.getByRole('button', { name: /search/i }));
-			act(() => {
-				// run timers of tooltip
-				jest.runOnlyPendingTimers();
-			});
+			await user.click(screen.getByRole('button', { name: /search/i }));
 			expect(searchAdvancedFilters).toHaveBeenCalledWith({
 				folderId: expect.objectContaining({
 					value: ROOTS.LOCAL_ROOT,
@@ -732,7 +670,7 @@ describe('Advanced search modal content', () => {
 			const filters = {};
 			const closeAction = jest.fn();
 			const searchAdvancedFilters = jest.fn();
-			render(
+			const { user } = setup(
 				<AdvancedSearchModalContent
 					filters={filters}
 					closeAction={closeAction}
@@ -742,41 +680,30 @@ describe('Advanced search modal content', () => {
 			);
 			expect(screen.getByText(/select a folder/i)).toBeVisible();
 			expect(screen.getByTestId('icon: FolderOutline')).toBeVisible();
-			userEvent.click(screen.getByTestId('icon: FolderOutline'));
+			await user.click(screen.getByTestId('icon: FolderOutline'));
 			await screen.findByRole('button', { name: /choose folder/i });
 			act(() => {
+				// run timers of modal
 				jest.runOnlyPendingTimers();
 			});
 			expect(screen.getByText(/shared with me/i)).toBeVisible();
-			userEvent.click(screen.getByText(/shared with me/i));
+			await user.click(screen.getByText(/shared with me/i));
 			await waitFor(() =>
 				expect(screen.getByRole('button', { name: /choose folder/i })).not.toHaveAttribute(
 					'disabled',
 					''
 				)
 			);
-			userEvent.click(screen.getByRole('button', { name: /choose folder/i }));
-			act(() => {
-				// run timers of tooltip
-				jest.runOnlyPendingTimers();
-			});
+			await user.click(screen.getByRole('button', { name: /choose folder/i }));
 			await waitFor(() =>
 				expect(screen.getByRole('button', { name: /search/i })).not.toHaveAttribute('disabled', '')
 			);
-			act(() => {
-				// run modal timers
-				jest.runOnlyPendingTimers();
-			});
 			expect(screen.queryByRole('button', { name: /choose folder/i })).not.toBeInTheDocument();
 			expect(screen.getByText(/shared with me/i)).toBeVisible();
 			expect(screen.getByTestId('icon: Folder')).toBeVisible();
 			// 2 close icon: folder chip and modal close
 			expect(screen.getAllByTestId('icon: Close')).toHaveLength(2);
-			userEvent.click(screen.getByRole('button', { name: /search/i }));
-			act(() => {
-				// run timers of tooltip
-				jest.runOnlyPendingTimers();
-			});
+			await user.click(screen.getByRole('button', { name: /search/i }));
 			expect(searchAdvancedFilters).toHaveBeenCalledWith({
 				folderId: expect.objectContaining({
 					value: undefined,
@@ -797,7 +724,7 @@ describe('Advanced search modal content', () => {
 			const searchAdvancedFilters = jest.fn();
 			const trashRoot = populateFolder(0, ROOTS.TRASH, ROOTS.TRASH);
 			const mocks = [mockGetPath({ node_id: ROOTS.TRASH }, [trashRoot])];
-			render(
+			const { user } = setup(
 				<AdvancedSearchModalContent
 					filters={filters}
 					closeAction={closeAction}
@@ -811,15 +738,8 @@ describe('Advanced search modal content', () => {
 			expect(screen.getByTestId('icon: Folder')).toBeVisible();
 			// 2 close icon: 1 chip, 1 close modal
 			expect(screen.getAllByTestId('icon: Close')).toHaveLength(2);
-			userEvent.click(screen.getByTestId('icon: FolderOutline'));
+			await user.click(screen.getByTestId('icon: FolderOutline'));
 			await screen.findByRole('button', { name: /choose folder/i });
-			// wait a tick to let getPath query run
-			await waitFor(
-				() =>
-					new Promise((resolve) => {
-						setTimeout(resolve, 0);
-					})
-			);
 			act(() => {
 				// run modal timers
 				jest.runOnlyPendingTimers();
@@ -827,22 +747,16 @@ describe('Advanced search modal content', () => {
 			expect(screen.getAllByText(/trash/i)).toHaveLength(2);
 			expect(screen.getByText(/home/i)).toBeVisible();
 			expect(screen.getByTestId('icon: CheckmarkSquare')).toBeVisible();
-			userEvent.click(screen.getByText(/home/i));
+			await user.click(screen.getByText(/home/i));
 			await waitFor(() =>
 				expect(screen.getByRole('button', { name: /choose folder/i })).not.toHaveAttribute(
 					'disabled',
 					''
 				)
 			);
-			act(() => {
-				userEvent.click(screen.getByTestId('icon: CheckmarkSquare'));
-			});
+			await user.click(screen.getByTestId('icon: CheckmarkSquare'));
 			expect(screen.getByTestId('icon: Square')).toBeVisible();
-			userEvent.click(screen.getByRole('button', { name: /choose folder/i }));
-			act(() => {
-				// run timers of tooltip
-				jest.runOnlyPendingTimers();
-			});
+			await user.click(screen.getByRole('button', { name: /choose folder/i }));
 			await waitFor(() =>
 				expect(screen.getByRole('button', { name: /search/i })).not.toHaveAttribute('disabled', '')
 			);
@@ -851,11 +765,7 @@ describe('Advanced search modal content', () => {
 			expect(screen.getByTestId('icon: Folder')).toBeVisible();
 			// 2 close icon: 1 chip, 1 close modal
 			expect(screen.getAllByTestId('icon: Close')).toHaveLength(2);
-			userEvent.click(screen.getByRole('button', { name: /search/i }));
-			act(() => {
-				// run timers of tooltip
-				jest.runOnlyPendingTimers();
-			});
+			await user.click(screen.getByRole('button', { name: /search/i }));
 			expect(searchAdvancedFilters).toHaveBeenCalledWith({
 				folderId: expect.objectContaining({
 					value: ROOTS.LOCAL_ROOT,

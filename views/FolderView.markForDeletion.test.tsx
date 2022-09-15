@@ -7,7 +7,6 @@
 import React from 'react';
 
 import { fireEvent, screen, waitForElementToBeRemoved } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 
@@ -24,7 +23,7 @@ import {
 	mockGetPermissions,
 	mockTrashNodes
 } from '../utils/mockUtils';
-import { actionRegexp, render, selectNodes, triggerLoadMore } from '../utils/testUtils';
+import { actionRegexp, setup, selectNodes, triggerLoadMore } from '../utils/testUtils';
 import { DisplayerProps } from './components/Displayer';
 import FolderView from './FolderView';
 
@@ -73,37 +72,39 @@ describe('Mark for deletion - trash', () => {
 				)
 			];
 
-			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+			const { user } = setup(<FolderView />, {
+				initialRouterEntries: [`/?folder=${currentFolder.id}`],
+				mocks
+			});
 
 			await screen.findByText(filename1);
 			await screen.findByText(folderName1);
 
 			// activate selection mode by selecting items
-			selectNodes([folderId1]);
+			await selectNodes([folderId1], user);
 			// check that all wanted items are selected
 			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 
-			userEvent.click(screen.getByTestId('icon: MoreVertical'));
+			await user.click(screen.getByTestId('icon: MoreVertical'));
 
 			const trashAction = await screen.findByText(actionRegexp.moveToTrash);
 			expect(trashAction.parentNode).not.toHaveAttribute('disabled');
-			userEvent.click(trashAction);
+			await user.click(trashAction);
 
-			const snackbar = await screen.findByText(/item moved to trash/i);
-			await waitForElementToBeRemoved(snackbar);
+			await screen.findByText(/item moved to trash/i);
 			expect(trashAction).not.toBeInTheDocument();
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 
 			expect(screen.queryAllByTestId(`file-icon-preview`).length).toEqual(1);
 
 			// activate selection mode by selecting items
-			selectNodes([fileId1]);
+			await selectNodes([fileId1], user);
 			// check that all wanted items are selected
 			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 
-			userEvent.click(screen.getByTestId('icon: MoreVertical'));
+			await user.click(screen.getByTestId('icon: MoreVertical'));
 
 			// wait for copy action to check that popper is open
 			const copyAction = await screen.findByText(actionRegexp.copy);
@@ -138,25 +139,27 @@ describe('Mark for deletion - trash', () => {
 				} as Folder)
 			];
 
-			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+			const { user } = setup(<FolderView />, {
+				initialRouterEntries: [`/?folder=${currentFolder.id}`],
+				mocks
+			});
 
 			await screen.findByText((firstPage[0] as Node).name);
 			expect(screen.getByText((firstPage[0] as Node).name)).toBeVisible();
 			expect(screen.getByText((firstPage[NODES_LOAD_LIMIT - 1] as Node).name)).toBeVisible();
 			expect(screen.queryByText((secondPage[0] as Node).name)).not.toBeInTheDocument();
-			selectNodes(nodesToTrash);
+			await selectNodes(nodesToTrash, user);
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length);
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 
-			userEvent.click(screen.getByTestId('icon: MoreVertical'));
+			await user.click(screen.getByTestId('icon: MoreVertical'));
 
 			const trashAction = await screen.findByText(actionRegexp.moveToTrash);
 			expect(trashAction).toBeVisible();
-			userEvent.click(trashAction);
+			await user.click(trashAction);
 
-			const snackbar = await screen.findByText(/Item moved to trash/i);
-			await waitForElementToBeRemoved(snackbar);
+			await screen.findByText(/Item moved to trash/i);
 			expect(screen.queryByText((firstPage[0] as Node).name)).not.toBeInTheDocument();
 			expect(
 				screen.queryByText((firstPage[NODES_LOAD_LIMIT - 1] as Node).name)
@@ -195,7 +198,10 @@ describe('Mark for deletion - trash', () => {
 				)
 			];
 
-			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+			const { user } = setup(<FolderView />, {
+				initialRouterEntries: [`/?folder=${currentFolder.id}`],
+				mocks
+			});
 
 			// wait for the load to be completed
 			await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -208,10 +214,9 @@ describe('Mark for deletion - trash', () => {
 			fireEvent.contextMenu(nodeItem);
 
 			await screen.findByText(actionRegexp.moveToTrash);
-			userEvent.click(screen.getByText(actionRegexp.moveToTrash));
+			await user.click(screen.getByText(actionRegexp.moveToTrash));
 
-			const snackbar = await screen.findByText(/Item moved to trash/i);
-			await waitForElementToBeRemoved(snackbar);
+			await screen.findByText(/Item moved to trash/i);
 
 			// contextual menu is closed
 			expect(screen.queryByText(actionRegexp.moveToTrash)).not.toBeInTheDocument();
@@ -246,14 +251,17 @@ describe('Mark for deletion - trash', () => {
 				)
 			];
 
-			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+			const { user } = setup(<FolderView />, {
+				initialRouterEntries: [`/?folder=${currentFolder.id}`],
+				mocks
+			});
 
 			// wait for the load to be completed
 			await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 
 			expect(screen.queryAllByTestId(`file-icon-preview`).length).toEqual(5);
 
-			selectNodes([element0.id, element1.id]);
+			await selectNodes([element0.id, element1.id], user);
 
 			// right click to open contextual menu
 			const nodeItem = screen.getByTestId(`node-item-${element0.id}`);
@@ -261,9 +269,8 @@ describe('Mark for deletion - trash', () => {
 			fireEvent.contextMenu(nodeItem);
 
 			await screen.findByText(actionRegexp.moveToTrash);
-			userEvent.click(screen.getByText(actionRegexp.moveToTrash));
-			const snackbar = await screen.findByText(/Item moved to trash/i);
-			await waitForElementToBeRemoved(snackbar);
+			await user.click(screen.getByText(actionRegexp.moveToTrash));
+			await screen.findByText(/Item moved to trash/i);
 
 			// contextual menu is closed
 			expect(screen.queryByText(actionRegexp.moveToTrash)).not.toBeInTheDocument();
@@ -300,7 +307,10 @@ describe('Mark for deletion - trash', () => {
 				)
 			];
 
-			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+			const { user } = setup(<FolderView />, {
+				initialRouterEntries: [`/?folder=${currentFolder.id}`],
+				mocks
+			});
 
 			await screen.findByText(firstPage[0].name);
 			expect(screen.getByText(firstPage[0].name)).toBeVisible();
@@ -309,9 +319,8 @@ describe('Mark for deletion - trash', () => {
 			const moveToTrashAction = await screen.findByText(actionRegexp.moveToTrash);
 			expect(moveToTrashAction).toBeVisible();
 			expect(moveToTrashAction.parentNode).not.toHaveAttribute('disabled', '');
-			userEvent.click(moveToTrashAction);
-			const snackbar = await screen.findByText(/Item moved to trash/i);
-			await waitForElementToBeRemoved(snackbar);
+			await user.click(moveToTrashAction);
+			await screen.findByText(/Item moved to trash/i);
 			expect(screen.queryByText(secondPage[0].name)).not.toBeInTheDocument();
 			await triggerLoadMore();
 			await screen.findByText(secondPage[0].name);

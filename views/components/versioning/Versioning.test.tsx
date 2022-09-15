@@ -5,8 +5,7 @@
  */
 import React from 'react';
 
-import { act, screen, waitFor, waitForElementToBeRemoved, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { screen, waitFor, within } from '@testing-library/react';
 import find from 'lodash/find';
 import map from 'lodash/map';
 import { graphql, rest } from 'msw';
@@ -37,7 +36,7 @@ import {
 	mockGetVersions,
 	mockKeepVersions
 } from '../../../utils/mockUtils';
-import { render, waitForNetworkResponse } from '../../../utils/testUtils';
+import { setup } from '../../../utils/testUtils';
 import * as moduleUtils from '../../../utils/utils';
 import { getChipLabel } from '../../../utils/utils';
 import { Versioning } from './Versioning';
@@ -68,7 +67,8 @@ describe('Versioning', () => {
 				version1 as FilesFile
 			])
 		];
-		render(<Versioning node={fileVersion3} />, { mocks });
+
+		setup(<Versioning node={fileVersion3} />, { mocks });
 
 		await screen.findByText(getChipLabel(fileVersion3.last_editor));
 
@@ -122,7 +122,7 @@ describe('Versioning', () => {
 					version2.version
 				])
 			];
-			render(<Versioning node={fileVersion5} />, { mocks });
+			const { user } = setup(<Versioning node={fileVersion5} />, { mocks });
 			await screen.findByText(getChipLabel(fileVersion5.last_editor));
 
 			const version5LastEditor = screen.getByText(getChipLabel(version5.last_editor));
@@ -141,11 +141,10 @@ describe('Versioning', () => {
 
 			const versions2Icons = screen.getByTestId('version2-icons');
 			const versions2MoreButton = within(versions2Icons).getByTestId('icon: MoreVerticalOutline');
-			userEvent.click(versions2MoreButton);
+			await user.click(versions2MoreButton);
 
 			const deleteVersionItem = await screen.findByText(/delete version/i);
-			userEvent.click(deleteVersionItem);
-			await waitForNetworkResponse();
+			await user.click(deleteVersionItem);
 			await waitFor(() => expect(screen.getAllByText(/Version \d+/)).toHaveLength(4));
 			expect(version2LastEditor).not.toBeInTheDocument();
 		});
@@ -192,7 +191,7 @@ describe('Versioning', () => {
 					version1.version
 				])
 			];
-			render(<Versioning node={fileVersion5} />, { mocks });
+			const { user } = setup(<Versioning node={fileVersion5} />, { mocks });
 			await screen.findByText(getChipLabel(fileVersion5.last_editor));
 
 			const version5LastEditor = screen.getByText(getChipLabel(version5.last_editor));
@@ -210,21 +209,20 @@ describe('Versioning', () => {
 			expect(screen.getByText('Last week')).toBeVisible();
 
 			const purgeButton = await screen.findByRole('button', { name: /purge all versions/i });
-			userEvent.click(purgeButton);
+			await user.click(purgeButton);
 
 			await screen.findByText(
 				/All versions that are not marked to be kept forever, except the current one, will be deleted/i
 			);
 
 			expect(screen.getAllByRole('button', { name: /purge all versions/i })).toHaveLength(2);
-			const modalPurgeAllButton = find(
-				screen.getAllByRole('button', { name: /purge all versions/i }),
-				(button) => button !== purgeButton
-			);
+			const modalPurgeAllButton = within(screen.getByTestId('modal')).getByRole('button', {
+				name: /purge all versions/i
+			});
 
-			expect(modalPurgeAllButton).toBeDefined();
-			userEvent.click(modalPurgeAllButton as HTMLElement);
-			await waitForElementToBeRemoved(modalPurgeAllButton);
+			expect(modalPurgeAllButton).toBeInTheDocument();
+			await user.click(modalPurgeAllButton);
+			expect(screen.queryByTestId('modal')).not.toBeInTheDocument();
 			await waitFor(() => expect(screen.getAllByText(/Version \d+/)).toHaveLength(2));
 			expect(version3LastEditor).not.toBeInTheDocument();
 		});
@@ -251,7 +249,7 @@ describe('Versioning', () => {
 			mockKeepVersions({ node_id: fileVersion2.id, versions: [2], keep_forever: false }, [2])
 		];
 
-		render(<Versioning node={fileVersion2} />, { mocks });
+		const { user } = setup(<Versioning node={fileVersion2} />, { mocks });
 		await screen.findByText(getChipLabel(fileVersion2.last_editor));
 
 		const version2LastEditor = screen.getByText(getChipLabel(version2.last_editor));
@@ -264,24 +262,22 @@ describe('Versioning', () => {
 
 		const versions2Icons = screen.getByTestId('version2-icons');
 		const versions2MoreButton = within(versions2Icons).getByTestId('icon: MoreVerticalOutline');
-		userEvent.click(versions2MoreButton);
+		await user.click(versions2MoreButton);
 
 		const keepForeverVersionItem = await screen.findByText(/keep this version forever/i);
-		userEvent.click(keepForeverVersionItem);
+		await user.click(keepForeverVersionItem);
 
-		const snackbar = await screen.findByText(/Version marked as to be kept forever/i);
-		await waitForElementToBeRemoved(snackbar);
+		await screen.findByText(/Version marked as to be kept forever/i);
 
 		await within(versions2Icons).findByTestId('icon: InfinityOutline');
 		const keepIcon = within(versions2Icons).getByTestId('icon: InfinityOutline');
 		expect(keepIcon).toBeVisible();
 
-		userEvent.click(versions2MoreButton);
+		await user.click(versions2MoreButton);
 		const removeKeepForeverItem = await screen.findByText(/remove keep forever/i);
-		userEvent.click(removeKeepForeverItem);
+		await user.click(removeKeepForeverItem);
 
-		const snackbar2 = await screen.findByText(/Keep forever removed/i);
-		await waitForElementToBeRemoved(snackbar2);
+		await screen.findByText(/Keep forever removed/i);
 
 		expect(keepIcon).not.toBeInTheDocument();
 	});
@@ -309,7 +305,7 @@ describe('Versioning', () => {
 			mockCloneVersion({ node_id: fileVersion2.id, version: 2 }, version3 as FilesFile)
 		];
 
-		render(<Versioning node={fileVersion2} />, { mocks });
+		const { user } = setup(<Versioning node={fileVersion2} />, { mocks });
 		await screen.findByText(getChipLabel(fileVersion2.last_editor));
 
 		const version2LastEditor = screen.getByText(getChipLabel(version2.last_editor));
@@ -324,13 +320,13 @@ describe('Versioning', () => {
 
 		const versions2Icons = screen.getByTestId('version2-icons');
 		const versions2MoreButton = within(versions2Icons).getByTestId('icon: MoreVerticalOutline');
-		userEvent.click(versions2MoreButton);
+		await user.click(versions2MoreButton);
 
 		const cloneAsCurrentItem = await screen.findByText(/clone as current/i);
-		userEvent.click(cloneAsCurrentItem);
+		await user.click(cloneAsCurrentItem);
 
-		const snackbar = await screen.findByText(/Version cloned as the current one/i);
-		await waitForElementToBeRemoved(snackbar);
+		await screen.findByText(/Version cloned as the current one/i);
+
 		expect(screen.getAllByText(/Version \d+/)).toHaveLength(3);
 	});
 
@@ -347,7 +343,7 @@ describe('Versioning', () => {
 			mockGetVersions({ node_id: fileVersion1.id }, [version1 as FilesFile])
 		];
 
-		render(<Versioning node={fileVersion1} />, { mocks });
+		const { user } = setup(<Versioning node={fileVersion1} />, { mocks });
 		await screen.findByText(getChipLabel(fileVersion1.last_editor));
 
 		const version1LastEditor = screen.getByText(getChipLabel(version1.last_editor));
@@ -359,10 +355,10 @@ describe('Versioning', () => {
 
 		const versions2Icons = screen.getByTestId('version1-icons');
 		const versions2MoreButton = within(versions2Icons).getByTestId('icon: MoreVerticalOutline');
-		userEvent.click(versions2MoreButton);
+		await user.click(versions2MoreButton);
 
 		const downloadItem = await screen.findByText(/download version/i);
-		userEvent.click(downloadItem);
+		await user.click(downloadItem);
 
 		expect(downloadSpy).toBeCalledWith(fileVersion1.id, fileVersion1.version);
 	});
@@ -382,7 +378,7 @@ describe('Versioning', () => {
 			mockGetVersions({ node_id: fileVersion1.id }, [version1 as FilesFile])
 		];
 
-		render(<Versioning node={fileVersion1} />, { mocks });
+		const { user } = setup(<Versioning node={fileVersion1} />, { mocks });
 		await screen.findByText(getChipLabel(fileVersion1.last_editor));
 
 		const version1LastEditor = screen.getByText(getChipLabel(version1.last_editor));
@@ -394,10 +390,10 @@ describe('Versioning', () => {
 
 		const versions2Icons = screen.getByTestId('version1-icons');
 		const versions2MoreButton = within(versions2Icons).getByTestId('icon: MoreVerticalOutline');
-		userEvent.click(versions2MoreButton);
+		await user.click(versions2MoreButton);
 
 		const openDocumentItem = await screen.findByText(/open document version/i);
-		userEvent.click(openDocumentItem);
+		await user.click(openDocumentItem);
 
 		expect(openNodeWithDocsSpy).toBeCalledWith(fileVersion1.id, fileVersion1.version);
 	});
@@ -454,7 +450,7 @@ describe('Versioning', () => {
 			)
 		);
 
-		render(<Versioning node={fileVersion4} />, { mocks });
+		const { user } = setup(<Versioning node={fileVersion4} />, { mocks });
 		await screen.findByText(getChipLabel(fileVersion4.last_editor));
 
 		const version4LastEditor = screen.getByText(getChipLabel(version4.last_editor));
@@ -471,11 +467,11 @@ describe('Versioning', () => {
 		expect(screen.getAllByText(/Version \d+/)).toHaveLength(4);
 
 		const uploadButton = await screen.findByRole('button', { name: /upload version/i });
-		userEvent.click(uploadButton);
+		await user.click(uploadButton);
 
 		const file = new File(['(⌐□_□)'], fileVersion5.name, { type: fileVersion5.mime_type });
 		const input = await screen.findByAltText(/Hidden file input/i);
-		userEvent.upload(input, file);
+		await user.upload(input, file);
 
 		await waitFor(() => expect(screen.getAllByText(/Version \d+/)).toHaveLength(5));
 		const version5LastEditor = screen.getByText(getChipLabel(version5.last_editor));
@@ -504,32 +500,31 @@ describe('Versioning', () => {
 			mockGetVersions({ node_id: baseFile.id }, versions as FilesFile[])
 		];
 
-		render(<Versioning node={baseFile} />, { mocks });
+		const { user } = setup(<Versioning node={baseFile} />, { mocks });
 		await screen.findByText(/Version 1/i);
 
 		expect(screen.getAllByText(/Version \d+/)).toHaveLength(maxVersions);
 
 		const versions1Icons = screen.getByTestId('version1-icons');
 		const versions1MoreButton = within(versions1Icons).getByTestId('icon: MoreVerticalOutline');
-		userEvent.click(versions1MoreButton);
+		await user.click(versions1MoreButton);
 
 		const cloneAsCurrentItem = await screen.findByText(/clone as current/i);
 		expect(cloneAsCurrentItem).toHaveAttribute('disabled', '');
-		userEvent.click(cloneAsCurrentItem);
+		// register tooltip listeners
+		jest.advanceTimersToNextTimer();
+		// hover on action shows a tooltip
+		await user.hover(cloneAsCurrentItem);
+		const tooltip = await screen.findByText(/you have reached the maximum number of versions/i);
+		expect(tooltip).toBeVisible();
+		await user.unhover(cloneAsCurrentItem);
+		expect(tooltip).not.toBeInTheDocument();
 
-		await waitForNetworkResponse();
+		await user.click(cloneAsCurrentItem);
 		expect(screen.queryByText(/Version cloned as the current one/i)).not.toBeInTheDocument();
 		// number of version is not changed
 		expect(screen.getAllByText(/Version \d+/)).toHaveLength(maxVersions);
-
-		// hover on action shows a tooltip
-		userEvent.hover(cloneAsCurrentItem);
-		const tooltip = await screen.findByText(/you have reached the maximum number of versions/i);
-		expect(tooltip).toBeVisible();
-		act(() => {
-			userEvent.unhover(cloneAsCurrentItem);
-		});
-		expect(tooltip).not.toBeInTheDocument();
+		expect(screen.getByText(/clone as current/i)).toBeVisible();
 	});
 
 	test('keep forever action is disabled if max number of keep is reached', async () => {
@@ -562,7 +557,7 @@ describe('Versioning', () => {
 			mockGetVersions({ node_id: baseFile.id }, versions as FilesFile[])
 		];
 
-		render(<Versioning node={baseFile} />, { mocks });
+		const { user } = setup(<Versioning node={baseFile} />, { mocks });
 		await screen.findByText(/Version 1/i);
 
 		expect(screen.getAllByText(/Version \d+/)).toHaveLength(versions.length);
@@ -574,31 +569,27 @@ describe('Versioning', () => {
 		const versionWithoutKeepMoreButton = within(versionWithoutKeepIcons).getByTestId(
 			'icon: MoreVerticalOutline'
 		);
-		userEvent.click(versionWithoutKeepMoreButton);
+		await user.click(versionWithoutKeepMoreButton);
 
 		const keepVersionItem = await screen.findByText(/keep this version forever/i);
 		expect(keepVersionItem).toHaveAttribute('disabled', '');
-		userEvent.click(keepVersionItem);
-
-		await waitForNetworkResponse();
-
-		expect(screen.queryByText(/Version marked as to be kept forever/i)).not.toBeInTheDocument();
+		// register tooltip listeners
+		jest.advanceTimersToNextTimer();
 
 		// hover on action shows a tooltip
-		userEvent.hover(keepVersionItem);
+		await user.hover(keepVersionItem);
 		const tooltip = await screen.findByText(
 			/You have reached the maximum number of versions to keep forever/i
 		);
 		expect(tooltip).toBeVisible();
-		act(() => {
-			userEvent.unhover(keepVersionItem);
-		});
+		await user.unhover(keepVersionItem);
 		expect(tooltip).not.toBeInTheDocument();
 
+		await user.click(keepVersionItem);
+		expect(screen.queryByText(/Version marked as to be kept forever/i)).not.toBeInTheDocument();
+
 		// click outside to close context menu
-		act(() => {
-			userEvent.click(screen.getByText(RegExp(`version ${versionWithoutKeep.version}`, 'i')));
-		});
+		await user.click(screen.getByText(RegExp(`version ${versionWithoutKeep.version}`, 'i')));
 		expect(screen.queryByText(/keep this version forever/i)).not.toBeInTheDocument();
 		expect(screen.getAllByTestId('icon: InfinityOutline')).toHaveLength(maxKeepVersions);
 	});
@@ -648,7 +639,7 @@ describe('Versioning', () => {
 			)
 		);
 
-		render(<Versioning node={baseFile} />, { mocks });
+		const { user } = setup(<Versioning node={baseFile} />, { mocks });
 		await screen.findByText(/Version 1/i);
 
 		expect(screen.getAllByText(/Version \d+/)).toHaveLength(maxVersions);
@@ -656,13 +647,13 @@ describe('Versioning', () => {
 		const uploadButton = await screen.findByRole('button', { name: /upload version/i });
 		expect(uploadButton).toBeVisible();
 		expect(uploadButton).not.toHaveAttribute('disabled', '');
-		userEvent.click(uploadButton);
+		await user.click(uploadButton);
 
 		const file = new File(['(⌐□_□)'], fileVersionUpload.name, {
 			type: fileVersionUpload.mime_type
 		});
 		const input = await screen.findByAltText(/Hidden file input/i);
-		userEvent.upload(input, file);
+		await user.upload(input, file);
 
 		await screen.findByText(RegExp(`version ${versionUpload.version}`, 'i'));
 		// uploaded version is visible and first version is removed from list
@@ -694,7 +685,7 @@ describe('Versioning', () => {
 			mockKeepVersions({ node_id: baseFile.id, versions: [1], keep_forever: false }, [1])
 		];
 
-		render(<Versioning node={baseFile} />, { mocks });
+		const { user } = setup(<Versioning node={baseFile} />, { mocks });
 		await screen.findByText(/Version 1/i);
 
 		expect(screen.getAllByText(/Version \d+/)).toHaveLength(versions.length);
@@ -703,14 +694,14 @@ describe('Versioning', () => {
 		const versionIcons = screen.getByTestId(`version1-icons`);
 		expect(within(versionIcons).getByTestId('icon: InfinityOutline')).toBeVisible();
 		const versionMoreButton = within(versionIcons).getByTestId('icon: MoreVerticalOutline');
-		userEvent.click(versionMoreButton);
+		await user.click(versionMoreButton);
 
 		const keepVersionItem = await screen.findByText(/remove keep forever/i);
 		expect(keepVersionItem.parentElement).not.toHaveAttribute('disabled', '');
-		userEvent.click(keepVersionItem);
+		await user.click(keepVersionItem);
 
-		const snackbar = await screen.findByText(/Keep forever removed/i);
-		await waitForElementToBeRemoved(snackbar);
+		await screen.findByText(/Keep forever removed/i);
+
 		expect(screen.queryByText(/rmeove keep forever/i)).not.toBeInTheDocument();
 		expect(within(versionIcons).queryByTestId('icon: InfinityOutline')).not.toBeInTheDocument();
 		expect(screen.getAllByTestId('icon: InfinityOutline')).toHaveLength(maxKeepVersions - 1);
@@ -740,19 +731,18 @@ describe('Versioning', () => {
 			mockDeleteVersions({ node_id: baseFile.id, versions: [1] }, [1])
 		];
 
-		render(<Versioning node={baseFile} />, { mocks });
+		const { user } = setup(<Versioning node={baseFile} />, { mocks });
 		await screen.findByText(/Version 1/i);
 
 		expect(screen.getAllByText(/Version \d+/)).toHaveLength(maxVersions);
 
 		const version2Icons = screen.getByTestId('version1-icons');
 		const version2MoreButton = within(version2Icons).getByTestId('icon: MoreVerticalOutline');
-		userEvent.click(version2MoreButton);
+		await user.click(version2MoreButton);
 
 		const deleteVersionItem = await screen.findByText(/delete version/i);
 		expect(deleteVersionItem).not.toHaveAttribute('disabled', '');
-		userEvent.click(deleteVersionItem);
-		await waitForNetworkResponse();
+		await user.click(deleteVersionItem);
 		await waitFor(() => expect(screen.getAllByText(/version \d+/i)).toHaveLength(maxVersions - 1));
 		expect(screen.getAllByText(/Version \d+/)).toHaveLength(maxVersions - 1);
 		expect(screen.queryByText(/version 1/i)).not.toBeInTheDocument();
@@ -783,14 +773,14 @@ describe('Versioning', () => {
 			mockDeleteVersions({ node_id: baseFile.id }, purgedVersions)
 		];
 
-		render(<Versioning node={baseFile} />, { mocks });
+		const { user } = setup(<Versioning node={baseFile} />, { mocks });
 		await screen.findByText(/Version 1/i);
 
 		expect(screen.getAllByText(/Version \d+/)).toHaveLength(maxVersions);
 
 		const purgeAllButton = await screen.findByRole('button', { name: /purge all versions/i });
 		expect(purgeAllButton).not.toHaveAttribute('disabled', '');
-		userEvent.click(purgeAllButton);
+		await user.click(purgeAllButton);
 		await screen.findByText(
 			/All versions that are not marked to be kept forever, except the current one, will be deleted/i
 		);
@@ -798,7 +788,7 @@ describe('Versioning', () => {
 		expect(purgeAllButtons).toHaveLength(2);
 		const purgeAllModalButton = find(purgeAllButtons, (button) => button !== purgeAllButton);
 		expect(purgeAllModalButton).toBeDefined();
-		userEvent.click(purgeAllModalButton as HTMLElement);
+		await user.click(purgeAllModalButton as HTMLElement);
 		await screen.findByRole('button', { name: /purge all versions/i });
 		// only version 1 is visible
 		expect(screen.getByText(/version \d+/i)).toBeVisible();
@@ -828,32 +818,30 @@ describe('Versioning', () => {
 			mockGetVersions({ node_id: baseFile.id }, versions as FilesFile[])
 		];
 
-		render(<Versioning node={baseFile} />, { mocks });
+		const { user } = setup(<Versioning node={baseFile} />, { mocks });
 		await screen.findByText(/Version 1/i);
 
 		expect(screen.getAllByText(/Version \d+/)).toHaveLength(versions.length);
 
 		const versions1Icons = screen.getByTestId('version1-icons');
 		const versions1MoreButton = within(versions1Icons).getByTestId('icon: MoreVerticalOutline');
-		userEvent.click(versions1MoreButton);
+		await user.click(versions1MoreButton);
 
 		const cloneAsCurrentItem = await screen.findByText(/clone as current/i);
 		expect(cloneAsCurrentItem).toHaveAttribute('disabled', '');
-		userEvent.click(cloneAsCurrentItem);
+		// register tooltip listeners
+		jest.advanceTimersToNextTimer();
+		// hover on action shows a tooltip
+		await user.hover(cloneAsCurrentItem);
+		const tooltip = await screen.findByText(/you don't have the correct permissions/i);
+		expect(tooltip).toBeVisible();
+		await user.unhover(cloneAsCurrentItem);
+		expect(tooltip).not.toBeInTheDocument();
 
-		await waitForNetworkResponse();
+		await user.click(cloneAsCurrentItem);
 		expect(screen.queryByText(/Version cloned as the current one/i)).not.toBeInTheDocument();
 		// number of version is not changed
 		expect(screen.getAllByText(/Version \d+/)).toHaveLength(versions.length);
-
-		// hover on action shows a tooltip
-		userEvent.hover(cloneAsCurrentItem);
-		const tooltip = await screen.findByText(/you don't have the correct permissions/i);
-		expect(tooltip).toBeVisible();
-		act(() => {
-			userEvent.unhover(cloneAsCurrentItem);
-		});
-		expect(tooltip).not.toBeInTheDocument();
 	});
 
 	test('delete version is disabled and shows a tooltip if user does not have write permissions', async () => {
@@ -879,32 +867,31 @@ describe('Versioning', () => {
 			mockGetVersions({ node_id: baseFile.id }, versions as FilesFile[])
 		];
 
-		render(<Versioning node={baseFile} />, { mocks });
+		const { user } = setup(<Versioning node={baseFile} />, { mocks });
 		await screen.findByText(/Version 1/i);
 
 		expect(screen.getAllByText(/Version \d+/)).toHaveLength(versions.length);
 
 		const versions1Icons = screen.getByTestId('version1-icons');
 		const versions1MoreButton = within(versions1Icons).getByTestId('icon: MoreVerticalOutline');
-		userEvent.click(versions1MoreButton);
+		await user.click(versions1MoreButton);
 
 		const deleteVersion = await screen.findByText(/delete version/i);
 		expect(deleteVersion).toHaveAttribute('disabled', '');
-		userEvent.click(deleteVersion);
+		// register tooltip listeners
+		jest.advanceTimersToNextTimer();
 
-		await waitForNetworkResponse();
+		// hover on action shows a tooltip
+		await user.hover(deleteVersion);
+		const tooltip = await screen.findByText(/you don't have the correct permissions/i);
+		expect(tooltip).toBeVisible();
+		await user.unhover(deleteVersion);
+		expect(tooltip).not.toBeInTheDocument();
+
+		await user.click(deleteVersion);
 		expect(screen.getByText(/version 1/i)).toBeVisible();
 		// number of version is not changed
 		expect(screen.getAllByText(/Version \d+/)).toHaveLength(versions.length);
-
-		// hover on action shows a tooltip
-		userEvent.hover(deleteVersion);
-		const tooltip = await screen.findByText(/you don't have the correct permissions/i);
-		expect(tooltip).toBeVisible();
-		act(() => {
-			userEvent.unhover(deleteVersion);
-		});
-		expect(tooltip).not.toBeInTheDocument();
 	});
 
 	test('open with docs is disabled and shows a tooltip if file cannot be opened with docs', async () => {
@@ -924,29 +911,29 @@ describe('Versioning', () => {
 			mockGetVersions({ node_id: baseFile.id }, versions as FilesFile[])
 		];
 
-		render(<Versioning node={baseFile} />, { mocks });
+		const { user } = setup(<Versioning node={baseFile} />, { mocks });
 		await screen.findByText(/Version 1/i);
 
 		expect(screen.getAllByText(/Version \d+/)).toHaveLength(versions.length);
 
 		const versions1Icons = screen.getByTestId('version1-icons');
 		const versions1MoreButton = within(versions1Icons).getByTestId('icon: MoreVerticalOutline');
-		userEvent.click(versions1MoreButton);
+		await user.click(versions1MoreButton);
 
 		const openDocumentVersion = await screen.findByText(/open document version/i);
 		expect(openDocumentVersion).toHaveAttribute('disabled', '');
-		userEvent.click(openDocumentVersion);
-		await waitForNetworkResponse();
-		expect(openNodeWithDocsSpy).not.toHaveBeenCalled();
+		// register tooltip listeners
+		jest.advanceTimersToNextTimer();
 
 		// hover on action shows a tooltip
-		userEvent.hover(openDocumentVersion);
+		await user.hover(openDocumentVersion);
 		const tooltip = await screen.findByText(/This version cannot be opened by the online editor/i);
 		expect(tooltip).toBeVisible();
-		act(() => {
-			userEvent.unhover(openDocumentVersion);
-		});
+		await user.unhover(openDocumentVersion);
 		expect(tooltip).not.toBeInTheDocument();
+
+		await user.click(openDocumentVersion);
+		expect(openNodeWithDocsSpy).not.toHaveBeenCalled();
 	});
 
 	test('keep version forever is disabled and shows a tooltip if user does not have permissions', async () => {
@@ -960,29 +947,28 @@ describe('Versioning', () => {
 			mockGetVersions({ node_id: baseFile.id }, versions as FilesFile[])
 		];
 
-		render(<Versioning node={baseFile} />, { mocks });
+		const { user } = setup(<Versioning node={baseFile} />, { mocks });
 		await screen.findByText(/Version 1/i);
 
 		expect(screen.getAllByText(/Version \d+/)).toHaveLength(versions.length);
 
 		const versions1Icons = screen.getByTestId('version1-icons');
 		const versions1MoreButton = within(versions1Icons).getByTestId('icon: MoreVerticalOutline');
-		userEvent.click(versions1MoreButton);
+		await user.click(versions1MoreButton);
 
 		const keepVersion = await screen.findByText(/(keep this version forever|remove keep forever)/i);
 		expect(keepVersion).toHaveAttribute('disabled', '');
-		userEvent.click(keepVersion);
-
-		await waitForNetworkResponse();
-		expect(screen.queryByText(/version marked as to be kept forever/i)).not.toBeInTheDocument();
+		// register tooltip listeners
+		jest.advanceTimersToNextTimer();
 
 		// hover on action shows a tooltip
-		userEvent.hover(keepVersion);
+		await user.hover(keepVersion);
 		const tooltip = await screen.findByText(/you don't have the correct permissions/i);
 		expect(tooltip).toBeVisible();
-		act(() => {
-			userEvent.unhover(keepVersion);
-		});
+		await user.unhover(keepVersion);
 		expect(tooltip).not.toBeInTheDocument();
+
+		await user.click(keepVersion);
+		expect(screen.queryByText(/version marked as to be kept forever/i)).not.toBeInTheDocument();
 	});
 });

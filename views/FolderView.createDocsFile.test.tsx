@@ -6,8 +6,7 @@
 
 import React from 'react';
 
-import { act, screen, waitForElementToBeRemoved, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { screen, waitForElementToBeRemoved, within } from '@testing-library/react';
 import find from 'lodash/find';
 import { graphql, rest } from 'msw';
 
@@ -39,7 +38,7 @@ import {
 	mockGetParent,
 	mockGetPermissions
 } from '../utils/mockUtils';
-import { render, triggerLoadMore } from '../utils/testUtils';
+import { setup, triggerLoadMore, UserEvent } from '../utils/testUtils';
 import { DisplayerProps } from './components/Displayer';
 import FolderView from './FolderView';
 
@@ -86,15 +85,15 @@ jest.mock('./components/Displayer', () => ({
 }));
 
 describe('Create docs file', () => {
-	async function createNode(newNode: { name: string }): Promise<void> {
+	async function createNode(newNode: { name: string }, user: UserEvent): Promise<void> {
 		// wait for the creation modal to be opened
 		const inputFieldDiv = await screen.findByTestId('input-name');
 		const inputField = within(inputFieldDiv).getByRole('textbox');
 		expect(inputField).toHaveValue('');
-		userEvent.type(inputField, newNode.name);
+		await user.type(inputField, newNode.name);
 		expect(inputField).toHaveValue(newNode.name);
 		const button = screen.getByRole('button', { name: /create/i });
-		userEvent.click(button);
+		await user.click(button);
 	}
 
 	test('Create docs file operation fail shows an error in the modal and does not close it', async () => {
@@ -123,7 +122,10 @@ describe('Create docs file', () => {
 			)
 		);
 
-		render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+		const { user } = setup(<FolderView />, {
+			initialRouterEntries: [`/?folder=${currentFolder.id}`],
+			mocks
+		});
 
 		// wait for the load to be completed
 		await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -137,16 +139,16 @@ describe('Create docs file', () => {
 		);
 		expect(createDocsDocument).toBeDefined();
 		const createDocsDocumentElement = screen.getByTestId('create-docs-document-test-id');
-		act(() => {
-			userEvent.click(createDocsDocumentElement);
-		});
+		await user.click(createDocsDocumentElement);
 
-		await createNode(node2);
-		const error = await screen.findByText(/Error! Name already assigned/);
-		expect(error).toBeVisible();
+		await createNode(node2, user);
+		const error = await within(screen.getByTestId('modal')).findByText(
+			/Error! Name already assigned/
+		);
+		expect(error).toBeInTheDocument();
 		const inputFieldDiv = screen.getByTestId('input-name');
 		const inputField = within(inputFieldDiv).getByRole('textbox');
-		expect(inputField).toBeVisible();
+		expect(inputField).toBeInTheDocument();
 		expect(inputField).toHaveValue(newName);
 		expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
 			currentFolder.children.nodes.length
@@ -183,7 +185,10 @@ describe('Create docs file', () => {
 			)
 		);
 
-		render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+		const { user } = setup(<FolderView />, {
+			initialRouterEntries: [`/?folder=${currentFolder.id}`],
+			mocks
+		});
 
 		// wait for the load to be completed
 		await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -197,16 +202,14 @@ describe('Create docs file', () => {
 		);
 		expect(createDocsDocument).toBeDefined();
 		if (createDocsDocument) {
-			act(() => {
-				const createDocsDocumentElement = screen.getByTestId('create-docs-document-test-id');
-				userEvent.click(createDocsDocumentElement);
-			});
+			const createDocsDocumentElement = screen.getByTestId('create-docs-document-test-id');
+			await user.click(createDocsDocumentElement);
 		} else {
 			fail();
 		}
 
 		// create action
-		await createNode(node2);
+		await createNode(node2, user);
 		await screen.findByTestId(`node-item-${node2.id}`);
 
 		const nodeItem = await screen.findByTestId(`node-item-${node2.id}`);
@@ -255,15 +258,17 @@ describe('Create docs file', () => {
 		server.use(
 			rest.post<CreateDocsFileRequestBody, never, CreateDocsFileResponse>(
 				`${DOCS_ENDPOINT}${CREATE_FILE_PATH}`,
-				(req, res, ctx) =>
-					res(
+				async (req, res, ctx) => {
+					const { filename } = await req.json<CreateDocsFileRequestBody>();
+					return res(
 						ctx.json({
 							nodeId:
-								(req.body.filename === node2.name && node2.id) ||
-								(req.body.filename === node1.name && node1.id) ||
+								(filename === node2.name && node2.id) ||
+								(filename === node1.name && node1.id) ||
 								null
 						})
-					)
+					);
+				}
 			),
 			graphql.query<GetNodeQuery, GetNodeQueryVariables>('getNode', (req, res, ctx) => {
 				const { node_id: id } = req.variables;
@@ -277,7 +282,10 @@ describe('Create docs file', () => {
 			})
 		);
 
-		render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+		const { user } = setup(<FolderView />, {
+			initialRouterEntries: [`/?folder=${currentFolder.id}`],
+			mocks
+		});
 
 		// wait for the load to be completed
 		await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -290,16 +298,14 @@ describe('Create docs file', () => {
 		);
 		expect(createDocsDocument).toBeDefined();
 		if (createDocsDocument) {
-			act(() => {
-				const createDocsDocumentElement = screen.getByTestId('create-docs-document-test-id');
-				userEvent.click(createDocsDocumentElement);
-			});
+			const createDocsDocumentElement = screen.getByTestId('create-docs-document-test-id');
+			await user.click(createDocsDocumentElement);
 		} else {
 			fail();
 		}
 
 		// create action
-		await createNode(node2);
+		await createNode(node2, user);
 		await screen.findByTestId(`node-item-${node2.id}`);
 		expect(screen.getByText(node2.name)).toBeVisible();
 
@@ -312,13 +318,11 @@ describe('Create docs file', () => {
 		// node2 is last element of the list
 		expect(nodes[nodes.length - 1]).toBe(node2Item);
 
-		act(() => {
-			const createDocsDocumentElement = screen.getByTestId('create-docs-document-test-id');
-			userEvent.click(createDocsDocumentElement);
-		});
+		const createDocsDocumentElement = screen.getByTestId('create-docs-document-test-id');
+		await user.click(createDocsDocumentElement);
 
 		// create action
-		await createNode(node1);
+		await createNode(node1, user);
 		await screen.findByTestId(`node-item-${node1.id}`);
 		expect(screen.getByText(node1.name)).toBeVisible();
 

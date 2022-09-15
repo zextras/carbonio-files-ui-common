@@ -5,8 +5,7 @@
  */
 import React from 'react';
 
-import { act, screen, waitFor, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { screen, waitFor, within } from '@testing-library/react';
 import find from 'lodash/find';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
@@ -31,7 +30,7 @@ import {
 	RequestName
 } from '../../../types/network';
 import { mockGetAccountsByEmail } from '../../../utils/mockUtils';
-import { render } from '../../../utils/testUtils';
+import { setup } from '../../../utils/testUtils';
 import { getChipLabel } from '../../../utils/utils';
 import { AddSharing } from './AddSharing';
 
@@ -61,10 +60,10 @@ describe('Add Sharing', () => {
 				]
 			});
 
-			render(<AddSharing node={node} />, { mocks: [] });
+			const { user } = setup(<AddSharing node={node} />, { mocks: [] });
 			const chipInput = screen.getByRole('textbox', { name: /add new people or groups/i });
 			expect(chipInput).toBeVisible();
-			userEvent.type(chipInput, 'c');
+			await user.type(chipInput, 'c');
 			// wait for the single character to be typed
 			await waitFor(() => expect(chipInput).toHaveDisplayValue('c'));
 			// wait for the dropdown to be shown
@@ -122,13 +121,13 @@ describe('Add Sharing', () => {
 			const mocks = [
 				mockGetAccountsByEmail({ emails: contactsNoGalEmails }, contactsNoGalAccounts)
 			];
-			render(<AddSharing node={node} />, { mocks });
+			const { user } = setup(<AddSharing node={node} />, { mocks });
 			const chipInput = screen.getByRole('textbox', { name: /add new people or groups/i });
 			expect(chipInput).toBeVisible();
-			userEvent.type(chipInput, 'c');
+			await user.type(chipInput, 'c');
 			// wait for the dropdown to be shown
 			await screen.findByText(/contact-group-1/i);
-			userEvent.click(screen.getByText(/contact-group-1/i));
+			await user.click(screen.getByText(/contact-group-1/i));
 			await screen.findAllByTestId('chip-with-popover');
 			await waitFor(() =>
 				expect(screen.getAllByTestId('chip-with-popover')).toHaveLength(contactGroup.m?.length || 0)
@@ -179,15 +178,15 @@ describe('Add Sharing', () => {
 					new Array(invalidMembers.length).fill(null)
 				)
 			];
-			render(<AddSharing node={node} />, { mocks });
+			const { user } = setup(<AddSharing node={node} />, { mocks });
 			const chipInput = screen.getByRole('textbox', { name: /add new people or groups/i });
 			expect(chipInput).toBeVisible();
-			userEvent.type(chipInput, 'c');
+			await user.type(chipInput, 'c');
 			// wait for the dropdown to be shown
 			await screen.findByText(/contact-group-1/i);
 			expect(screen.getByText(/contact-group-1/i)).toBeVisible();
 			const contactGroupDropdownItem = screen.getByText(/contact-group-1/i);
-			userEvent.click(contactGroupDropdownItem);
+			await user.click(contactGroupDropdownItem);
 			await screen.findAllByTestId('chip-with-popover');
 			await waitFor(() =>
 				expect(screen.getAllByTestId('chip-with-popover')).toHaveLength(
@@ -239,14 +238,14 @@ describe('Add Sharing', () => {
 				return undefined;
 			});
 
-			render(<AddSharing node={node} />, { mocks: [] });
+			const { user } = setup(<AddSharing node={node} />, { mocks: [] });
 			const chipInput = screen.getByRole('textbox', { name: /add new people or groups/i });
 			expect(chipInput).toBeVisible();
-			userEvent.type(chipInput, 'c');
+			await user.type(chipInput, 'c');
 			// wait for the dropdown to be shown
 			await screen.findAllByText(/contact/i);
 			expect(screen.getByText(/contact-group-1/i)).toBeVisible();
-			userEvent.click(screen.getByText(/contact-group-1/i));
+			await user.click(screen.getByText(/contact-group-1/i));
 			await screen.findByText(members[1].cn[0]._attrs.email);
 			// dropdown is closed
 			expect(screen.queryByText(/contact-group-1/i)).not.toBeInTheDocument();
@@ -279,14 +278,14 @@ describe('Add Sharing', () => {
 				return undefined;
 			});
 
-			render(<AddSharing node={node} />, { mocks: [] });
+			const { user } = setup(<AddSharing node={node} />, { mocks: [] });
 			const chipInput = screen.getByRole('textbox', { name: /add new people or groups/i });
 			expect(chipInput).toBeVisible();
-			userEvent.type(chipInput, 'c');
+			await user.type(chipInput, 'c');
 			// wait for the dropdown to be shown
 			await screen.findByText(/contact-group-1/i);
 			expect(screen.getByText(/contact-group-1/i)).toBeVisible();
-			userEvent.click(screen.getByText(/contact-group-1/i));
+			await user.click(screen.getByText(/contact-group-1/i));
 			await screen.findByText(members[0].cn[0]._attrs.email);
 			// dropdown is closed
 			expect(screen.queryByText(/contact-group-1/i)).not.toBeInTheDocument();
@@ -301,17 +300,15 @@ describe('Add Sharing', () => {
 			);
 			expect(member0Chip).toBeDefined();
 			const removeShareMember0 = within(member0Chip as HTMLElement).getByTestId('icon: Close');
-			act(() => {
-				userEvent.click(removeShareMember0);
-			});
+			await user.click(removeShareMember0);
 			expect(screen.queryByText(members[0].cn[0]._attrs.email)).not.toBeInTheDocument();
 			expect(screen.getByText(members[1].cn[0]._attrs.email)).toBeVisible();
 			// search and select contact group again
-			userEvent.type(chipInput, 'c');
+			await user.type(chipInput, 'c');
 			// wait for the dropdown to be shown
 			await screen.findByText(/contact-group-1/i);
 			expect(screen.getByText(/contact-group-1/i)).toBeVisible();
-			userEvent.click(screen.getByText(/contact-group-1/i));
+			await user.click(screen.getByText(/contact-group-1/i));
 			await screen.findByText(members[0].cn[0]._attrs.email);
 			// dropdown is closed
 			expect(screen.queryByText(/contact-group-1/i)).not.toBeInTheDocument();

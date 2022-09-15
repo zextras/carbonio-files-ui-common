@@ -13,17 +13,18 @@ import find from 'lodash/find';
 import forEach from 'lodash/forEach';
 import head from 'lodash/head';
 import includes from 'lodash/includes';
-import keyBy from 'lodash/keyBy';
+import map from 'lodash/map';
 import noop from 'lodash/noop';
 import partition from 'lodash/partition';
 import pullAt from 'lodash/pullAt';
+import reduce from 'lodash/reduce';
 import remove from 'lodash/remove';
 import size from 'lodash/size';
 import { useTranslation } from 'react-i18next';
 
 import buildClient from '../apollo';
 import { nodeSortVar } from '../apollo/nodeSortVar';
-import { UploadFunctions, uploadFunctionsVar, uploadVar } from '../apollo/uploadVar';
+import { UploadFunctions, uploadFunctionsVar, UploadRecord, uploadVar } from '../apollo/uploadVar';
 import { REST_ENDPOINT, UPLOAD_PATH, UPLOAD_QUEUE_LIMIT, UPLOAD_VERSION_PATH } from '../constants';
 import GET_CHILD from '../graphql/queries/getChild.graphql';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
@@ -54,8 +55,43 @@ const isMaybeFolder = (file: File): boolean => !file.type && file.size % 4096 ==
 
 const waitingQueue: Array<string> = [];
 const loadingQueue: Array<string> = [];
-// window.waitingQueue = waitingQueue;
-// window.loadingQueue = loadingQueue;
+
+type UploadAction =
+	| { type: 'add'; value: UploadRecord }
+	| { type: 'remove'; value: string[] }
+	| { type: 'update'; value: { id: string } & Partial<UploadType> };
+
+function uploadVarReducer(action: UploadAction): UploadRecord {
+	switch (action.type) {
+		case 'add':
+			uploadVar({ ...uploadVar(), ...action.value });
+			return uploadVar();
+		case 'update':
+			if (uploadVar()[action.value.id]) {
+				uploadVar({
+					...uploadVar(),
+					[action.value.id]: { ...uploadVar()[action.value.id], ...action.value }
+				});
+			}
+			return uploadVar();
+		case 'remove':
+			uploadVar(
+				reduce<UploadRecord, UploadRecord>(
+					uploadVar(),
+					(result, item, key) => {
+						if (!action.value.includes(item.id)) {
+							result[key] = item;
+						}
+						return result;
+					},
+					{}
+				)
+			);
+			return uploadVar();
+		default:
+			return uploadVar();
+	}
+}
 
 const addVersionToCache = (
 	apolloClient: ApolloClient<NormalizedCacheObject>,
@@ -76,15 +112,12 @@ const updateProgress = (ev: ProgressEvent, fileEnriched: UploadType): void => {
 			percentage: Math.floor((ev.loaded / ev.total) * 100)
 		};
 
-		const state = uploadVar();
-		state[fileEnriched.id] = updatedValue;
-		uploadVar({ ...state });
+		uploadVarReducer({ type: 'update', value: updatedValue });
 	}
 };
 
 const singleRetry = (id: string): void => {
-	const state = uploadVar();
-	const retryFile = find(state, (item) => item.id === id);
+	const retryFile = find(uploadVar(), (item) => item.id === id);
 	if (retryFile == null) {
 		throw new Error('unable to retry missing file');
 	}
@@ -92,20 +125,14 @@ const singleRetry = (id: string): void => {
 		throw new Error('unable to retry, upload must be Failed');
 	}
 
-	state[id] = {
-		...state[id],
-		status: UploadStatus.LOADING,
-		percentage: 0
-	};
-	uploadVar({ ...state });
-	const newRetryFile = find(state, (item) => item.id === id);
-	if (newRetryFile) {
-		const prevState = uploadFunctionsVar();
-		const itemFunctions = prevState[newRetryFile.id];
+	uploadVarReducer({ type: 'update', value: { id, status: UploadStatus.LOADING, percentage: 0 } });
 
+	const newRetryFile = find(uploadVar(), (item) => item.id === id);
+	if (newRetryFile) {
+		const itemFunctions = uploadFunctionsVar()[newRetryFile.id];
 		const abortFunction = itemFunctions.retry(newRetryFile);
 		uploadFunctionsVar({
-			...prevState,
+			...uploadFunctionsVar(),
 			[newRetryFile.id]: { ...itemFunctions, abort: abortFunction }
 		});
 	}
@@ -119,15 +146,6 @@ const uploadCompleted = (
 	addNodeToFolder: UpdateFolderContentType['addNodeToFolder'],
 	isUploadVersion: boolean
 ): void => {
-	function updateStatus(uploadItem: UploadType, status: UploadStatus): void {
-		const state = uploadVar();
-		state[uploadItem.id] = {
-			...uploadItem,
-			status
-		};
-		uploadVar({ ...state });
-	}
-
 	if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
 		const response = JSON.parse(xhr.response);
 		const { nodeId } = response;
@@ -135,14 +153,10 @@ const uploadCompleted = (
 			addVersionToCache(apolloClient, nodeId);
 		}
 
-		const state = uploadVar();
-		state[fileEnriched.id] = {
-			...fileEnriched,
-			status: UploadStatus.COMPLETED,
-			percentage: 100,
-			nodeId
-		};
-		uploadVar({ ...state });
+		uploadVarReducer({
+			type: 'update',
+			value: { id: fileEnriched.id, status: UploadStatus.COMPLETED, percentage: 100, nodeId }
+		});
 
 		apolloClient
 			.query<GetChildQuery, GetChildQueryVariables>({
@@ -185,7 +199,10 @@ const uploadCompleted = (
 		 * 500: name already exists
 		 * 0: aborted
 		 */
-		updateStatus(fileEnriched, UploadStatus.FAILED);
+		uploadVarReducer({
+			type: 'update',
+			value: { id: fileEnriched.id, status: UploadStatus.FAILED }
+		});
 		const handledStatuses = [405, 413, 500, 0];
 		if (xhr.readyState !== XMLHttpRequest.UNSENT && !handledStatuses.includes(xhr.status)) {
 			console.error('upload error: unhandled status', xhr.status);
@@ -215,7 +232,9 @@ const upload = (
 	xhr.setRequestHeader('Filename', encodeBase64(fileEnriched.file.name));
 	xhr.setRequestHeader('ParentId', fileEnriched.parentId);
 
-	if (xhr.upload) {
+	// FIXME: fix in order to be able to test the upload with msw
+	//   see https://github.com/mswjs/interceptors/issues/187
+	if (xhr.upload?.addEventListener) {
 		xhr.upload.addEventListener('progress', (ev: ProgressEvent) =>
 			updateProgress(ev, fileEnriched)
 		);
@@ -251,7 +270,9 @@ const uploadVersion = (
 	xhr.setRequestHeader('Filename', encodeBase64(fileEnriched.file.name));
 	xhr.setRequestHeader('OverwriteVersion', `${overwriteVersion}`);
 
-	if (xhr.upload) {
+	// FIXME: fix in order to be able to test the upload with msw
+	//   see https://github.com/mswjs/interceptors/issues/187
+	if (xhr.upload?.addEventListener) {
 		xhr.upload.addEventListener('progress', (ev: ProgressEvent) =>
 			updateProgress(ev, fileEnriched)
 		);
@@ -320,13 +341,10 @@ export const useUpload: UseUploadHook = () => {
 			createSnackbarForUploadError(
 				t('snackbar.upload.foldersNotAllowed', 'Folders cannot be uploaded')
 			);
-			const state = uploadVar();
-			state[folder.id] = {
-				...state[folder.id],
-				status: UploadStatus.FAILED,
-				percentage: 0
-			};
-			uploadVar({ ...state });
+			uploadVarReducer({
+				type: 'update',
+				value: { id: folder.id, status: UploadStatus.FAILED, percentage: 0 }
+			});
 			return noop;
 		},
 		[createSnackbarForUploadError, t]
@@ -335,7 +353,6 @@ export const useUpload: UseUploadHook = () => {
 	const add = useCallback<ReturnType<UseUploadHook>['add']>(
 		(files, parentId, checkForFolders) => {
 			// Upload only valid files
-
 			const filesEnriched: { [id: string]: UploadType } = {};
 			const uploadFunctions: { [id: string]: UploadFunctions } = {};
 			let validFilesCount = 0;
@@ -383,7 +400,7 @@ export const useUpload: UseUploadHook = () => {
 				);
 			}
 
-			uploadVar({ ...uploadVar(), ...filesEnriched });
+			uploadVarReducer({ type: 'add', value: filesEnriched });
 			uploadFunctionsVar({ ...uploadFunctionsVar(), ...uploadFunctions });
 		},
 		[addNodeToFolder, apolloClient, createSnackbarForUploadError, t, uploadFolder]
@@ -399,7 +416,8 @@ export const useUpload: UseUploadHook = () => {
 				nodeId: node.id,
 				parentId: (node.parent as Folder).id
 			};
-			uploadVar({ ...uploadVar(), ...{ [fileEnriched.id]: fileEnriched } });
+			uploadVarReducer({ type: 'add', value: { [fileEnriched.id]: fileEnriched } });
+			// uploadVar({ ...uploadVar(), ...{ [fileEnriched.id]: fileEnriched } });
 			const abortFunction: UploadFunctions['abort'] = uploadVersion(
 				fileEnriched,
 				apolloClient,
@@ -434,14 +452,12 @@ export const useUpload: UseUploadHook = () => {
 
 	const removeById = useCallback(
 		(ids: Array<string>) => {
-			const state = uploadVar();
 			forEach(ids, (id) => {
-				if (state[id].status === UploadStatus.LOADING) {
+				if (uploadVar()[id].status === UploadStatus.LOADING) {
 					abort(id);
 				}
-				delete state[id];
 			});
-			uploadVar({ ...state });
+			uploadVarReducer({ type: 'remove', value: ids });
 		},
 		[abort]
 	);
@@ -449,21 +465,20 @@ export const useUpload: UseUploadHook = () => {
 	const removeByNodeId = useCallback((nodeIds: Array<string>) => {
 		const oldState = uploadVar();
 		const partitions = partition(oldState, (item) => includes(nodeIds, item.nodeId));
-		const removedNodes = partitions[0];
-		const notRemovedNodes = partitions[1];
+		const removedNodes = map(partitions[0], (item) => item.id);
 		// update reactive var only if there are removed nodes
 		if (removedNodes.length > 0) {
-			uploadVar(keyBy(notRemovedNodes, 'id'));
+			uploadVarReducer({ type: 'remove', value: removedNodes });
 		}
 	}, []);
 
 	const removeAllCompleted = useCallback(() => {
 		const state = uploadVar();
-		const completedItems = filter(state, (item) => item.status === UploadStatus.COMPLETED);
-		forEach(completedItems, (item) => {
-			delete state[item.id];
-		});
-		uploadVar({ ...state });
+		const completedItems = map(
+			filter(state, (item) => item.status === UploadStatus.COMPLETED),
+			(item) => item.id
+		);
+		uploadVarReducer({ type: 'remove', value: completedItems });
 	}, []);
 
 	const retryById = useCallback((ids: Array<string>) => {

@@ -5,8 +5,7 @@
  */
 import React from 'react';
 
-import { act, screen, waitForElementToBeRemoved, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { screen, within } from '@testing-library/react';
 import find from 'lodash/find';
 import { Route } from 'react-router-dom';
 
@@ -25,7 +24,7 @@ import {
 	mockGetNodeLinks,
 	mockGetShares
 } from '../utils/mockUtils';
-import { render } from '../utils/testUtils';
+import { setup } from '../utils/testUtils';
 import { getChipLabel } from '../utils/utils';
 import FilterView from './FilterView';
 
@@ -84,7 +83,7 @@ describe('Filter view', () => {
 					nodes
 				)
 			];
-			render(
+			const { user } = setup(
 				<Route path="/filter/:filter">
 					<FilterView />
 				</Route>,
@@ -119,25 +118,19 @@ describe('Filter view', () => {
 			expect(share1Item).toBeVisible();
 			expect(share2Item).toBeVisible();
 			// delete first share
-			act(() => {
-				userEvent.click(within(share1Item as HTMLElement).getByTestId('icon: Close'));
-			});
+			await user.click(within(share1Item as HTMLElement).getByTestId('icon: Close'));
 			await screen.findByRole('button', { name: /remove/i });
-			userEvent.click(screen.getByRole('button', { name: /remove/i }));
-			await waitForElementToBeRemoved(screen.queryByText(getChipLabel(shares[0].share_target)));
-			const snackbar = await screen.findByText(/success/i);
-			await waitForElementToBeRemoved(snackbar);
+			await user.click(screen.getByRole('button', { name: /remove/i }));
+			// await waitForElementToBeRemoved(screen.queryByText(getChipLabel(shares[0].share_target)));
+			await screen.findByText(/success/i);
 			expect(share2Item).toBeVisible();
 			expect(nodeItem).toBeVisible();
 			// delete second share
-			act(() => {
-				userEvent.click(within(share2Item as HTMLElement).getByTestId('icon: Close'));
-			});
+			await user.click(within(share2Item as HTMLElement).getByTestId('icon: Close'));
 			await screen.findByRole('button', { name: /remove/i });
-			userEvent.click(screen.getByRole('button', { name: /remove/i }));
-			await waitForElementToBeRemoved(screen.queryByText(getChipLabel(shares[1].share_target)));
-			const snackbar2 = await screen.findByText(/success/i);
-			await waitForElementToBeRemoved(snackbar2);
+			await user.click(screen.getByRole('button', { name: /remove/i }));
+			// await waitForElementToBeRemoved(screen.queryByText(getChipLabel(shares[1].share_target)));
+			await screen.findByText(/success/i);
 			// node is removed from main list
 			expect(nodeItem).not.toBeInTheDocument();
 			// displayer is closed

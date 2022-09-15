@@ -43,7 +43,6 @@ import {
 	AutocompleteRequest,
 	AutocompleteResponse,
 	ContactGroupMatch,
-	DerefContactInformation,
 	GetContactsRequest,
 	GetContactsResponse,
 	isAnAccount,
@@ -146,9 +145,9 @@ function matchToContact(match: Match): Contact {
 	};
 }
 
-function derefContactInfoToContact({ _attrs: derefAttrs }: DerefContactInformation): Contact {
-	return derefAttrs;
-}
+// function derefContactInfoToContact({ _attrs: derefAttrs }: DerefContactInformation): Contact {
+// 	return derefAttrs;
+// }
 
 const removeDL: (autocompleteResponse: AutocompleteResponse) => Match[] = ({ match }) =>
 	filter(match, (m) => {
@@ -308,7 +307,7 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 							setChips((c) => [...c, contactWithId]);
 						}
 					})
-					.catch(() => null); // FIXME: this catch shouldn't be necessary but for some reason
+					.catch(() => null); // FIXME: this catch shouldn't be necessary but for some reason it is
 			}
 		},
 		[chips, getAccountByEmailLazyQuery, updateChip]
@@ -543,6 +542,7 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 					background="gray5"
 					bottomBorderColor="gray3"
 					wrap="wrap"
+					data-testid="add-sharing-chip-input"
 				/>
 			</Container>
 

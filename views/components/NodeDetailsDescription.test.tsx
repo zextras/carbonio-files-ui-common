@@ -8,13 +8,12 @@ import React from 'react';
 
 import { ApolloError } from '@apollo/client';
 import { faker } from '@faker-js/faker';
-import { screen, waitFor, waitForElementToBeRemoved, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { screen, waitFor, within } from '@testing-library/react';
 
 import { populateFile } from '../../mocks/mockUtils';
 import { canUpsertDescription } from '../../utils/ActionsFactory';
 import { mockUpdateNodeDescription, mockUpdateNodeDescriptionError } from '../../utils/mockUtils';
-import { generateError, render } from '../../utils/testUtils';
+import { generateError, setup } from '../../utils/testUtils';
 import { NodeDetailsDescription } from './NodeDetailsDescription';
 
 describe('NodeDetailsDescription component', () => {
@@ -22,7 +21,7 @@ describe('NodeDetailsDescription component', () => {
 		const node = populateFile();
 		node.permissions.can_write_file = true;
 		node.description = '';
-		render(
+		setup(
 			<NodeDetailsDescription
 				id={node.id}
 				description={node.description}
@@ -38,7 +37,7 @@ describe('NodeDetailsDescription component', () => {
 		const node = populateFile();
 		node.permissions.can_write_file = false;
 		node.description = '';
-		render(
+		setup(
 			<NodeDetailsDescription
 				id={node.id}
 				description={node.description}
@@ -55,7 +54,7 @@ describe('NodeDetailsDescription component', () => {
 	test('Edit icon disabled if can_write_file is false', () => {
 		const node = populateFile();
 		node.permissions.can_write_file = false;
-		render(
+		setup(
 			<NodeDetailsDescription
 				id={node.id}
 				description={node.description}
@@ -73,7 +72,7 @@ describe('NodeDetailsDescription component', () => {
 	test('Edit icon not disabled if can_write_file is true', () => {
 		const node = populateFile();
 		node.permissions.can_write_file = true;
-		render(
+		setup(
 			<NodeDetailsDescription
 				id={node.id}
 				description={node.description}
@@ -93,7 +92,7 @@ describe('NodeDetailsDescription component', () => {
 		node.permissions.can_write_file = true;
 		const newDescription = 'newDescription';
 
-		render(
+		const { user } = setup(
 			<NodeDetailsDescription
 				id={node.id}
 				description={node.description}
@@ -107,7 +106,7 @@ describe('NodeDetailsDescription component', () => {
 		const editIcon = screen.getByTestId('icon: Edit2Outline');
 		expect(editIcon).toBeVisible();
 		expect(editIcon.parentNode).not.toHaveAttribute('disabled', '');
-		userEvent.click(editIcon);
+		await user.click(editIcon);
 
 		const saveIcon = await screen.findByTestId('icon: SaveOutline');
 		expect(saveIcon).toBeVisible();
@@ -115,13 +114,13 @@ describe('NodeDetailsDescription component', () => {
 
 		const inputFieldDiv = await screen.findByTestId('input-description');
 		const inputField = within(inputFieldDiv).getByRole('textbox');
-		userEvent.clear(inputField);
-		userEvent.type(inputField, newDescription);
+		await user.clear(inputField);
+		await user.type(inputField, newDescription);
 
 		expect(saveIcon.parentNode).not.toHaveAttribute('disabled', '');
 
-		userEvent.clear(inputField);
-		userEvent.type(inputField, node.description);
+		await user.clear(inputField);
+		await user.type(inputField, node.description);
 
 		expect(saveIcon.parentNode).toHaveAttribute('disabled', '');
 	});
@@ -134,7 +133,7 @@ describe('NodeDetailsDescription component', () => {
 
 		expect(moreThan4096Description.length).toBeGreaterThan(4096);
 
-		render(
+		const { user } = setup(
 			<NodeDetailsDescription
 				id={node.id}
 				description={node.description}
@@ -148,7 +147,7 @@ describe('NodeDetailsDescription component', () => {
 		const editIcon = screen.getByTestId('icon: Edit2Outline');
 		expect(editIcon).toBeVisible();
 		expect(editIcon.parentNode).not.toHaveAttribute('disabled', '');
-		userEvent.click(editIcon);
+		await user.click(editIcon);
 
 		const saveIcon = await screen.findByTestId('icon: SaveOutline');
 		expect(saveIcon).toBeVisible();
@@ -156,13 +155,13 @@ describe('NodeDetailsDescription component', () => {
 
 		const inputFieldDiv = await screen.findByTestId('input-description');
 		const inputField = within(inputFieldDiv).getByRole('textbox');
-		userEvent.clear(inputField);
-		userEvent.type(inputField, newDescription);
+		await user.clear(inputField);
+		await user.type(inputField, newDescription);
 
 		expect(saveIcon.parentNode).not.toHaveAttribute('disabled', '');
 
-		userEvent.clear(inputField);
-		userEvent.paste(inputField, moreThan4096Description);
+		await user.clear(inputField);
+		await user.paste(moreThan4096Description);
 
 		expect(saveIcon.parentNode).toHaveAttribute('disabled', '');
 	});
@@ -172,7 +171,7 @@ describe('NodeDetailsDescription component', () => {
 		node.permissions.can_write_file = true;
 		const newDescription = 'newDescription';
 
-		render(
+		const { user } = setup(
 			<NodeDetailsDescription
 				id={node.id}
 				description={node.description}
@@ -186,7 +185,7 @@ describe('NodeDetailsDescription component', () => {
 		let editIcon = screen.getByTestId('icon: Edit2Outline');
 		expect(editIcon).toBeVisible();
 		expect(editIcon.parentNode).not.toHaveAttribute('disabled', '');
-		userEvent.click(editIcon);
+		await user.click(editIcon);
 
 		const saveIcon = await screen.findByTestId('icon: SaveOutline');
 		expect(saveIcon).toBeVisible();
@@ -194,8 +193,8 @@ describe('NodeDetailsDescription component', () => {
 
 		let inputFieldDiv = await screen.findByTestId('input-description');
 		let inputField = within(inputFieldDiv).getByRole('textbox');
-		userEvent.clear(inputField);
-		userEvent.type(inputField, newDescription);
+		await user.clear(inputField);
+		await user.type(inputField, newDescription);
 
 		expect(inputField).toHaveValue(newDescription);
 
@@ -203,13 +202,13 @@ describe('NodeDetailsDescription component', () => {
 
 		const closeICon = screen.getByTestId('icon: Close');
 		expect(closeICon).toBeVisible();
-		userEvent.click(closeICon);
+		await user.click(closeICon);
 
 		editIcon = await screen.findByTestId('icon: Edit2Outline');
 		expect(editIcon).toBeVisible();
 		expect(screen.getByText(node.description)).toBeInTheDocument();
 
-		userEvent.click(editIcon);
+		await user.click(editIcon);
 
 		inputFieldDiv = await screen.findByTestId('input-description');
 		inputField = within(inputFieldDiv).getByRole('textbox');
@@ -237,7 +236,7 @@ describe('NodeDetailsDescription component', () => {
 				updateNodeDescriptionMutationCallback
 			)
 		];
-		render(
+		const { user } = setup(
 			<NodeDetailsDescription
 				id={node.id}
 				description={node.description}
@@ -251,7 +250,7 @@ describe('NodeDetailsDescription component', () => {
 		let editIcon = screen.getByTestId('icon: Edit2Outline');
 		expect(editIcon).toBeVisible();
 		expect(editIcon.parentNode).not.toHaveAttribute('disabled', '');
-		userEvent.click(editIcon);
+		await user.click(editIcon);
 
 		const saveIcon = await screen.findByTestId('icon: SaveOutline');
 		expect(saveIcon).toBeVisible();
@@ -259,14 +258,14 @@ describe('NodeDetailsDescription component', () => {
 
 		const inputFieldDiv = await screen.findByTestId('input-description');
 		const inputField = within(inputFieldDiv).getByRole('textbox');
-		userEvent.clear(inputField);
-		userEvent.type(inputField, newDescription);
+		await user.clear(inputField);
+		await user.type(inputField, newDescription);
 
 		expect(inputField).toHaveValue(newDescription);
 
 		expect(saveIcon.parentNode).not.toHaveAttribute('disabled', '');
 
-		userEvent.click(saveIcon);
+		await user.click(saveIcon);
 
 		editIcon = await screen.findByTestId('icon: Edit2Outline');
 		expect(editIcon).toBeVisible();
@@ -291,7 +290,7 @@ describe('NodeDetailsDescription component', () => {
 				new ApolloError({ graphQLErrors: [generateError('update description error')] })
 			)
 		];
-		render(
+		const { user } = setup(
 			<NodeDetailsDescription
 				id={node.id}
 				description={node.description}
@@ -304,17 +303,17 @@ describe('NodeDetailsDescription component', () => {
 
 		const editIcon = screen.getByTestId('icon: Edit2Outline');
 		expect(editIcon).toBeVisible();
-		userEvent.click(editIcon);
+		await user.click(editIcon);
 		const saveIcon = await screen.findByTestId('icon: SaveOutline');
 		expect(saveIcon).toBeVisible();
 		const inputField = screen.getByRole('textbox', {
 			name: /maximum length allowed is 4096 characters/i
 		});
-		userEvent.clear(inputField);
-		userEvent.type(inputField, newDescription);
-		userEvent.click(saveIcon);
-		const snackbar = await screen.findByText(/update description error/i);
-		await waitForElementToBeRemoved(snackbar);
+		await user.clear(inputField);
+		await user.type(inputField, newDescription);
+		await user.click(saveIcon);
+		await screen.findByText(/update description error/i);
+
 		expect(
 			screen.getByRole('textbox', { name: /maximum length allowed is 4096 characters/i })
 		).toBeVisible();

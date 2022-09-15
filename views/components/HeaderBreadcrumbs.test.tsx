@@ -8,13 +8,12 @@ import React from 'react';
 
 import { gql } from '@apollo/client';
 import { act, fireEvent, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 
 import { UseNavigationHook } from '../../../hooks/useNavigation';
 import { draggedItemsVar } from '../../apollo/dragAndDropVar';
-import { DRAG_TYPES } from '../../constants';
+import { DRAG_TYPES, TIMERS } from '../../constants';
 import {
 	populateFolder,
 	populateNodes,
@@ -23,7 +22,7 @@ import {
 } from '../../mocks/mockUtils';
 import { Node } from '../../types/graphql/types';
 import { mockGetParent, mockGetPath, mockMoveNodes } from '../../utils/mockUtils';
-import { buildBreadCrumbRegExp, render, waitForNetworkResponse } from '../../utils/testUtils';
+import { buildBreadCrumbRegExp, setup } from '../../utils/testUtils';
 import { HeaderBreadcrumbs } from './HeaderBreadcrumbs';
 
 let mockedUseNavigationHook: ReturnType<UseNavigationHook>;
@@ -70,7 +69,7 @@ describe('Header Breadcrumbs', () => {
 	describe('Drag and drop', () => {
 		test('Drag and drop is disabled if folder id is empty', () => {
 			const crumbs = [{ id: 'Filter', label: 'Filter' }];
-			render(
+			setup(
 				<>
 					<HeaderBreadcrumbs crumbs={crumbs} />
 					<div draggable>draggable element mock</div>
@@ -124,7 +123,7 @@ describe('Header Breadcrumbs', () => {
 				)
 			];
 
-			const { getByTextWithMarkup } = render(
+			const { getByTextWithMarkup, user } = setup(
 				<>
 					<HeaderBreadcrumbs folderId={currentFolder.id} />
 					<div draggable>draggable element mock</div>
@@ -140,10 +139,9 @@ describe('Header Breadcrumbs', () => {
 			expect(screen.queryByText(path[0].name)).not.toBeInTheDocument();
 			expect(screen.getByTestId('icon: ChevronRight')).toBeVisible();
 			expect(screen.queryByTestId('icon: ChevronLeft')).not.toBeInTheDocument();
-			act(() => {
-				userEvent.click(screen.getByTestId('icon: FolderOutline'));
-			});
-			await waitForElementToBeRemoved(screen.queryByTestId('icon: ChevronRight'));
+			await user.click(screen.getByTestId('icon: FolderOutline'));
+			await screen.findByText(/hide previous folders/i);
+			expect(screen.queryByTestId('icon: ChevronRight')).not.toBeInTheDocument();
 			expect(screen.getByTestId('icon: ChevronLeft')).toBeVisible();
 			const destinationCrumbItem = await screen.findByText(path[0].name);
 			expect(
@@ -184,8 +182,6 @@ describe('Header Breadcrumbs', () => {
 			fireEvent.dragEnd(mockDraggedItem, { dataTransfer: dataTransfer() });
 			const snackbar = await screen.findByText(/item moved/i);
 			expect(snackbar).toBeVisible();
-			await waitForElementToBeRemoved(snackbar);
-			expect(snackbar).not.toBeInTheDocument();
 		});
 
 		test('Drop on current folder crumb does not trigger move action if crumb is parent of nodes', async () => {
@@ -223,7 +219,7 @@ describe('Header Breadcrumbs', () => {
 				)
 			];
 
-			const { getByTextWithMarkup } = render(
+			const { getByTextWithMarkup, user } = setup(
 				<>
 					<HeaderBreadcrumbs folderId={currentFolder.id} />
 					<div draggable>draggable element mock</div>
@@ -239,8 +235,9 @@ describe('Header Breadcrumbs', () => {
 			expect(screen.queryByText(path[0].name)).not.toBeInTheDocument();
 			expect(screen.getByTestId('icon: ChevronRight')).toBeVisible();
 			expect(screen.queryByTestId('icon: ChevronLeft')).not.toBeInTheDocument();
-			userEvent.click(screen.getByTestId('icon: FolderOutline'), undefined, { skipHover: true });
-			await waitForElementToBeRemoved(screen.queryByTestId('icon: ChevronRight'));
+			await user.click(screen.getByTestId('icon: FolderOutline'));
+			await screen.findByText(/hide previous folders/i);
+			expect(screen.queryByTestId('icon: ChevronRight')).not.toBeInTheDocument();
 			expect(screen.getByTestId('icon: ChevronLeft')).toBeVisible();
 			const destinationCrumbItem = await screen.findByText(currentFolder.name);
 			expect(
@@ -308,7 +305,7 @@ describe('Header Breadcrumbs', () => {
 
 			const mocks = [mockGetParent({ node_id: currentFolder.id }, currentFolder)];
 
-			const { getByTextWithMarkup } = render(
+			const { getByTextWithMarkup } = setup(
 				<>
 					<HeaderBreadcrumbs folderId={currentFolder.id} />
 					<div draggable>draggable element mock</div>
@@ -380,7 +377,7 @@ describe('Header Breadcrumbs', () => {
 
 			const mocks = [mockGetParent({ node_id: currentFolder.id }, currentFolder)];
 
-			const { getByTextWithMarkup } = render(
+			const { getByTextWithMarkup } = setup(
 				<>
 					<HeaderBreadcrumbs folderId={currentFolder.id} />
 					<div draggable>draggable element mock</div>
@@ -422,12 +419,7 @@ describe('Header Breadcrumbs', () => {
 				'background-color': 'rgba(130, 130, 130, 0.4)'
 			});
 			// wait for navigation to start eventually
-			await waitFor(
-				() =>
-					new Promise((resolve) => {
-						setTimeout(resolve, 2000);
-					})
-			);
+			jest.advanceTimersByTime(TIMERS.DRAG_NAVIGATION_TRIGGER);
 			fireEvent.dragLeave(destinationCrumbItem, { dataTransfer: dataTransfer() });
 			expect(mockedUseNavigationHook.navigateToFolder).not.toHaveBeenCalled();
 		});
@@ -470,7 +462,7 @@ describe('Header Breadcrumbs', () => {
 				)
 			];
 
-			const { getByTextWithMarkup } = render(
+			const { getByTextWithMarkup, user } = setup(
 				<>
 					<HeaderBreadcrumbs folderId={currentFolder.id} />
 					<div draggable>draggable element mock</div>
@@ -486,8 +478,8 @@ describe('Header Breadcrumbs', () => {
 			expect(screen.queryByText(path[0].name)).not.toBeInTheDocument();
 			expect(screen.getByTestId('icon: ChevronRight')).toBeVisible();
 			expect(screen.queryByTestId('icon: ChevronLeft')).not.toBeInTheDocument();
-			userEvent.click(screen.getByTestId('icon: FolderOutline'));
-			await waitForElementToBeRemoved(screen.queryByTestId('icon: ChevronRight'));
+			await user.click(screen.getByTestId('icon: FolderOutline'));
+			expect(screen.queryByTestId('icon: ChevronRight')).not.toBeInTheDocument();
 			await screen.findByText(/hide previous folders/i);
 			expect(screen.getByTestId('icon: ChevronLeft')).toBeVisible();
 			const destinationCrumbItem = await screen.findByText(path[0].name);
@@ -529,7 +521,6 @@ describe('Header Breadcrumbs', () => {
 			});
 			fireEvent.dragEnd(mockDraggedItem, { dataTransfer: dataTransfer() });
 			// wait a tick to allow mutation to eventually be executed
-			await waitForNetworkResponse();
 			expect(moveMutationFn).not.toHaveBeenCalled();
 		});
 
@@ -558,7 +549,7 @@ describe('Header Breadcrumbs', () => {
 				mockGetPath({ node_id: currentFolder.id }, path)
 			];
 
-			const { getByTextWithMarkup } = render(
+			const { getByTextWithMarkup } = setup(
 				<>
 					<HeaderBreadcrumbs folderId={currentFolder.id} />
 					<div draggable>draggable element mock</div>
@@ -614,7 +605,7 @@ describe('Header Breadcrumbs', () => {
 				mockGetPath({ node_id: currentFolder.id }, path)
 			];
 
-			const { getByTextWithMarkup } = render(
+			const { getByTextWithMarkup, user } = setup(
 				<>
 					<HeaderBreadcrumbs folderId={currentFolder.id} />
 					<div draggable>draggable element mock</div>
@@ -632,10 +623,8 @@ describe('Header Breadcrumbs', () => {
 			expect(screen.getByTestId('icon: ChevronRight')).toBeVisible();
 			expect(screen.queryByTestId('icon: ChevronLeft')).not.toBeInTheDocument();
 			// simulate a drag of a node of the list
-			act(() => {
-				userEvent.click(screen.getByTestId('icon: FolderOutline'));
-			});
-			await waitForElementToBeRemoved(screen.queryByTestId('icon: ChevronRight'));
+			await user.click(screen.getByTestId('icon: FolderOutline'));
+			expect(screen.queryByTestId('icon: ChevronRight')).not.toBeInTheDocument();
 			expect(screen.getByTestId('icon: ChevronLeft')).toBeVisible();
 			expect(
 				getByTextWithMarkup(buildBreadCrumbRegExp(...map(path, (parent) => parent.name)))
@@ -718,7 +707,7 @@ describe('Header Breadcrumbs', () => {
 				)
 			];
 
-			const { getByTextWithMarkup } = render(
+			const { getByTextWithMarkup, user } = setup(
 				<>
 					<HeaderBreadcrumbs folderId={currentFolder.id} />
 					<div draggable>draggable element mock</div>
@@ -736,10 +725,8 @@ describe('Header Breadcrumbs', () => {
 			expect(screen.getByTestId('icon: ChevronRight')).toBeVisible();
 			expect(screen.queryByTestId('icon: ChevronLeft')).not.toBeInTheDocument();
 			// simulate a drag of a node of the list
-			act(() => {
-				userEvent.click(screen.getByTestId('icon: FolderOutline'));
-			});
-			await waitForElementToBeRemoved(screen.queryByTestId('icon: ChevronRight'));
+			await user.click(screen.getByTestId('icon: FolderOutline'));
+			expect(screen.queryByTestId('icon: ChevronRight')).not.toBeInTheDocument();
 			expect(screen.getByTestId('icon: ChevronLeft')).toBeVisible();
 			expect(
 				getByTextWithMarkup(buildBreadCrumbRegExp(...map(path, (parent) => parent.name)))
@@ -794,7 +781,6 @@ describe('Header Breadcrumbs', () => {
 			// expect(destinationItem.parentElement).toHaveStyle({ 'background-color': '' });
 			const snackbar = await screen.findByText(/Item moved/i);
 			expect(snackbar).toBeVisible();
-			await waitForElementToBeRemoved(snackbar);
 		});
 
 		test('Drag on a hidden crumb without permissions does not trigger move action', async () => {
@@ -834,7 +820,7 @@ describe('Header Breadcrumbs', () => {
 				)
 			];
 
-			const { getByTextWithMarkup } = render(
+			const { getByTextWithMarkup, user } = setup(
 				<>
 					<HeaderBreadcrumbs folderId={currentFolder.id} />
 					<div draggable>draggable element mock</div>
@@ -852,8 +838,8 @@ describe('Header Breadcrumbs', () => {
 			expect(screen.getByTestId('icon: ChevronRight')).toBeVisible();
 			expect(screen.queryByTestId('icon: ChevronLeft')).not.toBeInTheDocument();
 			// simulate a drag of a node of the list
-			userEvent.click(screen.getByTestId('icon: FolderOutline'));
-			await waitForElementToBeRemoved(screen.queryByTestId('icon: ChevronRight'));
+			await user.click(screen.getByTestId('icon: FolderOutline'));
+			expect(screen.queryByTestId('icon: ChevronRight')).not.toBeInTheDocument();
 			await screen.findByText(/hide previous folders/i);
 			expect(screen.getByTestId('icon: ChevronLeft')).toBeVisible();
 			expect(
@@ -907,7 +893,6 @@ describe('Header Breadcrumbs', () => {
 				'background-color': 'rgba(130, 130, 130, 0.4)'
 			});
 			// wait a tick to allow mutation to eventually be executed
-			await waitForNetworkResponse();
 			expect(moveMutationFn).not.toHaveBeenCalled();
 		});
 	});

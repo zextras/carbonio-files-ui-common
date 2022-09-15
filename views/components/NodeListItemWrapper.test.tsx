@@ -7,15 +7,14 @@
 import React from 'react';
 
 import { screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 
 import { populateNode } from '../../mocks/mockUtils';
-import { render } from '../../utils/testUtils';
+import { setup } from '../../utils/testUtils';
 import { NodeListItemWrapper } from './NodeListItemWrapper';
 
 describe('NodeListItemWrapper', () => {
 	describe('hover actions', () => {
-		test('click on flag action changes flag icon visibility', () => {
+		test('click on flag action changes flag icon visibility', async () => {
 			const node = populateNode();
 			node.flagged = false;
 
@@ -25,14 +24,14 @@ describe('NodeListItemWrapper', () => {
 				}
 			});
 
-			render(<NodeListItemWrapper node={node} toggleFlag={toggleFlag} />);
+			const { user } = setup(<NodeListItemWrapper node={node} toggleFlag={toggleFlag} />);
 			expect(screen.queryByTestId('icon: Flag')).not.toBeInTheDocument();
-			userEvent.click(screen.getByTestId('icon: FlagOutline'));
+			await user.click(screen.getByTestId('icon: FlagOutline'));
 			expect(toggleFlag).toHaveBeenCalledTimes(1);
 			expect(node.flagged).toBeTruthy();
 		});
 
-		test('click on unflag action changes flag icon visibility', () => {
+		test('click on unflag action changes flag icon visibility', async () => {
 			const node = populateNode();
 			node.flagged = true;
 
@@ -42,10 +41,10 @@ describe('NodeListItemWrapper', () => {
 				}
 			});
 
-			render(<NodeListItemWrapper node={node} toggleFlag={toggleFlag} />);
+			const { user } = setup(<NodeListItemWrapper node={node} toggleFlag={toggleFlag} />);
 			expect(screen.getByTestId('icon: Flag')).toBeInTheDocument();
 			expect(screen.getByTestId('icon: Flag')).toBeVisible();
-			userEvent.click(screen.getByTestId('icon: UnflagOutline'));
+			await user.click(screen.getByTestId('icon: UnflagOutline'));
 			expect(toggleFlag).toHaveBeenCalledTimes(1);
 			expect(node.flagged).toBeFalsy();
 		});

@@ -7,10 +7,9 @@
 import React from 'react';
 
 import { screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 
 import { populateFile, populateUser } from '../../mocks/mockUtils';
-import { render } from '../../utils/testUtils';
+import { setup } from '../../utils/testUtils';
 import { NodeDetailsUserRow } from './NodeDetailsUserRow';
 
 describe('Node Details User Row', () => {
@@ -19,7 +18,7 @@ describe('Node Details User Row', () => {
 		const clickActionMock = jest.fn();
 		node.last_editor = populateUser();
 		const label = 'Created by';
-		render(
+		const { user } = setup(
 			<NodeDetailsUserRow
 				user={node.owner}
 				label={label}
@@ -30,7 +29,7 @@ describe('Node Details User Row', () => {
 			{ mocks: [] }
 		);
 		expect(screen.getByText(node.owner.email)).toBeVisible();
-		userEvent.click(screen.getByText(node.owner.email));
+		await user.click(screen.getByText(node.owner.email));
 		const labelElement = screen.getByText(label);
 		expect(labelElement).toBeVisible();
 		expect(clickActionMock).toBeCalled();
