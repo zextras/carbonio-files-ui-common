@@ -75,7 +75,7 @@ describe('Get children', () => {
 
 		await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 
-		const snackbar = await screen.findByText(/An error occurred/i);
+		await screen.findByText(/An error occurred/i);
 	});
 
 	test('first access to a folder show loading state and than show children', async () => {

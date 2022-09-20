@@ -17,7 +17,7 @@ type UseGetAccountsByEmailQueryReturnType = (
 ) => Promise<LazyQueryResult<GetAccountsByEmailQuery, GetAccountsByEmailQueryVariables>>;
 
 export function useGetAccountsByEmailQuery(): UseGetAccountsByEmailQueryReturnType {
-	const [getAccountsByEmailLazyQuery, { error }] = useLazyQuery<
+	const [getAccountsByEmailLazyQuery] = useLazyQuery<
 		GetAccountsByEmailQuery,
 		GetAccountsByEmailQueryVariables
 	>(GET_ACCOUNTS_BY_EMAIL, { fetchPolicy: 'no-cache', errorPolicy: 'all' });
