@@ -13,6 +13,7 @@ import filter from 'lodash/filter';
 import find from 'lodash/find';
 import includes from 'lodash/includes';
 import isEmpty from 'lodash/isEmpty';
+import reduce from 'lodash/reduce';
 import size from 'lodash/size';
 import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
@@ -62,8 +63,9 @@ import {
 	ActionsFactoryCheckerMap,
 	buildActionItems,
 	canBeMoveDestination,
+	isFolder,
 	getAllPermittedActions,
-	isFolder
+	isFile
 } from '../../utils/ActionsFactory';
 import {
 	downloadNode,
@@ -335,80 +337,102 @@ export const List: React.VFC<ListProps> = ({
 		}
 	}, [nodes, selectedIDs, exitSelectionMode]);
 
-	const { createPreview } = useContext(PreviewsManagerContext);
+	const { createPreview, initPreview, emptyPreview, openPreview } =
+		useContext(PreviewsManagerContext);
+
+	const nodesForPreview = useMemo(
+		() =>
+			reduce(
+				nodes,
+				(accumulator: any, node) => {
+					if (isFile(node)) {
+						const [$isSupportedByPreview, documentType] = isSupportedByPreview(node.mime_type);
+						if ($isSupportedByPreview) {
+							const actions = [
+								{
+									icon: 'ShareOutline',
+									id: 'ShareOutline',
+									tooltipLabel: t('preview.actions.tooltip.manageShares', 'Manage Shares'),
+									onClick: (): void => setActiveNode(node.id, DISPLAYER_TABS.sharing)
+								},
+								{
+									icon: 'DownloadOutline',
+									tooltipLabel: t('preview.actions.tooltip.download', 'Download'),
+									id: 'DownloadOutline',
+									onClick: (): void => downloadNode(node.id)
+								}
+							];
+							const closeAction = {
+								id: 'close-action',
+								icon: 'ArrowBackOutline',
+								tooltipLabel: t('preview.close.tooltip', 'Close')
+							};
+							if (documentType === PREVIEW_TYPE.IMAGE) {
+								accumulator.push({
+									previewType: 'image',
+									filename: node.name,
+									extension: node.extension || undefined,
+									size: (node.size !== undefined && humanFileSize(node.size)) || undefined,
+									actions,
+									closeAction,
+									src: node.version ? getImgPreviewSrc(node.id, node.version, 0, 0, 'high') : '',
+									id: node.id
+								});
+								return accumulator;
+							}
+							// if supported, open document with preview
+							const src =
+								(node.version &&
+									((documentType === PREVIEW_TYPE.PDF && getPdfPreviewSrc(node.id, node.version)) ||
+										(documentType === PREVIEW_TYPE.DOCUMENT &&
+											getDocumentPreviewSrc(node.id, node.version)))) ||
+								'';
+							if (includes(permittedSelectionModeActions, Action.OpenWithDocs)) {
+								actions.unshift({
+									id: 'OpenWithDocs',
+									icon: 'BookOpenOutline',
+									tooltipLabel: t('actions.openWithDocs', 'Open document'),
+									onClick: (): void => openNodeWithDocs(node.id)
+								});
+							}
+							accumulator.push({
+								previewType: 'pdf',
+								filename: node.name,
+								extension: node.extension || undefined,
+								size: (node.size !== undefined && humanFileSize(node.size)) || undefined,
+								useFallback: node.size !== undefined && node.size > PREVIEW_MAX_SIZE,
+								actions,
+								closeAction,
+								src,
+								id: node.id
+							});
+							return accumulator;
+						}
+						return accumulator;
+					}
+					return accumulator;
+				},
+				[]
+			),
+		[nodes, permittedSelectionModeActions, setActiveNode, t]
+	);
+
+	useEffect(() => {
+		initPreview(nodesForPreview);
+		return emptyPreview;
+	}, [emptyPreview, initPreview, nodesForPreview]);
 
 	const previewSelection = useCallback(() => {
 		const nodeToPreview = find(nodes, (node) => node.id === selectedIDs[0]);
-		const {
-			extension,
-			size: fileSize,
-			id,
-			name,
-			version,
-			mime_type: mimeType
-		} = nodeToPreview as File;
-		const [$isSupportedByPreview, documentType] = isSupportedByPreview(mimeType);
+		const { id, mime_type: mimeType } = nodeToPreview as File;
+		const [$isSupportedByPreview] = isSupportedByPreview(mimeType);
 		if ($isSupportedByPreview) {
-			const actions = [
-				{
-					icon: 'ShareOutline',
-					id: 'ShareOutline',
-					tooltipLabel: t('preview.actions.tooltip.manageShares', 'Manage Shares'),
-					onClick: (): void => setActiveNode(id, DISPLAYER_TABS.sharing)
-				},
-				{
-					icon: 'DownloadOutline',
-					tooltipLabel: t('preview.actions.tooltip.download', 'Download'),
-					id: 'DownloadOutline',
-					onClick: (): void => downloadNode(id)
-				}
-			];
-			const closeAction = {
-				id: 'close-action',
-				icon: 'ArrowBackOutline',
-				tooltipLabel: t('preview.close.tooltip', 'Close')
-			};
-			if (documentType === PREVIEW_TYPE.IMAGE) {
-				createPreview({
-					previewType: 'image',
-					filename: name,
-					extension: extension || undefined,
-					size: (fileSize !== undefined && humanFileSize(fileSize)) || undefined,
-					actions,
-					closeAction,
-					src: version ? getImgPreviewSrc(id, version, 0, 0, 'high') : ''
-				});
-			} else {
-				// if supported, open document with preview
-				const src =
-					(version &&
-						((documentType === PREVIEW_TYPE.PDF && getPdfPreviewSrc(id, version)) ||
-							(documentType === PREVIEW_TYPE.DOCUMENT && getDocumentPreviewSrc(id, version)))) ||
-					'';
-				if (includes(permittedSelectionModeActions, Action.OpenWithDocs)) {
-					actions.unshift({
-						id: 'OpenWithDocs',
-						icon: 'BookOpenOutline',
-						tooltipLabel: t('actions.openWithDocs', 'Open document'),
-						onClick: (): void => openNodeWithDocs(id)
-					});
-				}
-				createPreview({
-					previewType: 'pdf',
-					filename: name,
-					extension: extension || undefined,
-					size: (fileSize !== undefined && humanFileSize(fileSize)) || undefined,
-					useFallback: fileSize !== undefined && fileSize > PREVIEW_MAX_SIZE,
-					actions,
-					closeAction,
-					src
-				});
-			}
+			openPreview(id);
 		} else if (includes(permittedSelectionModeActions, Action.OpenWithDocs)) {
 			// if preview is not supported and document can be opened with docs, open editor
 			openNodeWithDocs(id);
 		}
-	}, [nodes, permittedSelectionModeActions, selectedIDs, t, setActiveNode, createPreview]);
+	}, [nodes, permittedSelectionModeActions, selectedIDs, openPreview]);
 
 	const itemsMap = useMemo<Partial<Record<Action, ActionItem>>>(
 		() => ({
