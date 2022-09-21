@@ -383,14 +383,7 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 			<Container background="gray6" height="auto">
 				{$isSupportedByPreview && previewType && (
 					<Container padding={{ all: 'small' }} height="auto">
-						<DisplayerPreview
-							typeName={typeName}
-							id={id}
-							version={version}
-							type={type}
-							mimeType={mimeType}
-							previewType={previewType}
-						/>
+						<DisplayerPreview id={id} version={version} type={type} mimeType={mimeType} />
 					</Container>
 				)}
 				<DisplayerContentContainer
