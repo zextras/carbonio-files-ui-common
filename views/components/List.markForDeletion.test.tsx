@@ -10,7 +10,7 @@ import map from 'lodash/map';
 
 import { populateFile, populateFolder, populateNode } from '../../mocks/mockUtils';
 import { Node } from '../../types/common';
-import { actionRegexp, render, selectNodes } from '../../utils/testUtils';
+import { actionRegexp, setup, selectNodes } from '../../utils/testUtils';
 import { List } from './List';
 
 describe('Mark for deletion - trash', () => {
@@ -27,7 +27,7 @@ describe('Mark for deletion - trash', () => {
 				currentFolder.children.nodes.push(node);
 			}
 
-			render(
+			const { user } = setup(
 				<List
 					nodes={currentFolder.children.nodes as Array<Node>}
 					mainList
@@ -36,7 +36,10 @@ describe('Mark for deletion - trash', () => {
 			);
 
 			// activate selection mode by selecting items
-			selectNodes(map(currentFolder.children.nodes, (node) => (node as Node).id));
+			await selectNodes(
+				map(currentFolder.children.nodes, (node) => (node as Node).id),
+				user
+			);
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(
 				currentFolder.children.nodes.length
@@ -49,7 +52,10 @@ describe('Mark for deletion - trash', () => {
 			expect(trashIcon).toBeVisible();
 			expect(trashIcon.parentElement).not.toHaveAttribute('disable');
 
-			selectNodes(map(currentFolder.children.nodes, (node) => (node as Node).id));
+			await selectNodes(
+				map(currentFolder.children.nodes, (node) => (node as Node).id),
+				user
+			);
 
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 			expect.assertions(4);
@@ -67,7 +73,7 @@ describe('Mark for deletion - trash', () => {
 			folder.permissions.can_write_folder = true;
 			currentFolder.children.nodes.push(folder);
 
-			render(
+			const { user } = setup(
 				<List
 					nodes={currentFolder.children.nodes as Array<Node>}
 					mainList
@@ -78,7 +84,10 @@ describe('Mark for deletion - trash', () => {
 			await screen.findByText(filename1);
 
 			// activate selection mode by selecting items
-			selectNodes(map(currentFolder.children.nodes, (node) => (node as Node).id));
+			await selectNodes(
+				map(currentFolder.children.nodes, (node) => (node as Node).id),
+				user
+			);
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(
 				currentFolder.children.nodes.length
@@ -90,7 +99,10 @@ describe('Mark for deletion - trash', () => {
 
 			expect(trashIcon).not.toBeInTheDocument();
 
-			selectNodes(map(currentFolder.children.nodes, (node) => (node as Node).id));
+			await selectNodes(
+				map(currentFolder.children.nodes, (node) => (node as Node).id),
+				user
+			);
 
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 			expect.assertions(3);
@@ -98,14 +110,14 @@ describe('Mark for deletion - trash', () => {
 	});
 
 	describe('Contextual menu actions', () => {
-		test('Mark for deletion is disabled if node does not have permissions', async () => {
+		test('Mark for deletion is hidden if node does not have permissions', async () => {
 			const currentFolder = populateFolder();
 			const node = populateNode();
 			node.permissions.can_write_file = false;
 			node.permissions.can_write_folder = false;
 			currentFolder.children.nodes.push(node);
 
-			render(
+			setup(
 				<List
 					nodes={currentFolder.children.nodes as Array<Node>}
 					mainList

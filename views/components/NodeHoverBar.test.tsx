@@ -7,19 +7,18 @@
 import React from 'react';
 
 import { screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 
 import { ActionItem } from '../../utils/ActionsFactory';
-import { render } from '../../utils/testUtils';
+import { setup } from '../../utils/testUtils';
 import { NodeHoverBar } from './NodeHoverBar';
 
 describe('Node Hover Bar', () => {
 	test('render nothing if no actions are provided', () => {
-		const { container } = render(<NodeHoverBar actions={[]} />);
+		const { container } = setup(<NodeHoverBar actions={[]} />);
 		expect(container).toBeEmptyDOMElement();
 	});
 
-	test('render all actions icons', () => {
+	test('render all actions icons', async () => {
 		const action1Fn = jest.fn();
 		const action2Fn = jest.fn();
 
@@ -38,15 +37,15 @@ describe('Node Hover Bar', () => {
 			}
 		];
 
-		render(<NodeHoverBar actions={actions} />);
+		const { user } = setup(<NodeHoverBar actions={actions} />);
 		expect(screen.getByTestId('icon: action1Icon')).toBeInTheDocument();
 		expect(screen.getByTestId('icon: action1Icon')).toBeVisible();
 		expect(screen.getByTestId('icon: action2Icon')).toBeInTheDocument();
 		expect(screen.getByTestId('icon: action2Icon')).toBeVisible();
-		userEvent.click(screen.getByTestId('icon: action1Icon'));
+		await user.click(screen.getByTestId('icon: action1Icon'));
 		expect(action1Fn).toHaveBeenCalledTimes(1);
 		expect(action2Fn).not.toHaveBeenCalled();
-		userEvent.click(screen.getByTestId('icon: action2Icon'));
+		await user.click(screen.getByTestId('icon: action2Icon'));
 		expect(action1Fn).toHaveBeenCalledTimes(1);
 		expect(action2Fn).toHaveBeenCalledTimes(1);
 	});

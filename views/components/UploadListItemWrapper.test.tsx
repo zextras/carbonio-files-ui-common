@@ -7,7 +7,6 @@
 import React from 'react';
 
 import { fireEvent, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 
 import { UseNavigationHook } from '../../../hooks/useNavigation';
 import { UseUploadHook } from '../../hooks/useUpload';
@@ -15,7 +14,7 @@ import { populateFolder } from '../../mocks/mockUtils';
 import { UploadStatus, UploadType } from '../../types/common';
 import { GetBaseNodeQuery, GetBaseNodeQueryVariables } from '../../types/graphql/types';
 import { mockGetBaseNode } from '../../utils/mockUtils';
-import { buildBreadCrumbRegExp, render } from '../../utils/testUtils';
+import { buildBreadCrumbRegExp, setup } from '../../utils/testUtils';
 import { humanFileSize } from '../../utils/utils';
 import { UploadListItemWrapper } from './UploadListItemWrapper';
 
@@ -56,7 +55,7 @@ describe('Upload List Item Wrapper', () => {
 
 		const mocks = [mockGetBaseNode({ node_id: destinationFolder.id }, destinationFolder)];
 
-		const { findByTextWithMarkup } = render(
+		const { findByTextWithMarkup } = setup(
 			<UploadListItemWrapper
 				node={file}
 				isSelected={false}
@@ -76,7 +75,7 @@ describe('Upload List Item Wrapper', () => {
 		expect(screen.getByTestId('icon: AnimatedLoader')).toBeVisible();
 	});
 
-	test('Retry action is disabled if uploading is in progress', async () => {
+	test('Retry action is hidden if uploading is in progress', async () => {
 		const destinationFolder = populateFolder();
 		const file: UploadType = {
 			file: new File(['uploading file'], 'file1.txt', { type: 'text/plain' }),
@@ -98,7 +97,7 @@ describe('Upload List Item Wrapper', () => {
 			}
 		});
 
-		render(
+		const { user } = setup(
 			<UploadListItemWrapper
 				node={file}
 				isSelected={false}
@@ -110,12 +109,12 @@ describe('Upload List Item Wrapper', () => {
 
 		expect(screen.getByText(file.file.name)).toBeVisible();
 		// hover bar
-		userEvent.hover(screen.getByText(file.file.name));
+		await user.hover(screen.getByText(file.file.name));
 		expect(screen.queryByTestId('icon: PlayCircleOutline')).not.toBeInTheDocument();
 		expect(screen.getByTestId('icon: CloseCircleOutline')).toBeInTheDocument();
 		expect(screen.getByTestId('icon: FolderOutline')).toBeInTheDocument();
-		userEvent.click(screen.getByTestId('icon: CloseCircleOutline'));
-		userEvent.click(screen.getByTestId('icon: FolderOutline'));
+		await user.click(screen.getByTestId('icon: CloseCircleOutline'));
+		await user.click(screen.getByTestId('icon: FolderOutline'));
 		expect(mockedUseUploadHook.removeById).toHaveBeenCalledWith([file.id]);
 		expect(mockedUseNavigationHook.navigateToFolder).toHaveBeenCalledWith(destinationFolder.id);
 		// contextual menu
@@ -139,7 +138,7 @@ describe('Upload List Item Wrapper', () => {
 
 		const mocks = [mockGetBaseNode({ node_id: destinationFolder.id }, destinationFolder)];
 
-		const { findByTextWithMarkup } = render(
+		const { findByTextWithMarkup } = setup(
 			<UploadListItemWrapper
 				node={file}
 				isSelected={false}

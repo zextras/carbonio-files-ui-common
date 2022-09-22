@@ -40,13 +40,7 @@ export const CopyNodesModalContent: React.VFC<CopyNodesModalContentProps> = ({
 	const [t] = useTranslation();
 	const [destinationFolder, setDestinationFolder] = useState<string>();
 	const [openedFolder, setOpenedFolder] = useState<string>(folderId || '');
-	const {
-		data: currentFolder,
-		loading,
-		error,
-		hasMore,
-		loadMore
-	} = useGetChildrenQuery(openedFolder);
+	const { data: currentFolder, loading, hasMore, loadMore } = useGetChildrenQuery(openedFolder);
 
 	/** Mutation to copy nodes */
 	const { copyNodes, loading: copyNodesMutationLoading } = useCopyNodesMutation();

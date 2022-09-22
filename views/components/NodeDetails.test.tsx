@@ -6,8 +6,7 @@
 
 import React from 'react';
 
-import { act, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { screen } from '@testing-library/react';
 import { sample } from 'lodash';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
@@ -25,7 +24,7 @@ import {
 import { Folder, NodeType, QueryGetPathArgs } from '../../types/graphql/types';
 import { canUpsertDescription } from '../../utils/ActionsFactory';
 import { mockGetPath } from '../../utils/mockUtils';
-import { buildBreadCrumbRegExp, render, waitForNetworkResponse } from '../../utils/testUtils';
+import { buildBreadCrumbRegExp, setup } from '../../utils/testUtils';
 import { formatDate, formatTime, humanFileSize, previewHandledMimeTypes } from '../../utils/utils';
 import { NodeDetails } from './NodeDetails';
 
@@ -36,7 +35,7 @@ describe('Node Details', () => {
 		node.last_editor = populateUser();
 		const loadMore = jest.fn();
 		const downloads = 123;
-		render(
+		setup(
 			<NodeDetails
 				typeName={node.__typename}
 				id={node.id}
@@ -74,12 +73,6 @@ describe('Node Details', () => {
 		).toBeVisible();
 		expect(screen.getByText(node.description)).toBeVisible();
 		expect(screen.getByText(humanFileSize(node.size))).toBeVisible();
-		// TODO: downloads count is not implemented yet
-		// expect(screen.getByText(downloads)).toBeVisible();
-		act(() => {
-			// run timers of displayer preview
-			jest.runOnlyPendingTimers();
-		});
 	});
 
 	test('Show folder info', () => {
@@ -93,7 +86,7 @@ describe('Node Details', () => {
 			child.owner = node.owner;
 		});
 		const loadMore = jest.fn();
-		render(
+		setup(
 			<NodeDetails
 				typeName={node.__typename}
 				id={node.id}
@@ -134,17 +127,13 @@ describe('Node Details', () => {
 		expect(screen.getByText('Content')).toBeVisible();
 		expect(screen.getByText(children[0].name)).toBeVisible();
 		expect(screen.getByText(children[1].name)).toBeVisible();
-		act(() => {
-			// run timers of displayer preview
-			jest.runOnlyPendingTimers();
-		});
 	});
 
 	test('Labels of empty info are hidden', () => {
 		const node = populateFile();
 		node.permissions.can_write_file = true;
 		const loadMore = jest.fn();
-		render(
+		setup(
 			<NodeDetails
 				typeName={node.__typename}
 				id={node.id}
@@ -192,7 +181,7 @@ describe('Node Details', () => {
 		];
 
 		const loadMore = jest.fn();
-		const { getByTextWithMarkup, queryByTextWithMarkup, findByTextWithMarkup } = render(
+		const { getByTextWithMarkup, queryByTextWithMarkup, findByTextWithMarkup, user } = setup(
 			<NodeDetails
 				typeName={undefined}
 				id={node.id}
@@ -217,12 +206,12 @@ describe('Node Details', () => {
 
 		await screen.findByText(node.name, { exact: false });
 		expect(getByTextWithMarkup(buildBreadCrumbRegExp(node.name))).toBeVisible();
-		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		expect(screen.queryByText(node.parent!.name, { exact: false })).not.toBeInTheDocument();
+		expect(
+			screen.queryByText((node.parent as Folder).name, { exact: false })
+		).not.toBeInTheDocument();
 		const showPathButton = screen.getByRole('button', { name: /show path/i });
 		expect(showPathButton).toBeVisible();
-		userEvent.click(showPathButton);
-		await waitForNetworkResponse();
+		await user.click(showPathButton);
 		await screen.findByText((node.parent as Folder).name, { exact: false });
 		expect(
 			getByTextWithMarkup(buildBreadCrumbRegExp(...map(path, (parent) => parent.name)))
@@ -234,7 +223,6 @@ describe('Node Details', () => {
 			args: getPathArgs
 		});
 		const newBreadcrumb = buildBreadCrumbRegExp(...map(path2, (parent) => parent.name));
-		await waitForNetworkResponse();
 		await findByTextWithMarkup(newBreadcrumb);
 		expect(getByTextWithMarkup(newBreadcrumb)).toBeVisible();
 		expect(
@@ -250,7 +238,7 @@ describe('Node Details', () => {
 		collaborator.full_name = '';
 		const share = populateShare(node, 'share-1', collaborator);
 		const loadMore = jest.fn();
-		render(
+		setup(
 			<NodeDetails
 				typeName={node.__typename}
 				id={node.id}
@@ -289,7 +277,7 @@ describe('Node Details', () => {
 		node.last_editor = { ...populateUser(), full_name: '' };
 		node.creator = { ...node.creator, full_name: '' };
 		const loadMore = jest.fn();
-		render(
+		setup(
 			<NodeDetails
 				typeName={node.__typename}
 				id={node.id}
@@ -319,10 +307,6 @@ describe('Node Details', () => {
 		expect(screen.getByText(/created by/i)).toBeVisible();
 		expect(screen.getByText(node.creator.email)).toBeVisible();
 		expect(screen.queryByText('|')).not.toBeInTheDocument();
-		act(() => {
-			// run timers of preview
-			jest.runOnlyPendingTimers();
-		});
 	});
 
 	test('Show file preview for image', async () => {
@@ -330,7 +314,7 @@ describe('Node Details', () => {
 		const loadMore = jest.fn();
 		node.type = NodeType.Image;
 		node.mime_type = 'image/png';
-		render(
+		setup(
 			<NodeDetails
 				typeName={node.__typename}
 				id={node.id}
@@ -362,7 +346,7 @@ describe('Node Details', () => {
 		const loadMore = jest.fn();
 		node.type = NodeType.Text;
 		node.mime_type = 'application/pdf';
-		render(
+		setup(
 			<NodeDetails
 				typeName={node.__typename}
 				id={node.id}
@@ -394,7 +378,7 @@ describe('Node Details', () => {
 		const loadMore = jest.fn();
 		node.type = NodeType.Application;
 		node.mime_type = sample(previewHandledMimeTypes) || 'application/vnd.oasis.opendocument.text';
-		render(
+		setup(
 			<NodeDetails
 				typeName={node.__typename}
 				id={node.id}
@@ -426,7 +410,7 @@ describe('Node Details', () => {
 		const loadMore = jest.fn();
 		node.type = NodeType.Text;
 		node.mime_type = 'text/plain';
-		render(
+		setup(
 			<NodeDetails
 				typeName={node.__typename}
 				id={node.id}
@@ -449,10 +433,6 @@ describe('Node Details', () => {
 			/>,
 			{ mocks: [] }
 		);
-		act(() => {
-			// run timers of displayer preview
-			jest.runOnlyPendingTimers();
-		});
 		expect(screen.getByText(node.name)).toBeVisible();
 		expect(screen.queryByRole('img')).not.toBeInTheDocument();
 	});

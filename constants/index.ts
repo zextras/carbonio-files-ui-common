@@ -77,6 +77,12 @@ export const FILTER_PARAMS: Record<URLParams['filter'], SearchParams> = {
 		cascade: false
 	}
 } as const;
+export const TIMERS = {
+	DRAG_NAVIGATION_TRIGGER: 1500,
+	MOUSE_MOVE_TIMEOUT: 1000,
+	SHOW_DROPZONE: 25,
+	HIDE_DROPZONE: 50
+} as const;
 
 // endpoint
 // keep endpoint without trailing slash

@@ -8,19 +8,13 @@ import React from 'react';
 
 import { ApolloError } from '@apollo/client';
 import { screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { map } from 'lodash';
 
 import ListHeader from '../../../components/ListHeader';
 import { populateFolder, populateParents } from '../../mocks/mockUtils';
 import { Folder } from '../../types/graphql/types';
 import { mockGetParent, mockGetPath } from '../../utils/mockUtils';
-import {
-	buildBreadCrumbRegExp,
-	generateError,
-	render,
-	waitForNetworkResponse
-} from '../../utils/testUtils';
+import { buildBreadCrumbRegExp, generateError, setup } from '../../utils/testUtils';
 import { buildCrumbs } from '../../utils/utils';
 
 describe('ListHeader', () => {
@@ -32,7 +26,7 @@ describe('ListHeader', () => {
 			const selectAll = jest.fn();
 			const unSelectAll = jest.fn();
 			const exitSelectionMode = jest.fn();
-			const { getByTextWithMarkup } = render(
+			const { getByTextWithMarkup } = setup(
 				<ListHeader
 					folderId={currentFolder.id}
 					exitSelectionMode={exitSelectionMode}
@@ -58,7 +52,7 @@ describe('ListHeader', () => {
 			const selectAll = jest.fn();
 			const unSelectAll = jest.fn();
 			const exitSelectionMode = jest.fn();
-			const { getByTextWithMarkup } = render(
+			const { getByTextWithMarkup } = setup(
 				<ListHeader
 					folderId={currentFolder.id}
 					exitSelectionMode={exitSelectionMode}
@@ -90,7 +84,7 @@ describe('ListHeader', () => {
 			const selectAll = jest.fn();
 			const unSelectAll = jest.fn();
 			const exitSelectionMode = jest.fn();
-			const { getByTextWithMarkup } = render(
+			const { getByTextWithMarkup, user } = setup(
 				<ListHeader
 					folderId={currentFolder.id}
 					exitSelectionMode={exitSelectionMode}
@@ -115,20 +109,20 @@ describe('ListHeader', () => {
 			// by default only 2 levels are shown
 			expect(getByTextWithMarkup(shortBreadcrumbRegExp)).toBeVisible();
 			// user clicks on the cta
-			userEvent.click(screen.getByTestId('icon: FolderOutline'));
+			await user.click(screen.getByTestId('icon: FolderOutline'));
 			// wait for the full path to be loaded
 			await screen.findByTestId('icon: ChevronLeft');
 			await screen.findByText(/hide previous folders/i);
 			// all levels are now shown
 			expect(getByTextWithMarkup(fullBreadcrumbRegExp)).toBeVisible();
 			// user clicks again on the cta
-			userEvent.click(screen.getByTestId('icon: FolderOutline'));
+			await user.click(screen.getByTestId('icon: FolderOutline'));
 			await screen.findByText(/show previous folders/i);
 			// root element is not shown now, only the short breadcrumb, without a request to the API
 			expect(getByTextWithMarkup(shortBreadcrumbRegExp)).toBeVisible();
 			expect(screen.queryByText(path[0].name)).not.toBeInTheDocument();
 			// user clicks on the cta
-			userEvent.click(screen.getByTestId('icon: FolderOutline'));
+			await user.click(screen.getByTestId('icon: FolderOutline'));
 			// wait for the full path to be loaded
 			await screen.findByTestId('icon: ChevronLeft');
 			await screen.findByText(/hide previous folders/i);
@@ -149,7 +143,7 @@ describe('ListHeader', () => {
 			const selectAll = jest.fn();
 			const unselectAll = jest.fn();
 			const exitSelectionMode = jest.fn();
-			const { getByTextWithMarkup } = render(
+			const { getByTextWithMarkup, user } = setup(
 				<ListHeader
 					folderId={currentFolder.id}
 					isSelectionModeActive={false}
@@ -173,9 +167,8 @@ describe('ListHeader', () => {
 			// by default only 2 levels are shown
 			expect(getByTextWithMarkup(shortBreadcrumbRegExp)).toBeVisible();
 			// user clicks on the cta
-			userEvent.click(screen.getByTestId('icon: FolderOutline'));
+			await user.click(screen.getByTestId('icon: FolderOutline'));
 			// wait for response
-			await waitForNetworkResponse();
 			await screen.findByText(/show previous folders/i);
 			// root element is not shown but the short breadcrumb remains visible
 			expect(getByTextWithMarkup(shortBreadcrumbRegExp)).toBeVisible();

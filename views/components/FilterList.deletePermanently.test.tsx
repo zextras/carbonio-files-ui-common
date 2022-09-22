@@ -5,8 +5,7 @@
  */
 import React from 'react';
 
-import { fireEvent, screen, waitForElementToBeRemoved, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { act, fireEvent, screen, waitForElementToBeRemoved, within } from '@testing-library/react';
 import forEach from 'lodash/forEach';
 import last from 'lodash/last';
 import map from 'lodash/map';
@@ -15,7 +14,7 @@ import { NODES_LOAD_LIMIT, ROOTS } from '../../constants';
 import { populateFile, populateNodes } from '../../mocks/mockUtils';
 import { Node } from '../../types/common';
 import { getFindNodesVariables, mockDeletePermanently, mockFindNodes } from '../../utils/mockUtils';
-import { actionRegexp, render, selectNodes } from '../../utils/testUtils';
+import { actionRegexp, setup, selectNodes } from '../../utils/testUtils';
 import FilterList from './FilterList';
 
 describe('Filter List', () => {
@@ -46,12 +45,12 @@ describe('Filter List', () => {
 					)
 				];
 
-				render(<FilterList folderId={ROOTS.TRASH} cascade={false} />, { mocks });
+				const { user } = setup(<FilterList folderId={ROOTS.TRASH} cascade={false} />, { mocks });
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 				// activate selection mode by selecting items
-				selectNodes(nodesIdsToDeletePermanently);
+				await selectNodes(nodesIdsToDeletePermanently, user);
 				// check that all wanted items are selected
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 
@@ -66,12 +65,15 @@ describe('Filter List', () => {
 				expect(deletePermanentlyIcon).toBeVisible();
 				expect(deletePermanentlyIcon).not.toHaveAttribute('disabled', '');
 
-				userEvent.click(deletePermanentlyIcon);
+				await user.click(deletePermanentlyIcon);
 
 				const confirmButton = await screen.findByRole('button', { name: /delete permanently/i });
-				userEvent.click(confirmButton);
-				const snackbar = await screen.findByText(/^success$/i);
-				await waitForElementToBeRemoved(snackbar);
+				act(() => {
+					// run timers of modal
+					jest.advanceTimersToNextTimer();
+				});
+				await user.click(confirmButton);
+				await screen.findByText(/^success$/i);
 				expect(confirmButton).not.toBeInTheDocument();
 
 				expect(element).not.toBeInTheDocument();
@@ -99,12 +101,12 @@ describe('Filter List', () => {
 
 				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), currentFilter)];
 
-				render(<FilterList flagged />, { mocks });
+				const { user } = setup(<FilterList flagged />, { mocks });
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 				// activate selection mode by selecting items
-				selectNodes(nodesIdsToDeletePermanently);
+				await selectNodes(nodesIdsToDeletePermanently, user);
 				// check that all wanted items are selected
 				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
 
@@ -140,7 +142,7 @@ describe('Filter List', () => {
 
 				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), [node])];
 
-				render(<FilterList flagged />, { mocks });
+				setup(<FilterList flagged />, { mocks });
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -176,7 +178,7 @@ describe('Filter List', () => {
 				mockFindNodes(getFindNodesVariables({ folder_id: ROOTS.TRASH, cascade: false }), secondPage)
 			];
 
-			render(<FilterList folderId={ROOTS.TRASH} cascade={false} />, { mocks });
+			const { user } = setup(<FilterList folderId={ROOTS.TRASH} cascade={false} />, { mocks });
 
 			await screen.findByText(firstPage[0].name);
 			expect(screen.getByText(firstPage[0].name)).toBeVisible();
@@ -184,25 +186,24 @@ describe('Filter List', () => {
 			expect(screen.queryByText(secondPage[0].name)).not.toBeInTheDocument();
 
 			// select all loaded nodes
-			selectNodes(nodesToDelete);
+			await selectNodes(nodesToDelete, user);
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length);
 
 			const deletePermanentlyAction = await screen.findByTestId('icon: DeletePermanentlyOutline');
 			expect(deletePermanentlyAction).toBeVisible();
 			expect(deletePermanentlyAction.parentNode).not.toHaveAttribute('disabled', '');
-			userEvent.click(deletePermanentlyAction);
+			await user.click(deletePermanentlyAction);
 			const confirmDeleteButton = await screen.findByRole('button', {
 				name: actionRegexp.deletePermanently
 			});
-			userEvent.click(confirmDeleteButton);
+			await user.click(confirmDeleteButton);
 			await waitForElementToBeRemoved(screen.queryByText(firstPage[0].name));
-			const snackbar = await screen.findByText(/^success$/i);
-			await waitForElementToBeRemoved(snackbar);
+			await screen.findByText(/^success$/i);
 			await screen.findByText(secondPage[0].name);
 			expect(screen.getByText(secondPage[0].name)).toBeVisible();
 			expect(screen.queryByText(firstPage[0].name)).not.toBeInTheDocument();
 			expect(screen.queryByText((last(firstPage) as Node).name)).not.toBeInTheDocument();
-		}, 60000);
+		});
 	});
 });

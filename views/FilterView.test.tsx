@@ -7,14 +7,12 @@
 import React from 'react';
 
 import {
-	act,
 	fireEvent,
 	screen,
 	waitFor,
 	waitForElementToBeRemoved,
 	within
 } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import map from 'lodash/map';
 import { graphql } from 'msw';
 import { Route } from 'react-router-dom';
@@ -36,32 +34,34 @@ import {
 } from '../mocks/mockUtils';
 import { Node } from '../types/common';
 import {
-	DeleteShareMutation,
-	DeleteShareMutationVariables,
-	File,
 	FindNodesQuery,
 	FindNodesQueryVariables,
 	Folder,
 	GetChildrenQuery,
 	GetChildrenQueryVariables,
-	GetNodeCollaborationLinksQuery,
-	GetNodeCollaborationLinksQueryVariables,
 	GetNodeQuery,
 	GetNodeQueryVariables,
 	GetPathQuery,
 	GetPathQueryVariables,
-	GetSharesQuery,
-	GetSharesQueryVariables,
 	NodeSort
 } from '../types/graphql/types';
-import { getFindNodesVariables, getNodeVariables } from '../utils/mockUtils';
+import {
+	getFindNodesVariables,
+	getNodeVariables,
+	getSharesVariables,
+	mockDeleteShare,
+	mockFindNodes,
+	mockGetNode,
+	mockGetNodeCollaborationLinks,
+	mockGetNodeLinks,
+	mockGetShares
+} from '../utils/mockUtils';
 import {
 	actionRegexp,
 	buildBreadCrumbRegExp,
 	moveNode,
-	render,
-	selectNodes,
-	waitForNetworkResponse
+	setup,
+	selectNodes
 } from '../utils/testUtils';
 import FilterView from './FilterView';
 
@@ -90,7 +90,7 @@ jest.mock('../../hooks/useCreateOptions', () => ({
 describe('Filter view', () => {
 	describe('Filter route param define findNodes query variables', () => {
 		test('No param render a "Missing filter" message', async () => {
-			render(<Route path="/filter/:filter?" component={FilterView} />, {
+			setup(<Route path="/filter/:filter?" component={FilterView} />, {
 				initialRouterEntries: ['/filter/']
 			});
 			const message = await screen.findByText(/missing filter/i);
@@ -99,10 +99,10 @@ describe('Filter view', () => {
 		});
 
 		test('Flagged filter has flagged=true and excludes trashed nodes', async () => {
-			render(<Route path="/filter/:filter?" component={FilterView} />, {
+			setup(<Route path="/filter/:filter?" component={FilterView} />, {
 				initialRouterEntries: ['/filter/flagged']
 			});
-			await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
+
 			await screen.findByText(/view files and folders/i);
 			const expectedVariables = {
 				flagged: true,
@@ -123,10 +123,9 @@ describe('Filter view', () => {
 		});
 
 		test('My Trash filter sharedWithMe=false and includes only trashed nodes', async () => {
-			render(<Route path="/filter/:filter?" component={FilterView} />, {
+			setup(<Route path="/filter/:filter?" component={FilterView} />, {
 				initialRouterEntries: ['/filter/myTrash']
 			});
-			await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 			await screen.findByText(/view files and folders/i);
 			const expectedVariables = {
 				folder_id: ROOTS.TRASH,
@@ -147,10 +146,9 @@ describe('Filter view', () => {
 		});
 
 		test('Shared trash filter has sharedWithMe=true and includes only trashed nodes', async () => {
-			render(<Route path="/filter/:filter?" component={FilterView} />, {
+			setup(<Route path="/filter/:filter?" component={FilterView} />, {
 				initialRouterEntries: ['/filter/sharedTrash']
 			});
-			await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 			await screen.findByText(/view files and folders/i);
 			const expectedVariables = {
 				folder_id: ROOTS.TRASH,
@@ -171,10 +169,9 @@ describe('Filter view', () => {
 		});
 
 		test('Shared by me filter has sharedByMe=true and excludes trashed nodes', async () => {
-			render(<Route path="/filter/:filter?" component={FilterView} />, {
+			setup(<Route path="/filter/:filter?" component={FilterView} />, {
 				initialRouterEntries: ['/filter/sharedByMe']
 			});
-			await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 			await screen.findByText(/view files and folders/i);
 			const expectedVariables = {
 				folder_id: ROOTS.LOCAL_ROOT,
@@ -196,10 +193,9 @@ describe('Filter view', () => {
 		});
 
 		test('Shared with me filter has sharedWithMe=true and excludes trashed nodes', async () => {
-			render(<Route path="/filter/:filter?" component={FilterView} />, {
+			setup(<Route path="/filter/:filter?" component={FilterView} />, {
 				initialRouterEntries: ['/filter/sharedWithMe']
 			});
-			await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 			await screen.findByText(/view files and folders/i);
 			const expectedVariables = {
 				folder_id: ROOTS.LOCAL_ROOT,
@@ -223,7 +219,7 @@ describe('Filter view', () => {
 
 	describe('Create Folder', () => {
 		test('Create folder option is always disabled', async () => {
-			render(<FilterView />);
+			setup(<FilterView />);
 			await screen.findByText(/view files and folders/i);
 			expect(map(mockedCreateOptions, (createOption) => createOption.action({}))).toEqual(
 				expect.arrayContaining([expect.objectContaining({ id: 'create-folder', disabled: true })])
@@ -245,7 +241,7 @@ describe('Filter view', () => {
 					return res(ctx.data({ getNode: result as Node }));
 				})
 			);
-			const { getByTextWithMarkup } = render(
+			const { getByTextWithMarkup, user } = setup(
 				<Route path="/filter/:filter?">
 					<FilterView />
 				</Route>,
@@ -254,13 +250,13 @@ describe('Filter view', () => {
 				}
 			);
 			// wait the content to be rendered
-			await screen.findAllByTestId('node-item', { exact: false });
 			await screen.findByText(/view files and folders/i);
+			await screen.findAllByTestId('node-item', { exact: false });
 			expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(nodes.length);
 			const nodeItem = screen.getByText(node.name);
 			expect(nodeItem).toBeVisible();
 			expect(screen.queryByText(/details/)).not.toBeInTheDocument();
-			userEvent.click(nodeItem);
+			await user.click(nodeItem);
 			await waitForElementToBeRemoved(screen.queryByText(/view files and folders/i));
 			await screen.findByText(/details/i);
 			expect(screen.getByText(/details/i)).toBeVisible();
@@ -268,10 +264,6 @@ describe('Filter view', () => {
 			await within(displayer).findAllByText(node.name);
 			expect(within(displayer).getAllByText(node.name)).toHaveLength(2);
 			expect(getByTextWithMarkup(buildBreadCrumbRegExp(node.name))).toBeVisible();
-			act(() => {
-				// run timers of displayer preview
-				jest.runOnlyPendingTimers();
-			});
 			expect.assertions(6);
 		});
 
@@ -337,7 +329,7 @@ describe('Filter view', () => {
 				)
 			);
 
-			const { getByTextWithMarkup, queryByTextWithMarkup, findByTextWithMarkup } = render(
+			const { getByTextWithMarkup, queryByTextWithMarkup, findByTextWithMarkup, user } = setup(
 				<Route path="/filter/:filter?">
 					<FilterView />
 				</Route>,
@@ -345,17 +337,16 @@ describe('Filter view', () => {
 					initialRouterEntries: ['/filter/flagged']
 				}
 			);
-
 			// wait the content to be rendered
-			await screen.findAllByTestId('node-item', { exact: false });
 			await screen.findByText(/view files and folders/i);
+			await screen.findAllByTestId('node-item', { exact: false });
 			expect(nodes).not.toBeNull();
 			expect(nodes.length).toBeGreaterThan(0);
 
 			const nodeItem = screen.getByText(node.name);
 			expect(nodeItem).toBeVisible();
 			expect(screen.queryByText(/details/)).not.toBeInTheDocument();
-			userEvent.click(nodeItem);
+			await user.click(nodeItem);
 
 			await screen.findByText(/details/i);
 			expect(screen.getByText(/details/i)).toBeVisible();
@@ -364,8 +355,7 @@ describe('Filter view', () => {
 			expect(getByTextWithMarkup(buildBreadCrumbRegExp(node.name))).toBeVisible();
 			const showPathButton = screen.getByRole('button', { name: /show path/i });
 			expect(showPathButton).toBeVisible();
-			userEvent.click(showPathButton);
-			await waitForNetworkResponse();
+			await user.click(showPathButton);
 			await within(displayer).findByText(node.parent.name);
 			const fullPathOriginalRegexp = buildBreadCrumbRegExp(...map(path, (parent) => parent.name));
 			await findByTextWithMarkup(fullPathOriginalRegexp);
@@ -373,9 +363,8 @@ describe('Filter view', () => {
 			// right click to open contextual menu
 			const nodeToMoveItem = screen.getByTestId(`node-item-${node.id}`);
 			fireEvent.contextMenu(nodeToMoveItem);
-			await moveNode(destinationFolder);
-			const snackbar = await screen.findByText(/item moved/i);
-			await waitForElementToBeRemoved(snackbar);
+			await moveNode(destinationFolder, user);
+			await screen.findByText(/item moved/i);
 			const fullPathUpdatedItem = await findByTextWithMarkup(
 				buildBreadCrumbRegExp(...map(pathUpdated, (parent) => parent.name))
 			);
@@ -389,7 +378,7 @@ describe('Filter view', () => {
 		});
 
 		test('Restore close the displayer from trash views', async () => {
-			render(
+			const { user } = setup(
 				<Route path="/filter/:filter?">
 					<FilterView />
 				</Route>,
@@ -397,10 +386,9 @@ describe('Filter view', () => {
 					initialRouterEntries: ['/filter/myTrash']
 				}
 			);
-
 			// wait the content to be rendered
-			await screen.findAllByTestId('node-item', { exact: false });
 			await screen.findByText(/view files and folders/i);
+			await screen.findAllByTestId('node-item', { exact: false });
 			const queryResult = global.apolloClient.readQuery<FindNodesQuery, FindNodesQueryVariables>({
 				query: FIND_NODES,
 				variables: getFindNodesVariables({
@@ -428,23 +416,20 @@ describe('Filter view', () => {
 			const nodeItem = screen.getByText(node.name);
 			expect(nodeItem).toBeVisible();
 			expect(screen.queryByText(/details/)).not.toBeInTheDocument();
-			userEvent.click(nodeItem);
+			await user.click(nodeItem);
 			await screen.findByText(/details/i);
 			expect(screen.getByText(/details/i)).toBeVisible();
 			const displayer = screen.getByTestId('displayer');
 			expect(within(displayer).getAllByText(node.name)).toHaveLength(2);
 			const restoreAction = within(displayer).getByTestId('icon: RestoreOutline');
 			expect(restoreAction).toBeVisible();
-			act(() => {
-				userEvent.click(restoreAction);
-			});
+			await user.click(restoreAction);
 			await waitFor(() =>
 				expect(screen.queryAllByTestId('node-item-', { exact: false })).toHaveLength(
 					nodes.length - 1
 				)
 			);
-			const snackbar = await screen.findByText(/^success$/i);
-			await waitForElementToBeRemoved(snackbar);
+			await screen.findByText(/^success$/i);
 			await screen.findByText(/view files and folders/i);
 			expect(within(displayer).queryByText(node.name)).not.toBeInTheDocument();
 			expect(restoreAction).not.toBeInTheDocument();
@@ -454,7 +439,7 @@ describe('Filter view', () => {
 		});
 
 		test('Delete permanently close the displayer from trash views', async () => {
-			render(
+			const { user } = setup(
 				<Route path="/filter/:filter?">
 					<FilterView />
 				</Route>,
@@ -462,10 +447,9 @@ describe('Filter view', () => {
 					initialRouterEntries: ['/filter/myTrash']
 				}
 			);
-
 			// wait the content to be rendered
-			await screen.findAllByTestId('node-item', { exact: false });
 			await screen.findByText(/view files and folders/i);
+			await screen.findAllByTestId('node-item', { exact: false });
 			const queryResult = global.apolloClient.readQuery<FindNodesQuery, FindNodesQueryVariables>({
 				query: FIND_NODES,
 				variables: getFindNodesVariables({
@@ -494,7 +478,7 @@ describe('Filter view', () => {
 			const nodeItem = screen.getByText(node.name);
 			expect(nodeItem).toBeVisible();
 			expect(screen.queryByText(/details/)).not.toBeInTheDocument();
-			userEvent.click(nodeItem);
+			await user.click(nodeItem);
 			await screen.findByText(/details/i);
 			expect(screen.getByText(/details/i)).toBeVisible();
 			const displayer = screen.getByTestId('displayer');
@@ -503,22 +487,19 @@ describe('Filter view', () => {
 				'icon: DeletePermanentlyOutline'
 			);
 			expect(deletePermanentlyAction).toBeVisible();
-			act(() => {
-				userEvent.click(deletePermanentlyAction);
-			});
+			await user.click(deletePermanentlyAction);
 			const deletePermanentlyConfirm = await screen.findByRole('button', {
 				name: actionRegexp.deletePermanently
 			});
-			userEvent.click(deletePermanentlyConfirm);
-			await waitForElementToBeRemoved(deletePermanentlyConfirm);
+			await user.click(deletePermanentlyConfirm);
 			await waitFor(() =>
 				expect(screen.queryAllByTestId('node-item-', { exact: false })).toHaveLength(
 					nodes.length - 1
 				)
 			);
-			const snackbar = await screen.findByText(/^success$/i);
-			await waitForElementToBeRemoved(snackbar);
+			await screen.findByText(/^success$/i);
 			await screen.findByText(/view files and folders/i);
+			expect(deletePermanentlyConfirm).not.toBeInTheDocument();
 			expect(within(displayer).queryByText(node.name)).not.toBeInTheDocument();
 			expect(deletePermanentlyAction).not.toBeInTheDocument();
 			expect(
@@ -529,16 +510,15 @@ describe('Filter view', () => {
 
 	describe('Context dependant actions', () => {
 		test('in trash filter only restore and delete permanently actions are visible', async () => {
-			render(
+			const { user } = setup(
 				<Route path="/filter/:filter?">
 					<FilterView />
 				</Route>,
 				{ initialRouterEntries: ['/filter/myTrash'] }
 			);
-
 			// right click to open contextual menu
-			const nodeItems = await screen.findAllByTestId('node-item', { exact: false });
 			await screen.findByText(/view files and folders/i);
+			const nodeItems = await screen.findAllByTestId('node-item', { exact: false });
 			fireEvent.contextMenu(nodeItems[0]);
 			// check that restore action becomes visible
 			const restoreAction = await screen.findByText(actionRegexp.restore);
@@ -563,7 +543,7 @@ describe('Filter view', () => {
 			expect(queryResult?.findNodes?.nodes || null).not.toBeNull();
 			const nodes = queryResult?.findNodes?.nodes as Node[];
 			// selection mode
-			selectNodes([nodes[0].id]);
+			await selectNodes([nodes[0].id], user);
 			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 			expect(screen.queryByTestId('icon: MoreVertical')).not.toBeInTheDocument();
 			const restoreActionSelection = await within(
@@ -583,9 +563,7 @@ describe('Filter view', () => {
 			expect(screen.queryByText(actionRegexp.download)).not.toBeInTheDocument();
 			expect(screen.queryByText(actionRegexp.copy)).not.toBeInTheDocument();
 			// exit selection mode
-			act(() => {
-				userEvent.click(screen.getByTestId('icon: ArrowBackOutline'));
-			});
+			await user.click(screen.getByTestId('icon: ArrowBackOutline'));
 			expect(restoreActionSelection).not.toBeInTheDocument();
 			expect(screen.queryByTestId('icon: MoreVertical')).not.toBeInTheDocument();
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
@@ -604,7 +582,7 @@ describe('Filter view', () => {
 			});
 
 			// displayer
-			userEvent.click(nodeItems[0]);
+			await user.click(nodeItems[0]);
 			await screen.findByText(/details/i);
 			const displayer = screen.getByTestId('displayer');
 			await within(displayer).findAllByText(nodes[0].name);
@@ -618,10 +596,6 @@ describe('Filter view', () => {
 			expect(screen.queryByText(actionRegexp.moveToTrash)).not.toBeInTheDocument();
 			expect(screen.queryByText(actionRegexp.download)).not.toBeInTheDocument();
 			expect(screen.queryByText(actionRegexp.copy)).not.toBeInTheDocument();
-			act(() => {
-				// run preview of displayer
-				jest.runOnlyPendingTimers();
-			});
 		});
 	});
 
@@ -636,63 +610,51 @@ describe('Filter view', () => {
 			);
 			node.shares = [populateShare({ ...node, shares: [] }, 'share-to-remove', mockedUserLogged)];
 
-			// override handlers to return wanted data
-			server.use(
-				graphql.query<FindNodesQuery, FindNodesQueryVariables>('findNodes', (req, res, ctx) =>
-					res(ctx.data({ findNodes: populateNodePage(currentFilter) }))
+			const mocks = [
+				mockFindNodes(
+					getFindNodesVariables({
+						folder_id: ROOTS.LOCAL_ROOT,
+						direct_share: true,
+						shared_with_me: true,
+						cascade: true
+					}),
+					currentFilter
 				),
-				graphql.query<GetNodeQuery, GetNodeQueryVariables>('getNode', (req, res, ctx) =>
-					res(ctx.data({ getNode: node as File | Folder }))
-				),
-				graphql.query<GetSharesQuery, GetSharesQueryVariables>('getShares', (req, res, ctx) =>
-					res(ctx.data({ getNode: node }))
-				),
-				graphql.query<GetNodeCollaborationLinksQuery, GetNodeCollaborationLinksQueryVariables>(
-					'getNodeCollaborationLinks',
-					(req, res, ctx) => res(ctx.data({ getNode: node }))
-				),
-				graphql.mutation<DeleteShareMutation, DeleteShareMutationVariables>(
-					'deleteShare',
-					(req, res, ctx) => res(ctx.data({ deleteShare: true }))
-				)
-			);
+				mockGetNode(getNodeVariables(node.id), node as Node),
+				mockGetShares(getSharesVariables(node.id), node),
+				mockGetNodeCollaborationLinks({ node_id: node.id }, node),
+				mockGetNodeLinks({ node_id: node.id }, node),
+				mockDeleteShare({ node_id: node.id, share_target_id: mockedUserLogged.id }, true)
+			];
 
-			render(
+			const { user } = setup(
 				<Route path="/filter/:filter?">
 					<FilterView />
 				</Route>,
-				{ initialRouterEntries: ['/filter/sharedWithMe'] }
+				{ initialRouterEntries: ['/filter/sharedWithMe'], mocks }
 			);
-
-			await screen.findByText(node.name);
 			await screen.findByText(/view files and folders/i);
+			await screen.findByText(node.name);
 			// open displayer
-			userEvent.click(screen.getByText(node.name));
+			await user.click(screen.getByText(node.name));
 			await screen.findByText(/sharing/i);
 			// go to share tab
-			userEvent.click(screen.getByText(/sharing/i));
+			await user.click(screen.getByText(/sharing/i));
 			// logged user chip is shown
 			await screen.findByText(/you$/i);
-			// wait for tooltip to register listeners
-			await waitFor(
-				() =>
-					new Promise((resolve) => {
-						setTimeout(resolve, 2);
-					})
-			);
+			// advance timers to allow tooltip to register listeners
+			jest.advanceTimersToNextTimer();
 			const sharingContent = screen.getByTestId('node-sharing');
 			// owner chip is visible
 			expect(within(sharingContent).getByText(node.owner.full_name)).toBeVisible();
 			// close button is visible on logged user chip
 			expect(within(sharingContent).getByTestId('icon: Close')).toBeVisible();
-			userEvent.click(within(sharingContent).getByTestId('icon: Close'));
+			await user.click(within(sharingContent).getByTestId('icon: Close'));
 			// confirmation modal
 			await screen.findByRole('button', { name: /remove/i });
 			await screen.findByText(/remove share/i);
-			userEvent.click(screen.getByRole('button', { name: /remove/i }));
-			await waitForElementToBeRemoved(screen.queryAllByText(node.name));
-			const snackbar = await screen.findByText(/success/i);
-			await waitForElementToBeRemoved(snackbar);
+			await user.click(screen.getByRole('button', { name: /remove/i }));
+			await screen.findByText(/success/i);
 			// node is removed from the list and displayer is closed
 			expect(screen.queryByText(node.name)).not.toBeInTheDocument();
 			expect(screen.queryByText(/you$/i)).not.toBeInTheDocument();

@@ -25,7 +25,7 @@ import styled from 'styled-components';
 import useUserInfo from '../../../hooks/useUserInfo';
 import { draggedItemsVar } from '../../apollo/dragAndDropVar';
 import { selectionModeVar } from '../../apollo/selectionVar';
-import { DRAG_TYPES, ROOTS } from '../../constants';
+import { DRAG_TYPES, ROOTS, TIMERS } from '../../constants';
 import { useMoveNodesMutation } from '../../hooks/graphql/mutations/useMoveNodesMutation';
 import { useTrashNodesMutation } from '../../hooks/graphql/mutations/useTrashNodesMutation';
 import { useGetBaseNodeQuery } from '../../hooks/graphql/queries/useGetBaseNodeQuery';
@@ -143,7 +143,7 @@ export const SecondaryBarItem: React.VFC<SecondaryBarItemProps> = ({ item, expan
 						// for the secondary bar allow navigation only for roots with permission to upload
 						navigationTimerRef.current = setTimeout(() => {
 							item.onClick && item.onClick(event);
-						}, 1500);
+						}, TIMERS.DRAG_NAVIGATION_TRIGGER);
 					}
 				} else if (isMovingNode) {
 					setDropAction('move');
@@ -160,7 +160,7 @@ export const SecondaryBarItem: React.VFC<SecondaryBarItemProps> = ({ item, expan
 					if (dropEnabledForMove) {
 						navigationTimerRef.current = setTimeout(() => {
 							item.onClick && item.onClick(event);
-						}, 1500);
+						}, TIMERS.DRAG_NAVIGATION_TRIGGER);
 					}
 				}
 			} else {

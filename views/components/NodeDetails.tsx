@@ -379,7 +379,12 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 	const nodeIsFolder = useMemo(() => isFolder({ __typename: typeName }), [typeName]);
 
 	return (
-		<MainContainer mainAlignment="flex-start" background="gray5" height="auto">
+		<MainContainer
+			mainAlignment="flex-start"
+			background="gray5"
+			height="auto"
+			data-testid="node-details"
+		>
 			<Container background="gray6" height="auto">
 				{$isSupportedByPreview && previewType && (
 					<Container padding={{ all: 'small' }} height="auto">
@@ -495,16 +500,6 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 						key={`NodeDetailsDescription${id}`}
 						loading={loading && description === undefined}
 					/>
-					{/*
-					TODO: download count is not implemented yet
-					{nodeIsFile && (
-						<TextRowWithShim
-							loading={loading}
-							label={t('displayer.details.downloads', 'Downloads by public link')}
-							content={downloads}
-							shimmerWidth="3em"
-						/>
-					)} */}
 				</DisplayerContentContainer>
 			</Container>
 			{nodeIsFolder && (nodes || loading) && (

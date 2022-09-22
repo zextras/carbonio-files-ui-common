@@ -69,7 +69,7 @@ export const CollaborationLinks: React.FC<CollaborationLinksProps> = ({
 	}, [getCollaborationLinksQueryData]);
 
 	/** Mutation to create collaboration link */
-	const { createCollaborationLink, loading: createCollaborationLinkLoading } =
+	const { createCollaborationLink, loading: _createCollaborationLinkLoading } =
 		useCreateCollaborationLinkMutation(nodeId);
 
 	/** Mutation to delete collaboration link */

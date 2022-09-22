@@ -19,7 +19,7 @@ import { useNavigation } from '../../hooks/useNavigation';
 import useUserInfo from '../../hooks/useUserInfo';
 import { draggedItemsVar } from '../apollo/dragAndDropVar';
 import { selectionModeVar } from '../apollo/selectionVar';
-import { DRAG_TYPES } from '../constants';
+import { DRAG_TYPES, TIMERS } from '../constants';
 import BASE_NODE from '../graphql/fragments/baseNode.graphql';
 import { Crumb, DroppableCrumb, NodeListItemType } from '../types/common';
 import { BaseNodeFragment, NodeType } from '../types/graphql/types';
@@ -148,7 +148,7 @@ export function useDroppableCrumbs(
 						// if mouse is hovering a child node start the actionTimer to trigger the click action
 						actionTimer.current = setTimeout(() => {
 							crumb.click && crumb.click(event);
-						}, 1500);
+						}, TIMERS.DRAG_NAVIGATION_TRIGGER);
 					}
 				} else {
 					event.dataTransfer.dropEffect = 'none';
@@ -172,7 +172,7 @@ export function useDroppableCrumbs(
 					// trigger action even if the upload is disabled because there could be parent folders with right permissions
 					actionTimer.current = setTimeout(() => {
 						crumb.click && crumb.click(event);
-					}, 1500);
+					}, TIMERS.DRAG_NAVIGATION_TRIGGER);
 				}
 			}
 		},

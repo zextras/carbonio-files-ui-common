@@ -6,23 +6,22 @@
 
 import React from 'react';
 
-import { act, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { screen } from '@testing-library/react';
 
 import { populateGalContact, populateNode } from '../../../mocks/mockUtils';
 import { Role, ShareChip } from '../../../types/common';
 import { GetNodeQuery, GetNodeQueryVariables } from '../../../types/graphql/types';
 import { getNodeVariables, mockGetNode } from '../../../utils/mockUtils';
-import { render } from '../../../utils/testUtils';
+import { setup } from '../../../utils/testUtils';
 import { getChipLabel } from '../../../utils/utils';
 import { AddShareChip } from './AddShareChip';
 
 describe('Add Share Chip', () => {
-	test('render a chip for share with read-only permissions', () => {
+	test('render a chip for share with read-only permissions', async () => {
 		const onUpdateFn = jest.fn();
 		const onCloseFn = jest.fn();
 		const contact = populateGalContact();
-		render(
+		const { user } = setup(
 			<AddShareChip
 				value={{
 					id: 'chip',
@@ -41,18 +40,16 @@ describe('Add Share Chip', () => {
 		expect(screen.queryByTestId('icon: Share')).not.toBeInTheDocument();
 		expect(screen.getByTestId('icon: Close')).toBeVisible();
 
-		act(() => {
-			userEvent.click(screen.getByTestId('icon: Close'));
-		});
+		await user.click(screen.getByTestId('icon: Close'));
 
 		expect(onCloseFn).toHaveBeenCalled();
 	});
 
-	test('render a chip for share with read and write permissions', () => {
+	test('render a chip for share with read and write permissions', async () => {
 		const onUpdateFn = jest.fn();
 		const onCloseFn = jest.fn();
 		const contact = populateGalContact();
-		render(
+		const { user } = setup(
 			<AddShareChip
 				value={{
 					id: 'chip',
@@ -71,18 +68,16 @@ describe('Add Share Chip', () => {
 		expect(screen.queryByTestId('icon: Share')).not.toBeInTheDocument();
 		expect(screen.getByTestId('icon: Close')).toBeVisible();
 
-		act(() => {
-			userEvent.click(screen.getByTestId('icon: Close'));
-		});
+		await user.click(screen.getByTestId('icon: Close'));
 
 		expect(onCloseFn).toHaveBeenCalled();
 	});
 
-	test('render a chip for share with read and share permissions', () => {
+	test('render a chip for share with read and share permissions', async () => {
 		const onUpdateFn = jest.fn();
 		const onCloseFn = jest.fn();
 		const contact = populateGalContact();
-		render(
+		const { user } = setup(
 			<AddShareChip
 				value={{
 					id: 'chip',
@@ -101,18 +96,16 @@ describe('Add Share Chip', () => {
 		expect(screen.getByTestId('icon: Share')).toBeVisible();
 		expect(screen.getByTestId('icon: Close')).toBeVisible();
 
-		act(() => {
-			userEvent.click(screen.getByTestId('icon: Close'));
-		});
+		await user.click(screen.getByTestId('icon: Close'));
 
 		expect(onCloseFn).toHaveBeenCalled();
 	});
 
-	test('render a chip for share with write and share permissions', () => {
+	test('render a chip for share with write and share permissions', async () => {
 		const onUpdateFn = jest.fn();
 		const onCloseFn = jest.fn();
 		const contact = populateGalContact();
-		render(
+		const { user } = setup(
 			<AddShareChip
 				value={{
 					id: 'chip',
@@ -131,18 +124,16 @@ describe('Add Share Chip', () => {
 		expect(screen.getByTestId('icon: Share')).toBeVisible();
 		expect(screen.getByTestId('icon: Close')).toBeVisible();
 
-		act(() => {
-			userEvent.click(screen.getByTestId('icon: Close'));
-		});
+		await user.click(screen.getByTestId('icon: Close'));
 
 		expect(onCloseFn).toHaveBeenCalled();
 	});
 
-	test('click on the chip open popover which contains roles and description of roles', () => {
+	test('click on the chip open popover which contains roles and description of roles', async () => {
 		const onUpdateFn = jest.fn();
 		const onCloseFn = jest.fn();
 		const contact = populateGalContact();
-		render(
+		const { user } = setup(
 			<AddShareChip
 				value={{
 					id: 'chip',
@@ -157,9 +148,7 @@ describe('Add Share Chip', () => {
 
 		expect(screen.getByText(getChipLabel(contact))).toBeVisible();
 
-		act(() => {
-			userEvent.click(screen.getByTestId('icon: EyeOutline'));
-		});
+		await user.click(screen.getByTestId('icon: EyeOutline'));
 
 		expect(screen.getByText('Viewer')).toBeVisible();
 		expect(screen.getByText('It will only be able to view or download the file or folder'));
@@ -170,7 +159,7 @@ describe('Add Share Chip', () => {
 	});
 
 	describe('Within popover', () => {
-		test('click on other role trigger update of the chip. Popover remains open', () => {
+		test('click on other role trigger update of the chip. Popover remains open', async () => {
 			const node = populateNode();
 			node.permissions.can_write_file = true;
 			node.permissions.can_write_folder = true;
@@ -195,18 +184,16 @@ describe('Add Share Chip', () => {
 				...contact
 			};
 
-			render(<AddShareChip value={chip} onClose={onCloseFn} />, {
+			const { user } = setup(<AddShareChip value={chip} onClose={onCloseFn} />, {
 				initialRouterEntries: [`/?node=${node.id}`]
 			});
 
 			expect(screen.getByText(getChipLabel(contact))).toBeVisible();
 
-			act(() => {
-				userEvent.click(screen.getByTestId('icon: EyeOutline'));
-			});
+			await user.click(screen.getByTestId('icon: EyeOutline'));
 
 			expect(screen.getByText('Editor')).toBeVisible();
-			userEvent.click(screen.getByText('Editor'));
+			await user.click(screen.getByText('Editor'));
 			expect(onUpdateFn).toHaveBeenCalled();
 			expect(onUpdateFn).toHaveBeenCalledWith(chip.id, { role: Role.Editor });
 			expect(screen.getByText('Viewer')).toBeVisible();
@@ -214,7 +201,7 @@ describe('Add Share Chip', () => {
 			expect(screen.getByText('Sharing allowed')).toBeVisible();
 		});
 
-		test('editor entry is disabled if user has not write permissions. Popover remains open', () => {
+		test('editor entry is disabled if user has not write permissions. Popover remains open', async () => {
 			const node = populateNode();
 			node.permissions.can_write_file = false;
 			node.permissions.can_write_folder = false;
@@ -231,7 +218,7 @@ describe('Add Share Chip', () => {
 				}
 			});
 
-			render(
+			const { user } = setup(
 				<AddShareChip
 					value={{
 						id: 'chip',
@@ -247,20 +234,18 @@ describe('Add Share Chip', () => {
 
 			expect(screen.getByText(getChipLabel(contact))).toBeVisible();
 
-			act(() => {
-				userEvent.click(screen.getByTestId('icon: EyeOutline'));
-			});
+			await user.click(screen.getByTestId('icon: EyeOutline'));
 
 			expect(screen.getByTestId('exclusive-selection-editor')).toBeInTheDocument();
 			expect(screen.getByText('Editor')).toBeVisible();
-			userEvent.click(screen.getByText('Editor'));
+			await user.click(screen.getByText('Editor'));
 			expect(onUpdateFn).not.toHaveBeenCalled();
 			expect(screen.getByText('Viewer')).toBeVisible();
 			expect(screen.getByText('Editor')).toBeVisible();
 			expect(screen.getByText('Sharing allowed')).toBeVisible();
 		});
 
-		test('click on unchecked checkbox "Sharing allowed" trigger update of the chip. Popover remains open', () => {
+		test('click on unchecked checkbox "Sharing allowed" trigger update of the chip. Popover remains open', async () => {
 			const node = populateNode();
 			node.permissions.can_write_file = true;
 			node.permissions.can_write_folder = true;
@@ -285,23 +270,21 @@ describe('Add Share Chip', () => {
 				...contact
 			};
 
-			render(<AddShareChip value={chip} onClose={onCloseFn} />, {
+			const { user } = setup(<AddShareChip value={chip} onClose={onCloseFn} />, {
 				initialRouterEntries: [`/?node=${node.id}`]
 			});
 
 			expect(screen.getByText(getChipLabel(contact))).toBeVisible();
 
-			act(() => {
-				userEvent.click(screen.getByTestId('icon: EyeOutline'));
-			});
+			await user.click(screen.getByTestId('icon: EyeOutline'));
 
 			expect(screen.getByText('Sharing allowed')).toBeVisible();
 			expect(screen.getByTestId('icon: Square')).toBeVisible();
 			expect(screen.queryByTestId('icon: CheckmarkSquare')).not.toBeInTheDocument();
 			// only click on checkbox trigger update
-			userEvent.click(screen.getByText('Sharing allowed'));
+			await user.click(screen.getByText('Sharing allowed'));
 			expect(onUpdateFn).not.toHaveBeenCalled();
-			userEvent.click(screen.getByTestId('icon: Square'));
+			await user.click(screen.getByTestId('icon: Square'));
 			expect(onUpdateFn).toHaveBeenCalled();
 			expect(onUpdateFn).toHaveBeenCalledWith(chip.id, { sharingAllowed: true });
 			expect(screen.getByText('Viewer')).toBeVisible();
@@ -309,7 +292,7 @@ describe('Add Share Chip', () => {
 			expect(screen.getByText('Sharing allowed')).toBeVisible();
 		});
 
-		test('click on checked checkbox "Sharing allowed" trigger update of the chip. Popover remains open', () => {
+		test('click on checked checkbox "Sharing allowed" trigger update of the chip. Popover remains open', async () => {
 			const node = populateNode();
 			node.permissions.can_write_file = true;
 			node.permissions.can_write_folder = true;
@@ -334,20 +317,18 @@ describe('Add Share Chip', () => {
 				...contact
 			};
 
-			render(<AddShareChip value={chip} onClose={onCloseFn} />, {
+			const { user } = setup(<AddShareChip value={chip} onClose={onCloseFn} />, {
 				initialRouterEntries: [`/?node=${node.id}`]
 			});
 
 			expect(screen.getByText(getChipLabel(contact))).toBeVisible();
 
-			act(() => {
-				userEvent.click(screen.getByTestId('icon: EyeOutline'));
-			});
+			await user.click(screen.getByTestId('icon: EyeOutline'));
 
 			expect(screen.getByText('Sharing allowed')).toBeVisible();
 			expect(screen.getByTestId('icon: CheckmarkSquare')).toBeVisible();
 			expect(screen.queryByTestId('icon: Square')).not.toBeInTheDocument();
-			userEvent.click(screen.getByTestId('icon: CheckmarkSquare'));
+			await user.click(screen.getByTestId('icon: CheckmarkSquare'));
 			expect(onUpdateFn).toHaveBeenCalled();
 			expect(onUpdateFn).toHaveBeenCalledWith(chip.id, { sharingAllowed: false });
 			expect(screen.getByText('Viewer')).toBeVisible();

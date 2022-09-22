@@ -68,7 +68,7 @@ export function populateUser(id?: string, name?: string, email?: string): User {
 	return {
 		id: id || faker.datatype.uuid(),
 		email: email || faker.internet.exampleEmail(name),
-		full_name: name || faker.name.findName(),
+		full_name: name || faker.name.fullName(),
 		__typename: 'User'
 	};
 }
@@ -340,7 +340,7 @@ export function populateContact(
 			email ||
 			(fullName && `${fullName.replace(/\s+/i, '.')}@example.com`) ||
 			faker.internet.exampleEmail(fullName),
-		full: fullName || faker.name.findName()
+		full: fullName || faker.name.fullName()
 	};
 }
 

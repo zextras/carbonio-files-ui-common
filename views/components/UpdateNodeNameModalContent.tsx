@@ -8,7 +8,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { FetchResult } from '@apollo/client';
-import { Input, Row, Text } from '@zextras/carbonio-design-system';
+import { Input } from '@zextras/carbonio-design-system';
 import trim from 'lodash/trim';
 import { useTranslation } from 'react-i18next';
 
@@ -97,15 +97,9 @@ export const UpdateNodeNameModalContent = <T extends UpdateNameMutation>({
 				data-testid="input-name"
 				inputRef={inputRef}
 				onKeyUp={keyUpHandler}
+				hasError={!!errorMsg}
+				description={errorMsg || undefined}
 			/>
-			{/* TODO: remove this error in favor of the input one */}
-			{errorMsg && (
-				<Row padding={{ top: 'small' }}>
-					<Text color="error" overflow="break-word" size="small">
-						{errorMsg}
-					</Text>
-				</Row>
-			)}
 			<ModalFooter
 				confirmLabel={confirmLabel}
 				confirmHandler={confirmHandler}

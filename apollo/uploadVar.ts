@@ -8,7 +8,9 @@ import { makeVar } from '@apollo/client';
 
 import { UploadType } from '../types/common';
 
-export const uploadVar = makeVar<{ [id: string]: UploadType }>({});
+export type UploadRecord = { [id: string]: UploadType };
+
+export const uploadVar = makeVar<UploadRecord>({});
 
 export interface UploadFunctions {
 	abort: () => void;

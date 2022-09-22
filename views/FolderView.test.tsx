@@ -6,8 +6,7 @@
 
 import React from 'react';
 
-import { act, fireEvent, screen, waitForElementToBeRemoved, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { fireEvent, screen, within } from '@testing-library/react';
 import map from 'lodash/map';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
@@ -39,12 +38,7 @@ import {
 	mockGetChildren,
 	mockGetParent
 } from '../utils/mockUtils';
-import {
-	buildBreadCrumbRegExp,
-	moveNode,
-	render,
-	waitForNetworkResponse
-} from '../utils/testUtils';
+import { buildBreadCrumbRegExp, moveNode, setup } from '../utils/testUtils';
 import FolderView from './FolderView';
 
 let mockedCreateOptions: CreateOptionsContent['createOptions'];
@@ -105,12 +99,11 @@ describe('Folder View', () => {
 					getNode: currentFolder
 				}
 			});
-			const { findByTextWithMarkup } = render(<FolderView />, {
+			const { findByTextWithMarkup } = setup(<FolderView />, {
 				initialRouterEntries: [`/?folder=${currentFolder.id}`]
 			});
 			await screen.findByText(/nothing here/i);
 			await findByTextWithMarkup(buildBreadCrumbRegExp(currentFolder.name));
-			await waitForNetworkResponse();
 			expect(map(mockedCreateOptions, (createOption) => createOption.action({}))).toEqual(
 				expect.arrayContaining([expect.objectContaining({ id: 'create-folder', disabled: true })])
 			);
@@ -155,7 +148,9 @@ describe('Folder View', () => {
 					getNode: currentFolder
 				}
 			});
-			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`] });
+			setup(<FolderView />, {
+				initialRouterEntries: [`/?folder=${currentFolder.id}`]
+			});
 			await screen.findByText(/nothing here/i);
 			expect(map(mockedCreateOptions, (createOption) => createOption.action({}))).toEqual(
 				expect.arrayContaining([expect.objectContaining({ id: 'create-folder', disabled: false })])
@@ -192,14 +187,14 @@ describe('Folder View', () => {
 					getNode: currentFolder.children.nodes[0] as Node
 				}
 			});
-			const { getByTextWithMarkup } = render(<FolderView />, {
+			const { getByTextWithMarkup, user } = setup(<FolderView />, {
 				initialRouterEntries: [`/?folder=${currentFolder.id}`]
 			});
 			const nodeItem = screen.getByText((currentFolder.children.nodes[0] as Node).name);
 			expect(nodeItem).toBeVisible();
 			const displayer = screen.getByTestId('displayer');
 			expect(within(displayer).queryByText(/details/i)).not.toBeInTheDocument();
-			userEvent.click(nodeItem);
+			await user.click(nodeItem);
 			await screen.findByText(/details/i);
 			expect(
 				within(displayer).getAllByText((currentFolder.children.nodes[0] as Node).name)
@@ -207,10 +202,6 @@ describe('Folder View', () => {
 			expect(
 				getByTextWithMarkup(buildBreadCrumbRegExp((currentFolder.children.nodes[0] as Node).name))
 			).toBeVisible();
-			act(() => {
-				// run timers of displayer preview
-				jest.runOnlyPendingTimers();
-			});
 			expect.assertions(4);
 		});
 
@@ -279,7 +270,7 @@ describe('Folder View', () => {
 					getNode: currentFolder
 				}
 			});
-			const { findByTextWithMarkup } = render(<FolderView />, {
+			const { findByTextWithMarkup, user } = setup(<FolderView />, {
 				initialRouterEntries: [`/?folder=${currentFolder.id}&node=${node.id}`]
 			});
 			const displayer = await screen.findByTestId('displayer');
@@ -293,9 +284,8 @@ describe('Folder View', () => {
 				node.name
 			);
 			fireEvent.contextMenu(nodeToMoveItem);
-			await moveNode(destinationFolder);
-			const snackbar = await screen.findByText(/item moved/i);
-			await waitForElementToBeRemoved(snackbar);
+			await moveNode(destinationFolder, user);
+			await screen.findByText(/item moved/i);
 			await screen.findByText(/view files and folders/i);
 			expect(screen.queryByTestId(`node-item-${node.id}`)).not.toBeInTheDocument();
 			expect(screen.queryAllByTestId('node-item-', { exact: false })).toHaveLength(
@@ -350,7 +340,9 @@ describe('Folder View', () => {
 				}
 			});
 
-			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`] });
+			setup(<FolderView />, {
+				initialRouterEntries: [`/?folder=${currentFolder.id}`]
+			});
 
 			await screen.findByText(/nothing here/i);
 			expect(map(mockedCreateOptions, (createOption) => createOption.action({}))).toEqual(
@@ -401,7 +393,9 @@ describe('Folder View', () => {
 					getNode: currentFolder
 				}
 			});
-			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`] });
+			setup(<FolderView />, {
+				initialRouterEntries: [`/?folder=${currentFolder.id}`]
+			});
 			await screen.findByText(/nothing here/i);
 			expect(map(mockedCreateOptions, (createOption) => createOption.action({}))).toEqual(
 				expect.arrayContaining([

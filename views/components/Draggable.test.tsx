@@ -9,14 +9,14 @@ import React from 'react';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 
 import { DRAG_TYPES } from '../../constants';
-import { render } from '../../utils/testUtils';
+import { setup } from '../../utils/testUtils';
 import { Draggable } from './Draggable';
 
 describe('Draggable', () => {
 	test('Force drag end on mouse move after user release drag but no drag end is fired', async () => {
 		const dragStartFn = jest.fn();
 		const dragEndFn = jest.fn();
-		render(
+		setup(
 			<Draggable onDragStart={dragStartFn} onDragEnd={dragEndFn} effect="move">
 				Draggable element
 			</Draggable>

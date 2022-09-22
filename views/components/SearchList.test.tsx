@@ -7,13 +7,13 @@
 import React from 'react';
 
 import {
+	act,
 	fireEvent,
 	screen,
 	waitFor,
 	waitForElementToBeRemoved,
 	within
 } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 import { graphql } from 'msw';
@@ -44,9 +44,8 @@ import {
 	actionRegexp,
 	buildChipsFromKeywords,
 	iconRegexp,
-	render,
-	selectNodes,
-	waitForNetworkResponse
+	setup,
+	selectNodes
 } from '../../utils/testUtils';
 import { SearchList } from './SearchList';
 
@@ -95,7 +94,7 @@ describe('Search list', () => {
 				files
 			};
 
-			render(<SearchList />, { mocks });
+			setup(<SearchList />, { mocks });
 
 			await screen.findByText(currentSearch[0].name);
 
@@ -112,8 +111,7 @@ describe('Search list', () => {
 				dataTransfer: dataTransferObj
 			});
 
-			const snackbar = await screen.findByText(/upload occurred in Files' home/i);
-			await waitForElementToBeRemoved(snackbar);
+			await screen.findByText(/upload occurred in Files' home/i);
 
 			expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
 				currentSearch.length
@@ -179,7 +177,7 @@ describe('Search list', () => {
 				})
 			});
 
-			render(<SearchList />, { mocks });
+			setup(<SearchList />, { mocks });
 
 			const itemToDrag = await screen.findByText(nodesToDrag[0].name);
 			fireEvent.dragStart(itemToDrag, { dataTransfer: dataTransfer() });
@@ -223,8 +221,7 @@ describe('Search list', () => {
 			expect(screen.queryByText('Drag&Drop Mode')).not.toBeInTheDocument();
 			fireEvent.drop(destinationItem, { dataTransfer: dataTransfer() });
 			fireEvent.dragEnd(itemToDrag, { dataTransfer: dataTransfer() });
-			const snackbar = await screen.findByText(/item moved/i);
-			await waitForElementToBeRemoved(snackbar);
+			await screen.findByText(/item moved/i);
 			expect(screen.queryByTestId('dropzone-overlay')).not.toBeInTheDocument();
 			expect(screen.getByText(nodesToDrag[0].name)).toBeInTheDocument();
 			expect(screen.getByText(nodesToDrag[0].name)).toBeVisible();
@@ -272,7 +269,7 @@ describe('Search list', () => {
 				})
 			});
 
-			render(<SearchList />, { mocks });
+			setup(<SearchList />, { mocks });
 
 			const itemToDrag = await screen.findByText(nodesToDrag[0].name);
 			fireEvent.dragStart(itemToDrag, { dataTransfer: dataTransfer() });
@@ -371,14 +368,19 @@ describe('Search list', () => {
 				})
 			});
 
-			render(<SearchList />, {
+			const { user } = setup(<SearchList />, {
 				mocks
 			});
 
 			const itemToDrag = await screen.findByText(nodesToDrag[0].name);
-			await selectNodes(map(nodesToDrag, (node) => node.id));
+			await selectNodes(
+				map(nodesToDrag, (node) => node.id),
+				user
+			);
 			// check that all wanted items are selected
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToDrag.length);
+			await waitFor(() => {
+				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToDrag.length);
+			});
 
 			fireEvent.dragStart(itemToDrag, { dataTransfer: dataTransfer() });
 			forEach(nodesToDrag, (node) => {
@@ -440,25 +442,24 @@ describe('Search list', () => {
 					)
 				];
 
-				render(<SearchList />, { mocks });
+				const { user } = setup(<SearchList />, { mocks });
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 				// activate selection mode by selecting items
-				selectNodes(nodesIdsToMFD);
+				await selectNodes(nodesIdsToMFD, user);
 				// check that all wanted items are selected
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 
-				userEvent.click(screen.getByTestId(iconRegexp.moreVertical));
+				await user.click(screen.getByTestId(iconRegexp.moreVertical));
 
 				const trashAction = await screen.findByText(actionRegexp.moveToTrash);
 				expect(trashAction.parentNode).not.toHaveAttribute('disabled');
 
-				userEvent.click(trashAction);
+				await user.click(trashAction);
 
-				const snackbar = await screen.findByText(/item moved to trash/i);
-				await waitForElementToBeRemoved(snackbar);
+				await screen.findByText(/item moved to trash/i);
 				expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 
 				expect(screen.queryAllByTestId(`file-icon-preview`).length).toEqual(2);
@@ -484,19 +485,19 @@ describe('Search list', () => {
 
 				const mocks = [mockFindNodes(getFindNodesVariables({ keywords }), currentFilter)];
 
-				render(<SearchList />, { mocks });
+				const { user } = setup(<SearchList />, { mocks });
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 				// activate selection mode by selecting items
-				selectNodes(nodesIdsToMFD);
+				await selectNodes(nodesIdsToMFD, user);
 				// check that all wanted items are selected
 				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
 
 				expect(screen.queryByTestId(iconRegexp.moveToTrash)).not.toBeInTheDocument();
 				const moreIconButton = screen.queryByTestId(iconRegexp.moreVertical);
 				if (moreIconButton) {
-					userEvent.click(moreIconButton);
+					await user.click(moreIconButton);
 					expect(screen.queryByText(actionRegexp.moveToTrash)).not.toBeInTheDocument();
 				}
 
@@ -549,12 +550,12 @@ describe('Search list', () => {
 					)
 				];
 
-				render(<SearchList />, { mocks });
+				const { user } = setup(<SearchList />, { mocks });
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 				// activate selection mode by selecting items
-				selectNodes(nodesIdsToRestore);
+				await selectNodes(nodesIdsToRestore, user);
 				// check that all wanted items are selected
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 
@@ -565,10 +566,9 @@ describe('Search list', () => {
 				expect(restoreIcon).toBeVisible();
 				expect(restoreIcon).not.toHaveAttribute('disabled', '');
 
-				userEvent.click(restoreIcon);
+				await user.click(restoreIcon);
 
-				const snackbar = await screen.findByText(/^success$/i);
-				await waitForElementToBeRemoved(snackbar);
+				await screen.findByText(/^success$/i);
 				expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 
 				expect(screen.queryAllByTestId(`file-icon-preview`).length).toEqual(2);
@@ -600,12 +600,12 @@ describe('Search list', () => {
 					mockFindNodes(getFindNodesVariables({ keywords }), currentFilter)
 				];
 
-				render(<SearchList />, { mocks });
+				const { user } = setup(<SearchList />, { mocks });
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 				// activate selection mode by selecting items
-				selectNodes(nodesIdsToRestore);
+				await selectNodes(nodesIdsToRestore, user);
 				// check that all wanted items are selected
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 
@@ -620,11 +620,9 @@ describe('Search list', () => {
 				expect(unselectAllIcon).toBeInTheDocument();
 				expect(unselectAllIcon).toBeVisible();
 
-				userEvent.click(restoreIcon);
+				await user.click(restoreIcon);
 
-				// await waitForElementToBeRemoved(unselectAllIcon);
-				const snackbar = await screen.findByText(/^success$/i);
-				await waitForElementToBeRemoved(snackbar);
+				await screen.findByText(/^success$/i);
 
 				const elementsWithSelectionModeOff = await screen.findAllByTestId('file-icon-preview');
 				const restoredItem = screen.getByText(currentFilter[0].name);
@@ -655,12 +653,12 @@ describe('Search list', () => {
 
 				const mocks = [mockFindNodes(getFindNodesVariables({ keywords }), currentFilter)];
 
-				render(<SearchList />, { mocks });
+				const { user } = setup(<SearchList />, { mocks });
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 				// activate selection mode by selecting items
-				selectNodes(nodesIdsToRestore);
+				await selectNodes(nodesIdsToRestore, user);
 				// check that all wanted items are selected
 				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
 
@@ -668,7 +666,7 @@ describe('Search list', () => {
 				expect(screen.queryByTestId(iconRegexp.moveToTrash)).not.toBeInTheDocument();
 				const moreIconButton = screen.queryByTestId(iconRegexp.moreVertical);
 				if (moreIconButton) {
-					userEvent.click(moreIconButton);
+					await user.click(moreIconButton);
 					expect(screen.queryByText(actionRegexp.restore)).not.toBeInTheDocument();
 					expect(screen.queryByText(actionRegexp.moveToTrash)).not.toBeInTheDocument();
 				}
@@ -713,12 +711,12 @@ describe('Search list', () => {
 					)
 				];
 
-				render(<SearchList />, { mocks });
+				const { user } = setup(<SearchList />, { mocks });
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 				// activate selection mode by selecting items
-				selectNodes(nodesIdsToDeletePermanently);
+				await selectNodes(nodesIdsToDeletePermanently, user);
 				// check that all wanted items are selected
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 
@@ -733,12 +731,15 @@ describe('Search list', () => {
 				expect(deletePermanentlyIcon).toBeVisible();
 				expect(deletePermanentlyIcon).not.toHaveAttribute('disabled', '');
 
-				userEvent.click(deletePermanentlyIcon);
+				await user.click(deletePermanentlyIcon);
 
 				const confirmButton = await screen.findByRole('button', { name: /delete permanently/i });
-				userEvent.click(confirmButton);
-				const snackbar = await screen.findByText(/^success$/i);
-				await waitForElementToBeRemoved(snackbar);
+				act(() => {
+					// run timers of modal
+					jest.runOnlyPendingTimers();
+				});
+				await user.click(confirmButton);
+				await screen.findByText(/^success$/i);
 				expect(confirmButton).not.toBeInTheDocument();
 
 				expect(element).not.toBeInTheDocument();
@@ -767,12 +768,12 @@ describe('Search list', () => {
 
 				const mocks = [mockFindNodes(getFindNodesVariables({ keywords }), currentFilter)];
 
-				render(<SearchList />, { mocks });
+				const { user } = setup(<SearchList />, { mocks });
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 				// activate selection mode by selecting items
-				selectNodes(nodesIdsToDeletePermanently);
+				await selectNodes(nodesIdsToDeletePermanently, user);
 				// check that all wanted items are selected
 				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
 
@@ -806,17 +807,17 @@ describe('Search list', () => {
 			const searchParams: AdvancedFilters = { keywords: buildChipsFromKeywords(keywords) };
 			searchParamsVar(searchParams);
 			const mocks = [mockFindNodes(getFindNodesVariables({ keywords }), nodes)];
-			render(<SearchList />, { mocks, initialRouterEntries: ['/search'] });
+			const { user } = setup(<SearchList />, { mocks, initialRouterEntries: ['/search'] });
 			await screen.findByText(nodes[0].name);
 			await screen.findByText(/[1-9] advanced filter(s)?/i);
 			expect(screen.getByText(nodes[0].name)).toBeVisible();
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
-			selectNodes([nodes[0].id]);
+			await selectNodes([nodes[0].id], user);
 			// check that all wanted items are selected
 			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 			expect(screen.getByText(/select all/i)).toBeVisible();
 			// deselect node. Selection mode remains active
-			selectNodes([nodes[0].id]);
+			await selectNodes([nodes[0].id], user);
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 			expect(screen.getAllByTestId('unCheckedAvatar')).toHaveLength(nodes.length);
 			expect(screen.getByText(/select all/i)).toBeVisible();
@@ -838,7 +839,7 @@ describe('Search list', () => {
 
 			const exitSelectionModeItem = screen.getByTestId('icon: ArrowBackOutline');
 			expect(exitSelectionModeItem).toBeVisible();
-			userEvent.click(exitSelectionModeItem);
+			await user.click(exitSelectionModeItem);
 			await screen.findByText(/[1-9] advanced filter(s)?/i);
 			expect(screen.queryByTestId('icon: Trash2Outline')).not.toBeInTheDocument();
 			expect(screen.queryByTestId('unCheckedAvatar')).not.toBeInTheDocument();
@@ -851,16 +852,12 @@ describe('Search list', () => {
 		test('Move to trash of all loaded nodes refetch search if trashed nodes are not included', async () => {
 			const firstPage = populateNodes(NODES_LOAD_LIMIT);
 			forEach(firstPage, (node) => {
-				// eslint-disable-next-line no-param-reassign
 				node.permissions.can_write_file = true;
-				// eslint-disable-next-line no-param-reassign
 				node.permissions.can_write_folder = true;
 			});
 			const secondPage = populateNodes(NODES_LOAD_LIMIT);
 			forEach(secondPage, (node) => {
-				// eslint-disable-next-line no-param-reassign
 				node.permissions.can_write_file = true;
-				// eslint-disable-next-line no-param-reassign
 				node.permissions.can_write_folder = true;
 			});
 			const keywords = ['keyword1', 'keyword2'];
@@ -884,25 +881,24 @@ describe('Search list', () => {
 				)
 			];
 
-			render(<SearchList />, { mocks });
+			const { user } = setup(<SearchList />, { mocks });
 
 			await screen.findByText(firstPage[0].name);
 			expect(screen.getByText(firstPage[0].name)).toBeVisible();
 			expect(screen.getByText(firstPage[NODES_LOAD_LIMIT - 1].name)).toBeVisible();
 			expect(screen.queryByText(secondPage[0].name)).not.toBeInTheDocument();
-			selectNodes(nodesToTrash);
+			await selectNodes(nodesToTrash, user);
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length);
 
 			const moreIconButton = screen.getByTestId(iconRegexp.moreVertical);
-			userEvent.click(moreIconButton);
+			await user.click(moreIconButton);
 
 			const trashAction = await screen.findByText(actionRegexp.moveToTrash);
 			expect(trashAction).toBeVisible();
-			userEvent.click(trashAction);
+			await user.click(trashAction);
 			await waitForElementToBeRemoved(screen.queryByText(firstPage[0].name));
-			const snackbar = await screen.findByText(/item moved to trash/i);
-			await waitForElementToBeRemoved(snackbar);
+			await screen.findByText(/item moved to trash/i);
 			await screen.findByText(secondPage[0].name);
 			expect(screen.queryByText(firstPage[NODES_LOAD_LIMIT - 1].name)).not.toBeInTheDocument();
 			expect(screen.getByText(secondPage[0].name)).toBeVisible();
@@ -911,20 +907,14 @@ describe('Search list', () => {
 		test('Restore of all loaded nodes refetch search if only trashed nodes are included', async () => {
 			const firstPage = populateNodes(NODES_LOAD_LIMIT);
 			forEach(firstPage, (node) => {
-				// eslint-disable-next-line no-param-reassign
 				node.permissions.can_write_file = true;
-				// eslint-disable-next-line no-param-reassign
 				node.permissions.can_write_folder = true;
-				// eslint-disable-next-line no-param-reassign
 				node.rootId = ROOTS.TRASH;
 			});
 			const secondPage = populateNodes(NODES_LOAD_LIMIT);
 			forEach(secondPage, (node) => {
-				// eslint-disable-next-line no-param-reassign
 				node.permissions.can_write_file = true;
-				// eslint-disable-next-line no-param-reassign
 				node.permissions.can_write_folder = true;
-				// eslint-disable-next-line no-param-reassign
 				node.rootId = ROOTS.TRASH;
 			});
 			const keywords = ['keyword1', 'keyword2'];
@@ -948,13 +938,13 @@ describe('Search list', () => {
 				)
 			];
 
-			render(<SearchList />, { mocks });
+			const { user } = setup(<SearchList />, { mocks });
 
 			await screen.findByText(firstPage[0].name);
 			expect(screen.getByText(firstPage[0].name)).toBeVisible();
 			expect(screen.getByText(firstPage[NODES_LOAD_LIMIT - 1].name)).toBeVisible();
 			expect(screen.queryByText(secondPage[0].name)).not.toBeInTheDocument();
-			selectNodes(nodesToRestore);
+			await selectNodes(nodesToRestore, user);
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length);
 
@@ -963,36 +953,27 @@ describe('Search list', () => {
 			const restoreAction = screen.getByTestId('icon: RestoreOutline');
 			expect(restoreAction).toBeVisible();
 			expect(restoreAction).not.toHaveAttribute('disabled', '');
-			userEvent.click(restoreAction);
+			await user.click(restoreAction);
 			await waitForElementToBeRemoved(screen.queryByText(firstPage[0].name));
-			const snackbar = await screen.findByText(/^success$/i);
-			await waitForElementToBeRemoved(snackbar);
+			await screen.findByText(/^success$/i);
 			await screen.findByText(secondPage[0].name);
 			expect(screen.queryByText(firstPage[NODES_LOAD_LIMIT - 1].name)).not.toBeInTheDocument();
 			expect(screen.getByText(secondPage[0].name)).toBeVisible();
-		}, 30000);
+		});
 
 		test('Delete permanently of all loaded nodes refetch search', async () => {
 			const firstPage = populateNodes(NODES_LOAD_LIMIT);
 			forEach(firstPage, (node) => {
-				// eslint-disable-next-line no-param-reassign
 				node.permissions.can_write_file = true;
-				// eslint-disable-next-line no-param-reassign
 				node.permissions.can_write_folder = true;
-				// eslint-disable-next-line no-param-reassign
 				node.permissions.can_delete = true;
-				// eslint-disable-next-line no-param-reassign
 				node.rootId = ROOTS.TRASH;
 			});
 			const secondPage = populateNodes(NODES_LOAD_LIMIT);
 			forEach(secondPage, (node) => {
-				// eslint-disable-next-line no-param-reassign
 				node.permissions.can_write_file = true;
-				// eslint-disable-next-line no-param-reassign
 				node.permissions.can_write_folder = true;
-				// eslint-disable-next-line no-param-reassign
 				node.permissions.can_delete = true;
-				// eslint-disable-next-line no-param-reassign
 				node.rootId = ROOTS.TRASH;
 			});
 			const keywords = ['keyword1', 'keyword2'];
@@ -1016,27 +997,26 @@ describe('Search list', () => {
 				)
 			];
 
-			render(<SearchList />, { mocks });
+			const { user } = setup(<SearchList />, { mocks });
 
 			await screen.findByText(firstPage[0].name);
 			expect(screen.getByText(firstPage[0].name)).toBeVisible();
 			expect(screen.getByText(firstPage[NODES_LOAD_LIMIT - 1].name)).toBeVisible();
 			expect(screen.queryByText(secondPage[0].name)).not.toBeInTheDocument();
-			selectNodes(nodesToDelete);
+			await selectNodes(nodesToDelete, user);
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length);
 			expect(screen.queryByTestId(iconRegexp.moreVertical)).not.toBeInTheDocument();
 			const deletePermanentlyAction = screen.getByTestId('icon: DeletePermanentlyOutline');
 			expect(deletePermanentlyAction).toBeVisible();
 			expect(deletePermanentlyAction).not.toHaveAttribute('disabled', '');
-			userEvent.click(deletePermanentlyAction);
+			await user.click(deletePermanentlyAction);
 			const modalConfirmButton = await screen.findByRole('button', {
 				name: actionRegexp.deletePermanently
 			});
-			userEvent.click(modalConfirmButton);
+			await user.click(modalConfirmButton);
 			await waitForElementToBeRemoved(modalConfirmButton);
-			const snackbar = await screen.findByText(/^success$/i);
-			await waitForElementToBeRemoved(snackbar);
+			await screen.findByText(/^success$/i);
 			await screen.findByText(secondPage[0].name);
 			expect(screen.queryByText(firstPage[0].name)).not.toBeInTheDocument();
 			expect(screen.queryByText(firstPage[NODES_LOAD_LIMIT - 1].name)).not.toBeInTheDocument();
@@ -1063,22 +1043,21 @@ describe('Search list', () => {
 				mockFlagNodes({ node_ids: nodesToUnflag, flag: false }, nodesToUnflag)
 			];
 
-			render(<SearchList />, { mocks, initialRouterEntries: ['/search'] });
+			const { user } = setup(<SearchList />, { mocks, initialRouterEntries: ['/search'] });
 
 			await screen.findByText(firstPage[0].name);
 			expect(screen.getByText(firstPage[0].name)).toBeVisible();
 			const nodeToUnflagItem1 = screen.getByTestId(`node-item-${nodesToUnflag[0]}`);
 			expect(nodeToUnflagItem1).toBeVisible();
 			expect(within(nodeToUnflagItem1).getByTestId('icon: Flag')).toBeVisible();
-			selectNodes(nodesToUnflag);
+			await selectNodes(nodesToUnflag, user);
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToUnflag.length);
 			expect(screen.queryByTestId(iconRegexp.moreVertical)).not.toBeInTheDocument();
 			const unflagIcon = await screen.findByTestId(iconRegexp.unflag);
 			expect(unflagIcon).toBeVisible();
 			expect(unflagIcon).not.toHaveAttribute('disabled', '');
-			userEvent.click(unflagIcon);
-			await waitForNetworkResponse();
+			await user.click(unflagIcon);
 			expect(within(nodeToUnflagItem1).queryByTestId('icon: Flag')).not.toBeInTheDocument();
 			expect(screen.getByText(firstPage[0].name)).toBeVisible();
 			expect(screen.getByText(firstPage[1].name)).toBeVisible();

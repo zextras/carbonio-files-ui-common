@@ -6,7 +6,6 @@
 import React from 'react';
 
 import { fireEvent, screen, waitForElementToBeRemoved } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import forEach from 'lodash/forEach';
 import last from 'lodash/last';
 import map from 'lodash/map';
@@ -16,7 +15,7 @@ import { NODES_LOAD_LIMIT, ROOTS } from '../../constants';
 import { populateNodes } from '../../mocks/mockUtils';
 import { Node } from '../../types/common';
 import { getFindNodesVariables, mockFindNodes, mockFlagNodes } from '../../utils/mockUtils';
-import { actionRegexp, iconRegexp, render, selectNodes } from '../../utils/testUtils';
+import { actionRegexp, iconRegexp, setup, selectNodes } from '../../utils/testUtils';
 import FilterList from './FilterList';
 
 describe('Filter List', () => {
@@ -50,7 +49,7 @@ describe('Filter List', () => {
 				// Warning: Failed prop type: Invalid prop `target` of type `Window` supplied to `ForwardRef(SnackbarFn)`, expected instance of `Window`
 				// This warning is printed in the console for this render. This happens because window element is a jsdom representation of the window
 				// and it's an object instead of a Window class instance, so the check on the prop type fail for the target prop
-				render(
+				const { user } = setup(
 					<Route path="/filter/:filter?">
 						<FilterList flagged folderId={ROOTS.LOCAL_ROOT} cascade />
 					</Route>,
@@ -62,18 +61,16 @@ describe('Filter List', () => {
 				expect(screen.queryAllByTestId('icon: Flag')).toHaveLength(currentFilter.length);
 
 				// activate selection mode by selecting items
-				selectNodes(nodesIdsToUnflag);
+				await selectNodes(nodesIdsToUnflag, user);
 
 				// check that all wanted items are selected
 				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesIdsToUnflag.length);
 
 				const unflagIcon = await screen.findByTestId(iconRegexp.unflag);
 				// click on unflag action on header bar
-				userEvent.click(unflagIcon);
-				// await waitForElementToBeRemoved(screen.queryAllByTestId('checkedAvatar'));
+				await user.click(unflagIcon);
 				// wait the snackbar with successful state to appear
-				const snackbar = await screen.findByText(/Item unflagged successfully/i);
-				await waitForElementToBeRemoved(snackbar);
+				await screen.findByText(/Item unflagged successfully/i);
 				expect(screen.getAllByTestId('icon: Flag')).toHaveLength(
 					currentFilter.length - nodesIdsToUnflag.length
 				);
@@ -108,7 +105,7 @@ describe('Filter List', () => {
 				// Warning: Failed prop type: Invalid prop `target` of type `Window` supplied to `ForwardRef(SnackbarFn)`, expected instance of `Window`
 				// This warning is printed in the console for this render. This happens because window element is a jsdom representation of the window
 				// and it's an object instead of a Window class instance, so the check on the prop type fail for the target prop
-				render(
+				const { user } = setup(
 					<Route path="/filter/:filter?">
 						<FilterList flagged folderId={ROOTS.LOCAL_ROOT} cascade />
 					</Route>,
@@ -125,15 +122,13 @@ describe('Filter List', () => {
 				fireEvent.contextMenu(nodeItem);
 				const unflagAction = await screen.findByText(actionRegexp.unflag);
 				expect(unflagAction).toBeVisible();
-				userEvent.click(unflagAction);
+				await user.click(unflagAction);
 				// wait the snackbar with successful state to appear
 				expect(unflagAction).not.toBeInTheDocument();
 				await screen.findByText(/Item unflagged successfully/i);
 				expect(screen.getAllByTestId('icon: Flag')).toHaveLength(nodes.length - 1);
 				// unflagged element is not in the list anymore
 				expect(screen.queryByTestId(`node-item-${nodes[0].id}`)).not.toBeInTheDocument();
-				// wait for the snackbar to be removed
-				await waitForElementToBeRemoved(screen.queryByText(/Item unflagged successfully/i));
 			});
 		});
 
@@ -160,7 +155,7 @@ describe('Filter List', () => {
 				)
 			];
 
-			render(<FilterList flagged folderId={ROOTS.LOCAL_ROOT} cascade />, { mocks });
+			const { user } = setup(<FilterList flagged folderId={ROOTS.LOCAL_ROOT} cascade />, { mocks });
 
 			await screen.findByText(firstPage[0].name);
 			expect(screen.getByText(firstPage[0].name)).toBeVisible();
@@ -168,16 +163,15 @@ describe('Filter List', () => {
 			expect(screen.queryByText(secondPage[0].name)).not.toBeInTheDocument();
 
 			// select all loaded nodes
-			selectNodes(nodesToUnflag);
+			await selectNodes(nodesToUnflag, user);
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length);
 
 			const unflagAction = await screen.findByTestId(iconRegexp.unflag);
-			userEvent.click(unflagAction);
+			await user.click(unflagAction);
 			await waitForElementToBeRemoved(screen.queryByText(firstPage[0].name));
-			const snackbar = await screen.findByText(/item unflagged successfully/i);
+			await screen.findByText(/item unflagged successfully/i);
 			await screen.findByText(secondPage[0].name);
-			await waitForElementToBeRemoved(snackbar);
 			expect(screen.getByText(secondPage[0].name)).toBeVisible();
 			expect(screen.queryByText(firstPage[0].name)).not.toBeInTheDocument();
 			expect(screen.queryByText((last(firstPage) as Node).name)).not.toBeInTheDocument();

@@ -6,16 +6,15 @@
 import React from 'react';
 
 import { fireEvent, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 
 import { populateFile, populateFolder, populateNode } from '../../mocks/mockUtils';
 import { Node } from '../../types/common';
-import { actionRegexp, iconRegexp, render, selectNodes } from '../../utils/testUtils';
+import { actionRegexp, iconRegexp, setup, selectNodes } from '../../utils/testUtils';
 import { List } from './List';
 
 describe('Move', () => {
 	describe('Selection mode', () => {
-		test('Move is disabled if node has not permissions', async () => {
+		test('Move is hidden if node has not permissions', async () => {
 			const currentFolder = populateFolder();
 			currentFolder.permissions.can_write_file = true;
 			currentFolder.permissions.can_write_folder = true;
@@ -31,7 +30,7 @@ describe('Move', () => {
 			node.parent = currentFolder;
 			currentFolder.children.nodes.push(file, folder, node);
 
-			render(
+			const { user } = setup(
 				<List
 					nodes={currentFolder.children.nodes as Array<Node>}
 					mainList
@@ -41,28 +40,28 @@ describe('Move', () => {
 
 			await screen.findByText(file.name);
 			// select file without can_write_file permission
-			selectNodes([file.id]);
+			await selectNodes([file.id], user);
 			// check that all wanted items are selected
 			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-			userEvent.click(screen.getByTestId('icon: MoreVertical'));
+			await user.click(screen.getByTestId('icon: MoreVertical'));
 
 			// wait copy to be sure that popper is open
 			await screen.findByText(actionRegexp.copy);
 			let moveAction = screen.queryByText(actionRegexp.move);
 			expect(moveAction).not.toBeInTheDocument();
 			// deselect file and select folder without can_write_folder permission
-			selectNodes([file.id, folder.id]);
+			await selectNodes([file.id, folder.id], user);
 			// check that all wanted items are selected
 			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 			expect(screen.queryByTestId(iconRegexp.moreVertical)).not.toBeInTheDocument();
 			expect(screen.queryByTestId(iconRegexp.move)).not.toBeInTheDocument();
 			// deselect folder and select node with right permission
-			selectNodes([folder.id, node.id]);
+			await selectNodes([folder.id, node.id], user);
 			// check that all wanted items are selected
 			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-			userEvent.click(screen.getByTestId('icon: MoreVertical'));
+			await user.click(screen.getByTestId('icon: MoreVertical'));
 			moveAction = await screen.findByText(actionRegexp.move);
 			expect(moveAction).toBeVisible();
 			expect(moveAction).not.toHaveAttribute('disabled', '');
@@ -80,7 +79,7 @@ describe('Move', () => {
 			folder.parent = currentFolder;
 			currentFolder.children.nodes.push(file, folder);
 
-			render(
+			const { user } = setup(
 				<List
 					nodes={currentFolder.children.nodes as Array<Node>}
 					mainList
@@ -90,12 +89,12 @@ describe('Move', () => {
 			);
 
 			await screen.findByText(file.name);
-			selectNodes([file.id, folder.id]);
+			await selectNodes([file.id, folder.id], user);
 
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-			userEvent.click(screen.getByTestId('icon: MoreVertical'));
+			await user.click(screen.getByTestId('icon: MoreVertical'));
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
 
 			const moveIcon = await screen.findByTestId(iconRegexp.move);
@@ -105,7 +104,7 @@ describe('Move', () => {
 	});
 
 	describe('Contextual menu actions', () => {
-		test('Move is disabled if node has not permissions', async () => {
+		test('Move is hidden if node has not permissions', async () => {
 			const currentFolder = populateFolder();
 			currentFolder.permissions.can_write_file = true;
 			currentFolder.permissions.can_write_folder = true;
@@ -121,7 +120,7 @@ describe('Move', () => {
 			node.parent = currentFolder;
 			currentFolder.children.nodes.push(file, folder, node);
 
-			render(
+			setup(
 				<List
 					nodes={currentFolder.children.nodes as Array<Node>}
 					mainList

@@ -6,8 +6,7 @@
 
 import React from 'react';
 
-import { screen, waitFor, waitForElementToBeRemoved, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { act, screen, waitFor, within } from '@testing-library/react';
 
 import { populateCollaborationLink, populateNode } from '../../../../mocks/mockUtils';
 import { SharePermission } from '../../../../types/graphql/types';
@@ -17,7 +16,7 @@ import {
 	mockDeleteCollaborationLinks,
 	mockGetNodeCollaborationLinks
 } from '../../../../utils/mockUtils';
-import { render } from '../../../../utils/testUtils';
+import { setup } from '../../../../utils/testUtils';
 import * as moduleUtils from '../../../../utils/utils';
 import { CollaborationLinks } from './CollaborationLinks';
 
@@ -28,7 +27,7 @@ describe('Collaboration Link', () => {
 		node.permissions.can_write_folder = true;
 		node.permissions.can_write_file = true;
 		const mocks = [mockGetNodeCollaborationLinks({ node_id: node.id }, node, [])];
-		render(
+		setup(
 			<CollaborationLinks
 				nodeId={node.id}
 				nodeName={node.name}
@@ -124,7 +123,7 @@ describe('Collaboration Link', () => {
 				readWriteAndShareCollaborationLink
 			)
 		];
-		render(
+		const { user } = setup(
 			<CollaborationLinks
 				nodeId={node.id}
 				nodeName={node.name}
@@ -144,11 +143,10 @@ describe('Collaboration Link', () => {
 		).getByRole('button', {
 			name: /generate link/i
 		});
-		userEvent.click(readWriteAndShareGenerateButton);
+		await user.click(readWriteAndShareGenerateButton);
 		expect(await screen.findByText(readWriteAndShareCollaborationLink.url)).toBeVisible();
 		const snackbar = await screen.findByText(/New Collaboration Link generated/i);
 		expect(snackbar).toBeVisible();
-		await waitForElementToBeRemoved(snackbar);
 	});
 
 	test('starting with ReadWriteAndShare collaboration link and then create ReadAndShare collaboration link', async () => {
@@ -173,7 +171,7 @@ describe('Collaboration Link', () => {
 				readAndShareCollaborationLink
 			)
 		];
-		render(
+		const { user } = setup(
 			<CollaborationLinks
 				nodeId={node.id}
 				nodeName={node.name}
@@ -194,11 +192,10 @@ describe('Collaboration Link', () => {
 				name: /generate link/i
 			}
 		);
-		userEvent.click(readAndShareGenerateButton);
+		await user.click(readAndShareGenerateButton);
 		expect(await screen.findByText(readAndShareCollaborationLink.url)).toBeVisible();
 		const snackbar = await screen.findByText(/New Collaboration Link generated/i);
 		expect(snackbar).toBeVisible();
-		await waitForElementToBeRemoved(snackbar);
 	});
 
 	test('starting with ReadAndShare collaboration link and then delete it', async () => {
@@ -216,7 +213,7 @@ describe('Collaboration Link', () => {
 				readAndShareCollaborationLink.id
 			])
 		];
-		render(
+		const { user } = setup(
 			<CollaborationLinks
 				nodeId={node.id}
 				nodeName={node.name}
@@ -237,7 +234,7 @@ describe('Collaboration Link', () => {
 				name: /revoke/i
 			}
 		);
-		userEvent.click(readAndShareRevokeButton);
+		await user.click(readAndShareRevokeButton);
 
 		const modalTitle = await screen.findByText(`Revoke ${node.name} collaboration link`);
 
@@ -246,14 +243,20 @@ describe('Collaboration Link', () => {
 		const modalContent = await screen.findByText(
 			`By revoking this link, you are blocking the possibility to create new shares with it. Everyone who has already used the collaboration link will keep the access to the node.`
 		);
-		expect(modalContent).toBeInTheDocument();
+		act(() => {
+			// run timers of modal
+			jest.runOnlyPendingTimers();
+		});
 
-		const revokeButtons = screen.getAllByRole('button', {
+		expect(modalContent).toBeVisible();
+		const revokeButton = within(screen.getByTestId('modal')).getByRole('button', {
 			name: /revoke/i
 		});
-		expect(revokeButtons).toHaveLength(2);
-		userEvent.click(revokeButtons[1]);
-		await waitForElementToBeRemoved(urlElement);
+		expect(revokeButton).toBeVisible();
+		await user.click(revokeButton);
+		await waitFor(() =>
+			expect(screen.queryByText(readAndShareCollaborationLink.url)).not.toBeInTheDocument()
+		);
 		expect(urlElement).not.toBeInTheDocument();
 	});
 
@@ -275,7 +278,7 @@ describe('Collaboration Link', () => {
 				[readWriteAndShareCollaborationLink.id]
 			)
 		];
-		render(
+		const { user } = setup(
 			<CollaborationLinks
 				nodeId={node.id}
 				nodeName={node.name}
@@ -295,7 +298,7 @@ describe('Collaboration Link', () => {
 		).getByRole('button', {
 			name: /revoke/i
 		});
-		userEvent.click(readWriteAndShareRevokeButton);
+		await user.click(readWriteAndShareRevokeButton);
 
 		const modalTitle = await screen.findByText(`Revoke ${node.name} collaboration link`);
 
@@ -305,13 +308,20 @@ describe('Collaboration Link', () => {
 			`By revoking this link, you are blocking the possibility to create new shares with it. Everyone who has already used the collaboration link will keep the access to the node.`
 		);
 		expect(modalContent).toBeInTheDocument();
+		act(() => {
+			// run timers of modal
+			jest.runOnlyPendingTimers();
+		});
 
-		const revokeButtons = screen.getAllByRole('button', {
+		expect(modalContent).toBeVisible();
+		const revokeButton = within(screen.getByTestId('modal')).getByRole('button', {
 			name: /revoke/i
 		});
-		expect(revokeButtons).toHaveLength(2);
-		userEvent.click(revokeButtons[1]);
-		await waitForElementToBeRemoved(urlElement);
+		expect(revokeButton).toBeVisible();
+		await user.click(revokeButton);
+		await waitFor(() =>
+			expect(screen.queryByText(readWriteAndShareCollaborationLink.url)).not.toBeInTheDocument()
+		);
 		expect(urlElement).not.toBeInTheDocument();
 	});
 
@@ -329,7 +339,7 @@ describe('Collaboration Link', () => {
 		const mocks = [
 			mockGetNodeCollaborationLinks({ node_id: node.id }, node, [readAndShareCollaborationLink])
 		];
-		render(
+		const { user } = setup(
 			<CollaborationLinks
 				nodeId={node.id}
 				nodeName={node.name}
@@ -341,12 +351,11 @@ describe('Collaboration Link', () => {
 			{ mocks }
 		);
 		const urlElement = await screen.findByText(readAndShareCollaborationLink.url);
-		userEvent.click(urlElement);
+		await user.click(urlElement);
 		expect(copyToClipboardFn).toBeCalledWith(readAndShareCollaborationLink.url);
 
 		const snackbar = await screen.findByText(/Collaboration Link copied/i);
 		expect(snackbar).toBeVisible();
-		await waitForElementToBeRemoved(snackbar);
 	});
 
 	test('If can_write is false than ReadWriteAndShare have to be hidden also if returned by query', async () => {
@@ -369,7 +378,7 @@ describe('Collaboration Link', () => {
 				readWriteAndShareCollaborationLink
 			])
 		];
-		render(
+		setup(
 			<CollaborationLinks
 				nodeId={node.id}
 				nodeName={node.name}
