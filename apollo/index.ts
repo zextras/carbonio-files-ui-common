@@ -245,7 +245,7 @@ const buildClient: () => ApolloClient<NormalizedCacheObject> = () => {
 		const wsLink = new GraphQLWsLink(
 			createClient({
 				url: `wss://${window.location.hostname}/services/files/graphql-ws`,
-				keepAlive: 10000
+				keepAlive: 45000
 			})
 		);
 
