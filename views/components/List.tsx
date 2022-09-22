@@ -83,7 +83,7 @@ import { ListContent } from './ListContent';
 import { SortingComponent } from './SortingComponent';
 
 const MainContainer = styled(Container)`
-	border-left: 1px solid ${(props): string => props.theme.palette.gray6.regular};
+	border-left: 0.0625rem solid ${(props): string => props.theme.palette.gray6.regular};
 `;
 
 interface ListProps {

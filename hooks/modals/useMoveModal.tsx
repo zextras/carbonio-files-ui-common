@@ -53,7 +53,7 @@ export function useMoveModal(moveNodesActionCallback?: () => void): {
 			if (folderToOpen) {
 				const closeModal = createModal(
 					{
-						minHeight: '400px',
+						minHeight: '25rem',
 						maxHeight: '60vh',
 						onClose: () => {
 							resetAll();

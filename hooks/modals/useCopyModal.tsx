@@ -28,7 +28,7 @@ export function useCopyModal(copyNodesActionCallback?: () => void): {
 		(nodes, fromFolder) => {
 			const closeModal = createModal(
 				{
-					minHeight: '400px',
+					minHeight: '25rem',
 					maxHeight: '60vh',
 					onClose: () => {
 						resetAll();

@@ -22,16 +22,16 @@ export const GridItem = styled(Container)<{
 
 export const GridContainer = styled.div<{ sectionsRows: Array<number> }>`
 	display: grid;
-	row-gap: 8px;
+	row-gap: 0.5rem;
 	justify-items: start;
 	width: 100%;
-	grid-template-columns: minmax(0, auto) auto minmax(0, auto) minmax(0, auto) 96px;
+	grid-template-columns: minmax(0, auto) auto minmax(0, auto) minmax(0, auto) 6rem;
 	${({ sectionsRows }): FlattenSimpleInterpolation => css`
 		grid-template-rows: ${reduce(
 			sectionsRows,
 			(acc, value) => {
 				if (value > 0) {
-					return `${acc} 21px repeat(${value}, 42px)`;
+					return `${acc} 1.3125rem repeat(${value}, 2.625rem)`;
 				}
 				return acc;
 			},

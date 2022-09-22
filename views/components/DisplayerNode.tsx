@@ -5,7 +5,7 @@
  */
 import React, { useCallback, useEffect, useMemo } from 'react';
 
-import { Container, Divider, TabBar } from '@zextras/carbonio-design-system';
+import { Container, Divider, TabBar, TabBarProps } from '@zextras/carbonio-design-system';
 import filter from 'lodash/filter';
 import map from 'lodash/map';
 import { useTranslation } from 'react-i18next';
@@ -72,7 +72,7 @@ export const DisplayerNode: React.VFC<DisplayerNodeProps> = ({
 		[t, activeNodeIsFile]
 	);
 
-	const tabOnChangeHandler = useCallback(
+	const tabOnChangeHandler = useCallback<TabBarProps['onChange']>(
 		(event, selectedId) => {
 			setActiveNode(node.id, selectedId);
 		},
@@ -118,8 +118,8 @@ export const DisplayerNode: React.VFC<DisplayerNodeProps> = ({
 						selected={tab || DISPLAYER_TABS.details}
 						onChange={tabOnChangeHandler}
 						width="fill"
-						height={48}
-						minHeight={48}
+						height="3rem"
+						minHeight="3rem"
 						background="gray6"
 					/>
 					<Divider color="gray3" />

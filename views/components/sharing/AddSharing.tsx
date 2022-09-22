@@ -69,8 +69,8 @@ const Hint: React.VFC<HintProps> = ({ label, email }) => (
 		orientation="horizontal"
 		mainAlignment="flex-start"
 		crossAlignment="center"
-		minWidth="256px"
-		minHeight={32}
+		minWidth="16rem"
+		minHeight="2rem"
 	>
 		<Avatar label={label} />
 		<Container orientation="vertical" crossAlignment="flex-start" padding={{ left: 'small' }}>
@@ -93,13 +93,13 @@ const Hint: React.VFC<HintProps> = ({ label, email }) => (
 );
 
 const SkeletonTile = styled.div<{ width: string; height: string; radius: string }>`
-	width: ${({ width }): string => width ?? '16px'};
-	max-width: ${({ width }): string => width ?? '16px'};
-	min-width: ${({ width }): string => width ?? '16px'};
-	height: ${({ height }): string => height ?? '16px'};
-	max-height: ${({ height }): string => height ?? '16px'};
-	min-height: ${({ height }): string => height ?? '16px'};
-	border-radius: ${({ radius }): string => radius ?? '2px'};
+	width: ${({ width }): string => width ?? '1rem'};
+	max-width: ${({ width }): string => width ?? '1rem'};
+	min-width: ${({ width }): string => width ?? '1rem'};
+	height: ${({ height }): string => height ?? '1rem'};
+	max-height: ${({ height }): string => height ?? '1rem'};
+	min-height: ${({ height }): string => height ?? '1rem'};
+	border-radius: ${({ radius }): string => radius ?? '0.125rem'};
 	background: ${({ theme }): string => theme.palette.gray2.regular};
 `;
 
@@ -108,19 +108,19 @@ const Loader: React.VFC = () => (
 		orientation="horizontal"
 		mainAlignment="flex-start"
 		crossAlignment="center"
-		minWidth="256px"
-		minHeight={32}
+		minWidth="16rem"
+		minHeight="2rem"
 		data-testid="add-sharing-loader"
 	>
-		<SkeletonTile radius="50%" width="32px" height="32px" />
+		<SkeletonTile radius="50%" width="2rem" height="2rem" />
 		<Container orientation="vertical" crossAlignment="flex-start" padding={{ left: 'small' }}>
 			<SkeletonTile
-				radius="4px"
-				width={`${Math.random() * 150 + 64}px`}
-				height="14px"
-				style={{ marginBottom: '4px' }}
+				radius="0.25rem"
+				width={`${Math.random() * 9.375 + 4}rem`}
+				height="0.875rem"
+				style={{ marginBottom: '0.25rem' }}
 			/>
-			<SkeletonTile radius="4px" width={`${Math.random() * 150 + 64}px`} height="12px" />
+			<SkeletonTile radius="0.25rem" width={`${Math.random() * 9.375 + 4}rem`} height="0.75rem" />
 		</Container>
 	</Container>
 );

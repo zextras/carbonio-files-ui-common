@@ -71,7 +71,7 @@ export const ListHeader: React.VFC<ListHeaderProps> = ({
 			{!hide && (
 				<>
 					<Row
-						minHeight={`${BREADCRUMB_ROW_HEIGHT}px`}
+						minHeight={BREADCRUMB_ROW_HEIGHT}
 						height="auto"
 						background="gray5"
 						mainAlignment="space-between"
@@ -96,7 +96,7 @@ export const ListHeader: React.VFC<ListHeaderProps> = ({
 	) : (
 		<>
 			<Row
-				height={48}
+				height={BREADCRUMB_ROW_HEIGHT}
 				background="gray5"
 				mainAlignment="space-between"
 				padding={{ vertical: 'medium' }}

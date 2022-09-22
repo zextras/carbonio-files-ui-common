@@ -140,19 +140,19 @@ const ShimmerNodeDetailsItem = (): JSX.Element => (
 		padding={{ all: 'small' }}
 	>
 		<Container width="fit" height="fit">
-			<Shimmer.Avatar size="medium" radius="8px" />
+			<Shimmer.Avatar size="medium" radius="0.5rem" />
 		</Container>
 		<Padding horizontal="small">
-			<ShimmerText $size="small" width="150px" />
+			<ShimmerText $size="small" width="9.375rem" />
 		</Padding>
 		<Container orientation="horizontal" mainAlignment="flex-end">
-			<ShimmerText $size="small" width="60px" />
+			<ShimmerText $size="small" width="3.75rem" />
 		</Container>
 	</Container>
 );
 
 const CustomAvatar = styled(Avatar).attrs({ 'data-testid': 'avatar' })`
-	margin-right: -4px;
+	margin-right: -0.25rem;
 	cursor: pointer;
 `;
 
@@ -504,7 +504,7 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 					background="gray6"
 					padding={{ all: 'large' }}
 					height="fit"
-					maxHeight={400}
+					maxHeight="25rem"
 				>
 					<Padding bottom="large">
 						<Text>{t('displayer.details.content', 'Content')}</Text>

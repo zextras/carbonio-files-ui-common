@@ -126,7 +126,7 @@ export const NodeSharing: React.VFC<NodeSharingProps> = ({ node }) => {
 		<MainContainer
 			mainAlignment="flex-start"
 			background="gray5"
-			height="calc(100% - 50px)"
+			height="calc(100% - 3.125rem)"
 			data-testid="node-sharing"
 		>
 			<Container
@@ -142,7 +142,7 @@ export const NodeSharing: React.VFC<NodeSharingProps> = ({ node }) => {
 						<Container
 							orientation="horizontal"
 							background="info"
-							minHeight="40px"
+							minHeight="2.5rem"
 							mainAlignment="flex-start"
 						>
 							<Padding left="small" right="medium">
@@ -167,7 +167,7 @@ export const NodeSharing: React.VFC<NodeSharingProps> = ({ node }) => {
 						<Text weight="bold">{t('displayer.details.collaborators', 'Collaborators')}</Text>
 					</Padding>
 					<ScrollContainer
-						maxHeight="132px"
+						maxHeight="8.25rem"
 						mainAlignment="flex-start"
 						orientation="horizontal"
 						padding={{ horizontal: 'small' }}

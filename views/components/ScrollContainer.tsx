@@ -74,13 +74,13 @@ export const ScrollContainer = React.forwardRef<HTMLDivElement, ScrollContainerP
 			>
 				{children}
 				{hasMore && (
-					<Row minHeight={57}>
+					<Row minHeight="3.75rem">
 						<LoadingIcon icon="Refresh" onClick={loadMore} ref={loadMoreRef} />
 					</Row>
 				)}
 				{fillerWithActions &&
 					React.cloneElement(fillerWithActions, {
-						children: <Row height={LIST_ITEM_HEIGHT / 2} />
+						children: <Row height={`calc(${LIST_ITEM_HEIGHT} / 2`} />
 					})}
 			</SCScrollContainer>
 		);

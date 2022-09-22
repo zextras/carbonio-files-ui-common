@@ -9,14 +9,14 @@ import { NodeSort } from '../types/graphql/types';
 
 export const NODES_LOAD_LIMIT = 25;
 export const NODES_SORT_DEFAULT = NodeSort.NameAsc;
-export const LIST_ITEM_HEIGHT = 64;
-export const LIST_ITEM_HEIGHT_COMPACT = 52;
-export const LIST_ITEM_HEIGHT_DETAILS = 52;
-export const LIST_ITEM_AVATAR_HEIGHT = 42;
-export const LIST_ITEM_AVATAR_HEIGHT_COMPACT = 32;
-export const LIST_ITEM_AVATAR_ICON_HEIGHT = 24;
-export const LIST_ITEM_AVATAR_ICON_HEIGHT_COMPACT = 16;
-export const BREADCRUMB_ROW_HEIGHT = 48;
+export const LIST_ITEM_HEIGHT = '4rem';
+export const LIST_ITEM_HEIGHT_COMPACT = '3.25rem';
+export const LIST_ITEM_HEIGHT_DETAILS = '3.25rem';
+export const LIST_ITEM_AVATAR_HEIGHT = '2.625rem';
+export const LIST_ITEM_AVATAR_HEIGHT_COMPACT = '2rem';
+export const LIST_ITEM_AVATAR_ICON_HEIGHT = '1.5rem';
+export const LIST_ITEM_AVATAR_ICON_HEIGHT_COMPACT = '1rem';
+export const BREADCRUMB_ROW_HEIGHT = '3rem';
 export const LIST_WIDTH = '40%';
 export const DISPLAYER_WIDTH = '60%';
 export const FULL_SHARES_LOAD_LIMIT = 100;
@@ -43,7 +43,7 @@ export const DRAG_TYPES = {
 	markForDeletion: 'files-drag-markfordeletion'
 };
 export const SHARE_CHIP_SIZE = 'small';
-export const SHARE_CHIP_MAX_WIDTH = '300px';
+export const SHARE_CHIP_MAX_WIDTH = '18.75rem';
 export const CONFIGS = {
 	MAX_VERSIONS: 'max-number-of-versions',
 	MAX_KEEP_VERSIONS: 'max-number-of-keep-versions'

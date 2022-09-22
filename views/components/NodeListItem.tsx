@@ -417,7 +417,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 							padding={{ left: 'large' }}
 							minWidth="auto"
 							width="fill"
-							maxWidth={`calc(100% - ${LIST_ITEM_AVATAR_HEIGHT}px)`}
+							maxWidth={`calc(100% - ${LIST_ITEM_AVATAR_HEIGHT})`}
 						>
 							<Row
 								padding={{ vertical: 'extrasmall' }}
