@@ -7,7 +7,7 @@
 import React from 'react';
 
 import { ApolloError } from '@apollo/client';
-import { screen, waitForElementToBeRemoved, within } from '@testing-library/react';
+import { act, screen, waitForElementToBeRemoved, within } from '@testing-library/react';
 import find from 'lodash/find';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
@@ -124,9 +124,13 @@ describe('Create folder', () => {
 		await within(screen.getByTestId('modal')).findByText(/Error! Name already assigned/i);
 		const error = within(screen.getByTestId('modal')).getByText(/Error! Name already assigned/i);
 		expect(error).toBeInTheDocument();
+		act(() => {
+			// run timers of modal
+			jest.runOnlyPendingTimers();
+		});
 		const inputFieldDiv = screen.getByTestId('input-name');
 		const inputField = within(inputFieldDiv).getByRole('textbox');
-		expect(inputField).toBeInTheDocument();
+		expect(inputField).toBeVisible();
 		expect(inputField).toHaveValue(newName);
 		expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
 			currentFolder.children.nodes.length

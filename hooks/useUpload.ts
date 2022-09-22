@@ -417,7 +417,6 @@ export const useUpload: UseUploadHook = () => {
 				parentId: (node.parent as Folder).id
 			};
 			uploadVarReducer({ type: 'add', value: { [fileEnriched.id]: fileEnriched } });
-			// uploadVar({ ...uploadVar(), ...{ [fileEnriched.id]: fileEnriched } });
 			const abortFunction: UploadFunctions['abort'] = uploadVersion(
 				fileEnriched,
 				apolloClient,
