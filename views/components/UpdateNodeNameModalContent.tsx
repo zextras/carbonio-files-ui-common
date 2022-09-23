@@ -8,14 +8,14 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { FetchResult } from '@apollo/client';
-import { Input } from '@zextras/carbonio-design-system';
+import { Divider, Input, ModalBody, ModalFooter } from '@zextras/carbonio-design-system';
 import trim from 'lodash/trim';
 import { useTranslation } from 'react-i18next';
 
 import { CreateDocsFile } from '../../types/common';
 import { CreateFolderMutation, UpdateNodeMutation } from '../../types/graphql/types';
 import { decodeError } from '../../utils/utils';
-import { ModalFooter } from './ModalFooter';
+import { ModalFooterCustom } from './ModalFooterCustom';
 
 type UpdateNameMutation = UpdateNodeMutation | CreateFolderMutation | CreateDocsFile;
 
@@ -90,20 +90,27 @@ export const UpdateNodeNameModalContent = <T extends UpdateNameMutation>({
 
 	return (
 		<>
-			<Input
-				value={newName}
-				onChange={changeName}
-				label={inputLabel}
-				data-testid="input-name"
-				inputRef={inputRef}
-				onKeyUp={keyUpHandler}
-				hasError={!!errorMsg}
-				description={errorMsg || undefined}
-			/>
+			<ModalBody>
+				<Input
+					value={newName}
+					onChange={changeName}
+					label={inputLabel}
+					data-testid="input-name"
+					inputRef={inputRef}
+					onKeyUp={keyUpHandler}
+					hasError={!!errorMsg}
+					description={errorMsg || undefined}
+				/>
+			</ModalBody>
+			<Divider />
 			<ModalFooter
-				confirmLabel={confirmLabel}
-				confirmHandler={confirmHandler}
-				confirmDisabled={!newName || newName === nodeName || pendingRequest}
+				customFooter={
+					<ModalFooterCustom
+						confirmLabel={confirmLabel}
+						confirmHandler={confirmHandler}
+						confirmDisabled={!newName || newName === nodeName || pendingRequest}
+					/>
+				}
 			/>
 		</>
 	);

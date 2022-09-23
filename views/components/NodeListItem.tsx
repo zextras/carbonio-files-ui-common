@@ -173,7 +173,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 				if (isNavigable) {
 					navigateTo(id, event);
 				} else if (includes(permittedContextualMenuActions, Action.Edit)) {
-					// if can be opened with docs on edit mode, open editor
+					// if node can be opened with docs on edit mode, open editor
 					openNodeWithDocs(id);
 				} else if ($isSupportedByPreview) {
 					openPreview(id);
@@ -370,7 +370,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 	}, []);
 
 	return (
-		<Container id={id}>
+		<Container data-testid={id}>
 			<ContextualMenu
 				disabled={
 					(disabled || isSelectionModeActive || compact) &&

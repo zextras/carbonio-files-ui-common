@@ -4,27 +4,36 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useApolloClient } from '@apollo/client';
-import { Container, Text } from '@zextras/carbonio-design-system';
+import { ReactiveVar, useApolloClient, useReactiveVar } from '@apollo/client';
+import {
+	Container,
+	Divider,
+	ModalFooter,
+	ModalHeader,
+	Text,
+	TextWithTooltip
+} from '@zextras/carbonio-design-system';
 import every from 'lodash/every';
 import find from 'lodash/find';
 import reduce from 'lodash/reduce';
 import { useTranslation } from 'react-i18next';
 
+import { DestinationVar, destinationVar } from '../../apollo/destinationVar';
 import { nodeSortVar } from '../../apollo/nodeSortVar';
 import { NODES_LOAD_LIMIT } from '../../constants';
 import GET_CHILDREN from '../../graphql/queries/getChildren.graphql';
 import { useCopyNodesMutation } from '../../hooks/graphql/mutations/useCopyNodesMutation';
 import { useGetChildrenQuery } from '../../hooks/graphql/queries/useGetChildrenQuery';
+import { useDestinationVarManager } from '../../hooks/useDestinationVarManager';
 import { GetNodeParentType, Node, NodeListItemType, RootListItemType } from '../../types/common';
 import { Folder, GetChildrenQuery, GetChildrenQueryVariables } from '../../types/graphql/types';
 import { canBeCopyDestination, isFile, isFolder, isRoot } from '../../utils/ActionsFactory';
-import { ModalFooter } from './ModalFooter';
-import { ModalHeader } from './ModalHeader';
+import { ModalFooterCustom } from './ModalFooterCustom';
 import { ModalList } from './ModalList';
 import { ModalRootsList } from './ModalRootsList';
+import { CustomModalBody } from './StyledComponents';
 
 interface CopyNodesModalContentProps {
 	nodesToCopy: Array<Pick<Node, '__typename' | 'id'> & GetNodeParentType>;
@@ -38,19 +47,32 @@ export const CopyNodesModalContent: React.VFC<CopyNodesModalContentProps> = ({
 	folderId
 }) => {
 	const [t] = useTranslation();
+	const { setCurrent, setDefault } = useDestinationVarManager();
+	const { currentValue } = useReactiveVar<DestinationVar<string>>(
+		destinationVar as ReactiveVar<DestinationVar<string>>
+	);
 	const [destinationFolder, setDestinationFolder] = useState<string>();
 	const [openedFolder, setOpenedFolder] = useState<string>(folderId || '');
 	const { data: currentFolder, loading, hasMore, loadMore } = useGetChildrenQuery(openedFolder);
+	const mainContainerRef = useRef<HTMLDivElement>(null);
+	const footerContainerRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		setDestinationFolder(currentValue);
+	}, [currentValue]);
 
 	/** Mutation to copy nodes */
 	const { copyNodes, loading: copyNodesMutationLoading } = useCopyNodesMutation();
 
 	const title = useMemo(
-		() =>
-			t('node.copy.modal.title', 'Copy items', {
-				count: nodesToCopy.length,
-				replace: { node: nodesToCopy.length === 1 && nodesToCopy[0] }
-			}),
+		() => (
+			<TextWithTooltip>
+				{t('node.copy.modal.title', 'Copy items', {
+					count: nodesToCopy.length,
+					replace: { node: nodesToCopy.length === 1 && nodesToCopy[0] }
+				})}
+			</TextWithTooltip>
+		),
 		[nodesToCopy, t]
 	);
 
@@ -131,59 +153,66 @@ export const CopyNodesModalContent: React.VFC<CopyNodesModalContentProps> = ({
 	}, [checkDisabled, checkSelectable, currentFolder?.getNode]);
 
 	const closeHandler = useCallback(() => {
-		setDestinationFolder(undefined);
 		closeAction && closeAction();
 	}, [closeAction]);
 
 	const apolloClient = useApolloClient();
 
-	const confirmHandler = useCallback(() => {
-		let destinationFolderNode;
-		if (destinationFolder === currentFolder?.getNode?.id) {
-			destinationFolderNode = currentFolder?.getNode;
-		} else if (destinationFolder) {
-			const node = find(nodes, ['id', destinationFolder]);
-			if (node) {
-				destinationFolderNode = node;
-			} else {
-				// case when a root folder is selected from the roots list
-				const cachedData = apolloClient.readQuery<GetChildrenQuery, GetChildrenQueryVariables>({
-					query: GET_CHILDREN,
-					variables: {
-						node_id: destinationFolder,
-						children_limit: NODES_LOAD_LIMIT,
-						sort: nodeSortVar()
+	const confirmHandler = useCallback(
+		(e: Event | React.SyntheticEvent) => {
+			e.stopPropagation();
+			let destinationFolderNode;
+			if (destinationFolder === currentFolder?.getNode?.id) {
+				destinationFolderNode = currentFolder?.getNode;
+			} else if (destinationFolder) {
+				const node = find(nodes, ['id', destinationFolder]);
+				if (node) {
+					destinationFolderNode = node;
+				} else {
+					// case when a root folder is selected from the roots list
+					const cachedData = apolloClient.readQuery<GetChildrenQuery, GetChildrenQueryVariables>({
+						query: GET_CHILDREN,
+						variables: {
+							node_id: destinationFolder,
+							children_limit: NODES_LOAD_LIMIT,
+							sort: nodeSortVar()
+						}
+					});
+					destinationFolderNode = cachedData?.getNode || {
+						__typename: 'Folder',
+						id: destinationFolder
+					};
+				}
+			}
+
+			if (destinationFolderNode) {
+				copyNodes(destinationFolderNode as Folder, ...nodesToCopy).then((result) => {
+					// TODO: handle case when not all nodes are copied
+					if (result?.data) {
+						closeHandler();
 					}
 				});
-				destinationFolderNode = cachedData?.getNode || {
-					__typename: 'Folder',
-					id: destinationFolder
-				};
 			}
-		}
+		},
+		[
+			destinationFolder,
+			currentFolder?.getNode,
+			nodes,
+			apolloClient,
+			copyNodes,
+			nodesToCopy,
+			closeHandler
+		]
+	);
 
-		if (destinationFolderNode) {
-			copyNodes(destinationFolderNode as Folder, ...nodesToCopy).then((result) => {
-				// TODO: handle case when not all nodes are copied
-				if (result?.data) {
-					closeHandler();
-				}
-			});
-		}
-	}, [
-		destinationFolder,
-		currentFolder?.getNode,
-		nodes,
-		apolloClient,
-		copyNodes,
-		nodesToCopy,
-		closeHandler
-	]);
-
-	const navigateTo = useCallback((id) => {
-		setOpenedFolder(id);
-		setDestinationFolder(id);
-	}, []);
+	const navigateTo = useCallback(
+		(id: string) => {
+			setOpenedFolder(id);
+			setCurrent(id);
+			setDefault(id);
+		},
+		[setCurrent, setDefault]
+	);
 
 	const setDestinationFolderHandler = useCallback(
 		(
@@ -193,75 +222,68 @@ export const CopyNodesModalContent: React.VFC<CopyNodesModalContentProps> = ({
 			const destinationId =
 				(node && !isRoot(node) && !node.disabled && node.id) || currentFolder?.getNode?.id;
 			if (isFolder(node)) {
-				setDestinationFolder(destinationId);
+				setCurrent(destinationId);
 				event.stopPropagation();
 			}
 		},
-		[currentFolder]
+		[currentFolder?.getNode?.id, setCurrent]
 	);
 
-	const resetDestinationFolderHandler = useCallback(() => {
-		setDestinationFolder(currentFolder?.getNode?.id);
-	}, [currentFolder]);
-
-	const modalHeight = useMemo(() => (nodes?.length >= 10 ? '60vh' : '40vh'), [nodes?.length]);
-
 	return (
-		<Container
-			padding={{ all: 'large' }}
-			mainAlignment="flex-start"
-			crossAlignment="flex-start"
-			minHeight="40vh"
-			height={modalHeight}
-			maxHeight="60vh"
-			onClick={resetDestinationFolderHandler}
-		>
-			<ModalHeader title={title} closeHandler={closeHandler} />
-			<Container
-				padding={{ vertical: 'small' }}
-				mainAlignment="center"
-				crossAlignment="flex-start"
-				height="fit"
-			>
+		<>
+			<ModalHeader
+				title={title}
+				onClose={closeHandler}
+				showCloseIcon
+				closeIconTooltip={t('modal.close.tooltip', 'Close')}
+			/>
+			<Divider />
+			<CustomModalBody ref={mainContainerRef}>
 				<Text overflow="break-word" size="small">
 					{t('node.move.modal.subtitle', 'Select a destination folder:')}
 				</Text>
-			</Container>
-			{currentFolder?.getNode ? (
-				<ModalList
-					folderId={currentFolder.getNode.id}
-					nodes={nodes}
-					activeNodes={destinationFolder}
-					setActiveNode={setDestinationFolderHandler}
-					loadMore={loadMore}
-					hasMore={hasMore}
-					navigateTo={navigateTo}
-					loading={loading}
-					limitNavigation={false}
-					writingFolder={copyingFolder}
-					writingFile={copyingFile}
-					allowRootNavigation
-				/>
-			) : (
-				(!loading && (
-					<ModalRootsList
+				{currentFolder?.getNode ? (
+					<ModalList
+						folderId={currentFolder.getNode.id}
+						nodes={nodes}
 						activeNodes={destinationFolder}
 						setActiveNode={setDestinationFolderHandler}
+						loadMore={loadMore}
+						hasMore={hasMore}
 						navigateTo={navigateTo}
-						checkDisabled={checkDisabled}
-						checkSelectable={checkSelectable}
+						loading={loading}
+						limitNavigation={false}
+						writingFolder={copyingFolder}
+						writingFile={copyingFile}
+						allowRootNavigation
 					/>
-				)) || <Container />
-			)}
-			<ModalFooter
-				confirmLabel={t('node.copy.modal.button.confirm', 'Copy')}
-				confirmHandler={confirmHandler}
-				confirmDisabled={!destinationFolder || copyNodesMutationLoading}
-				confirmDisabledTooltip={t(
-					'node.copy.modal.button.tooltip.confirm',
-					"You can't perform this action here"
+				) : (
+					(!loading && (
+						<ModalRootsList
+							activeNodes={destinationFolder}
+							setActiveNode={setDestinationFolderHandler}
+							navigateTo={navigateTo}
+							checkDisabled={checkDisabled}
+							checkSelectable={checkSelectable}
+						/>
+					)) || <Container />
 				)}
+			</CustomModalBody>
+			<Divider />
+			<ModalFooter
+				customFooter={
+					<ModalFooterCustom
+						confirmLabel={t('node.copy.modal.button.confirm', 'Copy')}
+						confirmHandler={confirmHandler}
+						confirmDisabled={!destinationFolder || copyNodesMutationLoading}
+						confirmDisabledTooltip={t(
+							'node.copy.modal.button.tooltip.confirm',
+							"You can't perform this action here"
+						)}
+						ref={footerContainerRef}
+					/>
+				}
 			/>
-		</Container>
+		</>
 	);
 };

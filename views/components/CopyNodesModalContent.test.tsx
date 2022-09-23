@@ -4,12 +4,15 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
+/* eslint-disable jsx-a11y/click-events-have-key-events,jsx-a11y/no-static-element-interactions */
+
 import React from 'react';
 
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 
+import { destinationVar } from '../../apollo/destinationVar';
 import { NODES_LOAD_LIMIT, ROOTS } from '../../constants';
 import GET_CHILDREN from '../../graphql/queries/getChildren.graphql';
 import {
@@ -45,6 +48,15 @@ import {
 } from '../../utils/testUtils';
 import { CopyNodesModalContent } from './CopyNodesModalContent';
 
+const resetToDefault = jest.fn(() => {
+	// clone implementation of the function contained in the click callback of useCopyContent
+	destinationVar({ ...destinationVar(), currentValue: destinationVar().defaultValue });
+});
+
+beforeEach(() => {
+	resetToDefault.mockClear();
+});
+
 describe('Copy Nodes Modal', () => {
 	test('if a folder id is provided, list shows content of the folder', async () => {
 		const currentFolder = populateFolder(5);
@@ -53,9 +65,14 @@ describe('Copy Nodes Modal', () => {
 			mockGetPath({ node_id: currentFolder.id }, [currentFolder]),
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder)
 		];
-		setup(<CopyNodesModalContent folderId={currentFolder.id} nodesToCopy={nodesToCopy} />, {
-			mocks
-		});
+		setup(
+			<div onClick={resetToDefault}>
+				<CopyNodesModalContent folderId={currentFolder.id} nodesToCopy={nodesToCopy} />
+			</div>,
+			{
+				mocks
+			}
+		);
 		await screen.findByText((currentFolder.children.nodes[0] as File | Folder).name);
 		expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
 			currentFolder.children.nodes.length
@@ -69,9 +86,14 @@ describe('Copy Nodes Modal', () => {
 			mockGetPath({ node_id: parentFolder.id }, [parentFolder]),
 			mockGetChildren(getChildrenVariables(parentFolder.id), parentFolder)
 		];
-		const { findByTextWithMarkup } = setup(<CopyNodesModalContent nodesToCopy={nodesToCopy} />, {
-			mocks
-		});
+		const { findByTextWithMarkup } = setup(
+			<div onClick={resetToDefault}>
+				<CopyNodesModalContent nodesToCopy={nodesToCopy} />
+			</div>,
+			{
+				mocks
+			}
+		);
 		await screen.findByText((parentFolder.children.nodes[0] as File | Folder).name);
 		await waitFor(() => expect(screen.queryByTestId('icon: Refresh')).not.toBeInTheDocument());
 		await findByTextWithMarkup(buildBreadCrumbRegExp('Files', parentFolder.name));
@@ -90,9 +112,14 @@ describe('Copy Nodes Modal', () => {
 			mockGetPath({ node_id: parentFolder.id }, [parentFolder]),
 			mockGetChildren(getChildrenVariables(parentFolder.id), parentFolder)
 		];
-		const { findByTextWithMarkup } = setup(<CopyNodesModalContent nodesToCopy={nodesToCopy} />, {
-			mocks
-		});
+		const { findByTextWithMarkup } = setup(
+			<div onClick={resetToDefault}>
+				<CopyNodesModalContent nodesToCopy={nodesToCopy} />
+			</div>,
+			{
+				mocks
+			}
+		);
 		await screen.findByText((parentFolder.children.nodes[0] as File | Folder).name);
 		await waitFor(() => expect(screen.queryByTestId('icon: Refresh')).not.toBeInTheDocument());
 		const breadcrumbRegexp = buildBreadCrumbRegExp('Files', parentFolder.name);
@@ -110,9 +137,14 @@ describe('Copy Nodes Modal', () => {
 		forEach(nodesToCopy, (mockedNode) => {
 			mockedNode.parent = populateFolder();
 		});
-		const { findByTextWithMarkup } = setup(<CopyNodesModalContent nodesToCopy={nodesToCopy} />, {
-			mocks: []
-		});
+		const { findByTextWithMarkup } = setup(
+			<div onClick={resetToDefault}>
+				<CopyNodesModalContent nodesToCopy={nodesToCopy} />
+			</div>,
+			{
+				mocks: []
+			}
+		);
 		await screen.findByText('Home');
 		expect(screen.getByText('Home')).toBeVisible();
 		expect(screen.getByText('Shared with me')).toBeVisible();
@@ -154,7 +186,9 @@ describe('Copy Nodes Modal', () => {
 			mockGetChildren(getChildrenVariables(folderWithWriteFolder.id), folderWithWriteFolder)
 		];
 		const { rerender, user } = setup(
-			<CopyNodesModalContent folderId={currentFolder.id} nodesToCopy={nodesToCopy} />,
+			<div onClick={resetToDefault}>
+				<CopyNodesModalContent folderId={currentFolder.id} nodesToCopy={nodesToCopy} />
+			</div>,
 			{ mocks }
 		);
 		await screen.findByText((currentFolder.children.nodes[0] as File | Folder).name);
@@ -182,7 +216,11 @@ describe('Copy Nodes Modal', () => {
 
 		// then copy folder
 		nodesToCopy = [folder];
-		rerender(<CopyNodesModalContent folderId={currentFolder.id} nodesToCopy={nodesToCopy} />);
+		rerender(
+			<div onClick={resetToDefault}>
+				<CopyNodesModalContent folderId={currentFolder.id} nodesToCopy={nodesToCopy} />
+			</div>
+		);
 		await screen.findByText((currentFolder.children.nodes[0] as File | Folder).name);
 		folderWithWriteFolderItem = screen.getByText(folderWithWriteFolder.name);
 		folderWithWriteFileItem = screen.getByText(folderWithWriteFile.name);
@@ -190,7 +228,7 @@ describe('Copy Nodes Modal', () => {
 		folderItem = screen.getByText(folder.name);
 		// folder without write folder permission is disabled and not navigable
 		expect(folderWithWriteFileItem).toHaveAttribute('disabled');
-		// double click on a disabled folder does nothing
+		// double-click on a disabled folder does nothing
 		await user.dblClick(folderWithWriteFileItem);
 		await waitFor(() => expect(folderWithWriteFileItem).toBeVisible());
 		expect(folderWithWriteFileItem).toHaveAttribute('disabled');
@@ -232,7 +270,9 @@ describe('Copy Nodes Modal', () => {
 			mockGetChildren(getChildrenVariables(sharedWithMeFilter[0].id), sharedWithMeFilter[0])
 		];
 		const { findByTextWithMarkup, user } = setup(
-			<CopyNodesModalContent nodesToCopy={nodesToCopy} />,
+			<div onClick={resetToDefault}>
+				<CopyNodesModalContent nodesToCopy={nodesToCopy} />
+			</div>,
 			{
 				mocks
 			}
@@ -314,7 +354,9 @@ describe('Copy Nodes Modal', () => {
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder)
 		];
 		const { user } = setup(
-			<CopyNodesModalContent folderId={currentFolder.id} nodesToCopy={nodesToCopy} />,
+			<div onClick={resetToDefault}>
+				<CopyNodesModalContent folderId={currentFolder.id} nodesToCopy={nodesToCopy} />
+			</div>,
 			{
 				mocks
 			}
@@ -374,11 +416,13 @@ describe('Copy Nodes Modal', () => {
 		const closeAction = jest.fn();
 
 		const { user, findByTextWithMarkup } = setup(
-			<CopyNodesModalContent
-				folderId={currentFolder.id}
-				nodesToCopy={nodesToCopy}
-				closeAction={closeAction}
-			/>,
+			<div onClick={resetToDefault}>
+				<CopyNodesModalContent
+					folderId={currentFolder.id}
+					nodesToCopy={nodesToCopy}
+					closeAction={closeAction}
+				/>
+			</div>,
 			{ mocks }
 		);
 
@@ -438,11 +482,13 @@ describe('Copy Nodes Modal', () => {
 		const closeAction = jest.fn();
 
 		const { findByTextWithMarkup, user } = setup(
-			<CopyNodesModalContent
-				folderId={currentFolder.id}
-				nodesToCopy={nodesToCopy}
-				closeAction={closeAction}
-			/>,
+			<div onClick={resetToDefault}>
+				<CopyNodesModalContent
+					folderId={currentFolder.id}
+					nodesToCopy={nodesToCopy}
+					closeAction={closeAction}
+				/>
+			</div>,
 			{ mocks }
 		);
 
@@ -510,11 +556,13 @@ describe('Copy Nodes Modal', () => {
 		const closeAction = jest.fn();
 
 		const { user } = setup(
-			<CopyNodesModalContent
-				folderId={currentFolder.id}
-				nodesToCopy={nodesToCopy}
-				closeAction={closeAction}
-			/>,
+			<div onClick={resetToDefault}>
+				<CopyNodesModalContent
+					folderId={currentFolder.id}
+					nodesToCopy={nodesToCopy}
+					closeAction={closeAction}
+				/>
+			</div>,
 			{ mocks }
 		);
 
@@ -580,11 +628,13 @@ describe('Copy Nodes Modal', () => {
 		});
 
 		const { findByTextWithMarkup, user } = setup(
-			<CopyNodesModalContent
-				folderId={currentFolder.id}
-				nodesToCopy={nodesToCopy}
-				closeAction={closeAction}
-			/>,
+			<div onClick={resetToDefault}>
+				<CopyNodesModalContent
+					folderId={currentFolder.id}
+					nodesToCopy={nodesToCopy}
+					closeAction={closeAction}
+				/>
+			</div>,
 			{ mocks }
 		);
 
@@ -661,11 +711,13 @@ describe('Copy Nodes Modal', () => {
 		const closeAction = jest.fn();
 
 		const { findByTextWithMarkup, user } = setup(
-			<CopyNodesModalContent
-				folderId={currentFolder.id}
-				nodesToCopy={nodesToCopy}
-				closeAction={closeAction}
-			/>,
+			<div onClick={resetToDefault}>
+				<CopyNodesModalContent
+					folderId={currentFolder.id}
+					nodesToCopy={nodesToCopy}
+					closeAction={closeAction}
+				/>
+			</div>,
 			{ mocks }
 		);
 
@@ -711,7 +763,9 @@ describe('Copy Nodes Modal', () => {
 		];
 
 		const { getByTextWithMarkup, findByTextWithMarkup, user } = setup(
-			<CopyNodesModalContent folderId={currentFolder.id} nodesToCopy={nodesToCopy} />,
+			<div onClick={resetToDefault}>
+				<CopyNodesModalContent folderId={currentFolder.id} nodesToCopy={nodesToCopy} />
+			</div>,
 			{ mocks }
 		);
 
@@ -761,7 +815,9 @@ describe('Copy Nodes Modal', () => {
 		];
 
 		const { findByTextWithMarkup } = setup(
-			<CopyNodesModalContent folderId={currentFolder.id} nodesToCopy={nodesToCopy} />,
+			<div onClick={resetToDefault}>
+				<CopyNodesModalContent folderId={currentFolder.id} nodesToCopy={nodesToCopy} />
+			</div>,
 			{
 				mocks
 			}

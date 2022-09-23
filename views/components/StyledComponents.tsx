@@ -4,7 +4,15 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { Avatar, Container, Row, Text, getColor, Shimmer } from '@zextras/carbonio-design-system';
+import {
+	Avatar,
+	Container,
+	Row,
+	Text,
+	getColor,
+	Shimmer,
+	ModalBody
+} from '@zextras/carbonio-design-system';
 import styled, { css, SimpleInterpolation } from 'styled-components';
 
 import {
@@ -79,7 +87,7 @@ export const ListItemContainer = styled(Container).attrs<
 		!$disabled &&
 		css`
 			cursor: pointer;
-		`}
+		`};
 `;
 
 export const CheckedAvatar = styled(Avatar)`
@@ -152,4 +160,11 @@ export const ShimmerText = styled(Shimmer.Text).attrs<{
 
 export const TextWithLineHeight = styled(Text)`
 	line-height: 1.5;
+`;
+
+export const CustomModalBody = styled(ModalBody)`
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	flex: 1 1 auto;
 `;

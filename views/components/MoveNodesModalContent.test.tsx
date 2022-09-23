@@ -4,12 +4,15 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
+/* eslint-disable jsx-a11y/click-events-have-key-events,jsx-a11y/no-static-element-interactions */
+
 import React from 'react';
 
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 
+import { destinationVar } from '../../apollo/destinationVar';
 import { NODES_LOAD_LIMIT } from '../../constants';
 import {
 	populateFile,
@@ -40,6 +43,15 @@ import {
 } from '../../utils/testUtils';
 import { MoveNodesModalContent } from './MoveNodesModalContent';
 
+const resetToDefault = jest.fn(() => {
+	// clone implementation of the function contained in the click callback of useCopyContent
+	destinationVar({ ...destinationVar(), currentValue: destinationVar().defaultValue });
+});
+
+beforeEach(() => {
+	resetToDefault.mockClear();
+});
+
 describe('Move Nodes Modal', () => {
 	test('if a folder id is provided, list shows content of the folder', async () => {
 		const currentFolder = populateFolder(5);
@@ -49,9 +61,14 @@ describe('Move Nodes Modal', () => {
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder)
 		];
 
-		setup(<MoveNodesModalContent folderId={currentFolder.id} nodesToMove={nodesToMove} />, {
-			mocks
-		});
+		setup(
+			<div onClick={resetToDefault}>
+				<MoveNodesModalContent folderId={currentFolder.id} nodesToMove={nodesToMove} />
+			</div>,
+			{
+				mocks
+			}
+		);
 		await screen.findByText((currentFolder.children.nodes[0] as File | Folder).name);
 		expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
 			currentFolder.children.nodes.length
@@ -87,7 +104,9 @@ describe('Move Nodes Modal', () => {
 			mockGetChildren(getChildrenVariables(folderWithWriteFolder.id), folderWithWriteFolder)
 		];
 		const { rerender, user } = setup(
-			<MoveNodesModalContent folderId={currentFolder.id} nodesToMove={nodesToMove} />,
+			<div onClick={resetToDefault}>
+				<MoveNodesModalContent folderId={currentFolder.id} nodesToMove={nodesToMove} />
+			</div>,
 			{ mocks }
 		);
 		await screen.findByText((currentFolder.children.nodes[0] as File | Folder).name);
@@ -115,7 +134,11 @@ describe('Move Nodes Modal', () => {
 
 		// then move folder
 		nodesToMove = [folder];
-		rerender(<MoveNodesModalContent folderId={currentFolder.id} nodesToMove={nodesToMove} />);
+		rerender(
+			<div onClick={resetToDefault}>
+				<MoveNodesModalContent folderId={currentFolder.id} nodesToMove={nodesToMove} />
+			</div>
+		);
 		await screen.findByText((currentFolder.children.nodes[0] as File | Folder).name);
 		folderWithWriteFolderItem = screen.getByText(folderWithWriteFolder.name);
 		folderWithWriteFileItem = screen.getByText(folderWithWriteFile.name);
@@ -154,7 +177,9 @@ describe('Move Nodes Modal', () => {
 			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder)
 		];
 		const { user } = setup(
-			<MoveNodesModalContent folderId={currentFolder.id} nodesToMove={nodesToMove} />,
+			<div onClick={resetToDefault}>
+				<MoveNodesModalContent folderId={currentFolder.id} nodesToMove={nodesToMove} />
+			</div>,
 			{
 				mocks
 			}
@@ -211,11 +236,13 @@ describe('Move Nodes Modal', () => {
 		const closeAction = jest.fn();
 
 		const { user } = setup(
-			<MoveNodesModalContent
-				folderId={currentFolder.id}
-				nodesToMove={nodesToMove}
-				closeAction={closeAction}
-			/>,
+			<div onClick={resetToDefault}>
+				<MoveNodesModalContent
+					folderId={currentFolder.id}
+					nodesToMove={nodesToMove}
+					closeAction={closeAction}
+				/>
+			</div>,
 			{ mocks }
 		);
 
@@ -272,11 +299,13 @@ describe('Move Nodes Modal', () => {
 		const closeAction = jest.fn();
 
 		const { user } = setup(
-			<MoveNodesModalContent
-				folderId={currentFolder.id}
-				nodesToMove={nodesToMove}
-				closeAction={closeAction}
-			/>,
+			<div onClick={resetToDefault}>
+				<MoveNodesModalContent
+					folderId={currentFolder.id}
+					nodesToMove={nodesToMove}
+					closeAction={closeAction}
+				/>
+			</div>,
 			{ mocks }
 		);
 
@@ -323,11 +352,13 @@ describe('Move Nodes Modal', () => {
 		const closeAction = jest.fn();
 
 		const { user } = setup(
-			<MoveNodesModalContent
-				folderId={currentFolder.id}
-				nodesToMove={nodesToMove}
-				closeAction={closeAction}
-			/>,
+			<div onClick={resetToDefault}>
+				<MoveNodesModalContent
+					folderId={currentFolder.id}
+					nodesToMove={nodesToMove}
+					closeAction={closeAction}
+				/>
+			</div>,
 			{ mocks }
 		);
 
@@ -341,7 +372,6 @@ describe('Move Nodes Modal', () => {
 		await waitFor(() => expect(confirmButton).not.toHaveAttribute('disabled', ''));
 		// click on disabled node
 		await user.click(fileItem);
-		// confirm button reset to opened folder and becomes disabled
 		expect(confirmButton).toHaveAttribute('disabled', '');
 		// click again on valid destination folder
 		await user.click(folderItem);
@@ -349,12 +379,6 @@ describe('Move Nodes Modal', () => {
 		await waitFor(() => expect(confirmButton).not.toHaveAttribute('disabled', ''));
 		// click on modal title
 		await user.click(screen.getByText(/move items/i));
-		// confirm button reset to opened folder and becomes disabled
-		expect(confirmButton).toHaveAttribute('disabled', '');
-		// click again on valid destination folder
-		await user.click(folderItem);
-		// confirm button becomes active
-		await waitFor(() => expect(confirmButton).not.toHaveAttribute('disabled', ''));
 	});
 
 	test('breadcrumb shows full path of opened folder and allows navigation to parent nodes', async () => {
@@ -383,7 +407,9 @@ describe('Move Nodes Modal', () => {
 		];
 
 		const { getByTextWithMarkup, findByTextWithMarkup, user } = setup(
-			<MoveNodesModalContent folderId={currentFolder.id} nodesToMove={nodesToMove} />,
+			<div onClick={resetToDefault}>
+				<MoveNodesModalContent folderId={currentFolder.id} nodesToMove={nodesToMove} />
+			</div>,
 			{ mocks }
 		);
 
@@ -459,7 +485,9 @@ describe('Move Nodes Modal', () => {
 		];
 
 		const { getByTextWithMarkup } = setup(
-			<MoveNodesModalContent folderId={sharedFolder.id} nodesToMove={[nodeToMove]} />,
+			<div onClick={resetToDefault}>
+				<MoveNodesModalContent folderId={sharedFolder.id} nodesToMove={[nodeToMove]} />
+			</div>,
 			{ mocks }
 		);
 
@@ -499,9 +527,14 @@ describe('Move Nodes Modal', () => {
 			)
 		];
 
-		setup(<MoveNodesModalContent folderId={currentFolder.id} nodesToMove={nodesToMove} />, {
-			mocks
-		});
+		setup(
+			<div onClick={resetToDefault}>
+				<MoveNodesModalContent folderId={currentFolder.id} nodesToMove={nodesToMove} />
+			</div>,
+			{
+				mocks
+			}
+		);
 		await screen.findByText((currentFolder.children.nodes[0] as File | Folder).name);
 		expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(NODES_LOAD_LIMIT);
 		expect(screen.getByTestId('icon: Refresh')).toBeInTheDocument();

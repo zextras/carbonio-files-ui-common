@@ -4,14 +4,18 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
+/* eslint-disable jsx-a11y/click-events-have-key-events,jsx-a11y/no-static-element-interactions */
+
 import React from 'react';
 
 import 'jest-styled-components';
-import { ApolloError } from '@apollo/client';
+import { ApolloError, ReactiveVar } from '@apollo/client';
 import { act, screen, waitFor, within } from '@testing-library/react';
 import forEach from 'lodash/forEach';
+import size from 'lodash/size';
 import { find as findStyled } from 'styled-components/test-utils';
 
+import { DestinationVar, destinationVar } from '../../apollo/destinationVar';
 import { ROOTS } from '../../constants';
 import {
 	populateFile,
@@ -20,7 +24,7 @@ import {
 	populateNodePage,
 	populateNodes
 } from '../../mocks/mockUtils';
-import { Node } from '../../types/common';
+import { Node, NodeWithMetadata } from '../../types/common';
 import { GetRootsListQuery, GetRootsListQueryVariables } from '../../types/graphql/types';
 import { isFile, isFolder } from '../../utils/ActionsFactory';
 import {
@@ -40,25 +44,53 @@ import { buildBreadCrumbRegExp, generateError, iconRegexp, setup } from '../../u
 import { NodesSelectionModalContent } from './NodesSelectionModalContent';
 import { HoverContainer } from './StyledComponents';
 
-let confirmAction: jest.Mock;
-let closeAction: jest.Mock;
+const confirmAction = jest.fn();
+const closeAction = jest.fn();
+
+const resetToDefault = jest.fn<
+	void,
+	[
+		{
+			maxSelection: number | undefined;
+			canSelectOpenedFolder: boolean | undefined;
+		}
+	]
+>(({ maxSelection, canSelectOpenedFolder }) => {
+	// clone implementation of the function contained in the click callback of useNodesSelectionModalContent
+	const getDestinationVar = destinationVar as ReactiveVar<DestinationVar<NodeWithMetadata[]>>;
+	if (maxSelection === 1 || size(getDestinationVar().currentValue) === 0) {
+		if (canSelectOpenedFolder) {
+			destinationVar({ ...destinationVar(), currentValue: destinationVar().defaultValue });
+		} else if (size(getDestinationVar().currentValue) > 0) {
+			destinationVar({ currentValue: undefined, defaultValue: undefined });
+		}
+	}
+});
 
 beforeEach(() => {
-	confirmAction = jest.fn();
-	closeAction = jest.fn();
+	confirmAction.mockClear();
+	closeAction.mockClear();
+	resetToDefault.mockClear();
 });
 
 describe('Nodes Selection Modal Content', () => {
 	test('title and description are visible if set', async () => {
 		const mocks = [mockGetRootsList()];
+
 		setup(
-			<NodesSelectionModalContent
-				confirmAction={confirmAction}
-				confirmLabel="Confirm label"
-				title="This is the title"
-				closeAction={closeAction}
-				description="This is the description"
-			/>,
+			<div
+				onClick={(): void =>
+					resetToDefault({ maxSelection: undefined, canSelectOpenedFolder: undefined })
+				}
+			>
+				<NodesSelectionModalContent
+					confirmAction={confirmAction}
+					confirmLabel="Confirm label"
+					title="This is the title"
+					closeAction={closeAction}
+					description="This is the description"
+				/>
+			</div>,
 			{
 				mocks
 			}
@@ -97,15 +129,21 @@ describe('Nodes Selection Modal Content', () => {
 		const isValidSelection = jest.fn().mockReturnValue(() => true);
 
 		const { findByTextWithMarkup, user } = setup(
-			<NodesSelectionModalContent
-				confirmAction={confirmAction}
-				confirmLabel="Select"
-				title="Select nodes"
-				closeAction={closeAction}
-				canSelectOpenedFolder
-				maxSelection={undefined}
-				isValidSelection={isValidSelection}
-			/>,
+			<div
+				onClick={(): void =>
+					resetToDefault({ maxSelection: undefined, canSelectOpenedFolder: true })
+				}
+			>
+				<NodesSelectionModalContent
+					confirmAction={confirmAction}
+					confirmLabel="Select"
+					title="Select nodes"
+					closeAction={closeAction}
+					canSelectOpenedFolder
+					maxSelection={undefined}
+					isValidSelection={isValidSelection}
+				/>
+			</div>,
 			{
 				mocks
 			}
@@ -161,15 +199,21 @@ describe('Nodes Selection Modal Content', () => {
 			.mockImplementation(({ id }: { id: string }) => id !== localRoot.id);
 
 		const { findByTextWithMarkup, user } = setup(
-			<NodesSelectionModalContent
-				confirmAction={confirmAction}
-				confirmLabel="Select"
-				title="Select nodes"
-				closeAction={closeAction}
-				canSelectOpenedFolder
-				maxSelection={undefined}
-				isValidSelection={isValidSelection}
-			/>,
+			<div
+				onClick={(): void =>
+					resetToDefault({ maxSelection: undefined, canSelectOpenedFolder: true })
+				}
+			>
+				<NodesSelectionModalContent
+					confirmAction={confirmAction}
+					confirmLabel="Select"
+					title="Select nodes"
+					closeAction={closeAction}
+					canSelectOpenedFolder
+					maxSelection={undefined}
+					isValidSelection={isValidSelection}
+				/>
+			</div>,
 			{
 				mocks
 			}
@@ -195,15 +239,8 @@ describe('Nodes Selection Modal Content', () => {
 		expect(breadcrumbItem).toBeVisible();
 		expect(screen.getByText(folder.name)).toBeVisible();
 		expect(screen.getByText(file.name)).toBeVisible();
-		// wait a tick to allow getBaseNode query to complete
-		await waitFor(
-			() =>
-				new Promise((resolve) => {
-					setTimeout(resolve, 0);
-				})
-		);
 		// confirm button remains disabled because opened folder is not valid by validity check
-		expect(confirmButton).toHaveAttribute('disabled', '');
+		await waitFor(() => expect(confirmButton).toHaveAttribute('disabled', ''));
 		expect(isValidSelection).toHaveBeenCalled();
 		expect(isValidSelection).toHaveBeenCalledWith(expect.objectContaining({ id: localRoot.id }));
 		await user.click(confirmButton);
@@ -229,15 +266,21 @@ describe('Nodes Selection Modal Content', () => {
 		const isValidSelection = jest.fn().mockReturnValue(true);
 
 		const { findByTextWithMarkup, user } = setup(
-			<NodesSelectionModalContent
-				confirmAction={confirmAction}
-				confirmLabel="Select"
-				title="Select nodes"
-				closeAction={closeAction}
-				canSelectOpenedFolder={false}
-				maxSelection={undefined}
-				isValidSelection={isValidSelection}
-			/>,
+			<div
+				onClick={(): void =>
+					resetToDefault({ maxSelection: undefined, canSelectOpenedFolder: false })
+				}
+			>
+				<NodesSelectionModalContent
+					confirmAction={confirmAction}
+					confirmLabel="Select"
+					title="Select nodes"
+					closeAction={closeAction}
+					canSelectOpenedFolder={false}
+					maxSelection={undefined}
+					isValidSelection={isValidSelection}
+				/>
+			</div>,
 			{
 				mocks
 			}
@@ -287,16 +330,22 @@ describe('Nodes Selection Modal Content', () => {
 		const isValidSelection = jest.fn().mockReturnValue(false);
 
 		const { user } = setup(
-			<NodesSelectionModalContent
-				confirmAction={confirmAction}
-				confirmLabel="Select"
-				title="Select nodes"
-				closeAction={closeAction}
-				canSelectOpenedFolder={false}
-				maxSelection={undefined}
-				isValidSelection={isValidSelection}
-				disabledTooltip="Node is not selectable"
-			/>,
+			<div
+				onClick={(): void =>
+					resetToDefault({ maxSelection: undefined, canSelectOpenedFolder: false })
+				}
+			>
+				<NodesSelectionModalContent
+					confirmAction={confirmAction}
+					confirmLabel="Select"
+					title="Select nodes"
+					closeAction={closeAction}
+					canSelectOpenedFolder={false}
+					maxSelection={undefined}
+					isValidSelection={isValidSelection}
+					disabledTooltip="Node is not selectable"
+				/>
+			</div>,
 			{
 				mocks
 			}
@@ -334,14 +383,20 @@ describe('Nodes Selection Modal Content', () => {
 			const mocks = [mockGetRootsList(), mockGetBaseNode({ node_id: localRoot.id }, localRoot)];
 
 			const { user } = setup(
-				<NodesSelectionModalContent
-					confirmAction={confirmAction}
-					confirmLabel="Confirm"
-					title="This is the title"
-					closeAction={closeAction}
-					description="This is the description"
-					maxSelection={1}
-				/>,
+				<div
+					onClick={(): void =>
+						resetToDefault({ maxSelection: 1, canSelectOpenedFolder: undefined })
+					}
+				>
+					<NodesSelectionModalContent
+						confirmAction={confirmAction}
+						confirmLabel="Confirm"
+						title="This is the title"
+						closeAction={closeAction}
+						description="This is the description"
+						maxSelection={1}
+					/>
+				</div>,
 				{
 					mocks
 				}
@@ -366,13 +421,19 @@ describe('Nodes Selection Modal Content', () => {
 		describe('without criteria to select nodes', () => {
 			test('show roots by default. confirm button is disabled', async () => {
 				const { user } = setup(
-					<NodesSelectionModalContent
-						confirmAction={confirmAction}
-						confirmLabel="Select"
-						title="Select nodes"
-						closeAction={closeAction}
-						maxSelection={1}
-					/>,
+					<div
+						onClick={(): void =>
+							resetToDefault({ maxSelection: 1, canSelectOpenedFolder: undefined })
+						}
+					>
+						<NodesSelectionModalContent
+							confirmAction={confirmAction}
+							confirmLabel="Select"
+							title="Select nodes"
+							closeAction={closeAction}
+							maxSelection={1}
+						/>
+					</div>,
 					{
 						mocks: [mockGetRootsList()]
 					}
@@ -415,13 +476,19 @@ describe('Nodes Selection Modal Content', () => {
 				];
 
 				const { findByTextWithMarkup, user } = setup(
-					<NodesSelectionModalContent
-						confirmAction={confirmAction}
-						confirmLabel="Select"
-						title="Select nodes"
-						closeAction={closeAction}
-						maxSelection={1}
-					/>,
+					<div
+						onClick={(): void =>
+							resetToDefault({ maxSelection: 1, canSelectOpenedFolder: undefined })
+						}
+					>
+						<NodesSelectionModalContent
+							confirmAction={confirmAction}
+							confirmLabel="Select"
+							title="Select nodes"
+							closeAction={closeAction}
+							maxSelection={1}
+						/>
+					</div>,
 					{
 						mocks
 					}
@@ -473,13 +540,19 @@ describe('Nodes Selection Modal Content', () => {
 				];
 
 				const { findByTextWithMarkup, user } = setup(
-					<NodesSelectionModalContent
-						confirmAction={confirmAction}
-						confirmLabel="Select"
-						title="Select nodes"
-						closeAction={closeAction}
-						maxSelection={1}
-					/>,
+					<div
+						onClick={(): void =>
+							resetToDefault({ maxSelection: 1, canSelectOpenedFolder: undefined })
+						}
+					>
+						<NodesSelectionModalContent
+							confirmAction={confirmAction}
+							confirmLabel="Select"
+							title="Select nodes"
+							closeAction={closeAction}
+							maxSelection={1}
+						/>
+					</div>,
 					{
 						mocks
 					}
@@ -531,14 +604,18 @@ describe('Nodes Selection Modal Content', () => {
 				];
 
 				const { findByTextWithMarkup, user } = setup(
-					<NodesSelectionModalContent
-						confirmAction={confirmAction}
-						confirmLabel="Select"
-						title="Select nodes"
-						closeAction={closeAction}
-						canSelectOpenedFolder
-						maxSelection={1}
-					/>,
+					<div
+						onClick={(): void => resetToDefault({ maxSelection: 1, canSelectOpenedFolder: true })}
+					>
+						<NodesSelectionModalContent
+							confirmAction={confirmAction}
+							confirmLabel="Select"
+							title="Select nodes"
+							closeAction={closeAction}
+							canSelectOpenedFolder
+							maxSelection={1}
+						/>
+					</div>,
 					{
 						mocks
 					}
@@ -598,14 +675,18 @@ describe('Nodes Selection Modal Content', () => {
 				];
 
 				const { findByTextWithMarkup, user } = setup(
-					<NodesSelectionModalContent
-						confirmAction={confirmAction}
-						confirmLabel="Select"
-						title="Select nodes"
-						closeAction={closeAction}
-						canSelectOpenedFolder={false}
-						maxSelection={1}
-					/>,
+					<div
+						onClick={(): void => resetToDefault({ maxSelection: 1, canSelectOpenedFolder: false })}
+					>
+						<NodesSelectionModalContent
+							confirmAction={confirmAction}
+							confirmLabel="Select"
+							title="Select nodes"
+							closeAction={closeAction}
+							canSelectOpenedFolder={false}
+							maxSelection={1}
+						/>
+					</div>,
 					{
 						mocks
 					}
@@ -651,13 +732,19 @@ describe('Nodes Selection Modal Content', () => {
 				const mocks = [mockGetRootsList(), mockGetBaseNode({ node_id: localRoot.id }, localRoot)];
 
 				const { findByTextWithMarkup, user } = setup(
-					<NodesSelectionModalContent
-						confirmAction={confirmAction}
-						confirmLabel="Select"
-						title="Select nodes"
-						closeAction={closeAction}
-						maxSelection={1}
-					/>,
+					<div
+						onClick={(): void =>
+							resetToDefault({ maxSelection: 1, canSelectOpenedFolder: undefined })
+						}
+					>
+						<NodesSelectionModalContent
+							confirmAction={confirmAction}
+							confirmLabel="Select"
+							title="Select nodes"
+							closeAction={closeAction}
+							maxSelection={1}
+						/>
+					</div>,
 					{
 						mocks
 					}
@@ -712,14 +799,18 @@ describe('Nodes Selection Modal Content', () => {
 				];
 
 				const { findByTextWithMarkup, user } = setup(
-					<NodesSelectionModalContent
-						confirmAction={confirmAction}
-						confirmLabel="Select"
-						title="Select nodes"
-						closeAction={closeAction}
-						canSelectOpenedFolder
-						maxSelection={1}
-					/>,
+					<div
+						onClick={(): void => resetToDefault({ maxSelection: 1, canSelectOpenedFolder: true })}
+					>
+						<NodesSelectionModalContent
+							confirmAction={confirmAction}
+							confirmLabel="Select"
+							title="Select nodes"
+							closeAction={closeAction}
+							canSelectOpenedFolder
+							maxSelection={1}
+						/>
+					</div>,
 					{
 						mocks
 					}
@@ -827,13 +918,19 @@ describe('Nodes Selection Modal Content', () => {
 				];
 
 				const { findByTextWithMarkup, user } = setup(
-					<NodesSelectionModalContent
-						confirmAction={confirmAction}
-						confirmLabel="Select"
-						title="Select nodes"
-						closeAction={closeAction}
-						maxSelection={1}
-					/>,
+					<div
+						onClick={(): void =>
+							resetToDefault({ maxSelection: 1, canSelectOpenedFolder: undefined })
+						}
+					>
+						<NodesSelectionModalContent
+							confirmAction={confirmAction}
+							confirmLabel="Select"
+							title="Select nodes"
+							closeAction={closeAction}
+							maxSelection={1}
+						/>
+					</div>,
 					{
 						mocks
 					}
@@ -900,6 +997,7 @@ describe('Nodes Selection Modal Content', () => {
 
 			test('shared with me root is navigable', async () => {
 				const sharedWithMeFilter = populateNodes(4);
+
 				const mocks = [
 					mockGetRootsList(),
 					mockFindNodes(
@@ -912,14 +1010,21 @@ describe('Nodes Selection Modal Content', () => {
 						sharedWithMeFilter
 					)
 				];
+
 				const { getByTextWithMarkup, user } = setup(
-					<NodesSelectionModalContent
-						confirmAction={confirmAction}
-						confirmLabel="Select"
-						title="Select nodes"
-						closeAction={closeAction}
-						maxSelection={1}
-					/>,
+					<div
+						onClick={(): void =>
+							resetToDefault({ maxSelection: 1, canSelectOpenedFolder: undefined })
+						}
+					>
+						<NodesSelectionModalContent
+							confirmAction={confirmAction}
+							confirmLabel="Select"
+							title="Select nodes"
+							closeAction={closeAction}
+							maxSelection={1}
+						/>
+					</div>,
 					{
 						mocks
 					}
@@ -959,6 +1064,7 @@ describe('Nodes Selection Modal Content', () => {
 				const filter = populateNodes(2);
 				const folder = populateFolder(3);
 				filter.push(folder);
+
 				const mocks = [
 					mockGetRootsList(),
 					mockFindNodes(
@@ -973,13 +1079,19 @@ describe('Nodes Selection Modal Content', () => {
 				];
 
 				const { user } = setup(
-					<NodesSelectionModalContent
-						confirmAction={confirmAction}
-						confirmLabel="Select"
-						title="Select nodes"
-						closeAction={closeAction}
-						maxSelection={1}
-					/>,
+					<div
+						onClick={(): void =>
+							resetToDefault({ maxSelection: 1, canSelectOpenedFolder: undefined })
+						}
+					>
+						<NodesSelectionModalContent
+							confirmAction={confirmAction}
+							confirmLabel="Select"
+							title="Select nodes"
+							closeAction={closeAction}
+							maxSelection={1}
+						/>
+					</div>,
 					{
 						mocks
 					}
@@ -1031,15 +1143,19 @@ describe('Nodes Selection Modal Content', () => {
 				];
 
 				const { user } = setup(
-					<NodesSelectionModalContent
-						title="Only files"
-						confirmAction={confirmAction}
-						confirmLabel="Confirm"
-						closeAction={closeAction}
-						isValidSelection={isValidSelection}
-						maxSelection={1}
-						canSelectOpenedFolder
-					/>,
+					<div
+						onClick={(): void => resetToDefault({ maxSelection: 1, canSelectOpenedFolder: true })}
+					>
+						<NodesSelectionModalContent
+							title="Only files"
+							confirmAction={confirmAction}
+							confirmLabel="Confirm"
+							closeAction={closeAction}
+							isValidSelection={isValidSelection}
+							maxSelection={1}
+							canSelectOpenedFolder
+						/>
+					</div>,
 					{ mocks }
 				);
 
@@ -1064,18 +1180,11 @@ describe('Nodes Selection Modal Content', () => {
 				expect(screen.getByTestId(`node-item-${file.id}`)).not.toHaveAttribute('disabled', '');
 				const confirmButton = screen.getByRole('button', { name: /confirm/i });
 				// confirm button is disabled because local root is not a file
-				expect(confirmButton).toHaveAttribute('disabled', '');
+				expect(confirmButton).toBeDisabled();
 				// click on folder
 				await user.click(screen.getByText(folder.name));
 				// confirm button remains disabled
-				expect(confirmButton).toHaveAttribute('disabled', '');
-				// wait a tick to get getBaseNode time to complete
-				await waitFor(
-					() =>
-						new Promise((resolve) => {
-							setTimeout(resolve, 0);
-						})
-				);
+				expect(confirmButton).toBeDisabled();
 				// click on file
 				await user.click(screen.getByText(file.name));
 				// confirm button becomes enabled
@@ -1109,14 +1218,20 @@ describe('Nodes Selection Modal Content', () => {
 				];
 
 				const { user, findByTextWithMarkup } = setup(
-					<NodesSelectionModalContent
-						title="Only folders"
-						confirmAction={confirmAction}
-						confirmLabel="Confirm"
-						closeAction={closeAction}
-						isValidSelection={isValidSelection}
-						maxSelection={1}
-					/>,
+					<div
+						onClick={(): void =>
+							resetToDefault({ maxSelection: 1, canSelectOpenedFolder: undefined })
+						}
+					>
+						<NodesSelectionModalContent
+							title="Only folders"
+							confirmAction={confirmAction}
+							confirmLabel="Confirm"
+							closeAction={closeAction}
+							isValidSelection={isValidSelection}
+							maxSelection={1}
+						/>
+					</div>,
 					{ mocks }
 				);
 
@@ -1143,12 +1258,15 @@ describe('Nodes Selection Modal Content', () => {
 				const confirmButton = screen.getByRole('button', { name: /confirm/i });
 				// confirm button is disabled because local root is not selectable by param
 				expect(confirmButton).toHaveAttribute('disabled', '');
+				// reset calls
+				resetToDefault.mockClear();
 				// click on folder
 				await user.click(screen.getByText(folder.name));
 				// confirm button becomes enabled
 				expect(confirmButton).not.toHaveAttribute('disabled', '');
 				// click on file
 				await user.click(screen.getByText(file.name));
+				expect(resetToDefault).toHaveBeenCalledTimes(1);
 				// confirm button becomes disabled
 				expect(confirmButton).toHaveAttribute('disabled', '');
 				// click again on folder
@@ -1190,14 +1308,20 @@ describe('Nodes Selection Modal Content', () => {
 				];
 
 				const { findByTextWithMarkup, user } = setup(
-					<NodesSelectionModalContent
-						title="Custom selector"
-						confirmAction={confirmAction}
-						confirmLabel="Confirm"
-						closeAction={closeAction}
-						isValidSelection={isValidSelection}
-						maxSelection={1}
-					/>,
+					<div
+						onClick={(): void =>
+							resetToDefault({ maxSelection: 1, canSelectOpenedFolder: undefined })
+						}
+					>
+						<NodesSelectionModalContent
+							title="Custom selector"
+							confirmAction={confirmAction}
+							confirmLabel="Confirm"
+							closeAction={closeAction}
+							isValidSelection={isValidSelection}
+							maxSelection={1}
+						/>
+					</div>,
 					{ mocks }
 				);
 
@@ -1286,6 +1410,7 @@ describe('Nodes Selection Modal Content', () => {
 			localRoot.children = populateNodePage([file, folder]);
 			file.parent = localRoot;
 			folder.parent = localRoot;
+
 			const mocks = [
 				mockGetRootsList(),
 				mockGetBaseNode({ node_id: localRoot.id }, localRoot),
@@ -1295,13 +1420,19 @@ describe('Nodes Selection Modal Content', () => {
 			];
 
 			const { findByTextWithMarkup, user } = setup(
-				<NodesSelectionModalContent
-					confirmAction={confirmAction}
-					confirmLabel="Select"
-					title="Multiple selection"
-					closeAction={closeAction}
-					maxSelection={undefined}
-				/>,
+				<div
+					onClick={(): void =>
+						resetToDefault({ maxSelection: undefined, canSelectOpenedFolder: undefined })
+					}
+				>
+					<NodesSelectionModalContent
+						confirmAction={confirmAction}
+						confirmLabel="Select"
+						title="Multiple selection"
+						closeAction={closeAction}
+						maxSelection={undefined}
+					/>
+				</div>,
 				{
 					mocks
 				}
@@ -1346,6 +1477,7 @@ describe('Nodes Selection Modal Content', () => {
 			forEach(nodes, (mockedNode) => {
 				mockedNode.parent = localRoot;
 			});
+
 			const mocks = [
 				mockGetRootsList(),
 				mockGetBaseNode({ node_id: localRoot.id }, localRoot),
@@ -1355,13 +1487,19 @@ describe('Nodes Selection Modal Content', () => {
 			];
 
 			const { findByTextWithMarkup, user } = setup(
-				<NodesSelectionModalContent
-					confirmAction={confirmAction}
-					confirmLabel="Select"
-					title="Multiple selection"
-					closeAction={closeAction}
-					maxSelection={3}
-				/>,
+				<div
+					onClick={(): void =>
+						resetToDefault({ maxSelection: 3, canSelectOpenedFolder: undefined })
+					}
+				>
+					<NodesSelectionModalContent
+						confirmAction={confirmAction}
+						confirmLabel="Select"
+						title="Multiple selection"
+						closeAction={closeAction}
+						maxSelection={3}
+					/>
+				</div>,
 				{
 					mocks
 				}
@@ -1424,13 +1562,19 @@ describe('Nodes Selection Modal Content', () => {
 				];
 
 				const { findByTextWithMarkup, user } = setup(
-					<NodesSelectionModalContent
-						confirmAction={confirmAction}
-						confirmLabel="Select"
-						title="Select nodes"
-						closeAction={closeAction}
-						maxSelection={undefined}
-					/>,
+					<div
+						onClick={(): void =>
+							resetToDefault({ maxSelection: undefined, canSelectOpenedFolder: undefined })
+						}
+					>
+						<NodesSelectionModalContent
+							confirmAction={confirmAction}
+							confirmLabel="Select"
+							title="Select nodes"
+							closeAction={closeAction}
+							maxSelection={undefined}
+						/>
+					</div>,
 					{
 						mocks
 					}
@@ -1482,13 +1626,19 @@ describe('Nodes Selection Modal Content', () => {
 				];
 
 				const { findByTextWithMarkup, user } = setup(
-					<NodesSelectionModalContent
-						confirmAction={confirmAction}
-						confirmLabel="Select"
-						title="Select nodes"
-						closeAction={closeAction}
-						maxSelection={undefined}
-					/>,
+					<div
+						onClick={(): void =>
+							resetToDefault({ maxSelection: undefined, canSelectOpenedFolder: undefined })
+						}
+					>
+						<NodesSelectionModalContent
+							confirmAction={confirmAction}
+							confirmLabel="Select"
+							title="Select nodes"
+							closeAction={closeAction}
+							maxSelection={undefined}
+						/>
+					</div>,
 					{
 						mocks
 					}
@@ -1540,14 +1690,20 @@ describe('Nodes Selection Modal Content', () => {
 				];
 
 				const { findByTextWithMarkup, user } = setup(
-					<NodesSelectionModalContent
-						confirmAction={confirmAction}
-						confirmLabel="Select"
-						title="Select nodes"
-						closeAction={closeAction}
-						canSelectOpenedFolder
-						maxSelection={undefined}
-					/>,
+					<div
+						onClick={(): void =>
+							resetToDefault({ maxSelection: undefined, canSelectOpenedFolder: true })
+						}
+					>
+						<NodesSelectionModalContent
+							confirmAction={confirmAction}
+							confirmLabel="Select"
+							title="Select nodes"
+							closeAction={closeAction}
+							canSelectOpenedFolder
+							maxSelection={undefined}
+						/>
+					</div>,
 					{
 						mocks
 					}
@@ -1607,14 +1763,20 @@ describe('Nodes Selection Modal Content', () => {
 				];
 
 				const { findByTextWithMarkup, user } = setup(
-					<NodesSelectionModalContent
-						confirmAction={confirmAction}
-						confirmLabel="Select"
-						title="Select nodes"
-						closeAction={closeAction}
-						canSelectOpenedFolder={false}
-						maxSelection={undefined}
-					/>,
+					<div
+						onClick={(): void =>
+							resetToDefault({ maxSelection: undefined, canSelectOpenedFolder: false })
+						}
+					>
+						<NodesSelectionModalContent
+							confirmAction={confirmAction}
+							confirmLabel="Select"
+							title="Select nodes"
+							closeAction={closeAction}
+							canSelectOpenedFolder={false}
+							maxSelection={undefined}
+						/>
+					</div>,
 					{
 						mocks
 					}
@@ -1672,14 +1834,20 @@ describe('Nodes Selection Modal Content', () => {
 				];
 
 				const { findByTextWithMarkup, user } = setup(
-					<NodesSelectionModalContent
-						confirmAction={confirmAction}
-						confirmLabel="Select"
-						title="Select nodes"
-						closeAction={closeAction}
-						canSelectOpenedFolder={false}
-						maxSelection={undefined}
-					/>,
+					<div
+						onClick={(): void =>
+							resetToDefault({ maxSelection: undefined, canSelectOpenedFolder: false })
+						}
+					>
+						<NodesSelectionModalContent
+							confirmAction={confirmAction}
+							confirmLabel="Select"
+							title="Select nodes"
+							closeAction={closeAction}
+							canSelectOpenedFolder={false}
+							maxSelection={undefined}
+						/>
+					</div>,
 					{
 						mocks
 					}
@@ -1755,14 +1923,20 @@ describe('Nodes Selection Modal Content', () => {
 				];
 
 				const { findByTextWithMarkup, user } = setup(
-					<NodesSelectionModalContent
-						confirmAction={confirmAction}
-						confirmLabel="Select"
-						title="Select nodes"
-						closeAction={closeAction}
-						canSelectOpenedFolder={false}
-						maxSelection={undefined}
-					/>,
+					<div
+						onClick={(): void =>
+							resetToDefault({ maxSelection: undefined, canSelectOpenedFolder: false })
+						}
+					>
+						<NodesSelectionModalContent
+							confirmAction={confirmAction}
+							confirmLabel="Select"
+							title="Select nodes"
+							closeAction={closeAction}
+							canSelectOpenedFolder={false}
+							maxSelection={undefined}
+						/>
+					</div>,
 					{
 						mocks
 					}
@@ -1835,14 +2009,20 @@ describe('Nodes Selection Modal Content', () => {
 				];
 
 				const { findByTextWithMarkup, user } = setup(
-					<NodesSelectionModalContent
-						confirmAction={confirmAction}
-						confirmLabel="Select"
-						title="Select nodes"
-						closeAction={closeAction}
-						canSelectOpenedFolder={false}
-						maxSelection={undefined}
-					/>,
+					<div
+						onClick={(): void =>
+							resetToDefault({ maxSelection: undefined, canSelectOpenedFolder: false })
+						}
+					>
+						<NodesSelectionModalContent
+							confirmAction={confirmAction}
+							confirmLabel="Select"
+							title="Select nodes"
+							closeAction={closeAction}
+							canSelectOpenedFolder={false}
+							maxSelection={undefined}
+						/>
+					</div>,
 					{
 						mocks
 					}
@@ -1910,14 +2090,20 @@ describe('Nodes Selection Modal Content', () => {
 				];
 
 				const { findByTextWithMarkup, user } = setup(
-					<NodesSelectionModalContent
-						confirmAction={confirmAction}
-						confirmLabel="Select"
-						title="Select nodes"
-						closeAction={closeAction}
-						canSelectOpenedFolder
-						maxSelection={undefined}
-					/>,
+					<div
+						onClick={(): void =>
+							resetToDefault({ maxSelection: undefined, canSelectOpenedFolder: true })
+						}
+					>
+						<NodesSelectionModalContent
+							confirmAction={confirmAction}
+							confirmLabel="Select"
+							title="Select nodes"
+							closeAction={closeAction}
+							canSelectOpenedFolder
+							maxSelection={undefined}
+						/>
+					</div>,
 					{
 						mocks
 					}
@@ -1993,15 +2179,21 @@ describe('Nodes Selection Modal Content', () => {
 				];
 
 				const { user } = setup(
-					<NodesSelectionModalContent
-						title="Only files"
-						confirmAction={confirmAction}
-						confirmLabel="Confirm"
-						closeAction={closeAction}
-						isValidSelection={isValidSelection}
-						maxSelection={undefined}
-						canSelectOpenedFolder
-					/>,
+					<div
+						onClick={(): void =>
+							resetToDefault({ maxSelection: undefined, canSelectOpenedFolder: true })
+						}
+					>
+						<NodesSelectionModalContent
+							title="Only files"
+							confirmAction={confirmAction}
+							confirmLabel="Confirm"
+							closeAction={closeAction}
+							isValidSelection={isValidSelection}
+							maxSelection={undefined}
+							canSelectOpenedFolder
+						/>
+					</div>,
 					{ mocks }
 				);
 
@@ -2023,7 +2215,6 @@ describe('Nodes Selection Modal Content', () => {
 				// confirm button is disabled because local root is not a file
 				expect(confirmButton).toHaveAttribute('disabled', '');
 				// click on file
-
 				await user.click(screen.getByText(file1.name));
 				// confirm button becomes enabled
 				await waitFor(() => expect(confirmButton).not.toHaveAttribute('disabled', ''));
@@ -2093,15 +2284,21 @@ describe('Nodes Selection Modal Content', () => {
 				];
 
 				const { user } = setup(
-					<NodesSelectionModalContent
-						title="Only folders"
-						confirmAction={confirmAction}
-						confirmLabel="Confirm"
-						closeAction={closeAction}
-						isValidSelection={isValidSelection}
-						maxSelection={undefined}
-						canSelectOpenedFolder
-					/>,
+					<div
+						onClick={(): void =>
+							resetToDefault({ maxSelection: undefined, canSelectOpenedFolder: true })
+						}
+					>
+						<NodesSelectionModalContent
+							title="Only folders"
+							confirmAction={confirmAction}
+							confirmLabel="Confirm"
+							closeAction={closeAction}
+							isValidSelection={isValidSelection}
+							maxSelection={undefined}
+							canSelectOpenedFolder
+						/>
+					</div>,
 					{ mocks }
 				);
 
@@ -2211,14 +2408,20 @@ describe('Nodes Selection Modal Content', () => {
 				];
 
 				const { findByTextWithMarkup, user } = setup(
-					<NodesSelectionModalContent
-						title="Custom selector"
-						confirmAction={confirmAction}
-						confirmLabel="Confirm"
-						closeAction={closeAction}
-						isValidSelection={isValidSelection}
-						maxSelection={undefined}
-					/>,
+					<div
+						onClick={(): void =>
+							resetToDefault({ maxSelection: undefined, canSelectOpenedFolder: undefined })
+						}
+					>
+						<NodesSelectionModalContent
+							title="Custom selector"
+							confirmAction={confirmAction}
+							confirmLabel="Confirm"
+							closeAction={closeAction}
+							isValidSelection={isValidSelection}
+							maxSelection={undefined}
+						/>
+					</div>,
 					{ mocks }
 				);
 
@@ -2359,15 +2562,21 @@ describe('Nodes Selection Modal Content', () => {
 			const isValidSelection = jest.fn().mockReturnValue(true);
 
 			const { findByTextWithMarkup, user } = setup(
-				<NodesSelectionModalContent
-					confirmAction={confirmAction}
-					confirmLabel="Select"
-					title="Select nodes"
-					closeAction={closeAction}
-					canSelectOpenedFolder={false}
-					maxSelection={undefined}
-					isValidSelection={isValidSelection}
-				/>,
+				<div
+					onClick={(): void =>
+						resetToDefault({ maxSelection: undefined, canSelectOpenedFolder: false })
+					}
+				>
+					<NodesSelectionModalContent
+						confirmAction={confirmAction}
+						confirmLabel="Select"
+						title="Select nodes"
+						closeAction={closeAction}
+						canSelectOpenedFolder={false}
+						maxSelection={undefined}
+						isValidSelection={isValidSelection}
+					/>
+				</div>,
 				{
 					mocks
 				}
@@ -2407,16 +2616,22 @@ describe('Nodes Selection Modal Content', () => {
 			const isValidSelection = jest.fn().mockReturnValue(true);
 
 			const { findByTextWithMarkup, user } = setup(
-				<NodesSelectionModalContent
-					confirmAction={confirmAction}
-					confirmLabel="Select"
-					title="Select nodes"
-					closeAction={closeAction}
-					canSelectOpenedFolder={false}
-					maxSelection={undefined}
-					isValidSelection={isValidSelection}
-					canCreateFolder
-				/>,
+				<div
+					onClick={(): void =>
+						resetToDefault({ maxSelection: undefined, canSelectOpenedFolder: false })
+					}
+				>
+					<NodesSelectionModalContent
+						confirmAction={confirmAction}
+						confirmLabel="Select"
+						title="Select nodes"
+						closeAction={closeAction}
+						canSelectOpenedFolder={false}
+						maxSelection={undefined}
+						isValidSelection={isValidSelection}
+						canCreateFolder
+					/>
+				</div>,
 				{
 					mocks
 				}
@@ -2467,16 +2682,22 @@ describe('Nodes Selection Modal Content', () => {
 			const isValidSelection = jest.fn().mockReturnValue(true);
 
 			const { findByTextWithMarkup, user } = setup(
-				<NodesSelectionModalContent
-					confirmAction={confirmAction}
-					confirmLabel="Select"
-					title="Select nodes"
-					closeAction={closeAction}
-					canSelectOpenedFolder={false}
-					maxSelection={undefined}
-					isValidSelection={isValidSelection}
-					canCreateFolder
-				/>,
+				<div
+					onClick={(): void =>
+						resetToDefault({ maxSelection: undefined, canSelectOpenedFolder: false })
+					}
+				>
+					<NodesSelectionModalContent
+						confirmAction={confirmAction}
+						confirmLabel="Select"
+						title="Select nodes"
+						closeAction={closeAction}
+						canSelectOpenedFolder={false}
+						maxSelection={undefined}
+						isValidSelection={isValidSelection}
+						canCreateFolder
+					/>
+				</div>,
 				{
 					mocks
 				}
@@ -2532,16 +2753,22 @@ describe('Nodes Selection Modal Content', () => {
 			const isValidSelection = jest.fn().mockReturnValue(true);
 
 			const { findByTextWithMarkup, user } = setup(
-				<NodesSelectionModalContent
-					confirmAction={confirmAction}
-					confirmLabel="Select"
-					title="Select nodes"
-					closeAction={closeAction}
-					canSelectOpenedFolder={false}
-					maxSelection={undefined}
-					isValidSelection={isValidSelection}
-					canCreateFolder
-				/>,
+				<div
+					onClick={(): void =>
+						resetToDefault({ maxSelection: undefined, canSelectOpenedFolder: false })
+					}
+				>
+					<NodesSelectionModalContent
+						confirmAction={confirmAction}
+						confirmLabel="Select"
+						title="Select nodes"
+						closeAction={closeAction}
+						canSelectOpenedFolder={false}
+						maxSelection={undefined}
+						isValidSelection={isValidSelection}
+						canCreateFolder
+					/>
+				</div>,
 				{
 					mocks
 				}
@@ -2605,16 +2832,22 @@ describe('Nodes Selection Modal Content', () => {
 			const newFolderName = 'new folder name';
 
 			const { findByTextWithMarkup, user } = setup(
-				<NodesSelectionModalContent
-					confirmAction={confirmAction}
-					confirmLabel="Select"
-					title="Select nodes"
-					closeAction={closeAction}
-					canSelectOpenedFolder={false}
-					maxSelection={undefined}
-					isValidSelection={isValidSelection}
-					canCreateFolder
-				/>,
+				<div
+					onClick={(): void =>
+						resetToDefault({ maxSelection: undefined, canSelectOpenedFolder: false })
+					}
+				>
+					<NodesSelectionModalContent
+						confirmAction={confirmAction}
+						confirmLabel="Select"
+						title="Select nodes"
+						closeAction={closeAction}
+						canSelectOpenedFolder={false}
+						maxSelection={undefined}
+						isValidSelection={isValidSelection}
+						canCreateFolder
+					/>
+				</div>,
 				{
 					mocks
 				}
@@ -2681,16 +2914,22 @@ describe('Nodes Selection Modal Content', () => {
 			const newFolderName = 'new folder name';
 
 			const { findByTextWithMarkup, user } = setup(
-				<NodesSelectionModalContent
-					confirmAction={confirmAction}
-					confirmLabel="Select"
-					title="Select nodes"
-					closeAction={closeAction}
-					canSelectOpenedFolder={false}
-					maxSelection={undefined}
-					isValidSelection={isValidSelection}
-					canCreateFolder
-				/>,
+				<div
+					onClick={(): void =>
+						resetToDefault({ maxSelection: undefined, canSelectOpenedFolder: false })
+					}
+				>
+					<NodesSelectionModalContent
+						confirmAction={confirmAction}
+						confirmLabel="Select"
+						title="Select nodes"
+						closeAction={closeAction}
+						canSelectOpenedFolder={false}
+						maxSelection={undefined}
+						isValidSelection={isValidSelection}
+						canCreateFolder
+					/>
+				</div>,
 				{
 					mocks
 				}
@@ -2758,16 +2997,22 @@ describe('Nodes Selection Modal Content', () => {
 			const isValidSelection = jest.fn().mockReturnValue(true);
 
 			const { findByTextWithMarkup, user } = setup(
-				<NodesSelectionModalContent
-					confirmAction={confirmAction}
-					confirmLabel="Select"
-					title="Select nodes"
-					closeAction={closeAction}
-					canSelectOpenedFolder={false}
-					maxSelection={undefined}
-					isValidSelection={isValidSelection}
-					canCreateFolder
-				/>,
+				<div
+					onClick={(): void =>
+						resetToDefault({ maxSelection: undefined, canSelectOpenedFolder: false })
+					}
+				>
+					<NodesSelectionModalContent
+						confirmAction={confirmAction}
+						confirmLabel="Select"
+						title="Select nodes"
+						closeAction={closeAction}
+						canSelectOpenedFolder={false}
+						maxSelection={undefined}
+						isValidSelection={isValidSelection}
+						canCreateFolder
+					/>
+				</div>,
 				{
 					mocks
 				}
@@ -2834,16 +3079,22 @@ describe('Nodes Selection Modal Content', () => {
 			const isValidSelection = jest.fn().mockReturnValue(true);
 
 			const { findByTextWithMarkup, user } = setup(
-				<NodesSelectionModalContent
-					confirmAction={confirmAction}
-					confirmLabel="Select"
-					title="Select nodes"
-					closeAction={closeAction}
-					canSelectOpenedFolder={false}
-					maxSelection={undefined}
-					isValidSelection={isValidSelection}
-					canCreateFolder
-				/>,
+				<div
+					onClick={(): void =>
+						resetToDefault({ maxSelection: undefined, canSelectOpenedFolder: false })
+					}
+				>
+					<NodesSelectionModalContent
+						confirmAction={confirmAction}
+						confirmLabel="Select"
+						title="Select nodes"
+						closeAction={closeAction}
+						canSelectOpenedFolder={false}
+						maxSelection={undefined}
+						isValidSelection={isValidSelection}
+						canCreateFolder
+					/>
+				</div>,
 				{
 					mocks
 				}
@@ -2909,16 +3160,22 @@ describe('Nodes Selection Modal Content', () => {
 			const isValidSelection = jest.fn().mockReturnValue(true);
 
 			const { user } = setup(
-				<NodesSelectionModalContent
-					confirmAction={confirmAction}
-					confirmLabel="Select"
-					title="Select nodes"
-					closeAction={closeAction}
-					canSelectOpenedFolder={false}
-					maxSelection={undefined}
-					isValidSelection={isValidSelection}
-					canCreateFolder
-				/>,
+				<div
+					onClick={(): void =>
+						resetToDefault({ maxSelection: undefined, canSelectOpenedFolder: false })
+					}
+				>
+					<NodesSelectionModalContent
+						confirmAction={confirmAction}
+						confirmLabel="Select"
+						title="Select nodes"
+						closeAction={closeAction}
+						canSelectOpenedFolder={false}
+						maxSelection={undefined}
+						isValidSelection={isValidSelection}
+						canCreateFolder
+					/>
+				</div>,
 				{
 					mocks
 				}
@@ -2968,16 +3225,22 @@ describe('Nodes Selection Modal Content', () => {
 			const newFolderName = 'new folder name';
 
 			const { findByTextWithMarkup, user } = setup(
-				<NodesSelectionModalContent
-					confirmAction={confirmAction}
-					confirmLabel="Select"
-					title="Select nodes"
-					closeAction={closeAction}
-					canSelectOpenedFolder={false}
-					maxSelection={undefined}
-					isValidSelection={isValidSelection}
-					canCreateFolder
-				/>,
+				<div
+					onClick={(): void =>
+						resetToDefault({ maxSelection: undefined, canSelectOpenedFolder: false })
+					}
+				>
+					<NodesSelectionModalContent
+						confirmAction={confirmAction}
+						confirmLabel="Select"
+						title="Select nodes"
+						closeAction={closeAction}
+						canSelectOpenedFolder={false}
+						maxSelection={undefined}
+						isValidSelection={isValidSelection}
+						canCreateFolder
+					/>
+				</div>,
 				{
 					mocks
 				}

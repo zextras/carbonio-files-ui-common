@@ -13,7 +13,12 @@ import reduce from 'lodash/reduce';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 
-import { FILTER_PARAMS, ROOTS } from '../../constants';
+import {
+	BREADCRUMB_ROW_HEIGHT,
+	FILTER_PARAMS,
+	LIST_ITEM_HEIGHT_COMPACT,
+	ROOTS
+} from '../../constants';
 import { useFindNodesQuery } from '../../hooks/graphql/queries/useFindNodesQuery';
 import { Crumb, NodeListItemType, RootListItemType } from '../../types/common';
 import { MakeOptional, NodeType } from '../../types/graphql/types';
@@ -23,6 +28,7 @@ import { EmptyFolder } from './EmptyFolder';
 import { ListContent } from './ListContent';
 import { LoadingIcon } from './LoadingIcon';
 import { ScrollContainer } from './ScrollContainer';
+import { OverFlowHiddenRow } from './StyledComponents';
 
 interface RootsListProps {
 	activeNodes?: OneOrMany<string>;
@@ -193,25 +199,21 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 		[navigateTo]
 	);
 
-	const stopPropagationClickHandler = (event: React.MouseEvent): void => {
-		event.stopPropagation();
-	};
-
 	return (
 		<ModalContainer
 			mainAlignment="flex-start"
 			crossAlignment="flex-start"
 			data-testid="modal-list-roots"
 			maxHeight="100%"
-			minHeight={0}
+			minHeight={`${BREADCRUMB_ROW_HEIGHT + LIST_ITEM_HEIGHT_COMPACT}px`}
 		>
-			<Row
+			<OverFlowHiddenRow
 				width="fill"
 				wrap="nowrap"
-				height={48}
-				onClick={stopPropagationClickHandler}
+				height={`${BREADCRUMB_ROW_HEIGHT}px`}
 				mainAlignment="flex-start"
 				flexShrink={0}
+				data-testid="modal-listHeader-roots"
 			>
 				{crumbs && <InteractiveBreadcrumbs crumbs={crumbs} />}
 				{loading && (
@@ -219,7 +221,7 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 						<LoadingIcon icon="Refresh" iconColor="primary" type="ghost" />
 					</Row>
 				)}
-			</Row>
+			</OverFlowHiddenRow>
 			<Container mainAlignment="flex-start" minHeight="0" maxHeight="100%">
 				{nodes &&
 					(nodes.length > 0 ? (

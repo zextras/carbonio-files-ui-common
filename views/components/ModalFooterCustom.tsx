@@ -4,71 +4,67 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import React, { useCallback } from 'react';
+import React from 'react';
 
 import { Button, Container, Padding, Tooltip } from '@zextras/carbonio-design-system';
 import { useTranslation } from 'react-i18next';
 
-interface ModalFooterProps {
+interface ModalFooterCustomProps {
 	confirmLabel: string;
 	confirmHandler: (event: React.MouseEvent<HTMLButtonElement> | KeyboardEvent) => void;
 	confirmDisabled?: boolean;
 	confirmDisabledTooltip?: string;
+	confirmLoading?: boolean;
 	cancelLabel?: string;
 	cancelHandler?: (event: React.MouseEvent<HTMLButtonElement> | KeyboardEvent) => void;
 	cancelDisabled?: boolean;
+	cancelLoading?: boolean;
 	cancelButtonColor?: string;
 	children?: React.ReactNode;
 }
 
-export const ModalFooter: React.VFC<ModalFooterProps> = ({
-	confirmLabel,
-	confirmHandler,
-	confirmDisabled,
-	confirmDisabledTooltip,
-	cancelLabel,
-	cancelHandler,
-	cancelDisabled,
-	cancelButtonColor,
-	children
-}) => {
-	const [t] = useTranslation();
+export const ModalFooterCustom = React.forwardRef<HTMLDivElement, ModalFooterCustomProps>(
+	function ModalFooterCustomFn(
+		{
+			confirmLabel,
+			confirmHandler,
+			confirmDisabled,
+			confirmDisabledTooltip,
+			confirmLoading,
+			cancelLabel,
+			cancelHandler,
+			cancelDisabled,
+			cancelButtonColor,
+			cancelLoading,
+			children
+		},
+		ref
+	) {
+		const [t] = useTranslation();
 
-	const stopPropagation = useCallback((event: React.SyntheticEvent) => {
-		event.stopPropagation();
-	}, []);
-
-	return (
-		<Container
-			padding={{ vertical: 'small' }}
-			minHeight={0}
-			height="auto"
-			flexGrow={0}
-			flexShrink={0}
-			flexBasis="auto"
-		>
-			{/* <Divider /> */}
+		return (
 			<Container
 				orientation="horizontal"
 				mainAlignment="flex-end"
 				crossAlignment="flex-end"
-				padding={{ top: 'small' }}
 				height="auto"
 				wrap="wrap"
+				ref={ref}
 			>
 				{children}
 				{cancelHandler && (
-					<Padding left="small" onClick={stopPropagation}>
+					<Padding left="small">
 						<Button
 							color={cancelButtonColor || 'primary'}
 							type="outlined"
 							onClick={cancelHandler}
 							label={cancelLabel || t('modal.button.cancel')}
 							disabled={cancelDisabled}
+							loading={cancelLoading}
 						/>
 					</Padding>
 				)}
-				<Padding left="small" onClick={stopPropagation}>
+				<Padding left="small">
 					<Tooltip
 						label={confirmDisabledTooltip}
 						disabled={!confirmDisabledTooltip || !confirmDisabled}
@@ -78,10 +74,11 @@ export const ModalFooter: React.VFC<ModalFooterProps> = ({
 							onClick={confirmHandler}
 							label={confirmLabel}
 							disabled={confirmDisabled}
+							loading={confirmLoading}
 						/>
 					</Tooltip>
 				</Padding>
 			</Container>
-		</Container>
-	);
-};
+		);
+	}
+);

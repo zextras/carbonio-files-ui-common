@@ -10,6 +10,7 @@ import { useModal } from '@zextras/carbonio-design-system';
 
 import { GetNodeParentType, Node } from '../../types/common';
 import { CopyNodesModalContent } from '../../views/components/CopyNodesModalContent';
+import { useDestinationVarManager } from '../useDestinationVarManager';
 
 export type OpenCopyModal = (
 	nodes: Array<Pick<Node, '__typename' | 'id'> & GetNodeParentType>,
@@ -21,18 +22,24 @@ export function useCopyModal(copyNodesActionCallback?: () => void): {
 } {
 	const createModal = useModal();
 
+	const { resetAll, resetCurrent } = useDestinationVarManager();
+
 	const openCopyNodesModal = useCallback<OpenCopyModal>(
 		(nodes, fromFolder) => {
 			const closeModal = createModal(
 				{
+					minHeight: '400px',
 					maxHeight: '60vh',
 					onClose: () => {
+						resetAll();
 						closeModal();
 					},
+					onClick: resetCurrent,
 					children: (
 						<CopyNodesModalContent
 							closeAction={(): void => {
 								copyNodesActionCallback && copyNodesActionCallback();
+								resetAll();
 								closeModal();
 							}}
 							nodesToCopy={nodes}
@@ -43,7 +50,7 @@ export function useCopyModal(copyNodesActionCallback?: () => void): {
 				true
 			);
 		},
-		[createModal, copyNodesActionCallback]
+		[createModal, resetCurrent, resetAll, copyNodesActionCallback]
 	);
 
 	return { openCopyNodesModal };

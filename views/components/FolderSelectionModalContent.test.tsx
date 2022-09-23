@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
+/* eslint-disable jsx-a11y/click-events-have-key-events,jsx-a11y/no-static-element-interactions */
+
 import React from 'react';
 
 import { screen, waitFor } from '@testing-library/react';
@@ -11,6 +13,7 @@ import 'jest-styled-components';
 import map from 'lodash/map';
 import { find as findStyled } from 'styled-components/test-utils';
 
+import { destinationVar } from '../../apollo/destinationVar';
 import { ROOTS } from '../../constants';
 import {
 	populateFile,
@@ -33,17 +36,30 @@ import { buildBreadCrumbRegExp, setup } from '../../utils/testUtils';
 import { FolderSelectionModalContent } from './FolderSelectionModalContent';
 import { HoverContainer } from './StyledComponents';
 
-let confirmAction: jest.Mock;
+const confirmAction = jest.fn(() => {
+	// clone implementation of the function contained in the close callback of useCopyContent
+	destinationVar({ defaultValue: undefined, currentValue: undefined });
+});
+const resetToDefault = jest.fn(() => {
+	// clone implementation of the function contained in the click callback of useCopyContent
+	destinationVar({ ...destinationVar(), currentValue: destinationVar().defaultValue });
+});
 
 beforeEach(() => {
-	confirmAction = jest.fn();
+	confirmAction.mockClear();
+	resetToDefault.mockClear();
 });
 
 describe('Folder Selection Modal Content', () => {
 	test('show roots if no folder is set. Choose button is disabled', async () => {
-		const { user } = setup(<FolderSelectionModalContent confirmAction={confirmAction} />, {
-			mocks: []
-		});
+		const { user } = setup(
+			<div onClick={resetToDefault}>
+				<FolderSelectionModalContent confirmAction={confirmAction} />
+			</div>,
+			{
+				mocks: []
+			}
+		);
 
 		await screen.findByText(/home/i);
 		expect(screen.getByText('Home')).toBeVisible();
@@ -76,7 +92,9 @@ describe('Folder Selection Modal Content', () => {
 		];
 
 		const { findByTextWithMarkup, user } = setup(
-			<FolderSelectionModalContent folderId={folder.id} confirmAction={confirmAction} />,
+			<div onClick={resetToDefault}>
+				<FolderSelectionModalContent folderId={folder.id} confirmAction={confirmAction} />
+			</div>,
 			{
 				mocks
 			}
@@ -151,7 +169,9 @@ describe('Folder Selection Modal Content', () => {
 		];
 
 		const { findByTextWithMarkup, user } = setup(
-			<FolderSelectionModalContent folderId={localRoot.id} confirmAction={confirmAction} />,
+			<div onClick={resetToDefault}>
+				<FolderSelectionModalContent folderId={localRoot.id} confirmAction={confirmAction} />
+			</div>,
 			{
 				mocks
 			}
@@ -205,7 +225,9 @@ describe('Folder Selection Modal Content', () => {
 		];
 
 		const { findByTextWithMarkup, user } = setup(
-			<FolderSelectionModalContent folderId={localRoot.id} confirmAction={confirmAction} />,
+			<div onClick={resetToDefault}>
+				<FolderSelectionModalContent folderId={localRoot.id} confirmAction={confirmAction} />
+			</div>,
 			{
 				mocks
 			}
@@ -276,11 +298,13 @@ describe('Folder Selection Modal Content', () => {
 		const localRoot = populateLocalRoot();
 		const mocks = [mockGetPath({ node_id: localRoot.id }, [localRoot])];
 		setup(
-			<FolderSelectionModalContent
-				folderId={localRoot.id}
-				confirmAction={confirmAction}
-				cascadeDefault
-			/>,
+			<div onClick={resetToDefault}>
+				<FolderSelectionModalContent
+					folderId={localRoot.id}
+					confirmAction={confirmAction}
+					cascadeDefault
+				/>
+			</div>,
 			{
 				mocks
 			}
@@ -301,7 +325,9 @@ describe('Folder Selection Modal Content', () => {
 		const localRoot = populateLocalRoot();
 		const mocks = [mockGetPath({ node_id: localRoot.id }, [localRoot])];
 		const { user } = setup(
-			<FolderSelectionModalContent folderId={localRoot.id} confirmAction={confirmAction} />,
+			<div onClick={resetToDefault}>
+				<FolderSelectionModalContent folderId={localRoot.id} confirmAction={confirmAction} />
+			</div>,
 			{
 				mocks
 			}
@@ -360,7 +386,9 @@ describe('Folder Selection Modal Content', () => {
 			)
 		];
 		const { getByTextWithMarkup, user } = setup(
-			<FolderSelectionModalContent confirmAction={confirmAction} />,
+			<div onClick={resetToDefault}>
+				<FolderSelectionModalContent confirmAction={confirmAction} />
+			</div>,
 			{
 				mocks
 			}
@@ -431,9 +459,14 @@ describe('Folder Selection Modal Content', () => {
 			mockGetPath({ node_id: folder.id }, [localRoot, folder])
 		];
 
-		const { user } = setup(<FolderSelectionModalContent confirmAction={confirmAction} />, {
-			mocks
-		});
+		const { user } = setup(
+			<div onClick={resetToDefault}>
+				<FolderSelectionModalContent confirmAction={confirmAction} />
+			</div>,
+			{
+				mocks
+			}
+		);
 		await screen.findByText(/home/i);
 		await user.dblClick(screen.getByText(/home/i));
 		await screen.findByText(folder.name);
@@ -470,9 +503,14 @@ describe('Folder Selection Modal Content', () => {
 			mockGetPath({ node_id: folder.id }, [folder])
 		];
 
-		const { user } = setup(<FolderSelectionModalContent confirmAction={confirmAction} />, {
-			mocks
-		});
+		const { user } = setup(
+			<div onClick={resetToDefault}>
+				<FolderSelectionModalContent confirmAction={confirmAction} />
+			</div>,
+			{
+				mocks
+			}
+		);
 		await screen.findByText(/shared with me/i);
 		await user.dblClick(screen.getByText(/shared with me/i));
 		await screen.findByText(folder.name);

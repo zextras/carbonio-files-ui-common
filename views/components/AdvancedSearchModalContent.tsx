@@ -12,6 +12,10 @@ import {
 	ChipItem,
 	Container,
 	CustomModal,
+	Divider,
+	ModalBody,
+	ModalFooter,
+	ModalHeader,
 	Row
 } from '@zextras/carbonio-design-system';
 import every from 'lodash/every';
@@ -24,12 +28,12 @@ import styled from 'styled-components';
 
 import { useActiveNode } from '../../../hooks/useActiveNode';
 import { ROOTS } from '../../constants';
-import { AdvancedFilters } from '../../types/common';
+import { useDestinationVarManager } from '../../hooks/useDestinationVarManager';
+import { AdvancedFilters, NodeListItemType } from '../../types/common';
 import { Folder } from '../../types/graphql/types';
 import { AdvancedSwitch } from './AdvancedSwitch';
 import { FolderSelectionModalContent } from './FolderSelectionModalContent';
-import { ModalFooter } from './ModalFooter';
-import { ModalHeader } from './ModalHeader';
+import { ModalFooterCustom } from './ModalFooterCustom';
 
 const FolderChipInput = styled(ChipInput)`
 	cursor: pointer;
@@ -54,6 +58,10 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 	const [currentFilters, setCurrentFilters] = useState<AdvancedFilters>(filters);
 	const [keywordsHasTextContent, setKeywordsHasTextContent] = useState<boolean>(false);
 	const folderChipInputRef = useRef<HTMLInputElement>(null);
+	const { resetAll, resetCurrent } = useDestinationVarManager<Pick<
+		NodeListItemType,
+		'id' | 'name'
+	> | null>();
 
 	const keywords = useMemo<ChipItem[]>(() => {
 		if (currentFilters.keywords) {
@@ -216,8 +224,9 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 	}, []);
 
 	const closeFolderSelectionModal = useCallback(() => {
+		resetAll();
 		setFolderSelectionModalOpen(false);
-	}, []);
+	}, [resetAll]);
 
 	const removeFocus = useCallback(() => {
 		if (folderChipInputRef.current) {
@@ -239,74 +248,82 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 
 	return (
 		<>
-			<Container padding={{ bottom: 'medium' }}>
-				<ModalHeader
-					title={t('search.advancedSearch.modal.title', 'Advanced Filters')}
-					closeHandler={closeHandler}
-				/>
-				<Container padding={{ horizontal: 'medium', vertical: 'small' }}>
-					<Row takeAvailableSpace wrap="nowrap" width="fill" crossAlignment="flex-start">
-						<AdvancedSwitch
-							label={t('search.advancedSearch.modal.flagged.label', 'Flagged')}
-							description={t(
-								'search.advancedSearch.modal.flagged.description',
-								"Filter the results by items that you've flagged"
-							)}
-							onChange={flaggedOnChange}
-							initialValue={!!currentFilters.flagged}
+			<ModalHeader
+				title={t('search.advancedSearch.modal.title', 'Advanced Filters')}
+				onClose={closeHandler}
+				showCloseIcon
+				closeIconTooltip={t('modal.close.tooltip', 'Close')}
+			/>
+			<Divider />
+			<ModalBody>
+				<Row takeAvailableSpace wrap="nowrap" width="fill" crossAlignment="flex-start">
+					<AdvancedSwitch
+						label={t('search.advancedSearch.modal.flagged.label', 'Flagged')}
+						description={t(
+							'search.advancedSearch.modal.flagged.description',
+							"Filter the results by items that you've flagged"
+						)}
+						onChange={flaggedOnChange}
+						initialValue={!!currentFilters.flagged}
+					/>
+					<AdvancedSwitch
+						label={t('search.advancedSearch.modal.shared.label', 'Shared')}
+						description={t(
+							'search.advancedSearch.modal.shared.description',
+							'Filter the results by items that contain at least one collaborator besides you'
+						)}
+						onChange={sharedOnChange}
+						initialValue={!!currentFilters.sharedByMe}
+					/>
+				</Row>
+				<Row takeAvailableSpace wrap="nowrap" width="fill">
+					<Container padding={{ all: 'extrasmall' }}>
+						<ChipInput
+							placeholder={t('search.advancedSearch.modal.keywords.label', 'Keywords')}
+							background="gray5"
+							value={keywords}
+							onChange={keywordsOnChange}
+							onAdd={keywordsOnAdd}
+							separators={[',', ';', 'Enter']}
+							onInputType={keywordsOnType}
+							confirmChipOnSpace={false}
 						/>
-						<AdvancedSwitch
-							label={t('search.advancedSearch.modal.shared.label', 'Shared')}
-							description={t(
-								'search.advancedSearch.modal.shared.description',
-								'Filter the results by items that contain at least one collaborator besides you'
-							)}
-							onChange={sharedOnChange}
-							initialValue={!!currentFilters.sharedByMe}
+					</Container>
+				</Row>
+				<Row takeAvailableSpace wrap="nowrap" width="fill">
+					<Container padding={{ all: 'extrasmall' }}>
+						<FolderChipInput
+							placeholder={t('search.advancedSearch.modal.folder.label', 'Select a folder')}
+							background="gray5"
+							value={folderId}
+							icon="FolderOutline"
+							onClick={openFolderSelectionModal}
+							iconAction={openFolderSelectionModal}
+							maxChips={1}
+							onChange={folderOnChange}
+							inputRef={folderChipInputRef}
 						/>
-					</Row>
-					<Row takeAvailableSpace wrap="nowrap" width="fill">
-						<Container padding={{ all: 'extrasmall' }}>
-							<ChipInput
-								placeholder={t('search.advancedSearch.modal.keywords.label', 'Keywords')}
-								background="gray5"
-								value={keywords}
-								onChange={keywordsOnChange}
-								onAdd={keywordsOnAdd}
-								separators={[',', ';', 'Enter']}
-								onInputType={keywordsOnType}
-								confirmChipOnSpace={false}
-							/>
-						</Container>
-					</Row>
-					<Row takeAvailableSpace wrap="nowrap" width="fill">
-						<Container padding={{ all: 'extrasmall' }}>
-							<FolderChipInput
-								placeholder={t('search.advancedSearch.modal.folder.label', 'Select a folder')}
-								background="gray5"
-								value={folderId}
-								icon="FolderOutline"
-								onClick={openFolderSelectionModal}
-								iconAction={openFolderSelectionModal}
-								maxChips={1}
-								onChange={folderOnChange}
-								inputRef={folderChipInputRef}
-							/>
-						</Container>
-					</Row>
-				</Container>
-				<ModalFooter
-					confirmHandler={confirmHandler}
-					confirmDisabled={searchDisabled}
-					confirmLabel={t('search.advancedSearch.modal.button.confirm', 'Search')}
-					cancelHandler={resetFilters}
-					cancelLabel={t('search.advancedSearch.modal.button.reset', 'Reset filters')}
-				/>
-			</Container>
+					</Container>
+				</Row>
+			</ModalBody>
+			<Divider />
+			<ModalFooter
+				customFooter={
+					<ModalFooterCustom
+						confirmHandler={confirmHandler}
+						confirmDisabled={searchDisabled}
+						confirmLabel={t('search.advancedSearch.modal.button.confirm', 'Search')}
+						cancelHandler={resetFilters}
+						cancelLabel={t('search.advancedSearch.modal.button.reset', 'Reset filters')}
+					/>
+				}
+			/>
 			<CustomModal
-				maxHeight="90vh"
+				minHeight="500px"
+				maxHeight="60vh"
 				onClose={closeFolderSelectionModal}
 				open={folderSelectionModalOpen}
+				onClick={resetCurrent}
 			>
 				<FolderSelectionModalContent
 					folderId={
