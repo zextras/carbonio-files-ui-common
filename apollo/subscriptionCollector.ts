@@ -23,10 +23,6 @@ const apolloClient: ApolloClient<NormalizedCacheObject> = buildClient();
 
 const subscriptionMap: Record<string, ObservableSubscription> = {};
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-// window.subscriptionMap = subscriptionMap;
-
 export const subscribeToFolderContent = (nodeId: string): void => {
 	if (subscriptionMap[nodeId]) {
 		return;
