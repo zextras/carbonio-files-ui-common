@@ -361,7 +361,7 @@ export const useUpload: UseUploadHook = () => {
 				const isItemMaybeFolder = checkForFolders && isMaybeFolder(file);
 				const canBeLoaded = !isItemMaybeFolder && size(loadingQueue) < UPLOAD_QUEUE_LIMIT;
 
-				const fileEnriched = {
+				const fileEnriched: UploadType = {
 					file,
 					parentId,
 					percentage: 0,

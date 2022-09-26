@@ -21,8 +21,8 @@ import { useNavigation } from '../../../hooks/useNavigation';
 import { LIST_ITEM_HEIGHT } from '../../constants';
 import { Breadcrumbs } from '../../design_system_fork/Breadcrumbs';
 import { useUpload } from '../../hooks/useUpload';
-import { Action, UploadStatus } from '../../types/common';
-import { Maybe, Node } from '../../types/graphql/types';
+import { Action, Node, UploadStatus } from '../../types/common';
+import { Maybe } from '../../types/graphql/types';
 import { buildActionItems } from '../../utils/ActionsFactory';
 import { buildCrumbs, humanFileSize, scrollToNodeItem } from '../../utils/utils';
 import { ContextualMenu } from './ContextualMenu';
@@ -55,7 +55,7 @@ const CustomBreadcrumbs = styled(Breadcrumbs)`
 	width: auto;
 `;
 
-export const UploadListItem: React.VFC<UploadListItemProps> = React.memo(
+export const UploadListItem = React.memo<UploadListItemProps>(
 	({
 		id,
 		nodeId,

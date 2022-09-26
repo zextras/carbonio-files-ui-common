@@ -24,6 +24,7 @@ import {
 
 export const DisplayerContentContainer = styled(Container)`
 	padding-bottom: 2rem;
+	overflow-y: auto;
 `;
 
 export const HoverContainer = styled(Row)`
