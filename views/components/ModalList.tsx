@@ -139,6 +139,7 @@ export const ModalList: React.VFC<ModalListProps> = ({
 				onClick={stopPropagationClickHandler}
 				mainAlignment="flex-start"
 				flexShrink={0}
+				data-testid="modal-listHeader"
 			>
 				{crumbs && <InteractiveBreadcrumbs crumbs={crumbs} />}
 				{(loading || loadingPath) && (

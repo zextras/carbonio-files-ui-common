@@ -10,7 +10,7 @@ import { screen } from '@testing-library/react';
 
 import { NODES_LOAD_LIMIT } from '../../constants';
 import { populateNodes } from '../../mocks/mockUtils';
-import { render, triggerLoadMore } from '../../utils/testUtils';
+import { setup, triggerLoadMore } from '../../utils/testUtils';
 import { NodeDetailsList } from './NodeDetailsList';
 
 describe('Node details list', () => {
@@ -19,7 +19,7 @@ describe('Node details list', () => {
 
 		const loadMoreMock = jest.fn();
 
-		render(<NodeDetailsList nodes={nodes} loading={false} loadMore={loadMoreMock} hasMore />, {
+		setup(<NodeDetailsList nodes={nodes} loading={false} loadMore={loadMoreMock} hasMore />, {
 			mocks: []
 		});
 

@@ -8,12 +8,15 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Container, Responsive } from '@zextras/carbonio-design-system';
 import filter from 'lodash/filter';
+import last from 'lodash/last';
+import map from 'lodash/map';
+import noop from 'lodash/noop';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
 import { ACTION_IDS, ACTION_TYPES } from '../../constants';
 import { useActiveNode } from '../../hooks/useActiveNode';
-import { useCreateOptions } from '../../hooks/useCreateOptions';
+import { CreateOptionsContent, useCreateOptions } from '../../hooks/useCreateOptions';
 import { subscribeToFolderContent } from '../apollo/subscriptionCollector';
 import { DISPLAYER_WIDTH, FILES_APP_ID, LIST_WIDTH, ROOTS } from '../constants';
 import { ListContext } from '../contexts';
@@ -146,19 +149,18 @@ const FolderView: React.VFC = () => {
 		setNewFile(undefined);
 	}, [setNewFile]);
 
+	const documentGenericType = useMemo(
+		() => (last(newFile?.split('_')) || 'document').toLowerCase(),
+		[newFile]
+	);
+
 	const { openCreateModal: openCreateFileModal } = useCreateModal(
 		// be careful: the following key is not parsed by i18next-extract, it must be added manually to the en.json file
 		/* i18next-extract-disable-next-line */
-		t(
-			`docs.create.modal.title.${(newFile || 'document').toLowerCase()}`,
-			`Create New ${(newFile || 'document').toLowerCase()}`
-		),
+		t(`docs.create.modal.title.${documentGenericType}`, `Create New ${documentGenericType}`),
 		// be careful: the following key is not parsed by i18next-extract, it must be added manually to the en.json file
 		/* i18next-extract-disable-next-line */
-		t(
-			`docs.create.modal.input.label.name.${(newFile || 'document').toLowerCase()}`,
-			`${(newFile || 'document').toLowerCase()} Name`
-		),
+		t(`docs.create.modal.input.label.name.${documentGenericType}`, `${documentGenericType} Name`),
 		createDocsFileAction,
 		resetNewFile
 	);
@@ -169,65 +171,103 @@ const FolderView: React.VFC = () => {
 		}
 	}, [openCreateFileModal, currentFolderId, newFile]);
 
-	const createDocumentAction = useCallback((event) => {
-		event && event.stopPropagation();
-		setNewFile(DocsType.DOCUMENT);
-	}, []);
+	const createDocsAction = useCallback<
+		(docsType: DocsType) => (event: React.SyntheticEvent | KeyboardEvent) => void
+	>(
+		(docsType) => () => {
+			setNewFile(docsType);
+		},
+		[]
+	);
 
-	const createSpreadsheetAction = useCallback((event) => {
-		event && event.stopPropagation();
-		setNewFile(DocsType.SPREADSHEET);
-	}, []);
-
-	const createPresentationAction = useCallback((event) => {
-		event && event.stopPropagation();
-		setNewFile(DocsType.PRESENTATION);
-	}, []);
-
-	const actions = useMemo<ActionItem[]>(() => {
-		const fillerActions: ActionItem[] = [];
-		fillerActions.push(
+	const actions = useMemo<ActionItem[]>(
+		() => [
 			{
-				id: 'create-folder',
+				id: ACTION_IDS.CREATE_FOLDER,
 				label: t('create.options.new.folder', 'New Folder'),
 				icon: 'FolderOutline',
 				click: createFolderAction,
 				disabled: !isCanCreateFolder
 			},
 			{
-				id: 'create-docs-document',
+				id: ACTION_IDS.CREATE_DOCS_DOCUMENT,
 				label: t('create.options.new.document', 'New Document'),
 				icon: 'FileTextOutline',
-				click: createDocumentAction,
-				disabled: !isCanCreateFile
+				disabled: !isCanCreateFile,
+				items: [
+					{
+						id: `${ACTION_IDS.CREATE_DOCS_DOCUMENT}-libre`,
+						label: t('create.options.new.odfDocument', 'ODF Document'),
+						click: createDocsAction(DocsType.LIBRE_DOCUMENT),
+						disabled: !isCanCreateFile
+					},
+					{
+						id: `${ACTION_IDS.CREATE_DOCS_DOCUMENT}-ms`,
+						label: t('create.options.new.msDocument', 'Microsoft Document'),
+						click: createDocsAction(DocsType.MS_DOCUMENT),
+						disabled: !isCanCreateFile
+					}
+				]
 			},
 			{
-				id: 'create-docs-spreadsheet',
+				id: ACTION_IDS.CREATE_DOCS_SPREADSHEET,
 				label: t('create.options.new.spreadsheet', 'New Spreadsheet'),
 				icon: 'FileCalcOutline',
-				click: createSpreadsheetAction,
-				disabled: !isCanCreateFile
+				disabled: !isCanCreateFile,
+				items: [
+					{
+						id: `${ACTION_IDS.CREATE_DOCS_SPREADSHEET}-libre`,
+						label: t('create.options.new.odfDocument', 'ODF Document'),
+						click: createDocsAction(DocsType.LIBRE_SPREADSHEET),
+						disabled: !isCanCreateFile
+					},
+					{
+						id: `${ACTION_IDS.CREATE_DOCS_SPREADSHEET}-ms`,
+						label: t('create.options.new.msDocument', 'Microsoft Document'),
+						click: createDocsAction(DocsType.MS_SPREADSHEET),
+						disabled: !isCanCreateFile
+					}
+				]
 			},
 			{
-				id: 'create-docs-presentation',
+				id: ACTION_IDS.CREATE_DOCS_PRESENTATION,
 				label: t('create.options.new.presentation', 'New Presentation'),
 				icon: 'FilePresentationOutline',
-				click: createPresentationAction,
-				disabled: !isCanCreateFile
+				disabled: !isCanCreateFile,
+				items: [
+					{
+						id: `${ACTION_IDS.CREATE_DOCS_PRESENTATION}-libre`,
+						label: t('create.options.new.odfDocument', 'ODF Document'),
+						click: createDocsAction(DocsType.LIBRE_PRESENTATION),
+						disabled: !isCanCreateFile
+					},
+					{
+						id: `${ACTION_IDS.CREATE_DOCS_PRESENTATION}-ms`,
+						label: t('create.options.new.msDocument', 'Microsoft Document'),
+						click: createDocsAction(DocsType.MS_PRESENTATION),
+						disabled: !isCanCreateFile
+					}
+				]
 			}
-		);
-		return fillerActions;
-	}, [
-		createDocumentAction,
-		createFolderAction,
-		createPresentationAction,
-		createSpreadsheetAction,
-		isCanCreateFile,
-		isCanCreateFolder,
-		t
-	]);
+		],
+		[createDocsAction, createFolderAction, isCanCreateFile, isCanCreateFolder, t]
+	);
 
 	useEffect(() => {
+		const createActions = map<
+			ActionItem,
+			NonNullable<CreateOptionsContent['createOptions']>[number]
+		>(actions, (action) => ({
+			type: ACTION_TYPES.NEW,
+			id: action.id,
+			action: () => ({
+				type: ACTION_TYPES.NEW,
+				group: FILES_APP_ID,
+				click: noop,
+				...action
+			})
+		}));
+
 		setCreateOptions(
 			{
 				type: ACTION_TYPES.NEW,
@@ -247,73 +287,15 @@ const FolderView: React.VFC = () => {
 					disabled: !isCanUploadFile
 				})
 			},
-			{
-				type: ACTION_TYPES.NEW,
-				id: ACTION_IDS.CREATE_FOLDER,
-				action: () => ({
-					type: ACTION_TYPES.NEW,
-					id: ACTION_IDS.CREATE_FOLDER,
-					group: FILES_APP_ID,
-					label: t('create.options.new.folder', 'New Folder'),
-					icon: 'FolderOutline',
-					click: createFolderAction,
-					disabled: !isCanCreateFolder
-				})
-			},
-			{
-				type: ACTION_TYPES.NEW,
-				id: ACTION_IDS.CREATE_DOCS_DOCUMENT,
-				action: () => ({
-					type: ACTION_TYPES.NEW,
-					id: ACTION_IDS.CREATE_DOCS_DOCUMENT,
-					group: FILES_APP_ID,
-					label: t('create.options.new.document', 'New Document'),
-					icon: 'FileTextOutline',
-					click: createDocumentAction,
-					disabled: !isCanCreateFile
-				})
-			},
-			{
-				type: ACTION_TYPES.NEW,
-				id: ACTION_IDS.CREATE_DOCS_SPREADSHEET,
-				action: () => ({
-					type: ACTION_TYPES.NEW,
-					id: ACTION_IDS.CREATE_DOCS_SPREADSHEET,
-					group: FILES_APP_ID,
-					label: t('create.options.new.spreadsheet', 'New Spreadsheet'),
-					icon: 'FileCalcOutline',
-					click: createSpreadsheetAction,
-					disabled: !isCanCreateFile
-				})
-			},
-			{
-				type: ACTION_TYPES.NEW,
-				id: ACTION_IDS.CREATE_DOCS_PRESENTATION,
-				action: () => ({
-					type: ACTION_TYPES.NEW,
-					id: ACTION_IDS.CREATE_DOCS_PRESENTATION,
-					group: FILES_APP_ID,
-					label: t('create.options.new.presentation', 'New Presentation'),
-					icon: 'FilePresentationOutline',
-					click: createPresentationAction,
-					disabled: !isCanCreateFile
-				})
-			}
+			...createActions
 		);
 
 		return (): void => {
-			removeCreateOptions(
-				ACTION_IDS.CREATE_FOLDER,
-				ACTION_IDS.CREATE_DOCS_DOCUMENT,
-				ACTION_IDS.CREATE_DOCS_SPREADSHEET,
-				ACTION_IDS.CREATE_DOCS_PRESENTATION
-			);
+			removeCreateOptions(...map(createActions, (action) => action.id));
 		};
 	}, [
-		createDocumentAction,
+		actions,
 		createFolderAction,
-		createPresentationAction,
-		createSpreadsheetAction,
 		inputElementOnchange,
 		isCanCreateFile,
 		isCanCreateFolder,

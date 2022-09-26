@@ -7,7 +7,6 @@
 import React from 'react';
 
 import { screen, waitFor, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { populateFile, populateFolder } from '../mocks/mockUtils';
@@ -18,7 +17,7 @@ import {
 	mockGetChildren,
 	mockGetPermissions
 } from '../utils/mockUtils';
-import { render } from '../utils/testUtils';
+import { setup } from '../utils/testUtils';
 import { DisplayerProps } from './components/Displayer';
 import FolderView from './FolderView';
 
@@ -67,7 +66,10 @@ describe('Sorting', () => {
 			)
 		];
 
-		render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+		const { user } = setup(<FolderView />, {
+			initialRouterEntries: [`/?folder=${currentFolder.id}`],
+			mocks
+		});
 
 		await screen.findByText(filename1);
 
@@ -79,13 +81,18 @@ describe('Sorting', () => {
 		expect(sortIcon).toBeInTheDocument();
 		expect(sortIcon).toBeVisible();
 		expect(sortIcon.parentElement).not.toHaveAttribute('disabled', '');
-		userEvent.click(sortIcon);
+		// register tooltip listeners
+		jest.advanceTimersToNextTimer();
+		await user.click(sortIcon);
 		const descendingOrderOption = await screen.findByText('Descending Order');
 		await screen.findByText(/ascending order by name/i);
-		userEvent.click(descendingOrderOption);
+		await user.click(descendingOrderOption);
 		await waitFor(() =>
 			expect(screen.getAllByTestId('node-item-', { exact: false })[0]).toHaveTextContent('b')
 		);
+		await user.hover(screen.getByTestId('icon: AzListOutline'));
+		// run timers of tooltip
+		jest.advanceTimersToNextTimer();
 		await screen.findByText(/descending order by name/i);
 		const descItems = screen.getAllByTestId('node-item-', { exact: false });
 		expect(within(descItems[0]).getByText('b')).toBeVisible();

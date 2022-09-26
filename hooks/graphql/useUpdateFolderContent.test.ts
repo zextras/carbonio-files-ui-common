@@ -7,7 +7,6 @@
 import { RenderHookResult } from '@testing-library/react-hooks';
 import find from 'lodash/find';
 
-import server from '../../../mocks/server';
 import { NODES_LOAD_LIMIT, NODES_SORT_DEFAULT } from '../../constants';
 import GET_CHILDREN from '../../graphql/queries/getChildren.graphql';
 import {
@@ -26,17 +25,13 @@ import {
 	Node
 } from '../../types/graphql/types';
 import { getChildrenVariables } from '../../utils/mockUtils';
-import { getApolloHookWrapper, WrapperProps } from '../../utils/testUtils';
+import { getApolloHookWrapper, HookWrapperProps } from '../../utils/testUtils';
 import { addNodeInSortedList } from '../../utils/utils';
 import { UpdateFolderContentType, useUpdateFolderContent } from './useUpdateFolderContent';
 
-afterEach(() => {
-	server.resetHandlers();
-});
-
 describe('useUpdateFolderContent', () => {
 	function setupHook(): {
-		renderHookResult: RenderHookResult<WrapperProps, unknown>;
+		renderHookResult: RenderHookResult<HookWrapperProps, unknown>;
 		updateFolderContent: UpdateFolderContentType;
 	} {
 		const renderHookResult = getApolloHookWrapper(global.apolloClient, useUpdateFolderContent);

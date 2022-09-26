@@ -364,34 +364,4 @@ describe('ActionsFactory test', () => {
 		const testFolder: Folder = populateFolder();
 		expect(canCopy([testFolder])).toBeTruthy();
 	});
-
-	// TODO uncomment and fix when permissions are updated
-	/*
-	it('getPermittedSelectionModePrimaryActions: ', () => {
-		const testFile: File = populateNode('File') as File;
-		const testFile2: File = populateNode('File') as File;
-		const testFolder: Folder = populateNode('Folder') as Folder;
-		testFolder.permissions.can_write_folder = true;
-		testFile.permissions.can_write_file = true;
-		testFile2.permissions.can_write_file = true;
-
-		const result = getPermittedSelectionModePrimaryActions([testFile, testFile2, testFolder]);
-		const expectedResult: Action[] = [];
-		expect(result).toEqual(expectedResult);
-	});
-
-	it('getPermittedSelectionModeSecondaryActions: ', () => {
-		const testFile: File = populateNode('File') as File;
-		const testFile2: File = populateNode('File') as File;
-		const testFolder: Folder = populateNode('Folder') as Folder;
-		testFolder.permissions.can_write_folder = true;
-		testFile.permissions.can_write_file = true;
-		testFile2.permissions.can_write_file = true;
-
-		const result = getPermittedSelectionModeSecondaryActions([testFile, testFile2, testFolder]);
-		const expectedResult: Action[] = [];
-		expect(result).toEqual(expectedResult);
-	});
-
-	 */
 });

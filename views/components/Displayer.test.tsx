@@ -6,9 +6,7 @@
 
 import React from 'react';
 
-import { screen, waitForElementToBeRemoved, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { act } from 'react-dom/test-utils';
+import { screen, within } from '@testing-library/react';
 
 import GET_CHILDREN from '../../graphql/queries/getChildren.graphql';
 import {
@@ -41,7 +39,7 @@ import {
 	buildBreadCrumbRegExp,
 	iconRegexp,
 	renameNode,
-	render
+	setup
 } from '../../utils/testUtils';
 import { getChipLabel } from '../../utils/utils';
 import { Displayer } from './Displayer';
@@ -71,7 +69,7 @@ describe('Displayer', () => {
 			mockGetNode(getNodeVariables(node.id), node),
 			mockGetNode(getNodeVariables(node.id), node)
 		];
-		const { findByTextWithMarkup } = render(<Displayer translationKey="No.node" />, {
+		const { findByTextWithMarkup, user } = setup(<Displayer translationKey="No.node" />, {
 			initialRouterEntries: [`/?node=${node.id}`],
 			mocks
 		});
@@ -82,16 +80,14 @@ describe('Displayer', () => {
 		);
 		if (copyIcon) {
 			expect(copyIcon.parentNode).not.toHaveAttribute('disabled');
-			act(() => {
-				userEvent.click(copyIcon);
-			});
+			await user.click(copyIcon);
 		} else {
 			const moreVertical = await screen.findByTestId('icon: MoreVertical');
 			if (moreVertical) {
-				userEvent.click(moreVertical);
+				await user.click(moreVertical);
 				const copyAction = await screen.findByText(actionRegexp.copy);
 				expect(copyAction.parentNode).not.toHaveAttribute('disabled');
-				userEvent.click(copyAction);
+				await user.click(copyAction);
 			} else {
 				fail();
 			}
@@ -103,12 +99,10 @@ describe('Displayer', () => {
 		// folder loading
 		await screen.findByText((parent.children.nodes[0] as File | Folder).name);
 		expect(copyButton).not.toHaveAttribute('disabled');
-		act(() => {
-			userEvent.click(copyButton);
-		});
-		await waitForElementToBeRemoved(copyButton);
-		const snackbar = await screen.findByText(/item copied/i);
-		await waitForElementToBeRemoved(snackbar);
+		await user.click(copyButton);
+		expect(screen.queryByRole('button', { name: actionRegexp.copy })).not.toBeInTheDocument();
+		await screen.findByText(/item copied/i);
+		jest.advanceTimersToNextTimer();
 		const queryResult = global.apolloClient.readQuery<GetChildrenQuery, GetChildrenQueryVariables>({
 			query: GET_CHILDREN,
 			variables: getChildrenVariables(parent.id)
@@ -144,17 +138,17 @@ describe('Displayer', () => {
 			mockGetNode(getNodeVariables(node.id), node),
 			mockGetNode(getNodeVariables(node.id), node)
 		];
-		const { findByTextWithMarkup } = render(<Displayer translationKey="No.node" />, {
+		const { findByTextWithMarkup, user } = setup(<Displayer translationKey="No.node" />, {
 			initialRouterEntries: [`/?node=${node.id}`],
 			mocks
 		});
 		await screen.findAllByText(node.name);
 		const moreVertical = screen.getByTestId('icon: MoreVertical');
 		expect(moreVertical).toBeVisible();
-		userEvent.click(moreVertical);
+		await user.click(moreVertical);
 		const moveAction = await screen.findByText(actionRegexp.move);
 		expect(moveAction.parentNode).not.toHaveAttribute('disabled');
-		userEvent.click(moveAction);
+		await user.click(moveAction);
 		// modal opening
 		const moveButton = await screen.findByRole('button', { name: actionRegexp.move });
 		// folder loading
@@ -164,14 +158,12 @@ describe('Displayer', () => {
 		// breadcrumb loading
 		await findByTextWithMarkup(buildBreadCrumbRegExp(parent.name));
 		expect(moveButton).toHaveAttribute('disabled');
-		userEvent.click(destinationFolderItem);
+		await user.click(destinationFolderItem);
 		expect(moveButton).not.toHaveAttribute('disabled');
-		act(() => {
-			userEvent.click(moveButton);
-		});
-		await waitForElementToBeRemoved(moveButton);
-		const snackbar = await screen.findByText(/item moved/i);
-		await waitForElementToBeRemoved(snackbar);
+		await user.click(moveButton);
+		expect(screen.queryByRole('button', { name: actionRegexp.move })).not.toBeInTheDocument();
+		await screen.findByText(/item moved/i);
+
 		await screen.findByText(/view files and folders/i);
 		const queryResult = global.apolloClient.readQuery<GetChildrenQuery, GetChildrenQueryVariables>({
 			query: GET_CHILDREN,
@@ -195,16 +187,16 @@ describe('Displayer', () => {
 			mockGetChildren(getChildrenVariables(parent.id), parent),
 			mockUpdateNode({ node_id: node.id, name: newName }, { ...node, name: newName })
 		];
-		const { getByTextWithMarkup } = render(<Displayer translationKey="No.node" />, {
+		const { getByTextWithMarkup, user } = setup(<Displayer translationKey="No.node" />, {
 			initialRouterEntries: [`/?node=${node.id}`],
 			mocks
 		});
 		await screen.findAllByText(node.name);
 		const moreVertical = screen.getByTestId('icon: MoreVertical');
 		expect(moreVertical).toBeVisible();
-		userEvent.click(moreVertical);
-		await renameNode(newName);
-		await waitForElementToBeRemoved(screen.queryByRole('button', { name: actionRegexp.rename }));
+		await user.click(moreVertical);
+		await renameNode(newName, user);
+		expect(screen.queryByRole('button', { name: actionRegexp.rename })).not.toBeInTheDocument();
 		expect(screen.getAllByText(newName)).toHaveLength(2);
 		expect(screen.queryByText(node.name)).not.toBeInTheDocument();
 		expect(getByTextWithMarkup(buildBreadCrumbRegExp(newName))).toBeVisible();
@@ -221,7 +213,7 @@ describe('Displayer', () => {
 
 		const collaborator0Name = getChipLabel(node.shares[0]?.share_target ?? { name: '' });
 		const collaborator5Name = getChipLabel(node.shares[5]?.share_target ?? { name: '' });
-		render(<Displayer translationKey="No.node" />, {
+		const { user } = setup(<Displayer translationKey="No.node" />, {
 			initialRouterEntries: [`/?node=${node.id}`],
 			mocks
 		});
@@ -230,9 +222,7 @@ describe('Displayer', () => {
 		expect(screen.queryByText(collaborator0Name)).not.toBeInTheDocument();
 		expect(screen.queryByText(collaborator5Name)).not.toBeInTheDocument();
 		expect(screen.getByTestId('icon: MoreHorizontalOutline')).toBeVisible();
-		act(() => {
-			userEvent.click(screen.getByTestId('icon: MoreHorizontalOutline'));
-		});
+		await user.click(screen.getByTestId('icon: MoreHorizontalOutline'));
 		await screen.findByText(collaborator0Name);
 		await screen.findByText(collaborator5Name);
 		await screen.findAllByTestId(/icon: (EyeOutline|Edit2Outline)/);

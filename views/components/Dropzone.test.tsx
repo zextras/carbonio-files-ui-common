@@ -8,12 +8,12 @@ import React from 'react';
 
 import { fireEvent, screen, waitForElementToBeRemoved, within } from '@testing-library/react';
 
-import { render } from '../../utils/testUtils';
+import { setup } from '../../utils/testUtils';
 import { Dropzone } from './Dropzone';
 
 describe('Dropzone', () => {
 	test('Hide dropzone overlay if another target is reached even without a dragLeave event', async () => {
-		render(
+		setup(
 			<>
 				<div data-testid="dropzone1">
 					<Dropzone effect="move" types={['test']}>
@@ -49,7 +49,7 @@ describe('Dropzone', () => {
 	});
 
 	test('Hide dropzone overlay if a valid nested dropzone is reached', async () => {
-		render(
+		setup(
 			<div data-testid="dropzone1">
 				<Dropzone effect="move" types={['type1']}>
 					{(): JSX.Element => (

@@ -6,7 +6,6 @@
 import React from 'react';
 
 import { fireEvent, screen, waitForElementToBeRemoved, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import forEach from 'lodash/forEach';
 import last from 'lodash/last';
 import map from 'lodash/map';
@@ -20,7 +19,7 @@ import {
 } from '../../mocks/mockUtils';
 import { Node } from '../../types/common';
 import { getFindNodesVariables, mockFindNodes, mockRestoreNodes } from '../../utils/mockUtils';
-import { actionRegexp, iconRegexp, render, selectNodes } from '../../utils/testUtils';
+import { actionRegexp, iconRegexp, setup, selectNodes } from '../../utils/testUtils';
 import FilterList from './FilterList';
 
 describe('Filter List', () => {
@@ -51,12 +50,12 @@ describe('Filter List', () => {
 					)
 				];
 
-				render(<FilterList folderId={ROOTS.TRASH} cascade={false} />, { mocks });
+				const { user } = setup(<FilterList folderId={ROOTS.TRASH} cascade={false} />, { mocks });
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 				// activate selection mode by selecting items
-				selectNodes(nodesIdsToRestore);
+				await selectNodes(nodesIdsToRestore, user);
 				// check that all wanted items are selected
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 
@@ -69,10 +68,9 @@ describe('Filter List', () => {
 				expect(restoreIcon).toBeVisible();
 				expect(restoreIcon).not.toHaveAttribute('disabled', '');
 
-				userEvent.click(restoreIcon);
+				await user.click(restoreIcon);
 
-				const snackbar = await screen.findByText(/^success$/i);
-				await waitForElementToBeRemoved(snackbar);
+				await screen.findByText(/^success$/i);
 				expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 
 				expect(screen.queryAllByTestId(`file-icon-preview`).length).toEqual(2);
@@ -102,12 +100,12 @@ describe('Filter List', () => {
 					)
 				];
 
-				render(<FilterList flagged />, { mocks });
+				const { user } = setup(<FilterList flagged />, { mocks });
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 				// activate selection mode by selecting items
-				selectNodes(nodesIdsToRestore);
+				await selectNodes(nodesIdsToRestore, user);
 				// check that all wanted items are selected
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 
@@ -124,11 +122,9 @@ describe('Filter List', () => {
 				expect(unselectAllIcon).toBeInTheDocument();
 				expect(unselectAllIcon).toBeVisible();
 
-				userEvent.click(restoreIcon);
+				await user.click(restoreIcon);
 
-				// await waitForElementToBeRemoved(unselectAllIcon);
-				const snackbar = await screen.findByText(/^success$/i);
-				await waitForElementToBeRemoved(snackbar);
+				await screen.findByText(/^success$/i);
 
 				const elementsWithSelectionModeOff = await screen.findAllByTestId('file-icon-preview');
 				const restoredItem = screen.queryByText(currentFilter[0].name);
@@ -158,12 +154,12 @@ describe('Filter List', () => {
 
 				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), currentFilter)];
 
-				render(<FilterList flagged />, { mocks });
+				const { user } = setup(<FilterList flagged />, { mocks });
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 				// activate selection mode by selecting items
-				selectNodes(nodesIdsToRestore);
+				await selectNodes(nodesIdsToRestore, user);
 				// check that all wanted items are selected
 				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
 				expect(screen.queryByTestId(iconRegexp.moreVertical)).not.toBeInTheDocument();
@@ -195,7 +191,7 @@ describe('Filter List', () => {
 
 				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), [node])];
 
-				render(<FilterList flagged />, { mocks });
+				setup(<FilterList flagged />, { mocks });
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -215,20 +211,14 @@ describe('Filter List', () => {
 		test('refetch trash filter if not all pages are loaded and all nodes are restored', async () => {
 			const firstPage = populateNodes(NODES_LOAD_LIMIT);
 			forEach(firstPage, (node) => {
-				// eslint-disable-next-line no-param-reassign
 				node.rootId = ROOTS.TRASH;
-				// eslint-disable-next-line no-param-reassign
 				node.permissions.can_write_file = true;
-				// eslint-disable-next-line no-param-reassign
 				node.permissions.can_write_folder = true;
 			});
 			const secondPage = populateNodes(NODES_LOAD_LIMIT);
 			forEach(secondPage, (node) => {
-				// eslint-disable-next-line no-param-reassign
 				node.rootId = ROOTS.TRASH;
-				// eslint-disable-next-line no-param-reassign
 				node.permissions.can_write_file = true;
-				// eslint-disable-next-line no-param-reassign
 				node.permissions.can_write_folder = true;
 			});
 			const nodesToRestore = map(firstPage, (node) => node.id);
@@ -239,7 +229,7 @@ describe('Filter List', () => {
 				mockFindNodes(getFindNodesVariables({ folder_id: ROOTS.TRASH, cascade: false }), secondPage)
 			];
 
-			render(<FilterList folderId={ROOTS.TRASH} cascade={false} />, { mocks });
+			const { user } = setup(<FilterList folderId={ROOTS.TRASH} cascade={false} />, { mocks });
 
 			await screen.findByText(firstPage[0].name);
 			expect(screen.getByText(firstPage[0].name)).toBeVisible();
@@ -247,21 +237,20 @@ describe('Filter List', () => {
 			expect(screen.queryByText(secondPage[0].name)).not.toBeInTheDocument();
 
 			// select all loaded nodes
-			selectNodes(nodesToRestore);
+			await selectNodes(nodesToRestore, user);
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length);
 
 			const restoreAction = await screen.findByTestId(iconRegexp.restore);
 			expect(restoreAction).toBeVisible();
 			expect(restoreAction.parentNode).not.toHaveAttribute('disabled', '');
-			userEvent.click(restoreAction);
+			await user.click(restoreAction);
 			await waitForElementToBeRemoved(screen.queryByText(firstPage[0].name));
-			const snackbar = await screen.findByText(/^success$/i);
-			await waitForElementToBeRemoved(snackbar);
+			await screen.findByText(/^success$/i);
 			await screen.findByText(secondPage[0].name);
 			expect(screen.getByText(secondPage[0].name)).toBeVisible();
 			expect(screen.queryByText(firstPage[0].name)).not.toBeInTheDocument();
 			expect(screen.queryByText((last(firstPage) as Node).name)).not.toBeInTheDocument();
-		}, 60000);
+		});
 	});
 });

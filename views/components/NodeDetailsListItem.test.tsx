@@ -11,7 +11,7 @@ import { screen } from '@testing-library/react';
 
 import { populateNode, populateUser } from '../../mocks/mockUtils';
 import { User } from '../../types/graphql/types';
-import { render } from '../../utils/testUtils';
+import { setup } from '../../utils/testUtils';
 import { formatDate } from '../../utils/utils';
 import { NodeDetailsListItem } from './NodeDetailsListItem';
 
@@ -28,7 +28,7 @@ beforeEach(() => {
 describe('Node List Item', () => {
 	test('render a basic node in the list, logged user is owner', () => {
 		const node = populateNode();
-		render(
+		setup(
 			<NodeDetailsListItem
 				id={node.id}
 				name={node.name}
@@ -51,7 +51,7 @@ describe('Node List Item', () => {
 	test('owner is visible if different from logged user', () => {
 		const node = populateNode();
 		node.owner = populateUser();
-		render(
+		setup(
 			<NodeDetailsListItem
 				id={node.id}
 				name={node.name}

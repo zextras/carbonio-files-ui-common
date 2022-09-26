@@ -7,14 +7,12 @@
 import React from 'react';
 
 import {
-	act,
 	fireEvent,
 	screen,
 	waitFor,
 	waitForElementToBeRemoved,
 	within
 } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 
@@ -38,7 +36,7 @@ import {
 	buildBreadCrumbRegExp,
 	iconRegexp,
 	moveNode,
-	render,
+	setup,
 	selectNodes,
 	triggerLoadMore
 } from '../utils/testUtils';
@@ -96,7 +94,10 @@ describe('Move', () => {
 				)
 			];
 
-			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+			const { user } = setup(<FolderView />, {
+				initialRouterEntries: [`/?folder=${currentFolder.id}`],
+				mocks
+			});
 
 			await screen.findByText(nodeToMove.name);
 
@@ -112,14 +113,13 @@ describe('Move', () => {
 			expect((destinationFolderCachedData?.getNode as Folder).id).toBe(destinationFolder.id);
 
 			// activate selection mode by selecting items
-			selectNodes([nodeToMove.id]);
+			await selectNodes([nodeToMove.id], user);
 			// check that all wanted items are selected
 			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-			userEvent.click(screen.getByTestId('icon: MoreVertical'));
-			await moveNode(destinationFolder);
-			const snackbar = await screen.findByText(/Item moved/i);
-			await waitForElementToBeRemoved(snackbar);
+			await user.click(screen.getByTestId('icon: MoreVertical'));
+			await moveNode(destinationFolder, user);
+			await screen.findByText(/Item moved/i);
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 
 			expect(screen.queryAllByTestId('node-item', { exact: false })).toHaveLength(
@@ -176,7 +176,10 @@ describe('Move', () => {
 				)
 			];
 
-			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+			const { user } = setup(<FolderView />, {
+				initialRouterEntries: [`/?folder=${currentFolder.id}`],
+				mocks
+			});
 
 			await screen.findByText(nodesToMove[0].name);
 
@@ -192,31 +195,31 @@ describe('Move', () => {
 			expect((destinationFolderCachedData?.getNode as Folder).id).toBe(destinationFolder.id);
 
 			// activate selection mode by selecting items
-			selectNodes(map(nodesToMove, (nodeToMove) => nodeToMove.id));
+			await selectNodes(
+				map(nodesToMove, (nodeToMove) => nodeToMove.id),
+				user
+			);
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToMove.length);
 			let moveAction = screen.queryByTestId(iconRegexp.move);
 			if (!moveAction) {
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-				userEvent.click(screen.getByTestId('icon: MoreVertical'));
+				await user.click(screen.getByTestId('icon: MoreVertical'));
 				moveAction = await screen.findByText('Move');
 			}
 			expect(moveAction).toBeVisible();
-			userEvent.click(moveAction);
+			await user.click(moveAction);
 			const modalList = await screen.findByTestId('modal-list-', { exact: false });
 			const destinationFolderItem = await within(modalList).findByText(destinationFolder.name);
-			userEvent.click(destinationFolderItem);
+			await user.click(destinationFolderItem);
 			await waitFor(() =>
 				expect(screen.getByRole('button', { name: /move/i })).not.toHaveAttribute('disabled', '')
 			);
-			act(() => {
-				userEvent.click(screen.getByRole('button', { name: /move/i }));
-			});
+			await user.click(screen.getByRole('button', { name: /move/i }));
 			await waitForElementToBeRemoved(screen.queryByRole('button', { name: /move/i }));
 			expect(screen.queryByRole('button', { name: /move/i })).not.toBeInTheDocument();
 			expect(screen.queryByText('Move')).not.toBeInTheDocument();
-			const snackbar = await screen.findByText(/Item moved/i);
-			await waitForElementToBeRemoved(snackbar);
+			await screen.findByText(/Item moved/i);
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 
 			expect(screen.queryAllByTestId('node-item', { exact: false })).toHaveLength(
@@ -280,7 +283,7 @@ describe('Move', () => {
 				} as Folder)
 			];
 
-			const { findByTextWithMarkup } = render(<FolderView />, {
+			const { findByTextWithMarkup, user } = setup(<FolderView />, {
 				initialRouterEntries: [`/?folder=${currentFolder.id}`],
 				mocks
 			});
@@ -289,32 +292,32 @@ describe('Move', () => {
 			expect(screen.getByText(firstPage[0].name)).toBeVisible();
 			expect(screen.getByText(firstPage[NODES_LOAD_LIMIT - 1].name)).toBeVisible();
 			expect(screen.queryByText(secondPage[0].name)).not.toBeInTheDocument();
-			selectNodes(map(nodesToMove, (node) => node.id));
+			await selectNodes(
+				map(nodesToMove, (node) => node.id),
+				user
+			);
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length);
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
-			userEvent.click(screen.getByTestId('icon: MoreVertical'));
+			await user.click(screen.getByTestId('icon: MoreVertical'));
 			const moveAction = await screen.findByText(actionRegexp.move);
 			expect(moveAction).toBeVisible();
 			expect(moveAction).not.toHaveAttribute('disabled', '');
-			userEvent.click(moveAction);
+			await user.click(moveAction);
 			await findByTextWithMarkup(buildBreadCrumbRegExp(commonParent.name, currentFolder.name));
-			const modalList = screen.getByTestId('modal-list', { exact: false });
+			const modalList = screen.getByTestId('modal-list-', { exact: false });
 			await within(modalList).findByText((currentFolder.children.nodes[0] as Node).name);
 			const moveModalButton = await screen.findByRole('button', { name: actionRegexp.move });
 			expect(moveModalButton).toHaveAttribute('disabled', '');
-			userEvent.click(screen.getByText(commonParent.name));
+			await user.click(screen.getByText(commonParent.name));
 			await findByTextWithMarkup(buildBreadCrumbRegExp(commonParent.name));
 			await screen.findByText(destinationFolder.name);
 			expect(screen.getByText(destinationFolder.name)).toBeVisible();
 			expect(screen.getByText(currentFolder.name)).toBeVisible();
-			userEvent.click(screen.getByText(destinationFolder.name));
+			await user.click(screen.getByText(destinationFolder.name));
 			await waitFor(() => expect(moveModalButton).not.toHaveAttribute('disabled', ''));
-			act(() => {
-				userEvent.click(moveModalButton);
-			});
-			const snackbar = await screen.findByText(/Item moved/i);
-			await waitForElementToBeRemoved(snackbar);
+			await user.click(moveModalButton);
+			await screen.findByText(/Item moved/i);
 			await screen.findByText(secondPage[0].name);
 			expect(screen.queryByText(firstPage[0].name)).not.toBeInTheDocument();
 			expect(screen.queryByText(firstPage[NODES_LOAD_LIMIT - 1].name)).not.toBeInTheDocument();
@@ -359,7 +362,10 @@ describe('Move', () => {
 				)
 			];
 
-			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+			const { user } = setup(<FolderView />, {
+				initialRouterEntries: [`/?folder=${currentFolder.id}`],
+				mocks
+			});
 
 			await screen.findByText(nodeToMove.name);
 
@@ -378,9 +384,8 @@ describe('Move', () => {
 			const nodeToMoveItem = await screen.findByText(nodeToMove.name);
 			fireEvent.contextMenu(nodeToMoveItem);
 
-			await moveNode(destinationFolder);
-			const snackbar = await screen.findByText(/Item moved/i);
-			await waitForElementToBeRemoved(snackbar);
+			await moveNode(destinationFolder, user);
+			await screen.findByText(/Item moved/i);
 
 			expect(screen.queryAllByTestId('node-item', { exact: false })).toHaveLength(
 				currentFolder.children.nodes.length - 1
@@ -433,16 +438,18 @@ describe('Move', () => {
 				)
 			];
 
-			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+			const { user } = setup(<FolderView />, {
+				initialRouterEntries: [`/?folder=${currentFolder.id}`],
+				mocks
+			});
 
 			await screen.findByText(firstPage[0].name);
 			expect(screen.getByText(firstPage[0].name)).toBeVisible();
 			expect(screen.getByText(firstPage[NODES_LOAD_LIMIT - 1].name)).toBeVisible();
 			expect(screen.queryByText(secondPage[0].name)).not.toBeInTheDocument();
 			fireEvent.contextMenu(screen.getByText(firstPage[NODES_LOAD_LIMIT - 1].name));
-			await moveNode(destinationFolder);
-			const snackbar = await screen.findByText(/Item moved/i);
-			await waitForElementToBeRemoved(snackbar);
+			await moveNode(destinationFolder, user);
+			await screen.findByText(/Item moved/i);
 			expect(screen.queryByText(firstPage[NODES_LOAD_LIMIT - 1].name)).not.toBeInTheDocument();
 			expect(screen.queryByText(secondPage[0].name)).not.toBeInTheDocument();
 			expect(screen.getByText(firstPage[0].name)).toBeVisible();

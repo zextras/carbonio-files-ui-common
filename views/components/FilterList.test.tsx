@@ -6,8 +6,7 @@
 
 import React from 'react';
 
-import { act, screen, waitForElementToBeRemoved, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { screen, waitFor, waitForElementToBeRemoved, within } from '@testing-library/react';
 import forEach from 'lodash/forEach';
 import { Link, Route, Switch } from 'react-router-dom';
 
@@ -29,10 +28,9 @@ import {
 import {
 	buildBreadCrumbRegExp,
 	iconRegexp,
-	render,
+	setup,
 	selectNodes,
-	triggerLoadMore,
-	waitForNetworkResponse
+	triggerLoadMore
 } from '../../utils/testUtils';
 import FolderView from '../FolderView';
 import { DisplayerProps } from './Displayer';
@@ -56,13 +54,12 @@ jest.mock('../components/Displayer', () => ({
 describe('Filter list', () => {
 	describe('Generic filter', () => {
 		test('first access to a filter show loading state and than show nodes', async () => {
-			render(<FilterList flagged />);
+			setup(<FilterList flagged />);
 
-			expect(screen.getByTestId('icon: Refresh')).toBeVisible();
-			await waitForElementToBeRemoved(() =>
-				within(screen.getByTestId('list-header')).queryByTestId('icon: Refresh')
-			);
-			expect(screen.getByTestId(`list-`)).not.toBeEmptyDOMElement();
+			const listHeader = screen.getByTestId('list-header');
+			expect(within(listHeader).getByTestId('icon: Refresh')).toBeVisible();
+			await waitFor(() => expect(screen.getByTestId(`list-`)).not.toBeEmptyDOMElement());
+			expect(within(listHeader).queryByTestId('icon: Refresh')).not.toBeInTheDocument();
 			const queryResult = global.apolloClient.readQuery<FindNodesQuery, FindNodesQueryVariables>({
 				query: FIND_NODES,
 				variables: getFindNodesVariables({ flagged: true })
@@ -89,7 +86,7 @@ describe('Filter list', () => {
 				)
 			];
 
-			render(<FilterList flagged />, { mocks });
+			setup(<FilterList flagged />, { mocks });
 
 			// this is the loading refresh icon
 			expect(screen.getByTestId('list-header')).toContainElement(
@@ -134,7 +131,7 @@ describe('Filter list', () => {
 			}
 			const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), nodes)];
 
-			render(<FilterList flagged />, { mocks });
+			setup(<FilterList flagged />, { mocks });
 
 			await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 
@@ -142,12 +139,9 @@ describe('Filter list', () => {
 		});
 
 		test('breadcrumb show Flagged', async () => {
-			const { getByTextWithMarkup } = render(<FilterList flagged />);
-
-			await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
+			const { getByTextWithMarkup } = setup(<FilterList flagged />);
 
 			const breadcrumbRegExp = buildBreadCrumbRegExp('Flagged');
-
 			expect(getByTextWithMarkup(breadcrumbRegExp)).toBeVisible();
 		});
 
@@ -173,7 +167,7 @@ describe('Filter list', () => {
 				mockFindNodes(getFindNodesVariables({ flagged: true }), [...nodes, node])
 			];
 
-			render(
+			const { user } = setup(
 				<div>
 					<Link
 						to={{
@@ -201,23 +195,17 @@ describe('Filter list', () => {
 			// only 1 item load
 			expect(screen.getByTestId('node-item', { exact: false })).toBeInTheDocument();
 			// navigate to folder
-			userEvent.click(screen.getByRole('link', { name: 'Go to folder' }));
-			await waitForNetworkResponse();
+			await user.click(screen.getByRole('link', { name: 'Go to folder' }));
 			// folder list, first load
 			await screen.findByTestId(`node-item-${node.id}`);
 			expect(screen.getByTestId('node-item', { exact: false })).toBeInTheDocument();
 			// flag the node through the hover bar
-			act(() => {
-				userEvent.click(screen.getByTestId('icon: FlagOutline'));
-			});
+			await user.click(screen.getByTestId('icon: FlagOutline'));
 			await screen.findByTestId('icon: Flag');
 			// navigate to filter again
-			act(() => {
-				userEvent.click(screen.getByRole('link', { name: 'Go to filter' }));
-			});
+			await user.click(screen.getByRole('link', { name: 'Go to filter' }));
 			// filter list, second load but with a new network request. Wait for loading icon to be removed
-			const listHeader = screen.getByTestId('list-header');
-			await waitForElementToBeRemoved(within(listHeader).queryByTestId('icon: Refresh'));
+			await screen.findByText(node.name);
 			const nodesItems = screen.getAllByTestId('node-item', { exact: false });
 			expect(nodesItems).toHaveLength(2);
 			expect(screen.getByTestId(`node-item-${node.id}`)).toBe(nodesItems[1]);
@@ -235,7 +223,7 @@ describe('Filter list', () => {
 				const mocks = [
 					mockFindNodes(getFindNodesVariables({ folder_id: ROOTS.TRASH, cascade: false }), nodes)
 				];
-				render(
+				const { user } = setup(
 					<Route path="/filter/:filter">
 						<FilterList folderId={ROOTS.TRASH} cascade={false} />
 					</Route>,
@@ -244,12 +232,12 @@ describe('Filter list', () => {
 				await screen.findByText(nodes[0].name);
 				expect(screen.getByText(nodes[0].name)).toBeVisible();
 				expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
-				selectNodes([nodes[0].id]);
+				await selectNodes([nodes[0].id], user);
 				// check that all wanted items are selected
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 				expect(screen.getByText(/select all/i)).toBeVisible();
 				// deselect node. Selection mode remains active
-				selectNodes([nodes[0].id]);
+				await selectNodes([nodes[0].id], user);
 				expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 				expect(screen.getAllByTestId('unCheckedAvatar')).toHaveLength(nodes.length);
 				expect(screen.getByText(/select all/i)).toBeVisible();
@@ -260,12 +248,9 @@ describe('Filter list', () => {
 				expect(screen.queryByTestId(iconRegexp.moveToTrash)).not.toBeInTheDocument();
 
 				expect(screen.getByTestId('icon: ArrowBackOutline')).toBeVisible();
-				act(() => {
-					userEvent.click(screen.getByTestId('icon: ArrowBackOutline'));
-				});
-				// await waitForElementToBeRemoved(screen.queryByTestId('icon: ArrowBackOutline'));
-				expect(screen.queryByTestId('icon: ArrowBackOutline')).not.toBeInTheDocument();
+				await user.click(screen.getByTestId('icon: ArrowBackOutline'));
 				const listHeader = screen.getByTestId('list-header', { exact: false });
+				expect(screen.queryByTestId('icon: ArrowBackOutline')).not.toBeInTheDocument();
 				expect(within(listHeader).queryByTestId('icon: RestoreOutline')).not.toBeInTheDocument();
 				expect(
 					within(listHeader).queryByTestId('icon: DeletePermanentlyOutline')

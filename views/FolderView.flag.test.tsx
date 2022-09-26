@@ -7,7 +7,6 @@
 import React from 'react';
 
 import { fireEvent, screen, waitForElementToBeRemoved, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 
@@ -22,13 +21,7 @@ import {
 	mockGetChildren,
 	mockGetPermissions
 } from '../utils/mockUtils';
-import {
-	actionRegexp,
-	iconRegexp,
-	render,
-	selectNodes,
-	waitForNetworkResponse
-} from '../utils/testUtils';
+import { actionRegexp, iconRegexp, setup, selectNodes } from '../utils/testUtils';
 import { DisplayerProps } from './components/Displayer';
 import FolderView from './FolderView';
 
@@ -85,33 +78,41 @@ describe('Flag', () => {
 				)
 			];
 
-			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+			const { user } = setup(<FolderView />, {
+				initialRouterEntries: [`/?folder=${currentFolder.id}`],
+				mocks
+			});
 
 			// wait for the load to be completed
 			await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 			expect(screen.queryByTestId('icon: Flag')).not.toBeInTheDocument();
 
 			// activate selection mode by selecting items
-			selectNodes(nodesIdsToFlag);
+			await selectNodes(nodesIdsToFlag, user);
 
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesIdsToFlag.length);
 
 			const flagIcon = await screen.findByTestId(iconRegexp.flag);
 			// click on flag action on header bar
-			userEvent.click(flagIcon);
-			await waitForElementToBeRemoved(screen.queryAllByTestId('checkedAvatar'));
+			await user.click(flagIcon);
+			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 			await screen.findAllByTestId('icon: Flag');
 			expect(screen.getAllByTestId('icon: Flag')).toHaveLength(nodesIdsToFlag.length);
 
 			// activate selection mode by selecting items
-			selectNodes(nodesIdsToUnflag);
+			await selectNodes(nodesIdsToUnflag, user);
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesIdsToUnflag.length);
-
+			// if present, open the additional actions
+			const moreActionsItem = screen.queryByTestId('icon: MoreVertical');
+			if (moreActionsItem !== null) {
+				await user.click(moreActionsItem);
+				await screen.findByTestId('dropdown-popper-list');
+			}
 			const unflagIcon = await screen.findByTestId(iconRegexp.unflag);
-			userEvent.click(unflagIcon);
-			await waitForElementToBeRemoved(screen.queryAllByTestId('checkedAvatar'));
+			await user.click(unflagIcon);
+			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 			await screen.findAllByTestId('icon: Flag');
 			expect(screen.getAllByTestId('icon: Flag')).toHaveLength(
 				nodesIdsToFlag.length - nodesIdsToUnflag.length
@@ -147,7 +148,10 @@ describe('Flag', () => {
 				)
 			];
 
-			render(<FolderView />, { initialRouterEntries: [`/?folder=${currentFolder.id}`], mocks });
+			const { user } = setup(<FolderView />, {
+				initialRouterEntries: [`/?folder=${currentFolder.id}`],
+				mocks
+			});
 
 			// wait for the load to be completed
 			await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -158,8 +162,7 @@ describe('Flag', () => {
 			fireEvent.contextMenu(nodeItem);
 			const flagAction = await screen.findByText(actionRegexp.flag);
 			expect(flagAction).toBeVisible();
-			userEvent.click(flagAction);
-			await waitForNetworkResponse();
+			await user.click(flagAction);
 			await within(nodeItem).findByTestId('icon: Flag');
 			expect(flagAction).not.toBeInTheDocument();
 			expect(within(nodeItem).getByTestId('icon: Flag')).toBeVisible();
@@ -167,8 +170,7 @@ describe('Flag', () => {
 			fireEvent.contextMenu(nodeItem);
 			const unflagAction = await screen.findByText(actionRegexp.unflag);
 			expect(unflagAction).toBeVisible();
-			userEvent.click(unflagAction);
-			await waitForNetworkResponse();
+			await user.click(unflagAction);
 			expect(unflagAction).not.toBeInTheDocument();
 			expect(within(nodeItem).queryByTestId('icon: Flag')).not.toBeInTheDocument();
 		});

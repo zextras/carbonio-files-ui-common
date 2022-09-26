@@ -11,6 +11,7 @@ import { throttle } from 'lodash';
 import intersection from 'lodash/intersection';
 import styled, { DefaultTheme } from 'styled-components';
 
+import { TIMERS } from '../../constants';
 import { DropzoneModal } from './DropzoneModal';
 
 interface DropzoneProps {
@@ -114,7 +115,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
 					showDropzoneTimer.current && clearTimeout(showDropzoneTimer.current);
 					showDropzoneTimer.current = setTimeout(() => {
 						setDragging(true);
-					}, 25);
+					}, TIMERS.SHOW_DROPZONE);
 					onDragEnter && onDragEnter(event);
 					event.preventDefault();
 				} else if (showDropzoneTimer.current) {
@@ -165,7 +166,7 @@ export const Dropzone: React.FC<DropzoneProps> = ({
 			) {
 				hideDropzoneTimer.current = setTimeout(() => {
 					dragLeaveAction(event);
-				}, 50);
+				}, TIMERS.HIDE_DROPZONE);
 			}
 		},
 		[dragLeaveAction]

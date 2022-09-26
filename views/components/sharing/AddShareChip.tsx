@@ -102,7 +102,7 @@ export const AddShareChip = React.forwardRef<HTMLDivElement, Omit<ShareChip, 'la
 			[t, value]
 		);
 
-		const actions: Array<ChipAction> = useMemo(() => {
+		const actions = useMemo<ChipAction[]>(() => {
 			const icons: Array<ChipAction> = [];
 			if (!error) {
 				if (value.role === Role.Viewer) {

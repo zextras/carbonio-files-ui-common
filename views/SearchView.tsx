@@ -106,7 +106,21 @@ export const SearchView: React.VFC<SearchViewProps> = ({
 					label: t('create.options.new.document', 'New Document'),
 					icon: 'FileTextOutline',
 					disabled: true,
-					click: noop
+					click: noop,
+					items: [
+						{
+							id: `${ACTION_IDS.CREATE_DOCS_DOCUMENT}-libre`,
+							label: t('create.options.new.odfDocument', 'ODF Document'),
+							click: noop,
+							disabled: true
+						},
+						{
+							id: `${ACTION_IDS.CREATE_DOCS_DOCUMENT}-ms`,
+							label: t('create.options.new.msDocument', 'Microsoft Document'),
+							click: noop,
+							disabled: true
+						}
+					]
 				})
 			},
 			{
@@ -119,7 +133,21 @@ export const SearchView: React.VFC<SearchViewProps> = ({
 					label: t('create.options.new.spreadsheet', 'New Spreadsheet'),
 					icon: 'FileCalcOutline',
 					disabled: true,
-					click: noop
+					click: noop,
+					items: [
+						{
+							id: `${ACTION_IDS.CREATE_DOCS_SPREADSHEET}-libre`,
+							label: t('create.options.new.odfDocument', 'ODF Document'),
+							click: noop,
+							disabled: true
+						},
+						{
+							id: `${ACTION_IDS.CREATE_DOCS_SPREADSHEET}-ms`,
+							label: t('create.options.new.msDocument', 'Microsoft Document'),
+							click: noop,
+							disabled: true
+						}
+					]
 				})
 			},
 			{
@@ -132,7 +160,21 @@ export const SearchView: React.VFC<SearchViewProps> = ({
 					label: t('create.options.new.presentation', 'New Presentation'),
 					icon: 'FilePresentationOutline',
 					disabled: true,
-					click: noop
+					click: noop,
+					items: [
+						{
+							id: `${ACTION_IDS.CREATE_DOCS_PRESENTATION}-libre`,
+							label: t('create.options.new.odfDocument', 'ODF Document'),
+							click: noop,
+							disabled: true
+						},
+						{
+							id: `${ACTION_IDS.CREATE_DOCS_PRESENTATION}-ms`,
+							label: t('create.options.new.msDocument', 'Microsoft Document'),
+							click: noop,
+							disabled: true
+						}
+					]
 				})
 			}
 		);

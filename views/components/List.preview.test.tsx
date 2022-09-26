@@ -7,12 +7,11 @@
 import React from 'react';
 
 import { fireEvent, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 
 import { PREVIEW_MAX_SIZE } from '../../constants';
 import { populateFile } from '../../mocks/mockUtils';
 import { NodeType } from '../../types/graphql/types';
-import { actionRegexp, render } from '../../utils/testUtils';
+import { actionRegexp, setup } from '../../utils/testUtils';
 import { List } from './List';
 
 describe('Preview action', () => {
@@ -22,12 +21,12 @@ describe('Preview action', () => {
 		file.mime_type = 'application/pdf';
 		file.size = PREVIEW_MAX_SIZE + 1;
 		file.extension = 'pdf';
-		render(<List nodes={[file]} mainList emptyListMessage="empty list" />);
+		const { user } = setup(<List nodes={[file]} mainList emptyListMessage="empty list" />);
 
 		await screen.findByText(file.name);
 		fireEvent.contextMenu(screen.getByText(file.name));
 		await screen.findByText(actionRegexp.preview);
-		userEvent.click(screen.getByText(actionRegexp.preview));
+		await user.click(screen.getByText(actionRegexp.preview));
 		// fallback is shown
 		await screen.findByText(/This item cannot be displayed/i);
 		expect(screen.getByText(/This item cannot be displayed/i)).toBeVisible();
@@ -41,14 +40,14 @@ describe('Preview action', () => {
 		file.mime_type = 'application/pdf';
 		file.size = 0;
 		file.extension = 'pdf';
-		render(<List nodes={[file]} mainList emptyListMessage="empty list" />);
+		const { user } = setup(<List nodes={[file]} mainList emptyListMessage="empty list" />);
 
 		await screen.findByText(file.name);
 		fireEvent.contextMenu(screen.getByText(file.name));
 		await screen.findByText(actionRegexp.preview);
-		userEvent.click(screen.getByText(actionRegexp.preview));
+		await user.click(screen.getByText(actionRegexp.preview));
 		// fallback is not shown
-		await screen.findByText(/loading pdf/i);
+		await screen.findByText(/failed to load pdf file/i);
 		expect(screen.queryByText(/This item cannot be displayed/i)).not.toBeInTheDocument();
 		expect(screen.queryByRole('button', { name: /download file/i })).not.toBeInTheDocument();
 	});
@@ -59,14 +58,14 @@ describe('Preview action', () => {
 		file.mime_type = 'application/pdf';
 		file.size = PREVIEW_MAX_SIZE;
 		file.extension = 'pdf';
-		render(<List nodes={[file]} mainList emptyListMessage="empty list" />);
+		const { user } = setup(<List nodes={[file]} mainList emptyListMessage="empty list" />);
 
 		await screen.findByText(file.name);
 		fireEvent.contextMenu(screen.getByText(file.name));
 		await screen.findByText(actionRegexp.preview);
-		userEvent.click(screen.getByText(actionRegexp.preview));
+		await user.click(screen.getByText(actionRegexp.preview));
 		// fallback is not shown
-		await screen.findByText(/loading pdf/i);
+		await screen.findByText(/failed to load pdf file/i);
 		expect(screen.queryByText(/This item cannot be displayed/i)).not.toBeInTheDocument();
 		expect(screen.queryByRole('button', { name: /download file/i })).not.toBeInTheDocument();
 	});
