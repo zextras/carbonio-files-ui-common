@@ -170,7 +170,7 @@ export const upsertNodeInFolder = (
 	if (cachedFolder && cachedFolder.getNode && isFolder(cachedFolder.getNode)) {
 		const { nodes } = cachedFolder.getNode.children;
 		addNodeInCachedChildren(
-			apolloClient.cache,
+			cache,
 			newNode,
 			folderId,
 			nodes.length === 0 ? 0 : addNodeInSortedList(nodes, newNode, nodeSortVar()),
