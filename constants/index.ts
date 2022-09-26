@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { RootsType, SearchParams, URLParams } from '../types/common';
+import { DocsType, RootsType, SearchParams, URLParams } from '../types/common';
 import { NodeSort } from '../types/graphql/types';
 
 export const NODES_LOAD_LIMIT = 25;
@@ -82,6 +82,14 @@ export const TIMERS = {
 	MOUSE_MOVE_TIMEOUT: 1000,
 	SHOW_DROPZONE: 25,
 	HIDE_DROPZONE: 50
+} as const;
+export const DOCS_EXTENSIONS: Record<DocsType, string> = {
+	[DocsType.LIBRE_DOCUMENT]: 'odt',
+	[DocsType.LIBRE_SPREADSHEET]: 'ods',
+	[DocsType.LIBRE_PRESENTATION]: 'odp',
+	[DocsType.MS_DOCUMENT]: 'docx',
+	[DocsType.MS_SPREADSHEET]: 'xlsx',
+	[DocsType.MS_PRESENTATION]: 'pptx'
 } as const;
 
 // endpoint
