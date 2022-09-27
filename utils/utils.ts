@@ -23,6 +23,7 @@ import { TFunction } from 'react-i18next';
 import { searchParamsVar } from '../apollo/searchVar';
 import {
 	DOCS_ENDPOINT,
+	DOCS_EXTENSIONS,
 	DOWNLOAD_PATH,
 	OPEN_FILE_PATH,
 	PREVIEW_PATH,
@@ -35,6 +36,7 @@ import {
 	Contact,
 	Crumb,
 	CrumbNode,
+	DocsType,
 	OrderTrend,
 	OrderType,
 	Role,
@@ -717,3 +719,13 @@ export const getListItemAvatarPictureUrl = (
 	type: NodeType,
 	mimeType: string | undefined
 ): string | undefined => getPreviewThumbnailSrc(id, version, type, mimeType, 80, 80);
+
+export function getNewDocumentActionLabel(t: TFunction, docsType: DocsType): string {
+	const [format] = docsType.split('_');
+	return t(`create.options.new.${format.toLowerCase()}Document`, 'Microsoft {{ext}}', {
+		context: DOCS_EXTENSIONS[docsType],
+		replace: {
+			ext: `(.${DOCS_EXTENSIONS[docsType]})`
+		}
+	});
+}

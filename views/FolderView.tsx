@@ -36,7 +36,7 @@ import {
 	canUploadFile,
 	isFolder
 } from '../utils/ActionsFactory';
-import { inputElement } from '../utils/utils';
+import { getNewDocumentActionLabel, inputElement } from '../utils/utils';
 import { Displayer } from './components/Displayer';
 import { EmptySpaceFiller } from './components/EmptySpaceFiller';
 import { List } from './components/List';
@@ -197,13 +197,13 @@ const FolderView: React.VFC = () => {
 				items: [
 					{
 						id: `${ACTION_IDS.CREATE_DOCS_DOCUMENT}-libre`,
-						label: t('create.options.new.odfDocument', 'ODF Document'),
+						label: getNewDocumentActionLabel(t, DocsType.LIBRE_DOCUMENT),
 						click: createDocsAction(DocsType.LIBRE_DOCUMENT),
 						disabled: !isCanCreateFile
 					},
 					{
 						id: `${ACTION_IDS.CREATE_DOCS_DOCUMENT}-ms`,
-						label: t('create.options.new.msDocument', 'Microsoft Document'),
+						label: getNewDocumentActionLabel(t, DocsType.MS_DOCUMENT),
 						click: createDocsAction(DocsType.MS_DOCUMENT),
 						disabled: !isCanCreateFile
 					}
@@ -217,13 +217,13 @@ const FolderView: React.VFC = () => {
 				items: [
 					{
 						id: `${ACTION_IDS.CREATE_DOCS_SPREADSHEET}-libre`,
-						label: t('create.options.new.odfDocument', 'ODF Document'),
+						label: getNewDocumentActionLabel(t, DocsType.LIBRE_SPREADSHEET),
 						click: createDocsAction(DocsType.LIBRE_SPREADSHEET),
 						disabled: !isCanCreateFile
 					},
 					{
 						id: `${ACTION_IDS.CREATE_DOCS_SPREADSHEET}-ms`,
-						label: t('create.options.new.msDocument', 'Microsoft Document'),
+						label: getNewDocumentActionLabel(t, DocsType.MS_SPREADSHEET),
 						click: createDocsAction(DocsType.MS_SPREADSHEET),
 						disabled: !isCanCreateFile
 					}
@@ -237,13 +237,13 @@ const FolderView: React.VFC = () => {
 				items: [
 					{
 						id: `${ACTION_IDS.CREATE_DOCS_PRESENTATION}-libre`,
-						label: t('create.options.new.odfDocument', 'ODF Document'),
+						label: getNewDocumentActionLabel(t, DocsType.LIBRE_PRESENTATION),
 						click: createDocsAction(DocsType.LIBRE_PRESENTATION),
 						disabled: !isCanCreateFile
 					},
 					{
 						id: `${ACTION_IDS.CREATE_DOCS_PRESENTATION}-ms`,
-						label: t('create.options.new.msDocument', 'Microsoft Document'),
+						label: getNewDocumentActionLabel(t, DocsType.MS_PRESENTATION),
 						click: createDocsAction(DocsType.MS_PRESENTATION),
 						disabled: !isCanCreateFile
 					}

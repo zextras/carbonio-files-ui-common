@@ -16,7 +16,8 @@ import { useNavigation } from '../../hooks/useNavigation';
 import { DISPLAYER_WIDTH, FILES_APP_ID, LIST_WIDTH, ROOTS } from '../constants';
 import { ListContext } from '../contexts';
 import { useUpload } from '../hooks/useUpload';
-import { inputElement } from '../utils/utils';
+import { DocsType } from '../types/common';
+import { getNewDocumentActionLabel, inputElement } from '../utils/utils';
 import { Displayer } from './components/Displayer';
 import { UploadList } from './components/UploadList';
 
@@ -99,14 +100,14 @@ const UploadView: React.VFC = () => {
 					click: noop,
 					items: [
 						{
-							id: `${ACTION_IDS.CREATE_DOCS_PRESENTATION}-libre`,
-							label: t('create.options.new.odfDocument', 'ODF Document'),
+							id: `${ACTION_IDS.CREATE_DOCS_DOCUMENT}-libre`,
+							label: getNewDocumentActionLabel(t, DocsType.LIBRE_DOCUMENT),
 							click: noop,
 							disabled: true
 						},
 						{
-							id: `${ACTION_IDS.CREATE_DOCS_PRESENTATION}-ms`,
-							label: t('create.options.new.msDocument', 'Microsoft Document'),
+							id: `${ACTION_IDS.CREATE_DOCS_DOCUMENT}-ms`,
+							label: getNewDocumentActionLabel(t, DocsType.MS_DOCUMENT),
 							click: noop,
 							disabled: true
 						}
@@ -126,14 +127,14 @@ const UploadView: React.VFC = () => {
 					click: noop,
 					items: [
 						{
-							id: `${ACTION_IDS.CREATE_DOCS_PRESENTATION}-libre`,
-							label: t('create.options.new.odfDocument', 'ODF Document'),
+							id: `${ACTION_IDS.CREATE_DOCS_SPREADSHEET}-libre`,
+							label: getNewDocumentActionLabel(t, DocsType.LIBRE_SPREADSHEET),
 							click: noop,
 							disabled: true
 						},
 						{
-							id: `${ACTION_IDS.CREATE_DOCS_PRESENTATION}-ms`,
-							label: t('create.options.new.msDocument', 'Microsoft Document'),
+							id: `${ACTION_IDS.CREATE_DOCS_SPREADSHEET}-ms`,
+							label: getNewDocumentActionLabel(t, DocsType.MS_SPREADSHEET),
 							click: noop,
 							disabled: true
 						}
@@ -154,13 +155,13 @@ const UploadView: React.VFC = () => {
 					items: [
 						{
 							id: `${ACTION_IDS.CREATE_DOCS_PRESENTATION}-libre`,
-							label: t('create.options.new.odfDocument', 'ODF Document'),
+							label: getNewDocumentActionLabel(t, DocsType.LIBRE_PRESENTATION),
 							click: noop,
 							disabled: true
 						},
 						{
 							id: `${ACTION_IDS.CREATE_DOCS_PRESENTATION}-ms`,
-							label: t('create.options.new.msDocument', 'Microsoft Document'),
+							label: getNewDocumentActionLabel(t, DocsType.MS_PRESENTATION),
 							click: noop,
 							disabled: true
 						}
