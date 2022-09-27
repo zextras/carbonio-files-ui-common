@@ -13,8 +13,14 @@ import { populateFile, populateFolder, populateNode, populateUser } from '../../
 import { Action } from '../../types/common';
 import { NodeType, User } from '../../types/graphql/types';
 import { getPermittedHoverBarActions } from '../../utils/ActionsFactory';
-import { iconRegexp, setup } from '../../utils/testUtils';
-import { formatDate, humanFileSize } from '../../utils/utils';
+import { iconRegexp, PreviewInitComponent, setup } from '../../utils/testUtils';
+import {
+	formatDate,
+	getDocumentPreviewSrc,
+	getImgPreviewSrc,
+	getPdfPreviewSrc,
+	humanFileSize
+} from '../../utils/utils';
 import * as moduleUtils from '../../utils/utils';
 import { NodeListItem } from './NodeListItem';
 
@@ -342,15 +348,28 @@ describe('Node List Item', () => {
 		node.mime_type = 'image/jpeg';
 
 		const { user } = setup(
-			<NodeListItem
-				id={node.id}
-				name={node.name}
-				type={node.type}
-				extension={node.extension}
-				size={node.size}
-				version={node.version}
-				mimeType={node.mime_type}
-			/>
+			<PreviewInitComponent
+				initPreviewArgs={[
+					{
+						previewType: 'image',
+						filename: node.name,
+						extension: node.extension || undefined,
+						size: (node.size !== undefined && humanFileSize(node.size)) || undefined,
+						src: node.version ? getImgPreviewSrc(node.id, node.version, 0, 0, 'high') : '',
+						id: node.id
+					}
+				]}
+			>
+				<NodeListItem
+					id={node.id}
+					name={node.name}
+					type={node.type}
+					extension={node.extension}
+					size={node.size}
+					version={node.version}
+					mimeType={node.mime_type}
+				/>
+			</PreviewInitComponent>
 		);
 		expect(screen.getByText(node.name)).toBeInTheDocument();
 		expect(screen.getByText(node.name)).toBeVisible();
@@ -374,15 +393,47 @@ describe('Node List Item', () => {
 		node.extension = 'pdf';
 
 		const { user } = setup(
-			<NodeListItem
-				id={node.id}
-				name={node.name}
-				type={node.type}
-				extension={node.extension}
-				size={node.size}
-				version={node.version}
-				mimeType={node.mime_type}
-			/>
+			<PreviewInitComponent
+				initPreviewArgs={[
+					{
+						previewType: 'pdf',
+						filename: node.name,
+						extension: node.extension || undefined,
+						size: (node.size !== undefined && humanFileSize(node.size)) || undefined,
+						src: node.version ? getPdfPreviewSrc(node.id, node.version) : '',
+						id: node.id,
+						closeAction: {
+							id: 'close-action',
+							icon: 'ArrowBackOutline',
+							tooltipLabel: 'Close'
+						},
+						actions: [
+							{
+								icon: 'ShareOutline',
+								id: 'ShareOutline',
+								tooltipLabel: 'Manage Shares',
+								onClick: (): void => undefined
+							},
+							{
+								icon: 'DownloadOutline',
+								tooltipLabel: 'Download',
+								id: 'DownloadOutline',
+								onClick: (): void => undefined
+							}
+						]
+					}
+				]}
+			>
+				<NodeListItem
+					id={node.id}
+					name={node.name}
+					type={node.type}
+					extension={node.extension}
+					size={node.size}
+					version={node.version}
+					mimeType={node.mime_type}
+				/>
+			</PreviewInitComponent>
 		);
 		expect(screen.getByText(node.name)).toBeInTheDocument();
 		expect(screen.getByText(node.name)).toBeVisible();
@@ -406,16 +457,54 @@ describe('Node List Item', () => {
 		node.extension = 'odt';
 
 		const { user } = setup(
-			<NodeListItem
-				id={node.id}
-				name={node.name}
-				type={node.type}
-				extension={node.extension}
-				size={node.size}
-				version={node.version}
-				mimeType={node.mime_type}
-				permittedContextualMenuActions={[Action.OpenWithDocs]}
-			/>
+			<PreviewInitComponent
+				initPreviewArgs={[
+					{
+						previewType: 'pdf',
+						filename: node.name,
+						extension: node.extension || undefined,
+						size: (node.size !== undefined && humanFileSize(node.size)) || undefined,
+						src: node.version ? getDocumentPreviewSrc(node.id, node.version) : '',
+						id: node.id,
+						closeAction: {
+							id: 'close-action',
+							icon: 'ArrowBackOutline',
+							tooltipLabel: 'Close'
+						},
+						actions: [
+							{
+								icon: 'ShareOutline',
+								id: 'ShareOutline',
+								tooltipLabel: 'Manage Shares',
+								onClick: (): void => undefined
+							},
+							{
+								icon: 'DownloadOutline',
+								tooltipLabel: 'Download',
+								id: 'DownloadOutline',
+								onClick: (): void => undefined
+							},
+							{
+								id: 'OpenWithDocs',
+								icon: 'BookOpenOutline',
+								tooltipLabel: 'Open document',
+								onClick: (): void => undefined
+							}
+						]
+					}
+				]}
+			>
+				<NodeListItem
+					id={node.id}
+					name={node.name}
+					type={node.type}
+					extension={node.extension}
+					size={node.size}
+					version={node.version}
+					mimeType={node.mime_type}
+					permittedContextualMenuActions={[Action.OpenWithDocs]}
+				/>
+			</PreviewInitComponent>
 		);
 		expect(screen.getByText(node.name)).toBeInTheDocument();
 		expect(screen.getByText(node.name)).toBeVisible();
