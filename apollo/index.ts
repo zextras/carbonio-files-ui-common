@@ -14,6 +14,7 @@ import {
 	split
 } from '@apollo/client';
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
+import { MockSubscriptionLink } from '@apollo/client/testing';
 import { getMainDefinition } from '@apollo/client/utilities';
 import { createClient } from 'graphql-ws';
 import find from 'lodash/find';
@@ -242,12 +243,15 @@ const buildClient: () => ApolloClient<NormalizedCacheObject> = () => {
 			credentials: 'same-origin'
 		});
 
-		const wsLink = new GraphQLWsLink(
-			createClient({
-				url: `wss://${window.location.hostname}/services/files/graphql-ws`,
-				keepAlive: 45000
-			})
-		);
+		const wsLink =
+			process.env.NODE_ENV === 'test'
+				? new MockSubscriptionLink()
+				: new GraphQLWsLink(
+						createClient({
+							url: `wss://${window.location.hostname}/services/files/graphql-ws`,
+							keepAlive: 45000
+						})
+				  );
 
 		// The split function takes three parameters:
 		// * A function that's called for each operation to execute
