@@ -7,7 +7,14 @@
 import React from 'react';
 
 import { gql } from '@apollo/client';
-import { fireEvent, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/react';
+import {
+	fireEvent,
+	screen,
+	waitFor,
+	waitForElementToBeRemoved,
+	within
+} from '@testing-library/react';
+import find from 'lodash/find';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 import { graphql } from 'msw';
@@ -760,28 +767,38 @@ describe('Drag and drop', () => {
 		const folderWithoutPermissionsItem = screen.getByText(path[1].name);
 		fireEvent.dragEnter(folderWithoutPermissionsItem, { dataTransfer: dataTransfer() });
 		fireEvent.dragOver(folderWithoutPermissionsItem, { dataTransfer: dataTransfer() });
-		expect(folderWithoutPermissionsItem.parentElement).toHaveStyle({
+		const breadcrumbCrumbs = screen.getAllByTestId('drop-crumb');
+		const folderWithoutPermissionsCrumb = find(
+			breadcrumbCrumbs,
+			(crumb) => within(crumb).queryByText(path[1].name) !== null
+		);
+		expect(folderWithoutPermissionsCrumb).toHaveStyle({
 			'background-color': 'rgba(130, 130, 130, 0.4)'
 		});
 		fireEvent.drop(folderWithoutPermissionsItem, { dataTransfer: dataTransfer() });
 		fireEvent.dragEnd(itemToDrag, { dataTransfer: dataTransfer() });
 		expect(itemToDrag).toBeVisible();
 		expect(itemToDrag).not.toHaveAttribute('disabled', '');
-		expect(folderWithoutPermissionsItem.parentElement).toHaveStyle({
+
+		expect(folderWithoutPermissionsCrumb).toHaveStyle({
 			'background-color': ''
 		});
 
 		// drag and drop on crumb with permissions
 		const destinationItem = screen.getByText(path[0].name);
+		const destinationCrumb = find(
+			breadcrumbCrumbs,
+			(crumb) => within(crumb).queryByText(path[0].name) !== null
+		);
 		fireEvent.dragStart(itemToDrag, { dataTransfer: dataTransfer() });
 		fireEvent.dragEnter(destinationItem, { dataTransfer: dataTransfer() });
 		fireEvent.dragOver(destinationItem, { dataTransfer: dataTransfer() });
-		expect(destinationItem.parentElement).toHaveStyle({
+		expect(destinationCrumb).toHaveStyle({
 			'background-color': 'rgba(43, 115, 210, 0.4)'
 		});
 		fireEvent.drop(destinationItem, { dataTransfer: dataTransfer() });
 		fireEvent.dragEnd(itemToDrag, { dataTransfer: dataTransfer() });
-		expect(destinationItem.parentElement).toHaveStyle({
+		expect(destinationCrumb).toHaveStyle({
 			'background-color': ''
 		});
 		await waitForElementToBeRemoved(itemToDrag);
