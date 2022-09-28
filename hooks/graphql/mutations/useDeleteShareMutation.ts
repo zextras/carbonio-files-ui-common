@@ -20,6 +20,7 @@ import SHARE_TARGET from '../../../graphql/fragments/shareTarget.graphql';
 import DELETE_SHARE from '../../../graphql/mutations/deleteShare.graphql';
 import FIND_NODES from '../../../graphql/queries/findNodes.graphql';
 import GET_CHILDREN from '../../../graphql/queries/getChildren.graphql';
+import { SharesCachedObject } from '../../../types/apollo';
 import { Node, PickIdNodeType } from '../../../types/common';
 import {
 	DeleteShareMutation,
@@ -29,7 +30,6 @@ import {
 	Folder,
 	GetChildrenQuery,
 	ParentIdFragment,
-	Share,
 	SharedTarget,
 	User
 } from '../../../types/graphql/types';
@@ -83,8 +83,8 @@ export function useDeleteShareMutation(): (
 						cache.modify({
 							id: cache.identify(node),
 							fields: {
-								shares(existingShareRefs: Share[]) {
-									const updatedShares = filter(existingShareRefs, (existingShareRef) => {
+								shares(existingShares: SharesCachedObject): SharesCachedObject {
+									const updatedShares = filter(existingShares.shares, (existingShareRef) => {
 										const sharedTarget: User | DistributionList | null | undefined =
 											existingShareRef.share_target &&
 											cache.readFragment<SharedTarget>({
@@ -100,7 +100,7 @@ export function useDeleteShareMutation(): (
 											(existingNodesRefs) => existingNodesRefs.args?.shared_by_me === true
 										);
 									}
-									return updatedShares;
+									return { ...existingShares, shares: updatedShares };
 								}
 							}
 						});

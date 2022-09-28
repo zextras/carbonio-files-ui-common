@@ -642,8 +642,6 @@ describe('Filter view', () => {
 			await user.click(screen.getByText(/sharing/i));
 			// logged user chip is shown
 			await screen.findByText(/you$/i);
-			// advance timers to allow tooltip to register listeners
-			jest.advanceTimersToNextTimer();
 			const sharingContent = screen.getByTestId('node-sharing');
 			// owner chip is visible
 			expect(within(sharingContent).getByText(node.owner.full_name)).toBeVisible();
@@ -652,7 +650,6 @@ describe('Filter view', () => {
 			await user.click(within(sharingContent).getByTestId('icon: Close'));
 			// confirmation modal
 			await screen.findByRole('button', { name: /remove/i });
-			await screen.findByText(/remove share/i);
 			await user.click(screen.getByRole('button', { name: /remove/i }));
 			await screen.findByText(/success/i);
 			// node is removed from the list and displayer is closed

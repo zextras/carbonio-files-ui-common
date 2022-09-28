@@ -6,7 +6,7 @@
 
 import { Reference } from '@apollo/client';
 
-import { QueryFindNodesArgs } from './graphql/types';
+import { NodeSharesArgs, QueryFindNodesArgs, Share } from './graphql/types';
 
 export interface NodesListCachedObject {
 	ordered: Reference[];
@@ -27,4 +27,14 @@ export interface NodesPageCachedObject {
 
 export interface FindNodesCachedObject extends NodesPageCachedObject {
 	args: QueryFindNodesArgs | null;
+}
+
+export type ShareCachedObject = Omit<Share, 'node' | 'share_target'> & {
+	node: Reference | undefined;
+	share_target: Reference | undefined;
+};
+
+export interface SharesCachedObject {
+	args: Partial<NodeSharesArgs> | null;
+	shares: ShareCachedObject[];
 }

@@ -11,9 +11,9 @@ import reduce from 'lodash/reduce';
 
 import SHARE_TARGET from '../../../graphql/fragments/shareTarget.graphql';
 import UPDATE_SHARE from '../../../graphql/mutations/updateShare.graphql';
+import { ShareCachedObject, SharesCachedObject } from '../../../types/apollo';
 import { PickIdNodeType } from '../../../types/common';
 import {
-	Share,
 	SharePermission,
 	ShareTargetFragment,
 	UpdateShareMutation,
@@ -51,10 +51,10 @@ export function useUpdateShareMutation(): [
 					cache.modify({
 						id: cache.identify(node),
 						fields: {
-							shares(existingShareRefs: Share[]) {
-								const updatedShares = reduce(
-									existingShareRefs,
-									(accumulator: Share[], existingShareRef: Share) => {
+							shares(existingShares: SharesCachedObject): SharesCachedObject {
+								const updatedShares = reduce<ShareCachedObject, ShareCachedObject[]>(
+									existingShares.shares,
+									(accumulator, existingShareRef) => {
 										const sharedTarget =
 											existingShareRef.share_target &&
 											cache.readFragment<ShareTargetFragment>({
@@ -62,7 +62,7 @@ export function useUpdateShareMutation(): [
 												fragment: SHARE_TARGET
 											});
 										if (sharedTarget && sharedTarget.id === shareTargetId) {
-											const newExistingShareRef = {
+											const newExistingShareRef: ShareCachedObject = {
 												...existingShareRef,
 												permission
 											};
@@ -75,7 +75,7 @@ export function useUpdateShareMutation(): [
 									[]
 								);
 
-								return updatedShares;
+								return { ...existingShares, shares: updatedShares };
 							}
 						}
 					});
