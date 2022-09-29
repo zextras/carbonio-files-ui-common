@@ -27,7 +27,7 @@ import { generateError, getFirstOfNextMonth, setup } from '../../utils/testUtils
 import { formatDate, initExpirationDate } from '../../utils/utils';
 import { Displayer } from './Displayer';
 
-describe('Displayer', () => {
+describe.skip('Displayer', () => {
 	describe('With unsaved changes', () => {
 		describe('on edit link', () => {
 			test('on description input, click on other tab show dialog to warn user about unsaved changes', async () => {

@@ -9,6 +9,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useState } from 're
 import { useReactiveVar } from '@apollo/client';
 import { Container, useSnackbar } from '@zextras/carbonio-design-system';
 import { PreviewsManagerContext } from '@zextras/carbonio-ui-preview';
+import { PreviewManagerContextType } from '@zextras/carbonio-ui-preview/lib/preview/PreviewManager';
 import filter from 'lodash/filter';
 import find from 'lodash/find';
 import includes from 'lodash/includes';
@@ -337,14 +338,13 @@ export const List: React.VFC<ListProps> = ({
 		}
 	}, [nodes, selectedIDs, exitSelectionMode]);
 
-	const { createPreview, initPreview, emptyPreview, openPreview } =
-		useContext(PreviewsManagerContext);
+	const { initPreview, emptyPreview, openPreview } = useContext(PreviewsManagerContext);
 
 	const nodesForPreview = useMemo(
 		() =>
 			reduce(
 				nodes,
-				(accumulator: any, node) => {
+				(accumulator: Parameters<PreviewManagerContextType['initPreview']>[0], node) => {
 					if (isFile(node)) {
 						const [$isSupportedByPreview, documentType] = isSupportedByPreview(node.mime_type);
 						if ($isSupportedByPreview) {

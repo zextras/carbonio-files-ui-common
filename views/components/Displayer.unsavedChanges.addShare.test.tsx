@@ -42,7 +42,7 @@ jest.mock('../../../network/network', () => ({
 		})
 }));
 
-describe('Displayer', () => {
+describe.skip('Displayer', () => {
 	describe('With unsaved changes', () => {
 		describe('On add share', () => {
 			test('on chip input field, click on other tab show dialog to warn user about unsaved changes', async () => {
