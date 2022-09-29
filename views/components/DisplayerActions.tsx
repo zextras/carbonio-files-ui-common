@@ -26,7 +26,7 @@ import { useTranslation } from 'react-i18next';
 import { useActiveNode } from '../../../hooks/useActiveNode';
 import { useSendViaMail } from '../../../hooks/useSendViaMail';
 import useUserInfo from '../../../hooks/useUserInfo';
-import { DISPLAYER_TABS, PREVIEW_MAX_SIZE, PREVIEW_TYPE } from '../../constants';
+import { DISPLAYER_TABS, PREVIEW_TYPE } from '../../constants';
 import { useDeleteNodesMutation } from '../../hooks/graphql/mutations/useDeleteNodesMutation';
 import { useFlagNodesMutation } from '../../hooks/graphql/mutations/useFlagNodesMutation';
 import { useRestoreNodesMutation } from '../../hooks/graphql/mutations/useRestoreNodesMutation';
@@ -45,15 +45,7 @@ import {
 	getAllPermittedActions,
 	isFile
 } from '../../utils/ActionsFactory';
-import {
-	downloadNode,
-	getDocumentPreviewSrc,
-	getImgPreviewSrc,
-	getPdfPreviewSrc,
-	humanFileSize,
-	isSupportedByPreview,
-	openNodeWithDocs
-} from '../../utils/utils';
+import { downloadNode, isSupportedByPreview, openNodeWithDocs } from '../../utils/utils';
 
 interface DisplayerActionsParams {
 	node: ActionsFactoryNodeType &
@@ -126,83 +118,20 @@ export const DisplayerActions: React.VFC<DisplayerActionsParams> = ({ node }) =>
 		setActiveNode(node.id, DISPLAYER_TABS.sharing);
 	}, [node.id, setActiveNode]);
 
-	const { createPreview } = useContext(PreviewsManagerContext);
+	const { openPreview } = useContext(PreviewsManagerContext);
 
-	const [$isSupportedByPreview, documentType] = useMemo<
+	const [$isSupportedByPreview] = useMemo<
 		[boolean, typeof PREVIEW_TYPE[keyof typeof PREVIEW_TYPE] | undefined]
 	>(() => isSupportedByPreview((isFile(node) && node.mime_type) || undefined), [node]);
 
 	const preview = useCallback(() => {
 		if ($isSupportedByPreview) {
-			const { extension, size, id, name, version } = node as File;
-			const actions = [
-				{
-					icon: 'ShareOutline',
-					id: 'ShareOutline',
-					tooltipLabel: t('preview.actions.tooltip.manageShares', 'Manage Shares'),
-					onClick: (): void => setActiveNode(id, DISPLAYER_TABS.sharing)
-				},
-				{
-					icon: 'DownloadOutline',
-					tooltipLabel: t('preview.actions.tooltip.download', 'Download'),
-					id: 'DownloadOutline',
-					onClick: (): void => downloadNode(id)
-				}
-			];
-			const closeAction = {
-				id: 'close-action',
-				icon: 'ArrowBackOutline',
-				tooltipLabel: t('preview.close.tooltip', 'Close')
-			};
-			if (documentType === PREVIEW_TYPE.IMAGE) {
-				createPreview({
-					previewType: 'image',
-					filename: name,
-					extension: extension || undefined,
-					size: (size && humanFileSize(size)) || undefined,
-					actions,
-					closeAction,
-					src: version ? getImgPreviewSrc(id, version, 0, 0, 'high') : ''
-				});
-			} else {
-				// if supported, open document with preview
-				const src =
-					(version &&
-						((documentType === PREVIEW_TYPE.PDF && getPdfPreviewSrc(id, version)) ||
-							(documentType === PREVIEW_TYPE.DOCUMENT && getDocumentPreviewSrc(id, version)))) ||
-					'';
-				if (includes(permittedDisplayerActions, Action.OpenWithDocs)) {
-					actions.unshift({
-						id: 'OpenWithDocs',
-						icon: 'BookOpenOutline',
-						tooltipLabel: t('actions.openWithDocs', 'Open document'),
-						onClick: (): void => openNodeWithDocs(node.id)
-					});
-				}
-				createPreview({
-					previewType: 'pdf',
-					filename: name,
-					extension: extension || undefined,
-					size: (size !== undefined && humanFileSize(size)) || undefined,
-					useFallback: size !== undefined && size > PREVIEW_MAX_SIZE,
-					actions,
-					closeAction,
-					src
-				});
-			}
+			openPreview(node.id);
 		} else if (includes(permittedDisplayerActions, Action.OpenWithDocs)) {
 			// if preview is not supported and document can be opened with docs, open editor
 			openNodeWithDocs(node.id);
 		}
-	}, [
-		$isSupportedByPreview,
-		permittedDisplayerActions,
-		node,
-		t,
-		documentType,
-		setActiveNode,
-		createPreview
-	]);
+	}, [$isSupportedByPreview, permittedDisplayerActions, openPreview, node.id]);
 
 	const itemsMap = useMemo<Partial<Record<Action, ActionItem>>>(
 		() => ({

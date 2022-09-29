@@ -11,21 +11,8 @@ import debounce from 'lodash/debounce';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 
-import { useActiveNode } from '../../../hooks/useActiveNode';
-import { DISPLAYER_TABS, PREVIEW_MAX_SIZE, PREVIEW_TYPE } from '../../constants';
-import { Node } from '../../types/common';
 import { NodeType } from '../../types/graphql/types';
-import { canOpenWithDocs } from '../../utils/ActionsFactory';
-import {
-	downloadNode,
-	getDocumentPreviewSrc,
-	getIconByFileType,
-	getImgPreviewSrc,
-	getPdfPreviewSrc,
-	getPreviewThumbnailSrc,
-	humanFileSize,
-	openNodeWithDocs
-} from '../../utils/utils';
+import { getIconByFileType, getPreviewThumbnailSrc } from '../../utils/utils';
 
 const ImgContainer = styled(Container)`
 	overflow: hidden;
@@ -38,31 +25,20 @@ const Img = styled.img`
 `;
 
 interface DisplayerPreviewProps {
-	typeName: Node['__typename'];
 	id: string;
 	type: NodeType;
 	mimeType: string | undefined;
 	version: number | undefined;
-	name?: string;
-	extension?: string | undefined;
-	size?: number | undefined;
-	previewType: typeof PREVIEW_TYPE[keyof typeof PREVIEW_TYPE];
 }
 
 export const DisplayerPreview: React.VFC<DisplayerPreviewProps> = ({
-	typeName,
 	id,
 	type,
 	mimeType,
-	version,
-	name,
-	extension,
-	size,
-	previewType
+	version
 }) => {
 	const previewContainerRef = useRef<HTMLDivElement>(null);
-	const { createPreview } = useContext(PreviewsManagerContext);
-	const { setActiveNode } = useActiveNode();
+	const { openPreview } = useContext(PreviewsManagerContext);
 	const [t] = useTranslation();
 	const previewHeight = useMemo(() => Math.ceil(window.innerHeight / 3), []);
 	const [loading, setLoading] = useState(true);
@@ -81,77 +57,9 @@ export const DisplayerPreview: React.VFC<DisplayerPreviewProps> = ({
 		lastSuccessfulSrcRef.current = undefined;
 	}, [id]);
 
-	const openPreview = useCallback(() => {
-		const actions = [
-			{
-				icon: 'ShareOutline',
-				id: 'ShareOutline',
-				tooltipLabel: t('preview.actions.tooltip.manageShares', 'Manage Shares'),
-				onClick: (): void => setActiveNode(id, DISPLAYER_TABS.sharing)
-			},
-			{
-				icon: 'DownloadOutline',
-				tooltipLabel: t('preview.actions.tooltip.download', 'Download'),
-				id: 'DownloadOutline',
-				onClick: (): void => downloadNode(id)
-			}
-		];
-		const closeAction = {
-			id: 'close-action',
-			icon: 'ArrowBackOutline',
-			tooltipLabel: t('preview.close.tooltip', 'Close')
-		};
-		if (previewType === PREVIEW_TYPE.IMAGE) {
-			createPreview({
-				previewType: 'image',
-				filename: name,
-				extension: extension || undefined,
-				size: (size && humanFileSize(size)) || undefined,
-				actions,
-				closeAction,
-				src: version ? getImgPreviewSrc(id, version, 0, 0, 'high') : ''
-			});
-		} else {
-			// if supported, open document with preview
-			const src =
-				(version &&
-					((previewType === PREVIEW_TYPE.PDF && getPdfPreviewSrc(id, version)) ||
-						(previewType === PREVIEW_TYPE.DOCUMENT && getDocumentPreviewSrc(id, version)))) ||
-				'';
-
-			// FIXME: improve to remove cast
-			if (canOpenWithDocs([{ __typename: typeName, id, type } as Node])) {
-				actions.unshift({
-					id: 'OpenWithDocs',
-					icon: 'BookOpenOutline',
-					tooltipLabel: t('actions.openWithDocs', 'Open document'),
-					onClick: (): void => openNodeWithDocs(id)
-				});
-			}
-			createPreview({
-				previewType: 'pdf',
-				filename: name,
-				extension: extension || undefined,
-				size: (size && humanFileSize(size)) || undefined,
-				useFallback: size !== undefined && size > PREVIEW_MAX_SIZE,
-				actions,
-				closeAction,
-				src
-			});
-		}
-	}, [
-		t,
-		previewType,
-		setActiveNode,
-		id,
-		createPreview,
-		name,
-		extension,
-		size,
-		version,
-		typeName,
-		type
-	]);
+	const openPreviewCallback = useCallback(() => {
+		openPreview(id);
+	}, [id, openPreview]);
 
 	const buildPreviewSrc = useCallback(() => {
 		if (previewContainerRef.current) {
@@ -236,7 +144,7 @@ export const DisplayerPreview: React.VFC<DisplayerPreviewProps> = ({
 			mainAlignment="flex-start"
 		>
 			{previewSrc && (!error || loading) && (
-				<Img ref={imgRef} src={previewSrc} alt="" onDoubleClick={openPreview} />
+				<Img ref={imgRef} src={previewSrc} alt="" onDoubleClick={openPreviewCallback} />
 			)}
 			{loading && !error && (
 				<Container orientation="vertical" gap="8px">

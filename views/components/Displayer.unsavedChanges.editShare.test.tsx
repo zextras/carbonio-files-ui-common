@@ -26,7 +26,7 @@ import { generateError, setup } from '../../utils/testUtils';
 import { getChipLabel } from '../../utils/utils';
 import { Displayer } from './Displayer';
 
-describe('Displayer', () => {
+describe.skip('Displayer', () => {
 	describe('With unsaved changes', () => {
 		describe('on edit share chip', () => {
 			test('click on other tab show dialog to warn user about unsaved changes', async () => {

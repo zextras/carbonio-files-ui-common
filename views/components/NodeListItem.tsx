@@ -15,16 +15,13 @@ import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { useActiveNode } from '../../../hooks/useActiveNode';
 import { useSendViaMail } from '../../../hooks/useSendViaMail';
 import useUserInfo from '../../../hooks/useUserInfo';
 import {
-	DISPLAYER_TABS,
 	DOUBLE_CLICK_DELAY,
 	LIST_ITEM_AVATAR_HEIGHT,
 	LIST_ITEM_HEIGHT,
 	LIST_ITEM_HEIGHT_COMPACT,
-	PREVIEW_MAX_SIZE,
 	PREVIEW_TYPE,
 	ROOTS
 } from '../../constants';
@@ -35,12 +32,9 @@ import {
 	downloadNode,
 	formatDate,
 	getIconByFileType,
-	getPdfPreviewSrc,
-	getImgPreviewSrc,
 	getListItemAvatarPictureUrl,
 	humanFileSize,
 	openNodeWithDocs,
-	getDocumentPreviewSrc,
 	isSupportedByPreview,
 	isSearchView
 } from '../../utils/utils';
@@ -135,8 +129,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 	version
 }) => {
 	const [t] = useTranslation();
-	const { createPreview } = useContext(PreviewsManagerContext);
-	const { setActiveNode } = useActiveNode();
+	const { openPreview } = useContext(PreviewsManagerContext);
 	const location = useLocation();
 	const userInfo = useUserInfo();
 	const [isContextualMenuActive, setIsContextualMenuActive] = useState(false);
@@ -164,7 +157,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 		[id, type]
 	);
 
-	const [$isSupportedByPreview, documentType] = useMemo<
+	const [$isSupportedByPreview] = useMemo<
 		[boolean, typeof PREVIEW_TYPE[keyof typeof PREVIEW_TYPE] | undefined]
 	>(() => isSupportedByPreview(mimeType), [mimeType]);
 
@@ -183,62 +176,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 					// if can be opened with docs on edit mode, open editor
 					openNodeWithDocs(id);
 				} else if ($isSupportedByPreview) {
-					const actions = [
-						{
-							icon: 'ShareOutline',
-							id: 'ShareOutline',
-							tooltipLabel: t('preview.actions.tooltip.manageShares', 'Manage Shares'),
-							onClick: (): void => setActiveNode(id, DISPLAYER_TABS.sharing)
-						},
-						{
-							icon: 'DownloadOutline',
-							tooltipLabel: t('preview.actions.tooltip.download', 'Download'),
-							id: 'DownloadOutline',
-							onClick: (): void => downloadNode(id)
-						}
-					];
-					const closeAction = {
-						id: 'close-action',
-						icon: 'ArrowBackOutline',
-						tooltipLabel: t('preview.close.tooltip', 'Close')
-					};
-					if (documentType === PREVIEW_TYPE.IMAGE) {
-						createPreview({
-							previewType: 'image',
-							filename: name,
-							extension: extension || undefined,
-							size: (size && humanFileSize(size)) || undefined,
-							actions,
-							closeAction,
-							src: version ? getImgPreviewSrc(id, version, 0, 0, 'high') : ''
-						});
-					} else {
-						// if supported, open document with preview
-						const src =
-							(version &&
-								((documentType === PREVIEW_TYPE.PDF && getPdfPreviewSrc(id, version)) ||
-									(documentType === PREVIEW_TYPE.DOCUMENT &&
-										getDocumentPreviewSrc(id, version)))) ||
-							'';
-						if (includes(permittedContextualMenuActions, Action.OpenWithDocs)) {
-							actions.unshift({
-								id: 'OpenWithDocs',
-								icon: 'BookOpenOutline',
-								tooltipLabel: t('actions.openWithDocs', 'Open document'),
-								onClick: (): void => openNodeWithDocs(id)
-							});
-						}
-						createPreview({
-							previewType: 'pdf',
-							filename: name,
-							extension: extension || undefined,
-							size: (size !== undefined && humanFileSize(size)) || undefined,
-							useFallback: size !== undefined && size > PREVIEW_MAX_SIZE,
-							actions,
-							closeAction,
-							src
-						});
-					}
+					openPreview(id);
 				} else if (includes(permittedContextualMenuActions, Action.OpenWithDocs)) {
 					// if preview is not supported and document can be opened with docs, open editor
 					openNodeWithDocs(id);
@@ -250,18 +188,11 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 			disabled,
 			trashed,
 			isNavigable,
-			$isSupportedByPreview,
 			permittedContextualMenuActions,
+			$isSupportedByPreview,
 			navigateTo,
 			id,
-			createPreview,
-			name,
-			extension,
-			size,
-			t,
-			version,
-			setActiveNode,
-			documentType
+			openPreview
 		]
 	);
 
