@@ -230,4 +230,31 @@ describe('Displayer', () => {
 		expect(screen.getByText(collaborator0Name)).toBeVisible();
 		expect(screen.getByText(collaborator5Name)).toBeVisible();
 	});
+
+	test('all collaborators are loaded inside the sharing tab when navigating from the details tab', async () => {
+		const node = populateNode();
+		node.shares = populateShares(node, 100);
+		node.permissions.can_share = false;
+		const mocks = [
+			mockGetNode(getNodeVariables(node.id), { ...node, shares: node.shares.slice(0, 6) }),
+			mockGetShares(getSharesVariables(node.id), node)
+		];
+
+		const collaborator0Name = getChipLabel(node.shares[0]?.share_target ?? { name: '' });
+		const collaborator99Name = getChipLabel(node.shares[99]?.share_target ?? { name: '' });
+		const { user } = setup(<Displayer translationKey="No.node" />, {
+			initialRouterEntries: [`/?node=${node.id}`],
+			mocks
+		});
+		await screen.findAllByText(node.name);
+		await screen.findByTestId('icon: MoreHorizontalOutline');
+		expect(screen.getAllByTestId('avatar')).toHaveLength(6);
+		expect(screen.getByTestId('icon: MoreHorizontalOutline')).toBeVisible();
+		await user.click(screen.getByTestId('icon: MoreHorizontalOutline'));
+		await screen.findByText(collaborator0Name);
+		await screen.findByText(collaborator99Name);
+		// tab is changed and all collaborators are loaded
+		expect(screen.getByText(collaborator0Name)).toBeVisible();
+		expect(screen.getByText(collaborator99Name)).toBeVisible();
+	});
 });

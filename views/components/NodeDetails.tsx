@@ -151,7 +151,7 @@ const ShimmerNodeDetailsItem = (): JSX.Element => (
 	</Container>
 );
 
-const CustomAvatar = styled(Avatar)`
+const CustomAvatar = styled(Avatar).attrs({ 'data-testid': 'avatar' })`
 	margin-right: -4px;
 	cursor: pointer;
 `;

@@ -27,6 +27,7 @@ export function useGetSharesQuery(
 		errorPolicy: 'all',
 		returnPartialData: true
 	});
+
 	useErrorHandler(error, 'GET_SHARES');
 
 	return { data, loading, error };
