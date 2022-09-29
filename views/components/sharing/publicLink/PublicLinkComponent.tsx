@@ -195,21 +195,23 @@ export const PublicLinkComponent: React.FC<PublicLinkComponentProps> = ({
 									? t('publicLink.link.urlChip.tooltip.expired', 'This link has expired')
 									: t('publicLink.link.urlChip.tooltip.copy', 'Copy public link')
 							}
-							maxWidth="unset"
 							placement="top"
 							disabled={forceUrlCopyDisabled && !isExpired}
 						>
-							<Text size="small" weight="light">
-								{url}
-							</Text>
+							<Row wrap="nowrap" minWidth={0}>
+								<Text size="small" weight="light">
+									{url}
+								</Text>
+							</Row>
 						</Tooltip>
 					}
 					hasAvatar={false}
 					onClick={forceUrlCopyDisabled || isExpired ? undefined : copyUrl}
 					disabled={forceUrlCopyDisabled || isExpired}
 					minWidth={0}
+					maxWidth="100%"
 				/>
-				<Container orientation="horizontal" width="fit" padding={{ left: 'large' }}>
+				<Container orientation="horizontal" width="fit" padding={{ left: 'large' }} flexShrink={0}>
 					{status === PublicLinkRowStatus.OPEN && (
 						<>
 							<Button

@@ -13,6 +13,7 @@ import {
 	Container,
 	Icon,
 	Padding,
+	Row,
 	Text,
 	Tooltip,
 	useModal,
@@ -212,8 +213,15 @@ export const CollaborationLinks: React.FC<CollaborationLinksProps> = ({
 				padding={{ all: 'small' }}
 				data-testid="read-share-collaboration-link-container"
 			>
-				<Icon icon="EyeOutline" size="medium" />
-				<Container crossAlignment="flex-start" width="fit" flexGrow={1}>
+				<Container
+					width="auto"
+					flexShrink={0}
+					mainAlignment="flex-start"
+					crossAlignment="flex-start"
+				>
+					<Icon icon="EyeOutline" size="medium" />
+				</Container>
+				<Container crossAlignment="flex-start" width="auto" flexGrow={1} minWidth={0}>
 					<TextWithLineHeight size="small">
 						{t('collaborationLinks.row.title.ReadAndShare', 'Read and Share')}
 					</TextWithLineHeight>
@@ -228,14 +236,17 @@ export const CollaborationLinks: React.FC<CollaborationLinksProps> = ({
 									maxWidth="unset"
 									placement="top"
 								>
-									<Text size="small" weight="light">
-										{readAndShareCollaborationLink.url}
-									</Text>
+									<Row wrap="nowrap" minWidth={0}>
+										<Text size="small" weight="light">
+											{readAndShareCollaborationLink.url}
+										</Text>
+									</Row>
 								</Tooltip>
 							}
 							hasAvatar={false}
 							minWidth={0}
 							onClick={copyCollaborationUrl}
+							maxWidth="100%"
 						/>
 					) : (
 						<TextWithLineHeight size="extrasmall" color="secondary">
@@ -243,24 +254,26 @@ export const CollaborationLinks: React.FC<CollaborationLinksProps> = ({
 						</TextWithLineHeight>
 					)}
 				</Container>
-				{readAndShareCollaborationLink ? (
-					<Button
-						size="small"
-						type="outlined"
-						color="error"
-						label={t('collaborationLinks.button.revoke', 'Revoke')}
-						onClick={deleteReadAndShareCollaborationLinkCallback}
-						icon={'SlashOutline'}
-					/>
-				) : (
-					<Button
-						size="small"
-						type="outlined"
-						label={t('collaborationLinks.button.generateLink', 'Generate Link')}
-						onClick={createReadAndShareCollaborationLinkCallback}
-						disabled={loading}
-					/>
-				)}
+				<Container width="auto" flexShrink={0} mainAlignment="flex-start" crossAlignment="flex-end">
+					{readAndShareCollaborationLink ? (
+						<Button
+							size="small"
+							type="outlined"
+							color="error"
+							label={t('collaborationLinks.button.revoke', 'Revoke')}
+							onClick={deleteReadAndShareCollaborationLinkCallback}
+							icon={'SlashOutline'}
+						/>
+					) : (
+						<Button
+							size="small"
+							type="outlined"
+							label={t('collaborationLinks.button.generateLink', 'Generate Link')}
+							onClick={createReadAndShareCollaborationLinkCallback}
+							disabled={loading}
+						/>
+					)}
+				</Container>
 			</Container>
 			<Padding vertical="extrasmall" />
 			{canWrite && (
@@ -272,8 +285,15 @@ export const CollaborationLinks: React.FC<CollaborationLinksProps> = ({
 					padding={{ all: 'small' }}
 					data-testid="read-write-share-collaboration-link-container"
 				>
-					<Icon icon="Edit2Outline" size="medium" />
-					<Container crossAlignment="flex-start" width="fit" flexGrow={1}>
+					<Container
+						width="auto"
+						flexShrink={0}
+						mainAlignment="flex-start"
+						crossAlignment="flex-start"
+					>
+						<Icon icon="Edit2Outline" size="medium" />
+					</Container>
+					<Container crossAlignment="flex-start" width="auto" flexGrow={1} minWidth={0}>
 						<TextWithLineHeight size="small">
 							{t('collaborationLinks.row.title.writeAndShare', 'Write and Share')}
 						</TextWithLineHeight>
@@ -288,14 +308,17 @@ export const CollaborationLinks: React.FC<CollaborationLinksProps> = ({
 										maxWidth="unset"
 										placement="top"
 									>
-										<Text size="small" weight="light">
-											{readWriteAndShareCollaborationLink.url}
-										</Text>
+										<Row wrap="nowrap" minWidth={0}>
+											<Text size="small" weight="light">
+												{readWriteAndShareCollaborationLink.url}
+											</Text>
+										</Row>
 									</Tooltip>
 								}
 								hasAvatar={false}
 								minWidth={0}
 								onClick={copyCollaborationUrl}
+								maxWidth="100%"
 							/>
 						) : (
 							<TextWithLineHeight size="extrasmall" color="secondary">
@@ -306,24 +329,31 @@ export const CollaborationLinks: React.FC<CollaborationLinksProps> = ({
 							</TextWithLineHeight>
 						)}
 					</Container>
-					{readWriteAndShareCollaborationLink ? (
-						<Button
-							size="small"
-							type="outlined"
-							color="error"
-							label={t('collaborationLinks.button.revoke', 'Revoke')}
-							onClick={deleteReadWriteAndShareCollaborationLinkCallback}
-							icon={'SlashOutline'}
-						/>
-					) : (
-						<Button
-							size="small"
-							type="outlined"
-							label={t('collaborationLinks.button.generateLink', 'Generate Link')}
-							onClick={createReadWriteAndShareCollaborationLinkCallback}
-							disabled={loading}
-						/>
-					)}
+					<Container
+						width="auto"
+						flexShrink={0}
+						mainAlignment="flex-start"
+						crossAlignment="flex-end"
+					>
+						{readWriteAndShareCollaborationLink ? (
+							<Button
+								size="small"
+								type="outlined"
+								color="error"
+								label={t('collaborationLinks.button.revoke', 'Revoke')}
+								onClick={deleteReadWriteAndShareCollaborationLinkCallback}
+								icon={'SlashOutline'}
+							/>
+						) : (
+							<Button
+								size="small"
+								type="outlined"
+								label={t('collaborationLinks.button.generateLink', 'Generate Link')}
+								onClick={createReadWriteAndShareCollaborationLinkCallback}
+								disabled={loading}
+							/>
+						)}
+					</Container>
 				</Container>
 			)}
 		</Container>
