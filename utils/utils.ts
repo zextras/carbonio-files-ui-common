@@ -46,7 +46,7 @@ import {
 import { Maybe, Node, NodeSort, NodeType, SharePermission } from '../types/graphql/types';
 
 /**
- * Format a size in byte as human readable
+ * Format a size in byte as human-readable
  */
 export const humanFileSize = (inputSize: number): string => {
 	if (inputSize === 0) {

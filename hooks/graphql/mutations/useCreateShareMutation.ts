@@ -10,6 +10,7 @@ import { ApolloError, FetchResult, gql, useMutation } from '@apollo/client';
 
 import SHARE_TARGET from '../../../graphql/fragments/shareTarget.graphql';
 import CREATE_SHARE from '../../../graphql/mutations/createShare.graphql';
+import { ShareCachedObject, SharesCachedObject } from '../../../types/apollo';
 import { Node } from '../../../types/common';
 import {
 	CreateShareMutation,
@@ -52,7 +53,7 @@ export function useCreateShareMutation(): [
 						cache.modify({
 							id: cache.identify(node),
 							fields: {
-								shares(existingShareRefs) {
+								shares(existingShareRefs: SharesCachedObject): SharesCachedObject {
 									// TODO: move fragment to graphql file and add type
 									const nodeRef = cache.writeFragment({
 										data: data.createShare.node,
@@ -70,12 +71,16 @@ export function useCreateShareMutation(): [
 										});
 									}
 
-									const newShare = {
+									const newShare: ShareCachedObject = {
 										...data.createShare,
 										share_target: targetRef,
 										node: nodeRef
 									};
-									return [...existingShareRefs, newShare];
+
+									return {
+										...existingShareRefs,
+										shares: [...existingShareRefs.shares, newShare]
+									};
 								}
 							}
 						});

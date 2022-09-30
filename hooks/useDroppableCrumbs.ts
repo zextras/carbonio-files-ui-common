@@ -330,6 +330,7 @@ export function useDroppableCrumbs(
 		if (currentFolderId) {
 			return map(crumbs, (crumb) => ({
 				...crumb,
+				'data-testid': 'drop-crumb',
 				onDragEnter: crumbDragEnterHandler(crumb),
 				onDragOver: crumbDragOverHandler(crumb),
 				onDragLeave: crumbDragLeaveHandler,

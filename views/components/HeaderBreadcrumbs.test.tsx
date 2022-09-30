@@ -7,7 +7,15 @@
 import React from 'react';
 
 import { gql } from '@apollo/client';
-import { act, fireEvent, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/react';
+import {
+	act,
+	fireEvent,
+	screen,
+	waitFor,
+	waitForElementToBeRemoved,
+	within
+} from '@testing-library/react';
+import find from 'lodash/find';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 
@@ -83,6 +91,8 @@ describe('Header Breadcrumbs', () => {
 			fireEvent.dragStart(mockDraggedItem, { dataTransfer: dataTransfer() });
 			fireEvent.dragEnter(destinationCrumbItem, { dataTransfer: dataTransfer() });
 			fireEvent.dragOver(destinationCrumbItem, { dataTransfer: dataTransfer() });
+			const breadcrumbCrumbs = screen.queryByTestId('drop-crumb');
+			expect(breadcrumbCrumbs).not.toBeInTheDocument();
 			expect(destinationCrumbItem).not.toHaveStyle({
 				'background-color': 'rgba(43, 115, 210, 0.4)'
 			});
@@ -172,11 +182,16 @@ describe('Header Breadcrumbs', () => {
 			draggedItemsVar(movingNodes);
 			dataTransfer().setData(DRAG_TYPES.move, JSON.stringify(movingNodes));
 			fireEvent.dragEnter(destinationCrumbItem, { dataTransfer: dataTransfer() });
-			expect(destinationCrumbItem.parentElement).toHaveStyle({
+			const breadcrumbCrumbs = screen.getAllByTestId('drop-crumb');
+			const destinationCrumb = find(
+				breadcrumbCrumbs,
+				(crumb) => within(crumb).queryByText(path[0].name) !== null
+			);
+			expect(destinationCrumb).toHaveStyle({
 				'background-color': 'rgba(43, 115, 210, 0.4)'
 			});
 			fireEvent.drop(destinationCrumbItem, { dataTransfer: dataTransfer() });
-			expect(destinationCrumbItem.parentElement).toHaveStyle({
+			expect(destinationCrumb).toHaveStyle({
 				'background-color': ''
 			});
 			fireEvent.dragEnd(mockDraggedItem, { dataTransfer: dataTransfer() });
@@ -268,7 +283,12 @@ describe('Header Breadcrumbs', () => {
 			draggedItemsVar(movingNodes);
 			dataTransfer().setData(DRAG_TYPES.move, JSON.stringify(movingNodes));
 			fireEvent.dragEnter(destinationCrumbItem, { dataTransfer: dataTransfer() });
-			expect(destinationCrumbItem.parentElement).not.toHaveStyle({
+			const breadcrumbCrumbs = screen.getAllByTestId('drop-crumb');
+			const destinationCrumb = find(
+				breadcrumbCrumbs,
+				(crumb) => within(crumb).queryByText(path[0].name) !== null
+			);
+			expect(destinationCrumb).not.toHaveStyle({
 				'background-color': 'rgba(43, 115, 210, 0.4)'
 			});
 			fireEvent.drop(destinationCrumbItem, { dataTransfer: dataTransfer() });
@@ -343,7 +363,12 @@ describe('Header Breadcrumbs', () => {
 			dataTransfer().setData(DRAG_TYPES.move, JSON.stringify(movingNodes));
 			fireEvent.dragEnter(destinationCrumbItem, { dataTransfer: dataTransfer() });
 			fireEvent.dragOver(destinationCrumbItem, { dataTransfer: dataTransfer() });
-			expect(destinationCrumbItem.parentElement).toHaveStyle({
+			const breadcrumbCrumbs = screen.getAllByTestId('drop-crumb');
+			const destinationCrumb = find(
+				breadcrumbCrumbs,
+				(crumb) => within(crumb).queryByText(parent.name) !== null
+			);
+			expect(destinationCrumb).toHaveStyle({
 				'background-color': 'rgba(43, 115, 210, 0.4)'
 			});
 			// wait for navigation to start
@@ -415,7 +440,12 @@ describe('Header Breadcrumbs', () => {
 			dataTransfer().setData(DRAG_TYPES.move, JSON.stringify(movingNodes));
 			fireEvent.dragEnter(destinationCrumbItem, { dataTransfer: dataTransfer() });
 			fireEvent.dragOver(destinationCrumbItem, { dataTransfer: dataTransfer() });
-			expect(destinationCrumbItem.parentElement).toHaveStyle({
+			const breadcrumbCrumbs = screen.getAllByTestId('drop-crumb');
+			const destinationCrumb = find(
+				breadcrumbCrumbs,
+				(crumb) => within(crumb).queryByText(parent.name) !== null
+			);
+			expect(destinationCrumb).toHaveStyle({
 				'background-color': 'rgba(130, 130, 130, 0.4)'
 			});
 			// wait for navigation to start eventually
@@ -512,11 +542,16 @@ describe('Header Breadcrumbs', () => {
 			dataTransfer().setData(DRAG_TYPES.move, JSON.stringify(movingNodes));
 			fireEvent.dragEnter(destinationCrumbItem, { dataTransfer: dataTransfer() });
 			fireEvent.dragOver(destinationCrumbItem, { dataTransfer: dataTransfer() });
-			expect(destinationCrumbItem.parentElement).toHaveStyle({
+			const breadcrumbCrumbs = screen.getAllByTestId('drop-crumb');
+			const destinationCrumb = find(
+				breadcrumbCrumbs,
+				(crumb) => within(crumb).queryByText(path[0].name) !== null
+			);
+			expect(destinationCrumb).toHaveStyle({
 				'background-color': 'rgba(130, 130, 130, 0.4)'
 			});
 			fireEvent.drop(destinationCrumbItem, { dataTransfer: dataTransfer() });
-			expect(destinationCrumbItem.parentElement).toHaveStyle({
+			expect(destinationCrumb).toHaveStyle({
 				'background-color': ''
 			});
 			fireEvent.dragEnd(mockDraggedItem, { dataTransfer: dataTransfer() });
@@ -771,14 +806,18 @@ describe('Header Breadcrumbs', () => {
 			fireEvent.dragLeave(collapserItem, { dataTransfer: dataTransfer() });
 			fireEvent.dragEnter(destinationItem, { dataTransfer: dataTransfer() });
 			fireEvent.dragOver(destinationItem, { dataTransfer: dataTransfer() });
-			expect(destinationItem.parentElement).toHaveStyle({
+			const breadcrumbCrumbs = screen.getAllByTestId('drop-crumb');
+			const destinationCrumb = find(
+				breadcrumbCrumbs,
+				(crumb) => within(crumb).queryByText(path[0].name) !== null
+			);
+			expect(destinationCrumb).toHaveStyle({
 				'background-color': 'rgba(43, 115, 210, 0.4)'
 			});
 			fireEvent.drop(screen.getByText(path[0].name), { dataTransfer: dataTransfer() });
-			expect(destinationItem.parentElement).not.toHaveStyle({
+			expect(destinationCrumb).not.toHaveStyle({
 				'background-color': 'rgba(43, 115, 210, 0.4)'
 			});
-			// expect(destinationItem.parentElement).toHaveStyle({ 'background-color': '' });
 			const snackbar = await screen.findByText(/Item moved/i);
 			expect(snackbar).toBeVisible();
 		});
@@ -885,11 +924,16 @@ describe('Header Breadcrumbs', () => {
 			fireEvent.dragLeave(collapserItem, { dataTransfer: dataTransfer() });
 			fireEvent.dragEnter(destinationItem, { dataTransfer: dataTransfer() });
 			fireEvent.dragOver(destinationItem, { dataTransfer: dataTransfer() });
-			expect(destinationItem.parentElement).toHaveStyle({
+			const breadcrumbCrumbs = screen.getAllByTestId('drop-crumb');
+			const destinationCrumb = find(
+				breadcrumbCrumbs,
+				(crumb) => within(crumb).queryByText(path[0].name) !== null
+			);
+			expect(destinationCrumb).toHaveStyle({
 				'background-color': 'rgba(130, 130, 130, 0.4)'
 			});
 			fireEvent.drop(destinationItem, { dataTransfer: dataTransfer() });
-			expect(destinationItem.parentElement).not.toHaveStyle({
+			expect(destinationCrumb).not.toHaveStyle({
 				'background-color': 'rgba(130, 130, 130, 0.4)'
 			});
 			// wait a tick to allow mutation to eventually be executed

@@ -25,7 +25,9 @@ import {
 	FindNodesCachedObject,
 	NodesListCachedObject,
 	NodesPage,
-	NodesPageCachedObject
+	NodesPageCachedObject,
+	ShareCachedObject,
+	SharesCachedObject
 } from '../types/apollo';
 import introspection from '../types/graphql/possible-types';
 import {
@@ -36,8 +38,7 @@ import {
 	GetNodeQueryVariables,
 	NodeSharesArgs,
 	QueryFindNodesArgs,
-	QueryGetNodeArgs,
-	Share
+	QueryGetNodeArgs
 } from '../types/graphql/types';
 
 function mergeNodesList(
@@ -99,15 +100,43 @@ const cache = new InMemoryCache({
 				shares: {
 					keyArgs: false,
 					merge(
-						existing: Share[],
-						incoming: Share[],
+						existing: ShareCachedObject[],
+						incoming: ShareCachedObject[],
 						{ args }: FieldFunctionOptions<Partial<NodeSharesArgs>>
-					): Share[] {
+					): SharesCachedObject {
 						if (args?.cursor) {
 							const newExisting = existing || [];
-							return [...newExisting, ...incoming];
+							return {
+								args,
+								shares: [...newExisting, ...incoming]
+							};
 						}
-						return [...incoming];
+						return { args, shares: [...incoming] };
+					},
+					read(
+						existing: SharesCachedObject,
+						{ args }: FieldFunctionOptions<Partial<NodeSharesArgs>>
+					): ShareCachedObject[] | undefined {
+						// return the already cached data when:
+						// cached data is missing
+						// or
+						// no arg limit is passed
+						// or
+						// a previous query requested a greater number of shares (cached limit is greater than args limit)
+						// or
+						// cached shares number is lower than the previous query limit
+						// (so even requesting a greater limit, the returned share will be the same of the already cached)
+						if (
+							!existing?.args?.limit ||
+							!args?.limit ||
+							existing.args.limit >= args.limit ||
+							existing.shares.length < existing.args.limit
+						) {
+							return existing?.shares;
+						}
+						// otherwise, if a query is requesting a number of shares grater then the cached data,
+						// return undefined to force the network request
+						return undefined;
 					}
 				}
 			}
