@@ -10,7 +10,7 @@ import { ApolloProvider } from '@apollo/client';
 import { ModalManager, SnackbarManager } from '@zextras/carbonio-design-system';
 import { PreviewManager } from '@zextras/carbonio-ui-preview';
 
-import StyledWrapper from '../../../StyledWrapper';
+import StyledWrapper from '../../../views/StyledWrapper';
 import buildClient from '../../apollo';
 
 export const ProvidersWrapper: React.FC = ({ children }) => {

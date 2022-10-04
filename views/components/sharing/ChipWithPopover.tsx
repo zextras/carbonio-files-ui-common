@@ -8,18 +8,20 @@ import React, { useCallback, useState, useEffect } from 'react';
 
 import {
 	Popover,
-	Chip,
+	Chip as DSChip,
 	ChipProps,
 	getColor,
 	useCombinedRefs
 } from '@zextras/carbonio-design-system';
 import styled from 'styled-components';
 
+import { Chip } from '../../../mui/Chip';
+
 const CustomPopover = styled(Popover)`
 	z-index: 1000;
 `;
 
-const ActiveChip = styled(Chip)<{ $active: boolean }>`
+const ActiveChip = styled(DSChip)<{ $active: boolean }>`
 	background: ${({ background, $active, theme }): string =>
 		getColor(`${background}.${$active ? 'active' : 'regular'}`, theme)};
 `;
@@ -91,9 +93,18 @@ export const ChipWithPopover = React.forwardRef<HTMLDivElement, ChipWithPopoverP
 			[openPopoverOnClick, onClick, onValueChange]
 		);
 
+		const { size, label, actions } = rest;
+
 		return (
 			<>
 				<div ref={innerRef} data-testid="chip-with-popover">
+					<Chip
+						label={label}
+						size={size === 'large' ? 'medium' : size}
+						onClick={openPopoverOnClick || onClick ? onClickChip : undefined}
+						onDelete={onClose ? onCloseChip : undefined}
+						actions={actions}
+					/>
 					<ActiveChip
 						$active={open}
 						background={background}

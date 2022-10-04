@@ -37,7 +37,7 @@ import { I18nextProvider } from 'react-i18next';
 import { MemoryRouter } from 'react-router-dom';
 
 import I18nFactory from '../../i18n/i18n-test-factory';
-import StyledWrapper from '../../StyledWrapper';
+import StyledWrapper from '../../views/StyledWrapper';
 import { AdvancedFilters } from '../types/common';
 import { Folder } from '../types/graphql/types';
 import { Mock } from './mockUtils';
