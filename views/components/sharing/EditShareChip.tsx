@@ -7,17 +7,18 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { FetchResult, useLazyQuery } from '@apollo/client';
-import { ChipAction, Text, useSnackbar } from '@zextras/carbonio-design-system';
+import { Text, useSnackbar } from '@zextras/carbonio-design-system';
 import filter from 'lodash/filter';
 import map from 'lodash/map';
 import { useTranslation } from 'react-i18next';
 
-import { SHARE_CHIP_MAX_WIDTH, SHARE_CHIP_SIZE } from '../../../constants';
+import { SHARE_CHIP_SIZE } from '../../../constants';
 import GET_PERMISSIONS from '../../../graphql/queries/getPermissions.graphql';
 import { useDeleteShareMutation } from '../../../hooks/graphql/mutations/useDeleteShareMutation';
 import { useUpdateShareMutation } from '../../../hooks/graphql/mutations/useUpdateShareMutation';
 import { useDecreaseYourOwnSharePermissionModal } from '../../../hooks/modals/useDecreaseYourOwnSharePermissionModal';
 import { useDeleteShareModal } from '../../../hooks/useDeleteShareModal';
+import { ChipAction } from '../../../mui/Chip';
 import { Role } from '../../../types/common';
 import {
 	DeleteNodesMutation,
@@ -305,7 +306,7 @@ export const EditShareChip: React.FC<EditShareChipProps> = ({
 				openPopoverOnClick={false}
 				popoverOpen={popoverOpen}
 				onValueChange={updatePermissionsPopover}
-				maxWidth={SHARE_CHIP_MAX_WIDTH}
+				// maxWidth={SHARE_CHIP_MAX_WIDTH}
 			>
 				{(closePopover: () => void): JSX.Element => (
 					<EditShareChipPopoverContainer

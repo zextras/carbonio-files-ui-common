@@ -9,19 +9,19 @@ import {
 	ButtonProps,
 	Chip as MuiChip,
 	ChipProps as MuiChipProps,
-	IconButton,
-	Palette,
 	Stack,
 	Theme,
 	Tooltip,
 	TooltipProps
 } from '@mui/material';
-import { Icon } from '@zextras/carbonio-design-system';
+import { Icon, IconProps } from '@zextras/carbonio-design-system';
 import map from 'lodash/map';
 
-type ChipAction = {
+import { IconButton, IconButtonProps } from './IconButton';
+
+export type ChipAction = {
 	/** Chip action icon color */
-	color?: keyof Palette;
+	color?: IconProps['color'];
 	/** Chip action disabled status */
 	disabled?: boolean;
 	/** Chip action icon */
@@ -38,7 +38,7 @@ type ChipAction = {
 			/** Chip action click callback (button type only). NB: onClick event IS propagated. It's up to the dev to eventually stop the propagation */
 			onClick: ButtonProps['onClick'];
 			/** Chip action background (button type only) */
-			background?: keyof Palette;
+			background?: IconButtonProps['backgroundColor'];
 	  }
 	| {
 			/** Chip action type */
@@ -46,7 +46,7 @@ type ChipAction = {
 	  }
 );
 
-interface ChipProps extends MuiChipProps {
+export interface ChipProps extends MuiChipProps {
 	/** Chip actions (buttons or icons) */
 	actions?: ChipAction[];
 	/** Chip error. If a string is provided it is shown in a tooltip */
@@ -83,11 +83,9 @@ export const Chip = React.forwardRef<HTMLDivElement, ChipProps>(function ChipFn(
 								aria-label={action.label}
 								size={size}
 								onClick={action.onClick}
-								sx={
-									(size === 'small' && { padding: '2px' }) ||
-									(size === 'medium' && { padding: '4px' }) ||
-									undefined
-								}
+								sx={{
+									...((size === 'small' && { p: 0.25 }) || (size === 'medium' && { p: 0.5 }) || {})
+								}}
 								backgroundColor={error || !action.background ? 'gray5' : action.background}
 							>
 								<Icon

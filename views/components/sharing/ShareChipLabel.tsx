@@ -5,11 +5,10 @@
  */
 import React, { useMemo } from 'react';
 
-import { Text, Tooltip } from '@zextras/carbonio-design-system';
+import { Tooltip, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 
 import useUserInfo from '../../../../hooks/useUserInfo';
-import { SHARE_CHIP_SIZE } from '../../../constants';
 import { Contact } from '../../../types/common';
 import { getChipLabel, getChipTooltip } from '../../../utils/utils';
 
@@ -31,10 +30,8 @@ export const ShareChipLabel = ({
 	);
 
 	return (
-		<Tooltip label={getChipTooltip(contact)} maxWidth="100%" disabled={!showTooltip}>
-			<Text size={SHARE_CHIP_SIZE} weight="light">
-				{chipLabel}
-			</Text>
+		<Tooltip title={getChipTooltip(contact)} disableHoverListener={!showTooltip} enterDelay={500}>
+			<Typography variant="light">{chipLabel}</Typography>
 		</Tooltip>
 	);
 };
