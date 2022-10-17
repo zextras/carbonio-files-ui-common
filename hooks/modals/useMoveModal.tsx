@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 
 import { GetNodeParentType, Node } from '../../types/common';
 import { MoveNodesModalContent } from '../../views/components/MoveNodesModalContent';
+import { useDestinationVarManager } from '../useDestinationVarManager';
 
 export type OpenMoveModal = (
 	nodes: Array<Pick<Node, '__typename' | 'id' | 'owner'> & GetNodeParentType>,
@@ -24,6 +25,8 @@ export function useMoveModal(moveNodesActionCallback?: () => void): {
 
 	const createSnackbar = useSnackbar();
 	const [t] = useTranslation();
+
+	const { resetAll, resetCurrent } = useDestinationVarManager();
 
 	const openMoveNodesModal = useCallback<OpenMoveModal>(
 		(nodes, fromFolder) => {
@@ -50,14 +53,18 @@ export function useMoveModal(moveNodesActionCallback?: () => void): {
 			if (folderToOpen) {
 				const closeModal = createModal(
 					{
+						minHeight: '400px',
 						maxHeight: '60vh',
 						onClose: () => {
+							resetAll();
 							closeModal();
 						},
+						onClick: resetCurrent,
 						children: (
 							<MoveNodesModalContent
 								closeAction={(): void => {
 									moveNodesActionCallback && moveNodesActionCallback();
+									resetAll();
 									closeModal();
 								}}
 								nodesToMove={nodes}
@@ -69,7 +76,7 @@ export function useMoveModal(moveNodesActionCallback?: () => void): {
 				);
 			}
 		},
-		[createModal, createSnackbar, moveNodesActionCallback, t]
+		[createModal, createSnackbar, moveNodesActionCallback, resetAll, resetCurrent, t]
 	);
 
 	return { openMoveNodesModal };

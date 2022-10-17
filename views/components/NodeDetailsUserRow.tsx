@@ -46,7 +46,7 @@ export interface NodeDetailsUserRowProps {
 	label: string;
 	tooltip: string;
 	dateTime?: number;
-	clickAction?: React.MouseEventHandler;
+	clickAction?: (event: React.MouseEvent<HTMLElement> | KeyboardEvent) => void;
 	loading?: boolean | undefined;
 }
 

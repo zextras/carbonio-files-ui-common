@@ -7,6 +7,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Container, Responsive } from '@zextras/carbonio-design-system';
+import { Action } from '@zextras/carbonio-shell-ui';
 import filter from 'lodash/filter';
 import last from 'lodash/last';
 import map from 'lodash/map';
@@ -255,12 +256,16 @@ const FolderView: React.VFC = () => {
 		>(actions, (action) => ({
 			type: ACTION_TYPES.NEW,
 			id: action.id,
-			action: () => ({
-				type: ACTION_TYPES.NEW,
-				group: FILES_APP_ID,
-				click: noop,
-				...action
-			})
+			action: () =>
+				({
+					// FIXME: remove ts-ignore when shell will fix type of "type"
+					// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+					// @ts-ignore
+					type: ACTION_TYPES.NEW,
+					group: FILES_APP_ID,
+					click: noop,
+					...action
+				} as Action)
 		}));
 
 		setCreateOptions(
@@ -268,6 +273,9 @@ const FolderView: React.VFC = () => {
 				type: ACTION_TYPES.NEW,
 				id: ACTION_IDS.UPLOAD_FILE,
 				action: () => ({
+					// FIXME: remove ts-ignore when shell will fix type of "type"
+					// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+					// @ts-ignore
 					type: ACTION_TYPES.NEW,
 					id: ACTION_IDS.UPLOAD_FILE,
 					primary: true,

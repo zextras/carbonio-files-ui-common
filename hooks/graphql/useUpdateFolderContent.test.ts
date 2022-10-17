@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { RenderHookResult } from '@testing-library/react-hooks';
 import find from 'lodash/find';
 
 import { NODES_LOAD_LIMIT, NODES_SORT_DEFAULT } from '../../constants';
@@ -25,21 +24,11 @@ import {
 	Node
 } from '../../types/graphql/types';
 import { getChildrenVariables } from '../../utils/mockUtils';
-import { getApolloHookWrapper, HookWrapperProps } from '../../utils/testUtils';
+import { setupHook } from '../../utils/testUtils';
 import { addNodeInSortedList } from '../../utils/utils';
 import { UpdateFolderContentType, useUpdateFolderContent } from './useUpdateFolderContent';
 
 describe('useUpdateFolderContent', () => {
-	function setupHook(): {
-		renderHookResult: RenderHookResult<HookWrapperProps, unknown>;
-		updateFolderContent: UpdateFolderContentType;
-	} {
-		const renderHookResult = getApolloHookWrapper(global.apolloClient, useUpdateFolderContent);
-		const updateFolderContent = renderHookResult.result.current as UpdateFolderContentType;
-		expect(updateFolderContent).toBeDefined();
-		return { renderHookResult, updateFolderContent };
-	}
-
 	function readGetChildrenQuery(folderId: string, sort = NODES_SORT_DEFAULT): Folder {
 		const queryResult = global.apolloClient.readQuery<GetChildrenQuery, GetChildrenQueryVariables>({
 			query: GET_CHILDREN,
@@ -79,9 +68,10 @@ describe('useUpdateFolderContent', () => {
 			prepareCache(folder);
 
 			const element = populateNode();
-			const {
-				updateFolderContent: { addNodeToFolder }
-			} = setupHook();
+			const { addNodeToFolder } = setupHook<
+				Parameters<typeof useUpdateFolderContent>[number],
+				UpdateFolderContentType
+			>(useUpdateFolderContent).result.current;
 
 			addNodeToFolder(folder, element);
 			const queryResult = global.apolloClient.readQuery<
@@ -109,9 +99,10 @@ describe('useUpdateFolderContent', () => {
 
 			prepareCache(folder);
 
-			const {
-				updateFolderContent: { addNodeToFolder }
-			} = setupHook();
+			const { addNodeToFolder } = setupHook<
+				Parameters<typeof useUpdateFolderContent>[number],
+				UpdateFolderContentType
+			>(useUpdateFolderContent).result.current;
 
 			// call the hook
 			addNodeToFolder(folder, notLoadedElements[0]);
@@ -142,9 +133,10 @@ describe('useUpdateFolderContent', () => {
 
 			prepareCache(folder, sort);
 
-			const {
-				updateFolderContent: { addNodeToFolder }
-			} = setupHook();
+			const { addNodeToFolder } = setupHook<
+				Parameters<typeof useUpdateFolderContent>[number],
+				UpdateFolderContentType
+			>(useUpdateFolderContent).result.current;
 
 			// call the hook saying that there are no more children to load
 			addNodeToFolder(folder, element);
@@ -173,9 +165,10 @@ describe('useUpdateFolderContent', () => {
 
 			prepareCache(folder, sort);
 
-			const {
-				updateFolderContent: { addNodeToFolder }
-			} = setupHook();
+			const { addNodeToFolder } = setupHook<
+				Parameters<typeof useUpdateFolderContent>[number],
+				UpdateFolderContentType
+			>(useUpdateFolderContent).result.current;
 
 			// call the hook saying that there are no more children to load
 			addNodeToFolder(folder, element);
@@ -203,9 +196,10 @@ describe('useUpdateFolderContent', () => {
 
 			prepareCache(folder);
 
-			const {
-				updateFolderContent: { addNodeToFolder }
-			} = setupHook();
+			const { addNodeToFolder } = setupHook<
+				Parameters<typeof useUpdateFolderContent>[number],
+				UpdateFolderContentType
+			>(useUpdateFolderContent).result.current;
 
 			// call the hook saying that there are more children to load
 			addNodeToFolder(folder, element);
@@ -228,9 +222,10 @@ describe('useUpdateFolderContent', () => {
 
 			prepareCache(folder);
 
-			const {
-				updateFolderContent: { addNodeToFolder }
-			} = setupHook();
+			const { addNodeToFolder } = setupHook<
+				Parameters<typeof useUpdateFolderContent>[number],
+				UpdateFolderContentType
+			>(useUpdateFolderContent).result.current;
 
 			// first create operation
 			// give new files a name that will put them at the end of the list
@@ -276,9 +271,10 @@ describe('useUpdateFolderContent', () => {
 			let newPos = addNodeInSortedList(folder.children.nodes, element, NODES_SORT_DEFAULT);
 			newPos = newPos > -1 ? newPos : folder.children.nodes.length;
 
-			const {
-				updateFolderContent: { addNodeToFolder }
-			} = setupHook();
+			const { addNodeToFolder } = setupHook<
+				Parameters<typeof useUpdateFolderContent>[number],
+				UpdateFolderContentType
+			>(useUpdateFolderContent).result.current;
 
 			// call the hook
 			addNodeToFolder(folder, element);
@@ -308,9 +304,11 @@ describe('useUpdateFolderContent', () => {
 
 			let newPos = addNodeInSortedList(folder.children.nodes, element, NODES_SORT_DEFAULT);
 			newPos = newPos > -1 ? newPos : folder.children.nodes.length;
-			const {
-				updateFolderContent: { addNodeToFolder }
-			} = setupHook();
+
+			const { addNodeToFolder } = setupHook<
+				Parameters<typeof useUpdateFolderContent>[number],
+				UpdateFolderContentType
+			>(useUpdateFolderContent).result.current;
 
 			// call the hook saying that there are no more children to load
 			addNodeToFolder(folder, element);
@@ -347,9 +345,10 @@ describe('useUpdateFolderContent', () => {
 			);
 			newPos = newPos > -1 ? newPos : NODES_LOAD_LIMIT;
 
-			const {
-				updateFolderContent: { addNodeToFolder }
-			} = setupHook();
+			const { addNodeToFolder } = setupHook<
+				Parameters<typeof useUpdateFolderContent>[number],
+				UpdateFolderContentType
+			>(useUpdateFolderContent).result.current;
 
 			// call the hook saying that there are more children to load
 			addNodeToFolder(folder, element);
@@ -412,9 +411,10 @@ describe('useUpdateFolderContent', () => {
 			let newPos = addNodeInSortedList(folder.children.nodes, secondLast, sort);
 			expect(newPos).toBe(-1);
 
-			const {
-				updateFolderContent: { addNodeToFolder }
-			} = setupHook();
+			const { addNodeToFolder } = setupHook<
+				Parameters<typeof useUpdateFolderContent>[number],
+				UpdateFolderContentType
+			>(useUpdateFolderContent).result.current;
 
 			// add the secondLast item to the folder, it is out from ordered items, so it will be put in the unordered items
 			addNodeToFolder(folder, secondLast);

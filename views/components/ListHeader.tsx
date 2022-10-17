@@ -20,6 +20,7 @@ import size from 'lodash/size';
 import take from 'lodash/take';
 import { useTranslation } from 'react-i18next';
 
+import { BREADCRUMB_ROW_HEIGHT } from '../../constants';
 import { ActionItem } from '../../utils/ActionsFactory';
 
 export interface ListHeaderProps {
@@ -70,7 +71,7 @@ export const ListHeader: React.VFC<ListHeaderProps> = ({
 			{!hide && (
 				<>
 					<Row
-						minHeight={48}
+						minHeight={`${BREADCRUMB_ROW_HEIGHT}px`}
 						height="auto"
 						background="gray5"
 						mainAlignment="space-between"

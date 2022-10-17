@@ -12,7 +12,7 @@ import takeRightWhile from 'lodash/takeRightWhile';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 
-import { ROOTS } from '../../constants';
+import { BREADCRUMB_ROW_HEIGHT, LIST_ITEM_HEIGHT_COMPACT, ROOTS } from '../../constants';
 import GET_PATH from '../../graphql/queries/getPath.graphql';
 import { Crumb, NodeListItemType } from '../../types/common';
 import { GetPathQuery, GetPathQueryVariables, Node } from '../../types/graphql/types';
@@ -24,6 +24,7 @@ import { EmptyFolder } from './EmptyFolder';
 import { ListContent } from './ListContent';
 import { LoadingIcon } from './LoadingIcon';
 import { ScrollContainer } from './ScrollContainer';
+import { OverFlowHiddenRow } from './StyledComponents';
 
 interface ModalListProps {
 	folderId: string;
@@ -120,23 +121,18 @@ export const ModalList: React.VFC<ModalListProps> = ({
 		writingFolder
 	]);
 
-	const stopPropagationClickHandler = (event: React.MouseEvent): void => {
-		event.stopPropagation();
-	};
-
 	return (
 		<ModalContainer
 			mainAlignment="flex-start"
 			crossAlignment="flex-start"
 			data-testid={`modal-list-${folderId}`}
 			maxHeight="100%"
-			minHeight={0}
+			minHeight={`${BREADCRUMB_ROW_HEIGHT + LIST_ITEM_HEIGHT_COMPACT}px`}
 		>
-			<Row
+			<OverFlowHiddenRow
 				width="fill"
 				wrap="nowrap"
-				height={48}
-				onClick={stopPropagationClickHandler}
+				height={`${BREADCRUMB_ROW_HEIGHT}px`}
 				mainAlignment="flex-start"
 				flexShrink={0}
 				data-testid="modal-listHeader"
@@ -147,7 +143,7 @@ export const ModalList: React.VFC<ModalListProps> = ({
 						<LoadingIcon icon="Refresh" iconColor="primary" type="ghost" />
 					</Row>
 				)}
-			</Row>
+			</OverFlowHiddenRow>
 			<Container mainAlignment="flex-start" minHeight="0">
 				{nodes.length > 0 ? (
 					<ListContent

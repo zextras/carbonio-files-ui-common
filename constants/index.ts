@@ -16,6 +16,7 @@ export const LIST_ITEM_AVATAR_HEIGHT = 42;
 export const LIST_ITEM_AVATAR_HEIGHT_COMPACT = 32;
 export const LIST_ITEM_AVATAR_ICON_HEIGHT = 24;
 export const LIST_ITEM_AVATAR_ICON_HEIGHT_COMPACT = 16;
+export const BREADCRUMB_ROW_HEIGHT = 48;
 export const LIST_WIDTH = '40%';
 export const DISPLAYER_WIDTH = '60%';
 export const FULL_SHARES_LOAD_LIMIT = 100;

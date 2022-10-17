@@ -4,20 +4,15 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
-import { Dropdown } from '@zextras/carbonio-design-system';
+import { Dropdown, DropdownProps, useCombinedRefs } from '@zextras/carbonio-design-system';
 import styled from 'styled-components';
 
 import { ActionItem } from '../../utils/ActionsFactory';
 
-interface ContextualMenuProps {
-	disabled?: boolean;
-	onOpen: () => void;
-	onClose: () => void;
+interface ContextualMenuProps extends Omit<DropdownProps, 'items' | 'contextMenu'> {
 	actions: ActionItem[];
-	disableRestoreFocus?: boolean;
-	children: React.ReactElement;
 }
 
 type ContextualMenuElement = HTMLDivElement & {
@@ -29,71 +24,70 @@ const CustomDropdown = styled(Dropdown)`
 	height: 100%;
 `;
 
-export const ContextualMenu: React.VFC<ContextualMenuProps> = ({
-	children,
-	disabled = false,
-	onOpen,
-	onClose,
-	actions,
-	disableRestoreFocus
-}) => {
-	const contextMenuRef = useRef<ContextualMenuElement>(null);
-	const [open, setOpen] = useState(false);
+export const ContextualMenu = React.forwardRef<HTMLDivElement, ContextualMenuProps>(
+	function ContextualMenuFn(
+		{ children, disabled = false, onOpen, onClose, actions, disableRestoreFocus, ...rest },
+		ref
+	) {
+		const contextMenuRef = useCombinedRefs<ContextualMenuElement>(ref);
+		const [open, setOpen] = useState(false);
 
-	useEffect(() => {
-		if (contextMenuRef.current) {
-			const htmlElement = contextMenuRef.current;
-			htmlElement.oncontextmenu = (): void => {
-				if (!htmlElement.dropdownOpen) {
-					htmlElement.click();
-				}
-			};
-		}
-	}, []);
+		useEffect(() => {
+			if (contextMenuRef.current) {
+				const htmlElement = contextMenuRef.current;
+				htmlElement.oncontextmenu = (): void => {
+					if (!htmlElement.dropdownOpen) {
+						htmlElement.click();
+					}
+				};
+			}
+		}, [contextMenuRef]);
 
-	const onOpenHandler = useCallback(() => {
-		if (contextMenuRef.current) {
-			contextMenuRef.current.dropdownOpen = true;
-			setOpen(true);
-		}
-	}, []);
+		const onOpenHandler = useCallback(() => {
+			if (contextMenuRef.current) {
+				contextMenuRef.current.dropdownOpen = true;
+				setOpen(true);
+			}
+		}, [contextMenuRef]);
 
-	const onCloseHandler = useCallback(() => {
-		if (contextMenuRef.current) {
-			contextMenuRef.current.dropdownOpen = false;
-			setOpen(false);
-		}
-	}, []);
+		const onCloseHandler = useCallback(() => {
+			if (contextMenuRef.current) {
+				contextMenuRef.current.dropdownOpen = false;
+				setOpen(false);
+			}
+		}, [contextMenuRef]);
 
-	useEffect(() => {
-		// trigger onOpen and onClose with an internal state to avoid hover-bar to flash when contextual menu is
-		// opened again but in a different position
-		if (open) {
-			onOpen();
-		} else {
-			onClose();
-		}
-	}, [onClose, onOpen, open]);
+		useEffect(() => {
+			// trigger onOpen and onClose with an internal state to avoid hover-bar to flash when contextual menu is
+			// opened again but in a different position
+			if (open) {
+				onOpen && onOpen();
+			} else {
+				onClose && onClose();
+			}
+		}, [onClose, onOpen, open]);
 
-	useEffect(() => {
-		// force close when disabled
-		if (disabled && contextMenuRef.current && contextMenuRef.current.dropdownOpen) {
-			contextMenuRef.current.click();
-		}
-	}, [open, disabled, onCloseHandler]);
+		useEffect(() => {
+			// force close when disabled
+			if (disabled && contextMenuRef.current && contextMenuRef.current.dropdownOpen) {
+				contextMenuRef.current.click();
+			}
+		}, [open, disabled, onCloseHandler, contextMenuRef]);
 
-	return (
-		<CustomDropdown
-			placement="right-start"
-			contextMenu
-			disabled={disabled}
-			onOpen={onOpenHandler}
-			onClose={onCloseHandler}
-			items={actions}
-			ref={contextMenuRef}
-			disableRestoreFocus={disableRestoreFocus}
-		>
-			{children}
-		</CustomDropdown>
-	);
-};
+		return (
+			<CustomDropdown
+				placement="right-start"
+				contextMenu
+				disabled={disabled}
+				onOpen={onOpenHandler}
+				onClose={onCloseHandler}
+				items={actions}
+				ref={contextMenuRef}
+				disableRestoreFocus={disableRestoreFocus}
+				{...rest}
+			>
+				{children}
+			</CustomDropdown>
+		);
+	}
+);

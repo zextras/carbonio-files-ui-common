@@ -6,20 +6,29 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Container, Text } from '@zextras/carbonio-design-system';
+import { ReactiveVar, useReactiveVar } from '@apollo/client';
+import {
+	Divider,
+	ModalFooter,
+	ModalHeader,
+	Text,
+	TextWithTooltip
+} from '@zextras/carbonio-design-system';
 import find from 'lodash/find';
 import reduce from 'lodash/reduce';
 import { useTranslation } from 'react-i18next';
 
 import useUserInfo from '../../../hooks/useUserInfo';
+import { DestinationVar, destinationVar } from '../../apollo/destinationVar';
 import { useMoveNodesMutation } from '../../hooks/graphql/mutations/useMoveNodesMutation';
 import { useGetChildrenQuery } from '../../hooks/graphql/queries/useGetChildrenQuery';
+import { useDestinationVarManager } from '../../hooks/useDestinationVarManager';
 import { Node, NodeListItemType } from '../../types/common';
 import { Folder, GetChildrenQuery } from '../../types/graphql/types';
 import { canBeMoveDestination, isFile, isFolder } from '../../utils/ActionsFactory';
-import { ModalFooter } from './ModalFooter';
-import { ModalHeader } from './ModalHeader';
+import { ModalFooterCustom } from './ModalFooterCustom';
 import { ModalList } from './ModalList';
+import { CustomModalBody } from './StyledComponents';
 
 interface MoveNodesModalContentProps {
 	nodesToMove: Array<Pick<Node, '__typename' | 'id' | 'owner'>>;
@@ -33,20 +42,32 @@ export const MoveNodesModalContent: React.VFC<MoveNodesModalContentProps> = ({
 	folderId
 }) => {
 	const [t] = useTranslation();
+	const { setCurrent, setDefault } = useDestinationVarManager();
+	const { currentValue } = useReactiveVar<DestinationVar<string>>(
+		destinationVar as ReactiveVar<DestinationVar<string>>
+	);
 	const [destinationFolder, setDestinationFolder] = useState<string>();
 	const [openedFolder, setOpenedFolder] = useState<string>(folderId || '');
 	const { data: currentFolder, loadMore, hasMore, loading } = useGetChildrenQuery(openedFolder);
 	const mainContainerRef = useRef<HTMLDivElement>(null);
+	const footerContainerRef = useRef<HTMLDivElement>(null);
 
-	/** Mutation to move nodes * */
+	useEffect(() => {
+		setDestinationFolder(currentValue);
+	}, [currentValue]);
+
+	/** Mutation to move nodes */
 	const { moveNodes, loading: moveNodesMutationLoading } = useMoveNodesMutation();
 
 	const title = useMemo(
-		() =>
-			t('node.move.modal.title', 'Move items', {
-				count: nodesToMove.length,
-				replace: { node: nodesToMove.length === 1 && nodesToMove[0] }
-			}),
+		() => (
+			<TextWithTooltip>
+				{t('node.move.modal.title', 'Move items', {
+					count: nodesToMove.length,
+					replace: { node: nodesToMove.length === 1 && nodesToMove[0] }
+				})}
+			</TextWithTooltip>
+		),
 		[nodesToMove, t]
 	);
 
@@ -91,116 +112,92 @@ export const MoveNodesModalContent: React.VFC<MoveNodesModalContentProps> = ({
 	}, [currentFolder, me, nodesToMove]);
 
 	const closeHandler = useCallback(() => {
-		setDestinationFolder(undefined);
 		closeAction && closeAction();
 	}, [closeAction]);
 
-	const confirmHandler = useCallback(() => {
-		const destinationFolderNode =
-			destinationFolder === currentFolder?.getNode?.id
-				? currentFolder?.getNode
-				: find(nodes, ['id', destinationFolder]);
+	const confirmHandler = useCallback(
+		(e: React.SyntheticEvent | KeyboardEvent) => {
+			e && e.stopPropagation();
+			const destinationFolderNode =
+				destinationFolder === currentFolder?.getNode?.id
+					? currentFolder?.getNode
+					: find(nodes, ['id', destinationFolder]);
 
-		// reset the opened folder so that the eviction of the children in the mutation does not run a new network query
-		if (destinationFolderNode) {
-			moveNodes(destinationFolderNode as Folder, ...nodesToMove).then((result) => {
-				if (result.data?.moveNodes?.length === nodesToMove.length) {
-					closeHandler();
-				}
-			});
-		}
-	}, [destinationFolder, currentFolder, nodes, moveNodes, nodesToMove, closeHandler]);
+			// reset the opened folder so that the eviction of the children in the mutation does not run a new network query
+			if (destinationFolderNode) {
+				moveNodes(destinationFolderNode as Folder, ...nodesToMove).then((result) => {
+					if (result.data?.moveNodes?.length === nodesToMove.length) {
+						closeHandler();
+					}
+				});
+			}
+		},
+		[destinationFolder, currentFolder, nodes, moveNodes, nodesToMove, closeHandler]
+	);
 
-	const navigateTo = useCallback((id: string, event?: React.SyntheticEvent | Event) => {
-		setOpenedFolder(id);
-		setDestinationFolder(id);
-		event && event.stopPropagation();
-	}, []);
+	const navigateTo = useCallback(
+		(id: string) => {
+			setOpenedFolder(id);
+			setCurrent(id);
+			setDefault(id);
+		},
+		[setCurrent, setDefault]
+	);
 
 	const setDestinationFolderHandler = useCallback(
 		(node: Pick<NodeListItemType, 'id' | 'disabled'>, event: React.SyntheticEvent) => {
 			const destinationId =
 				(node && !node.disabled && node.id) || (currentFolder as GetChildrenQuery)?.getNode?.id;
-			setDestinationFolder(destinationId);
+			setCurrent(destinationId);
 			event.stopPropagation();
 		},
-		[currentFolder]
+		[currentFolder, setCurrent]
 	);
-
-	const resetDestinationFolderHandler = useCallback(() => {
-		setDestinationFolder(currentFolder?.getNode?.id);
-	}, [currentFolder]);
-
-	const clickModalHandler = useCallback(
-		(event) => {
-			if (event.target === mainContainerRef.current?.parentElement) {
-				resetDestinationFolderHandler();
-			}
-		},
-		[resetDestinationFolderHandler]
-	);
-
-	useEffect(() => {
-		// since with modal manager we have not control on modal container, set the reset action through the main container parent
-		// it's quite an ugly solution, let's say it's a TODO: find a better solution
-		const containerElement = mainContainerRef?.current;
-		if (containerElement?.parentElement) {
-			mainContainerRef.current?.parentNode?.addEventListener('click', clickModalHandler);
-		}
-
-		return (): void => {
-			containerElement?.parentNode?.removeEventListener('click', clickModalHandler);
-		};
-	}, [clickModalHandler]);
-
-	const modalHeight = useMemo(() => (nodes?.length >= 10 ? '60vh' : '40vh'), [nodes?.length]);
 
 	return (
-		<Container
-			padding={{ all: 'large' }}
-			mainAlignment="flex-start"
-			crossAlignment="flex-start"
-			minHeight="40vh"
-			height={modalHeight}
-			maxHeight="60vh"
-			onClick={resetDestinationFolderHandler}
-			ref={mainContainerRef}
-		>
-			<ModalHeader title={title} closeHandler={closeHandler} />
-			<Container
-				padding={{ vertical: 'small' }}
-				mainAlignment="center"
-				crossAlignment="flex-start"
-				height="fit"
-			>
+		<>
+			<ModalHeader
+				title={title}
+				onClose={closeHandler}
+				showCloseIcon
+				closeIconTooltip={t('modal.close.tooltip', 'Close')}
+			/>
+			<Divider />
+			<CustomModalBody ref={mainContainerRef}>
 				<Text overflow="break-word" size="small">
 					{t('node.move.modal.subtitle', 'Select a destination folder:')}
 				</Text>
-			</Container>
-			<ModalList
-				folderId={currentFolder?.getNode?.id || ''}
-				nodes={nodes}
-				activeNodes={destinationFolder}
-				setActiveNode={setDestinationFolderHandler}
-				loadMore={loadMore}
-				hasMore={hasMore}
-				navigateTo={navigateTo}
-				loading={loading}
-				writingFile={movingFile}
-				writingFolder={movingFolder}
-				limitNavigation
-			/>
+				<ModalList
+					folderId={currentFolder?.getNode?.id || ''}
+					nodes={nodes}
+					activeNodes={destinationFolder}
+					setActiveNode={setDestinationFolderHandler}
+					loadMore={loadMore}
+					hasMore={hasMore}
+					navigateTo={navigateTo}
+					loading={loading}
+					writingFile={movingFile}
+					writingFolder={movingFolder}
+					limitNavigation
+				/>
+			</CustomModalBody>
+			<Divider />
 			<ModalFooter
-				confirmLabel={t('node.move.modal.button.confirm', 'Move')}
-				confirmHandler={confirmHandler}
-				confirmDisabled={
-					!destinationFolder || destinationFolder === folderId || moveNodesMutationLoading
+				customFooter={
+					<ModalFooterCustom
+						confirmLabel={t('node.move.modal.button.confirm', 'Move')}
+						confirmHandler={confirmHandler}
+						confirmDisabled={
+							!destinationFolder || destinationFolder === folderId || moveNodesMutationLoading
+						}
+						confirmDisabledTooltip={t(
+							'node.move.modal.button.tooltip.confirm',
+							"You can't perform this action here"
+						)}
+						ref={footerContainerRef}
+					/>
 				}
-				confirmDisabledTooltip={t(
-					'node.move.modal.button.tooltip.confirm',
-					"You can't perform this action here"
-				)}
 			/>
-		</Container>
+		</>
 	);
 };

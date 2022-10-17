@@ -6,7 +6,7 @@
 
 import React, { ReactElement, useContext, useEffect, useMemo } from 'react';
 
-import { ApolloClient, ApolloProvider, NormalizedCacheObject } from '@apollo/client';
+import { ApolloProvider } from '@apollo/client';
 import { MockedProvider } from '@apollo/client/testing';
 import {
 	act,
@@ -24,7 +24,7 @@ import {
 	waitFor,
 	within
 } from '@testing-library/react';
-import { renderHook, RenderHookResult } from '@testing-library/react-hooks';
+import { renderHook, RenderHookOptions, RenderHookResult } from '@testing-library/react-hooks';
 import userEvent from '@testing-library/user-event';
 import { ModalManager, SnackbarManager } from '@zextras/carbonio-design-system';
 import { PreviewManager, PreviewsManagerContext } from '@zextras/carbonio-ui-preview';
@@ -127,26 +127,6 @@ export const buildBreadCrumbRegExp = (...nodesNames: string[]): RegExp => {
 	return RegExp(regExp, 'g');
 };
 
-export interface HookWrapperProps {
-	children: React.ReactElement;
-}
-
-/**
- * Generate a wrapper for testing hooks with apollo operations
- * @param client
- * @param hook
- */
-export function getApolloHookWrapper(
-	client: ApolloClient<NormalizedCacheObject>,
-	hook: () => unknown
-): RenderHookResult<HookWrapperProps, unknown> {
-	const wrapper: React.VFC<HookWrapperProps> = ({ children }) => (
-		<ApolloProvider client={client}>{children}</ApolloProvider>
-	);
-
-	return renderHook(() => hook(), { wrapper });
-}
-
 /**
  * Utility to generate an error for mocks that can be decoded with {@link decodeError}
  * @param message
@@ -156,7 +136,7 @@ export function generateError(message: string): GraphQLError {
 }
 
 interface WrapperProps {
-	children?: React.ReactElement;
+	children?: React.ReactNode | undefined;
 	initialRouterEntries?: string[];
 	mocks?: Mock[];
 }
@@ -207,7 +187,7 @@ function customRender(
 	} = {}
 ): RenderResult<typeof queries & CustomByTextWithMarkupQueries> {
 	return render(ui, {
-		wrapper: ({ children }: { children: React.ReactElement }) => (
+		wrapper: ({ children }: Pick<WrapperProps, 'children'>) => (
 			<Wrapper initialRouterEntries={initialRouterEntries} mocks={mocks}>
 				{children}
 			</Wrapper>
@@ -233,6 +213,24 @@ export const setup = (
 		...options?.renderOptions
 	})
 });
+
+/**
+ * Generate a wrapper for testing hooks with apollo operations
+ */
+export function setupHook<TProps, TResult>(
+	hook: (props: TProps) => TResult,
+	options?: Pick<WrapperProps, 'initialRouterEntries' | 'mocks'> & RenderHookOptions<TProps>
+): RenderHookResult<TProps, TResult> {
+	const renderHookResult = renderHook<TProps, TResult>(hook, {
+		wrapper: ({ children }: Pick<WrapperProps, 'children'>) => (
+			<Wrapper {...options}>{children}</Wrapper>
+		)
+	});
+
+	const hookFn = renderHookResult.result.current;
+	expect(hookFn).toBeDefined();
+	return renderHookResult;
+}
 
 export async function triggerLoadMore(): Promise<void> {
 	expect(screen.getByTestId('icon: Refresh')).toBeVisible();
