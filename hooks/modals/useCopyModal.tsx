@@ -22,7 +22,7 @@ export function useCopyModal(copyNodesActionCallback?: () => void): {
 } {
 	const createModal = useModal();
 
-	const { resetAll, resetCurrent } = useDestinationVarManager();
+	const { resetAll, resetCurrent } = useDestinationVarManager<string>();
 
 	const openCopyNodesModal = useCallback<OpenCopyModal>(
 		(nodes, fromFolder) => {

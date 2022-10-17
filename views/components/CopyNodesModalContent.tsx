@@ -47,7 +47,7 @@ export const CopyNodesModalContent: React.VFC<CopyNodesModalContentProps> = ({
 	folderId
 }) => {
 	const [t] = useTranslation();
-	const { setCurrent, setDefault } = useDestinationVarManager();
+	const { setCurrent, setDefault } = useDestinationVarManager<string>();
 	const { currentValue } = useReactiveVar<DestinationVar<string>>(
 		destinationVar as ReactiveVar<DestinationVar<string>>
 	);

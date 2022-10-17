@@ -26,7 +26,7 @@ export function useMoveModal(moveNodesActionCallback?: () => void): {
 	const createSnackbar = useSnackbar();
 	const [t] = useTranslation();
 
-	const { resetAll, resetCurrent } = useDestinationVarManager();
+	const { resetAll, resetCurrent } = useDestinationVarManager<string>();
 
 	const openMoveNodesModal = useCallback<OpenMoveModal>(
 		(nodes, fromFolder) => {
