@@ -72,16 +72,12 @@ export const DisplayerNode: React.VFC<DisplayerNodeProps> = ({
 		[t, activeNodeIsFile]
 	);
 
-	const clickTabHandler = useCallback(
-		(event) => {
-			setActiveNode(node.id, event.selectedItemId);
+	const tabOnChangeHandler = useCallback(
+		(event, selectedId) => {
+			setActiveNode(node.id, selectedId);
 		},
 		[node.id, setActiveNode]
 	);
-
-	const changeTabHandler = useCallback(() => {
-		// do nothing
-	}, []);
 
 	const canUpsertNodeDescription = useMemo(() => {
 		if (node) {
@@ -120,8 +116,7 @@ export const DisplayerNode: React.VFC<DisplayerNodeProps> = ({
 					<TabBar
 						items={tabs}
 						selected={tab || DISPLAYER_TABS.details}
-						onChange={changeTabHandler}
-						onItemClick={clickTabHandler}
+						onChange={tabOnChangeHandler}
 						width="fill"
 						height={48}
 						minHeight={48}
