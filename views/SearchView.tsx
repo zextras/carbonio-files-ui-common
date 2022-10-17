@@ -70,6 +70,9 @@ export const SearchView: React.VFC<SearchViewProps> = ({
 				type: ACTION_TYPES.NEW,
 				id: ACTION_IDS.UPLOAD_FILE,
 				action: () => ({
+					// FIXME: remove ts-ignore when shell will fix type of "type"
+					// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+					// @ts-ignore
 					type: ACTION_TYPES.NEW,
 					id: ACTION_IDS.UPLOAD_FILE,
 					primary: true,
