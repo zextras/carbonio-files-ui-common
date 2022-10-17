@@ -514,7 +514,7 @@ describe('Node List Item', () => {
 		expect(screen.getAllByText(node.name)).toHaveLength(2);
 		expect(screen.getAllByText(new RegExp(node.extension, 'i'))).toHaveLength(2);
 		expect(screen.getAllByText(new RegExp(humanFileSize(node.size), 'i'))).toHaveLength(2);
-		expect(screen.getByText(/failed to load PDF file/i)).toBeInTheDocument();
+		expect(screen.getByText(/failed to load document preview/i)).toBeInTheDocument();
 		expect(screen.getByTestId('icon: ArrowBackOutline')).toBeInTheDocument();
 		expect(screen.getByTestId('icon: ShareOutline')).toBeInTheDocument();
 		expect(screen.getByTestId('icon: DownloadOutline')).toBeInTheDocument();

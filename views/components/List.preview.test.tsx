@@ -47,7 +47,7 @@ describe('Preview action', () => {
 		await screen.findByText(actionRegexp.preview);
 		await user.click(screen.getByText(actionRegexp.preview));
 		// fallback is not shown
-		await screen.findByText(/failed to load pdf file/i);
+		await screen.findByText(/failed to load document preview/i);
 		expect(screen.queryByText(/This item cannot be displayed/i)).not.toBeInTheDocument();
 		expect(screen.queryByRole('button', { name: /download file/i })).not.toBeInTheDocument();
 	});
@@ -65,7 +65,7 @@ describe('Preview action', () => {
 		await screen.findByText(actionRegexp.preview);
 		await user.click(screen.getByText(actionRegexp.preview));
 		// fallback is not shown
-		await screen.findByText(/failed to load pdf file/i);
+		await screen.findByText(/failed to load document preview/i);
 		expect(screen.queryByText(/This item cannot be displayed/i)).not.toBeInTheDocument();
 		expect(screen.queryByRole('button', { name: /download file/i })).not.toBeInTheDocument();
 	});
