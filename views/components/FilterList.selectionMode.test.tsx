@@ -8,7 +8,7 @@ import React from 'react';
 import { screen } from '@testing-library/react';
 import { Route } from 'react-router-dom';
 
-import { ROOTS } from '../../constants';
+import { FILTER_TYPE, INTERNAL_PATH, ROOTS } from '../../constants';
 import { populateNodes } from '../../mocks/mockUtils';
 import { getFindNodesVariables, mockFindNodes } from '../../utils/mockUtils';
 import { iconRegexp, setup, selectNodes } from '../../utils/testUtils';
@@ -25,10 +25,10 @@ describe('Filter List', () => {
 				)
 			];
 			const { user } = setup(
-				<Route path="/filter/:filter">
+				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
 					<FilterList flagged cascade folderId={ROOTS.LOCAL_ROOT} />
 				</Route>,
-				{ mocks, initialRouterEntries: ['/filter/flagged'] }
+				{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
 			);
 			await screen.findByText(nodes[0].name);
 			expect(screen.getByText(nodes[0].name)).toBeVisible();

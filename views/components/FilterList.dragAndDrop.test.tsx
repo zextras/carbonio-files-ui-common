@@ -12,7 +12,7 @@ import { graphql } from 'msw';
 import { Route } from 'react-router-dom';
 
 import server from '../../../mocks/server';
-import { ROOTS } from '../../constants';
+import { FILTER_TYPE, INTERNAL_PATH, ROOTS } from '../../constants';
 import { populateFolder, populateNodes } from '../../mocks/mockUtils';
 import {
 	File as FilesFile,
@@ -163,7 +163,7 @@ describe('Filter List', () => {
 			};
 
 			setup(
-				<Route path="/filter/:filter">
+				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
 					<FilterList
 						sharedWithMe={false}
 						folderId={ROOTS.TRASH}
@@ -173,7 +173,7 @@ describe('Filter List', () => {
 				</Route>,
 				{
 					mocks,
-					initialRouterEntries: ['/filter/myTrash']
+					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`]
 				}
 			);
 
@@ -361,10 +361,10 @@ describe('Filter List', () => {
 			};
 
 			setup(
-				<Route path="/filter/:filter">
+				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
 					<FilterList folderId={ROOTS.TRASH} cascade canUploadFile={false} />
 				</Route>,
-				{ mocks, initialRouterEntries: ['/filter/myTrash'] }
+				{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`] }
 			);
 
 			await screen.findByText(destinationFolder.name);
@@ -707,12 +707,12 @@ describe('Filter List', () => {
 			});
 
 			const { user } = setup(
-				<Route path="/filter/:filter">
+				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
 					<FilterList flagged folderId={ROOTS.LOCAL_ROOT} canUploadFile cascade />
 				</Route>,
 				{
 					mocks,
-					initialRouterEntries: ['/filter/flagged']
+					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
 				}
 			);
 

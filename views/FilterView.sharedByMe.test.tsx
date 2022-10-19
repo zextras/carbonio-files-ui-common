@@ -10,7 +10,7 @@ import find from 'lodash/find';
 import { Route } from 'react-router-dom';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
-import { ROOTS } from '../constants';
+import { FILTER_TYPE, INTERNAL_PATH, ROOTS } from '../constants';
 import { populateNode, populateNodes, populateShares } from '../mocks/mockUtils';
 import { SharedTarget } from '../types/graphql/types';
 import {
@@ -84,11 +84,13 @@ describe('Filter view', () => {
 				)
 			];
 			const { user } = setup(
-				<Route path="/filter/:filter">
+				<Route path={`${INTERNAL_PATH.FILTER}/:filter`}>
 					<FilterView />
 				</Route>,
 				{
-					initialRouterEntries: [`/filter/sharedByMe/?node=${nodeWithShares.id}&tab=sharing`],
+					initialRouterEntries: [
+						`${INTERNAL_PATH.FILTER}${FILTER_TYPE.sharedByMe}/?node=${nodeWithShares.id}&tab=sharing`
+					],
 					mocks
 				}
 			);

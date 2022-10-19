@@ -19,7 +19,7 @@ import { Route } from 'react-router-dom';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import server from '../../mocks/server';
-import { NODES_LOAD_LIMIT, ROOTS } from '../constants';
+import { FILTER_TYPE, INTERNAL_PATH, NODES_LOAD_LIMIT, ROOTS } from '../constants';
 import FIND_NODES from '../graphql/queries/findNodes.graphql';
 import GET_NODE from '../graphql/queries/getNode.graphql';
 import handleFindNodesRequest from '../mocks/handleFindNodesRequest';
@@ -90,8 +90,8 @@ jest.mock('../../hooks/useCreateOptions', () => ({
 describe('Filter view', () => {
 	describe('Filter route param define findNodes query variables', () => {
 		test('No param render a "Missing filter" message', async () => {
-			setup(<Route path="/filter/:filter?" component={FilterView} />, {
-				initialRouterEntries: ['/filter/']
+			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+				initialRouterEntries: [`${INTERNAL_PATH.FILTER}/`]
 			});
 			const message = await screen.findByText(/missing filter/i);
 			expect(mockedRequestHandler).not.toHaveBeenCalled();
@@ -99,8 +99,8 @@ describe('Filter view', () => {
 		});
 
 		test('Flagged filter has flagged=true and excludes trashed nodes', async () => {
-			setup(<Route path="/filter/:filter?" component={FilterView} />, {
-				initialRouterEntries: ['/filter/flagged']
+			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
 			});
 
 			await screen.findByText(/view files and folders/i);
@@ -123,8 +123,8 @@ describe('Filter view', () => {
 		});
 
 		test('My Trash filter sharedWithMe=false and includes only trashed nodes', async () => {
-			setup(<Route path="/filter/:filter?" component={FilterView} />, {
-				initialRouterEntries: ['/filter/myTrash']
+			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`]
 			});
 			await screen.findByText(/view files and folders/i);
 			const expectedVariables = {
@@ -146,8 +146,8 @@ describe('Filter view', () => {
 		});
 
 		test('Shared trash filter has sharedWithMe=true and includes only trashed nodes', async () => {
-			setup(<Route path="/filter/:filter?" component={FilterView} />, {
-				initialRouterEntries: ['/filter/sharedTrash']
+			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.sharedTrash}`]
 			});
 			await screen.findByText(/view files and folders/i);
 			const expectedVariables = {
@@ -169,8 +169,8 @@ describe('Filter view', () => {
 		});
 
 		test('Shared by me filter has sharedByMe=true and excludes trashed nodes', async () => {
-			setup(<Route path="/filter/:filter?" component={FilterView} />, {
-				initialRouterEntries: ['/filter/sharedByMe']
+			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.sharedByMe}`]
 			});
 			await screen.findByText(/view files and folders/i);
 			const expectedVariables = {
@@ -193,8 +193,8 @@ describe('Filter view', () => {
 		});
 
 		test('Shared with me filter has sharedWithMe=true and excludes trashed nodes', async () => {
-			setup(<Route path="/filter/:filter?" component={FilterView} />, {
-				initialRouterEntries: ['/filter/sharedWithMe']
+			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.sharedWithMe}`]
 			});
 			await screen.findByText(/view files and folders/i);
 			const expectedVariables = {
@@ -242,11 +242,11 @@ describe('Filter view', () => {
 				})
 			);
 			const { getByTextWithMarkup, user } = setup(
-				<Route path="/filter/:filter?">
+				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
 					<FilterView />
 				</Route>,
 				{
-					initialRouterEntries: [`/filter/flagged`]
+					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
 				}
 			);
 			// wait the content to be rendered
@@ -330,11 +330,11 @@ describe('Filter view', () => {
 			);
 
 			const { getByTextWithMarkup, queryByTextWithMarkup, findByTextWithMarkup, user } = setup(
-				<Route path="/filter/:filter?">
+				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
 					<FilterView />
 				</Route>,
 				{
-					initialRouterEntries: ['/filter/flagged']
+					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
 				}
 			);
 			// wait the content to be rendered
@@ -379,11 +379,11 @@ describe('Filter view', () => {
 
 		test('Restore close the displayer from trash views', async () => {
 			const { user } = setup(
-				<Route path="/filter/:filter?">
+				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
 					<FilterView />
 				</Route>,
 				{
-					initialRouterEntries: ['/filter/myTrash']
+					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`]
 				}
 			);
 			// wait the content to be rendered
@@ -440,11 +440,11 @@ describe('Filter view', () => {
 
 		test('Delete permanently close the displayer from trash views', async () => {
 			const { user } = setup(
-				<Route path="/filter/:filter?">
+				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
 					<FilterView />
 				</Route>,
 				{
-					initialRouterEntries: ['/filter/myTrash']
+					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`]
 				}
 			);
 			// wait the content to be rendered
@@ -511,10 +511,10 @@ describe('Filter view', () => {
 	describe('Context dependant actions', () => {
 		test('in trash filter only restore and delete permanently actions are visible', async () => {
 			const { user } = setup(
-				<Route path="/filter/:filter?">
+				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
 					<FilterView />
 				</Route>,
-				{ initialRouterEntries: ['/filter/myTrash'] }
+				{ initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`] }
 			);
 			// right click to open contextual menu
 			await screen.findByText(/view files and folders/i);
@@ -628,10 +628,10 @@ describe('Filter view', () => {
 			];
 
 			const { user } = setup(
-				<Route path="/filter/:filter?">
+				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
 					<FilterView />
 				</Route>,
-				{ initialRouterEntries: ['/filter/sharedWithMe'], mocks }
+				{ initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.sharedWithMe}`], mocks }
 			);
 			await screen.findByText(/view files and folders/i);
 			await screen.findByText(node.name);

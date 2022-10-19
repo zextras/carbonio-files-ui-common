@@ -12,7 +12,7 @@ import map from 'lodash/map';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { searchParamsVar } from '../apollo/searchVar';
-import { ROOTS } from '../constants';
+import { INTERNAL_PATH, ROOTS } from '../constants';
 import BASE_NODE from '../graphql/fragments/baseNode.graphql';
 import {
 	populateFolder,
@@ -94,7 +94,7 @@ describe('Search view', () => {
 			];
 
 			const { user } = setup(<SearchView />, {
-				initialRouterEntries: [`/search/?node=${nodeWithShares.id}&tab=sharing`],
+				initialRouterEntries: [`${INTERNAL_PATH.SEARCH}/?node=${nodeWithShares.id}&tab=sharing`],
 				mocks
 			});
 			// render of the list
@@ -162,7 +162,7 @@ describe('Search view', () => {
 			];
 
 			const { getByTextWithMarkup, user } = setup(<SearchView />, {
-				initialRouterEntries: ['/search'],
+				initialRouterEntries: [INTERNAL_PATH.SEARCH],
 				mocks
 			});
 			expect(screen.queryByText('Previous view')).not.toBeInTheDocument();
@@ -224,7 +224,7 @@ describe('Search view', () => {
 			const { getByTextWithMarkup, queryByTextWithMarkup, findByTextWithMarkup, user } = setup(
 				<SearchView />,
 				{
-					initialRouterEntries: ['/search'],
+					initialRouterEntries: [INTERNAL_PATH.SEARCH],
 					mocks
 				}
 			);
@@ -299,7 +299,7 @@ describe('Search view', () => {
 			];
 
 			const { user } = setup(<SearchView />, {
-				initialRouterEntries: ['/search'],
+				initialRouterEntries: [INTERNAL_PATH.SEARCH],
 				mocks
 			});
 
@@ -357,7 +357,7 @@ describe('Search view', () => {
 			];
 
 			const { user } = setup(<SearchView />, {
-				initialRouterEntries: ['/search'],
+				initialRouterEntries: [INTERNAL_PATH.SEARCH],
 				mocks
 			});
 
@@ -432,7 +432,7 @@ describe('Search view', () => {
 			];
 
 			const { user } = setup(<SearchView />, {
-				initialRouterEntries: ['/search'],
+				initialRouterEntries: [INTERNAL_PATH.SEARCH],
 				mocks
 			});
 
@@ -505,7 +505,7 @@ describe('Search view', () => {
 			];
 
 			const { user } = setup(<SearchView />, {
-				initialRouterEntries: ['/search'],
+				initialRouterEntries: [INTERNAL_PATH.SEARCH],
 				mocks
 			});
 

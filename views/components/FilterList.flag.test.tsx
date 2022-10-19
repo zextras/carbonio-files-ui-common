@@ -11,7 +11,7 @@ import last from 'lodash/last';
 import map from 'lodash/map';
 import { Route } from 'react-router-dom';
 
-import { NODES_LOAD_LIMIT, ROOTS } from '../../constants';
+import { FILTER_TYPE, INTERNAL_PATH, NODES_LOAD_LIMIT, ROOTS } from '../../constants';
 import { populateNodes } from '../../mocks/mockUtils';
 import { Node } from '../../types/common';
 import { getFindNodesVariables, mockFindNodes, mockFlagNodes } from '../../utils/mockUtils';
@@ -50,10 +50,10 @@ describe('Filter List', () => {
 				// This warning is printed in the console for this render. This happens because window element is a jsdom representation of the window
 				// and it's an object instead of a Window class instance, so the check on the prop type fail for the target prop
 				const { user } = setup(
-					<Route path="/filter/:filter?">
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
 						<FilterList flagged folderId={ROOTS.LOCAL_ROOT} cascade />
 					</Route>,
-					{ initialRouterEntries: ['/filter/flagged'], mocks }
+					{ initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`], mocks }
 				);
 
 				// wait for the load to be completed
@@ -106,10 +106,10 @@ describe('Filter List', () => {
 				// This warning is printed in the console for this render. This happens because window element is a jsdom representation of the window
 				// and it's an object instead of a Window class instance, so the check on the prop type fail for the target prop
 				const { user } = setup(
-					<Route path="/filter/:filter?">
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
 						<FilterList flagged folderId={ROOTS.LOCAL_ROOT} cascade />
 					</Route>,
-					{ initialRouterEntries: ['/filter/flagged'], mocks }
+					{ initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`], mocks }
 				);
 
 				// wait for the load to be completed

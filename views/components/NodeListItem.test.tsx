@@ -8,7 +8,7 @@ import React from 'react';
 
 import { screen, waitFor } from '@testing-library/react';
 
-import { PREVIEW_PATH, PREVIEW_TYPE, REST_ENDPOINT, ROOTS } from '../../constants';
+import { INTERNAL_PATH, PREVIEW_PATH, PREVIEW_TYPE, REST_ENDPOINT, ROOTS } from '../../constants';
 import { populateFile, populateFolder, populateNode, populateUser } from '../../mocks/mockUtils';
 import { Action } from '../../types/common';
 import { NodeType, User } from '../../types/graphql/types';
@@ -558,7 +558,7 @@ describe('Node List Item', () => {
 	test('Trash icon is visible if node is trashed and is search view', () => {
 		const node = populateNode();
 		setup(<NodeListItem id={node.id} name={node.name} type={node.type} trashed />, {
-			initialRouterEntries: ['/search']
+			initialRouterEntries: [INTERNAL_PATH.SEARCH]
 		});
 		expect(screen.getByText(node.name)).toBeVisible();
 		expect(screen.getByTestId(iconRegexp.trash)).toBeVisible();
@@ -574,7 +574,7 @@ describe('Node List Item', () => {
 	test('Trash icon is not visible if node is not trashed and is search view', () => {
 		const node = populateNode();
 		setup(<NodeListItem id={node.id} name={node.name} type={node.type} trashed={false} />, {
-			initialRouterEntries: ['/search']
+			initialRouterEntries: [INTERNAL_PATH.SEARCH]
 		});
 		expect(screen.getByText(node.name)).toBeVisible();
 		expect(screen.queryByTestId(iconRegexp.trash)).not.toBeInTheDocument();

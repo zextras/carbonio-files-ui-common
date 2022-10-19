@@ -11,7 +11,7 @@ import forEach from 'lodash/forEach';
 import { Link, Route, Switch } from 'react-router-dom';
 
 import { CreateOptionsContent } from '../../../hooks/useCreateOptions';
-import { NODES_LOAD_LIMIT, ROOTS } from '../../constants';
+import { FILTER_TYPE, INTERNAL_PATH, NODES_LOAD_LIMIT, ROOTS } from '../../constants';
 import FIND_NODES from '../../graphql/queries/findNodes.graphql';
 import { populateFolder, populateNode, populateNodes } from '../../mocks/mockUtils';
 import { Node } from '../../types/common';
@@ -177,9 +177,9 @@ describe('Filter list', () => {
 					>
 						Go to folder
 					</Link>
-					<Link to="/filter">Go to filter</Link>
+					<Link to={INTERNAL_PATH.FILTER}>Go to filter</Link>
 					<Switch>
-						<Route path="/filter" exact>
+						<Route path={INTERNAL_PATH.FILTER} exact>
 							<FilterList flagged />
 						</Route>
 						<Route path="/folder">
@@ -187,7 +187,7 @@ describe('Filter list', () => {
 						</Route>
 					</Switch>
 				</div>,
-				{ initialRouterEntries: ['/filter'], mocks }
+				{ initialRouterEntries: [INTERNAL_PATH.FILTER], mocks }
 			);
 
 			// filter list, first load to write data in cache
@@ -224,10 +224,10 @@ describe('Filter list', () => {
 					mockFindNodes(getFindNodesVariables({ folder_id: ROOTS.TRASH, cascade: false }), nodes)
 				];
 				const { user } = setup(
-					<Route path="/filter/:filter">
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
 						<FilterList folderId={ROOTS.TRASH} cascade={false} />
 					</Route>,
-					{ mocks, initialRouterEntries: ['/filter/myTrash'] }
+					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`] }
 				);
 				await screen.findByText(nodes[0].name);
 				expect(screen.getByText(nodes[0].name)).toBeVisible();
