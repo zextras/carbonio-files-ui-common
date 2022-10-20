@@ -11,12 +11,18 @@ import last from 'lodash/last';
 import map from 'lodash/map';
 import { Route } from 'react-router-dom';
 
-import { FILTER_TYPE, INTERNAL_PATH, NODES_LOAD_LIMIT, ROOTS } from '../../constants';
+import {
+	FILTER_TYPE,
+	INTERNAL_PATH,
+	NODES_LOAD_LIMIT,
+	NODES_SORT_DEFAULT,
+	ROOTS
+} from '../../constants';
 import { populateNodes } from '../../mocks/mockUtils';
 import { Node } from '../../types/common';
 import { getFindNodesVariables, mockFindNodes, mockFlagNodes } from '../../utils/mockUtils';
 import { actionRegexp, iconRegexp, setup, selectNodes } from '../../utils/testUtils';
-import FilterList from './FilterList';
+import { FilterList } from './FilterList';
 
 describe('Filter List', () => {
 	describe('Flag', () => {
@@ -51,7 +57,14 @@ describe('Filter List', () => {
 				// and it's an object instead of a Window class instance, so the check on the prop type fail for the target prop
 				const { user } = setup(
 					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
-						<FilterList flagged folderId={ROOTS.LOCAL_ROOT} cascade />
+						<FilterList
+							flagged
+							folderId={ROOTS.LOCAL_ROOT}
+							cascade
+							crumbs={[]}
+							sort={NODES_SORT_DEFAULT}
+							emptyListMessage="It looks like there's nothing here."
+						/>
 					</Route>,
 					{ initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`], mocks }
 				);
@@ -107,7 +120,14 @@ describe('Filter List', () => {
 				// and it's an object instead of a Window class instance, so the check on the prop type fail for the target prop
 				const { user } = setup(
 					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
-						<FilterList flagged folderId={ROOTS.LOCAL_ROOT} cascade />
+						<FilterList
+							flagged
+							folderId={ROOTS.LOCAL_ROOT}
+							cascade
+							crumbs={[]}
+							sort={NODES_SORT_DEFAULT}
+							emptyListMessage="It looks like there's nothing here."
+						/>
 					</Route>,
 					{ initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`], mocks }
 				);
@@ -155,7 +175,17 @@ describe('Filter List', () => {
 				)
 			];
 
-			const { user } = setup(<FilterList flagged folderId={ROOTS.LOCAL_ROOT} cascade />, { mocks });
+			const { user } = setup(
+				<FilterList
+					flagged
+					folderId={ROOTS.LOCAL_ROOT}
+					cascade
+					crumbs={[]}
+					sort={NODES_SORT_DEFAULT}
+					emptyListMessage="It looks like there's nothing here."
+				/>,
+				{ mocks }
+			);
 
 			await screen.findByText(firstPage[0].name);
 			expect(screen.getByText(firstPage[0].name)).toBeVisible();

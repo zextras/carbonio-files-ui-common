@@ -11,7 +11,13 @@ import forEach from 'lodash/forEach';
 import { Link, Route, Switch } from 'react-router-dom';
 
 import { CreateOptionsContent } from '../../../hooks/useCreateOptions';
-import { FILTER_TYPE, INTERNAL_PATH, NODES_LOAD_LIMIT, ROOTS } from '../../constants';
+import {
+	FILTER_TYPE,
+	INTERNAL_PATH,
+	NODES_LOAD_LIMIT,
+	NODES_SORT_DEFAULT,
+	ROOTS
+} from '../../constants';
 import FIND_NODES from '../../graphql/queries/findNodes.graphql';
 import { populateFolder, populateNode, populateNodes } from '../../mocks/mockUtils';
 import { Node } from '../../types/common';
@@ -34,7 +40,7 @@ import {
 } from '../../utils/testUtils';
 import FolderView from '../FolderView';
 import { DisplayerProps } from './Displayer';
-import FilterList from './FilterList';
+import { FilterList } from './FilterList';
 
 jest.mock('../../../hooks/useCreateOptions', () => ({
 	useCreateOptions: (): CreateOptionsContent => ({
@@ -54,7 +60,14 @@ jest.mock('../components/Displayer', () => ({
 describe('Filter list', () => {
 	describe('Generic filter', () => {
 		test('first access to a filter show loading state and than show nodes', async () => {
-			setup(<FilterList flagged />);
+			setup(
+				<FilterList
+					flagged
+					crumbs={[]}
+					sort={NODES_SORT_DEFAULT}
+					emptyListMessage="It looks like there's nothing here."
+				/>
+			);
 
 			const listHeader = screen.getByTestId('list-header');
 			expect(within(listHeader).getByTestId('icon: Refresh')).toBeVisible();
@@ -86,7 +99,15 @@ describe('Filter list', () => {
 				)
 			];
 
-			setup(<FilterList flagged />, { mocks });
+			setup(
+				<FilterList
+					flagged
+					crumbs={[]}
+					sort={NODES_SORT_DEFAULT}
+					emptyListMessage="It looks like there's nothing here."
+				/>,
+				{ mocks }
+			);
 
 			// this is the loading refresh icon
 			expect(screen.getByTestId('list-header')).toContainElement(
@@ -131,7 +152,15 @@ describe('Filter list', () => {
 			}
 			const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), nodes)];
 
-			setup(<FilterList flagged />, { mocks });
+			setup(
+				<FilterList
+					flagged
+					crumbs={[]}
+					sort={NODES_SORT_DEFAULT}
+					emptyListMessage="It looks like there's nothing here."
+				/>,
+				{ mocks }
+			);
 
 			await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 
@@ -139,7 +168,14 @@ describe('Filter list', () => {
 		});
 
 		test('breadcrumb show Flagged', async () => {
-			const { getByTextWithMarkup } = setup(<FilterList flagged />);
+			const { getByTextWithMarkup } = setup(
+				<FilterList
+					flagged
+					crumbs={[{ id: 'crumb1', label: 'Flagged' }]}
+					sort={NODES_SORT_DEFAULT}
+					emptyListMessage="It looks like there's nothing here."
+				/>
+			);
 
 			const breadcrumbRegExp = buildBreadCrumbRegExp('Flagged');
 			expect(getByTextWithMarkup(breadcrumbRegExp)).toBeVisible();
@@ -180,7 +216,12 @@ describe('Filter list', () => {
 					<Link to={INTERNAL_PATH.FILTER}>Go to filter</Link>
 					<Switch>
 						<Route path={INTERNAL_PATH.FILTER} exact>
-							<FilterList flagged />
+							<FilterList
+								flagged
+								crumbs={[]}
+								sort={NODES_SORT_DEFAULT}
+								emptyListMessage="It looks like there's nothing here."
+							/>
 						</Route>
 						<Route path="/folder">
 							<FolderView />
@@ -225,7 +266,13 @@ describe('Filter list', () => {
 				];
 				const { user } = setup(
 					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
-						<FilterList folderId={ROOTS.TRASH} cascade={false} />
+						<FilterList
+							folderId={ROOTS.TRASH}
+							cascade={false}
+							crumbs={[]}
+							sort={NODES_SORT_DEFAULT}
+							emptyListMessage="It looks like there's nothing here."
+						/>
 					</Route>,
 					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`] }
 				);

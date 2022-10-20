@@ -12,7 +12,7 @@ import { graphql } from 'msw';
 import { Route } from 'react-router-dom';
 
 import server from '../../../mocks/server';
-import { FILTER_TYPE, INTERNAL_PATH, ROOTS } from '../../constants';
+import { FILTER_TYPE, INTERNAL_PATH, NODES_SORT_DEFAULT, ROOTS } from '../../constants';
 import { populateFolder, populateNodes } from '../../mocks/mockUtils';
 import {
 	File as FilesFile,
@@ -31,7 +31,7 @@ import {
 	mockMoveNodes
 } from '../../utils/mockUtils';
 import { setup, selectNodes } from '../../utils/testUtils';
-import FilterList from './FilterList';
+import { FilterList } from './FilterList';
 
 describe('Filter List', () => {
 	describe('Drag and drop', () => {
@@ -82,9 +82,20 @@ describe('Filter List', () => {
 				files
 			};
 
-			setup(<FilterList sharedWithMe folderId={ROOTS.LOCAL_ROOT} canUploadFile cascade={false} />, {
-				mocks
-			});
+			setup(
+				<FilterList
+					sharedWithMe
+					folderId={ROOTS.LOCAL_ROOT}
+					canUploadFile
+					cascade={false}
+					crumbs={[]}
+					sort={NODES_SORT_DEFAULT}
+					emptyListMessage="It looks like there's nothing here."
+				/>,
+				{
+					mocks
+				}
+			);
 
 			await screen.findByText(currentFilter[0].name);
 
@@ -169,6 +180,9 @@ describe('Filter List', () => {
 						folderId={ROOTS.TRASH}
 						canUploadFile={false}
 						cascade={false}
+						crumbs={[]}
+						sort={NODES_SORT_DEFAULT}
+						emptyListMessage="It looks like there's nothing here."
 					/>
 				</Route>,
 				{
@@ -246,9 +260,20 @@ describe('Filter List', () => {
 				files
 			};
 
-			setup(<FilterList folderId={ROOTS.LOCAL_ROOT} sharedWithMe cascade canUploadFile />, {
-				mocks
-			});
+			setup(
+				<FilterList
+					folderId={ROOTS.LOCAL_ROOT}
+					sharedWithMe
+					cascade
+					canUploadFile
+					crumbs={[]}
+					sort={NODES_SORT_DEFAULT}
+					emptyListMessage="It looks like there's nothing here."
+				/>,
+				{
+					mocks
+				}
+			);
 
 			await screen.findByText(destinationFolder.name);
 
@@ -302,7 +327,17 @@ describe('Filter List', () => {
 				files
 			};
 
-			setup(<FilterList flagged cascade canUploadFile />, { mocks });
+			setup(
+				<FilterList
+					flagged
+					cascade
+					canUploadFile
+					crumbs={[]}
+					sort={NODES_SORT_DEFAULT}
+					emptyListMessage="It looks like there's nothing here."
+				/>,
+				{ mocks }
+			);
 
 			await screen.findByText(destinationFolder.name);
 
@@ -362,7 +397,14 @@ describe('Filter List', () => {
 
 			setup(
 				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
-					<FilterList folderId={ROOTS.TRASH} cascade canUploadFile={false} />
+					<FilterList
+						folderId={ROOTS.TRASH}
+						cascade
+						canUploadFile={false}
+						crumbs={[]}
+						sort={NODES_SORT_DEFAULT}
+						emptyListMessage="It looks like there's nothing here."
+					/>
 				</Route>,
 				{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`] }
 			);
@@ -431,6 +473,9 @@ describe('Filter List', () => {
 					folderId={ROOTS.TRASH}
 					canUploadFile={false}
 					cascade={false}
+					crumbs={[]}
+					sort={NODES_SORT_DEFAULT}
+					emptyListMessage="It looks like there's nothing here."
 				/>,
 				{
 					mocks
@@ -510,9 +555,20 @@ describe('Filter List', () => {
 				})
 			});
 
-			setup(<FilterList flagged folderId={ROOTS.LOCAL_ROOT} canUploadFile cascade />, {
-				mocks
-			});
+			setup(
+				<FilterList
+					flagged
+					folderId={ROOTS.LOCAL_ROOT}
+					canUploadFile
+					cascade
+					crumbs={[]}
+					sort={NODES_SORT_DEFAULT}
+					emptyListMessage="It looks like there's nothing here."
+				/>,
+				{
+					mocks
+				}
+			);
 
 			const itemToDrag = await screen.findByText(nodesToDrag[0].name);
 			fireEvent.dragStart(itemToDrag, { dataTransfer: dataTransfer() });
@@ -606,9 +662,20 @@ describe('Filter List', () => {
 				})
 			});
 
-			setup(<FilterList flagged folderId={ROOTS.LOCAL_ROOT} canUploadFile cascade />, {
-				mocks
-			});
+			setup(
+				<FilterList
+					flagged
+					folderId={ROOTS.LOCAL_ROOT}
+					canUploadFile
+					cascade
+					crumbs={[]}
+					sort={NODES_SORT_DEFAULT}
+					emptyListMessage="It looks like there's nothing here."
+				/>,
+				{
+					mocks
+				}
+			);
 
 			const itemToDrag = await screen.findByText(nodesToDrag[0].name);
 			fireEvent.dragStart(itemToDrag, { dataTransfer: dataTransfer() });
@@ -708,7 +775,15 @@ describe('Filter List', () => {
 
 			const { user } = setup(
 				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
-					<FilterList flagged folderId={ROOTS.LOCAL_ROOT} canUploadFile cascade />
+					<FilterList
+						flagged
+						folderId={ROOTS.LOCAL_ROOT}
+						canUploadFile
+						cascade
+						crumbs={[]}
+						sort={NODES_SORT_DEFAULT}
+						emptyListMessage="It looks like there's nothing here."
+					/>
 				</Route>,
 				{
 					mocks,
@@ -783,7 +858,18 @@ describe('Filter List', () => {
 				})
 			});
 
-			setup(<FilterList flagged folderId={ROOTS.LOCAL_ROOT} canUploadFile cascade />, { mocks });
+			setup(
+				<FilterList
+					flagged
+					folderId={ROOTS.LOCAL_ROOT}
+					canUploadFile
+					cascade
+					crumbs={[]}
+					sort={NODES_SORT_DEFAULT}
+					emptyListMessage="It looks like there's nothing here."
+				/>,
+				{ mocks }
+			);
 
 			const itemToDrag = await screen.findByText(nodesToDrag[0].name);
 			fireEvent.dragStart(itemToDrag, { dataTransfer: dataTransfer() });

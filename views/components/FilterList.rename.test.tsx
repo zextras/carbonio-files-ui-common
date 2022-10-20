@@ -32,7 +32,7 @@ import {
 } from '../../utils/mockUtils';
 import { actionRegexp, generateError, renameNode, setup, selectNodes } from '../../utils/testUtils';
 import { addNodeInSortedList } from '../../utils/utils';
-import FilterList from './FilterList';
+import { FilterList } from './FilterList';
 
 describe('Filter List', () => {
 	describe('Rename', () => {
@@ -48,7 +48,15 @@ describe('Filter List', () => {
 
 				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), nodes)];
 
-				const { user } = setup(<FilterList flagged />, { mocks });
+				const { user } = setup(
+					<FilterList
+						flagged
+						crumbs={[]}
+						sort={NODES_SORT_DEFAULT}
+						emptyListMessage="It looks like there's nothing here."
+					/>,
+					{ mocks }
+				);
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -80,7 +88,15 @@ describe('Filter List', () => {
 
 				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), [node])];
 
-				const { user } = setup(<FilterList flagged />, { mocks });
+				const { user } = setup(
+					<FilterList
+						flagged
+						crumbs={[]}
+						sort={NODES_SORT_DEFAULT}
+						emptyListMessage="It looks like there's nothing here."
+					/>,
+					{ mocks }
+				);
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -126,7 +142,15 @@ describe('Filter List', () => {
 					)
 				];
 
-				const { user } = setup(<FilterList flagged />, { mocks });
+				const { user } = setup(
+					<FilterList
+						flagged
+						crumbs={[]}
+						sort={NODES_SORT_DEFAULT}
+						emptyListMessage="It looks like there's nothing here."
+					/>,
+					{ mocks }
+				);
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -183,7 +207,15 @@ describe('Filter List', () => {
 					)
 				];
 
-				const { user } = setup(<FilterList flagged />, { mocks });
+				const { user } = setup(
+					<FilterList
+						flagged
+						crumbs={[]}
+						sort={NODES_SORT_DEFAULT}
+						emptyListMessage="It looks like there's nothing here."
+					/>,
+					{ mocks }
+				);
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -218,7 +250,15 @@ describe('Filter List', () => {
 
 				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), nodes)];
 
-				const { user } = setup(<FilterList flagged />, { mocks });
+				const { user } = setup(
+					<FilterList
+						flagged
+						crumbs={[]}
+						sort={NODES_SORT_DEFAULT}
+						emptyListMessage="It looks like there's nothing here."
+					/>,
+					{ mocks }
+				);
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -258,7 +298,15 @@ describe('Filter List', () => {
 
 				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), [node])];
 
-				setup(<FilterList flagged />, { mocks });
+				setup(
+					<FilterList
+						flagged
+						crumbs={[]}
+						sort={NODES_SORT_DEFAULT}
+						emptyListMessage="It looks like there's nothing here."
+					/>,
+					{ mocks }
+				);
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -299,7 +347,15 @@ describe('Filter List', () => {
 					)
 				];
 
-				const { user } = setup(<FilterList flagged />, { mocks });
+				const { user } = setup(
+					<FilterList
+						flagged
+						crumbs={[]}
+						sort={NODES_SORT_DEFAULT}
+						emptyListMessage="It looks like there's nothing here."
+					/>,
+					{ mocks }
+				);
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -369,7 +425,15 @@ describe('Filter List', () => {
 					)
 				];
 
-				const { user } = setup(<FilterList flagged />, { mocks });
+				const { user } = setup(
+					<FilterList
+						flagged
+						crumbs={[]}
+						sort={NODES_SORT_DEFAULT}
+						emptyListMessage="It looks like there's nothing here."
+					/>,
+					{ mocks }
+				);
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -465,7 +529,15 @@ describe('Filter List', () => {
 					)
 				];
 
-				const { user } = setup(<FilterList flagged />, { mocks });
+				const { user } = setup(
+					<FilterList
+						flagged
+						crumbs={[]}
+						sort={NODES_SORT_DEFAULT}
+						emptyListMessage="It looks like there's nothing here."
+					/>,
+					{ mocks }
+				);
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));

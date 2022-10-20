@@ -17,6 +17,7 @@ import {
 	BREADCRUMB_ROW_HEIGHT,
 	FILTER_PARAMS,
 	LIST_ITEM_HEIGHT_COMPACT,
+	NODES_SORT_DEFAULT,
 	ROOTS
 } from '../../constants';
 import { useFindNodesQuery } from '../../hooks/graphql/queries/useFindNodesQuery';
@@ -61,7 +62,12 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 }) => {
 	const [t] = useTranslation();
 	const [filterQueryParams, setFilterQueryParam] = useState<FilterQueryParams>({});
-	const { data: findNodesData, loading, loadMore, hasMore } = useFindNodesQuery(filterQueryParams);
+	const {
+		data: findNodesData,
+		loading,
+		loadMore,
+		hasMore
+	} = useFindNodesQuery({ ...filterQueryParams, sort: NODES_SORT_DEFAULT });
 
 	const listRef = useRef<HTMLDivElement | null>(null);
 

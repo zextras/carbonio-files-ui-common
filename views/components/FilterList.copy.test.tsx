@@ -9,7 +9,7 @@ import { fireEvent, screen, within } from '@testing-library/react';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 
-import { ROOTS } from '../../constants';
+import { NODES_SORT_DEFAULT, ROOTS } from '../../constants';
 import GET_CHILDREN from '../../graphql/queries/getChildren.graphql';
 import {
 	populateFile,
@@ -31,10 +31,10 @@ import {
 	actionRegexp,
 	buildBreadCrumbRegExp,
 	iconRegexp,
-	setup,
-	selectNodes
+	selectNodes,
+	setup
 } from '../../utils/testUtils';
-import FilterList from './FilterList';
+import { FilterList } from './FilterList';
 
 describe('Filter List', () => {
 	describe('Copy', () => {
@@ -49,7 +49,15 @@ describe('Filter List', () => {
 
 				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), currentFilter)];
 
-				const { user } = setup(<FilterList flagged />, { mocks });
+				const { user } = setup(
+					<FilterList
+						flagged
+						crumbs={[]}
+						sort={NODES_SORT_DEFAULT}
+						emptyListMessage="It looks like there's nothing here."
+					/>,
+					{ mocks }
+				);
 
 				await screen.findByText(file.name);
 				await selectNodes([file.id, folder.id], user);
@@ -93,9 +101,17 @@ describe('Filter List', () => {
 					)
 				];
 
-				const { getByTextWithMarkup, findByTextWithMarkup, user } = setup(<FilterList flagged />, {
-					mocks
-				});
+				const { getByTextWithMarkup, findByTextWithMarkup, user } = setup(
+					<FilterList
+						flagged
+						crumbs={[]}
+						sort={NODES_SORT_DEFAULT}
+						emptyListMessage="It looks like there's nothing here."
+					/>,
+					{
+						mocks
+					}
+				);
 
 				await screen.findByText(nodeToCopy.name);
 
@@ -196,9 +212,17 @@ describe('Filter List', () => {
 					)
 				];
 
-				const { findByTextWithMarkup, user } = setup(<FilterList flagged />, {
-					mocks
-				});
+				const { findByTextWithMarkup, user } = setup(
+					<FilterList
+						flagged
+						crumbs={[]}
+						sort={NODES_SORT_DEFAULT}
+						emptyListMessage="It looks like there's nothing here."
+					/>,
+					{
+						mocks
+					}
+				);
 
 				await screen.findByText(nodesToCopy[0].name);
 
@@ -292,9 +316,17 @@ describe('Filter List', () => {
 					mockGetPath({ node_id: localRoot.id }, [localRoot])
 				];
 
-				const { getByTextWithMarkup, user } = setup(<FilterList flagged />, {
-					mocks
-				});
+				const { getByTextWithMarkup, user } = setup(
+					<FilterList
+						flagged
+						crumbs={[]}
+						sort={NODES_SORT_DEFAULT}
+						emptyListMessage="It looks like there's nothing here."
+					/>,
+					{
+						mocks
+					}
+				);
 
 				await screen.findByText(nodesToCopy[0].name);
 
@@ -401,9 +433,17 @@ describe('Filter List', () => {
 					)
 				];
 
-				const { getByTextWithMarkup, findByTextWithMarkup, user } = setup(<FilterList flagged />, {
-					mocks
-				});
+				const { getByTextWithMarkup, findByTextWithMarkup, user } = setup(
+					<FilterList
+						flagged
+						crumbs={[]}
+						sort={NODES_SORT_DEFAULT}
+						emptyListMessage="It looks like there's nothing here."
+					/>,
+					{
+						mocks
+					}
+				);
 
 				await screen.findByText(nodeToCopy.name);
 

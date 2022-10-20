@@ -93,9 +93,9 @@ describe('Filter view', () => {
 			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
 				initialRouterEntries: [`${INTERNAL_PATH.FILTER}/`]
 			});
-			const message = await screen.findByText(/missing filter/i);
+			await screen.findByTestId('missing-filter');
+			expect(screen.getByText(/it looks like there's nothing here/i)).toBeVisible();
 			expect(mockedRequestHandler).not.toHaveBeenCalled();
-			expect(message).toBeVisible();
 		});
 
 		test('Flagged filter has flagged=true and excludes trashed nodes', async () => {
@@ -119,7 +119,7 @@ describe('Filter view', () => {
 				expect.anything(),
 				expect.anything()
 			);
-			expect(screen.queryByText(/missing filter/i)).not.toBeInTheDocument();
+			expect(screen.queryByTestId('missing-filter')).not.toBeInTheDocument();
 		});
 
 		test('My Trash filter sharedWithMe=false and includes only trashed nodes', async () => {
@@ -142,7 +142,7 @@ describe('Filter view', () => {
 				expect.anything(),
 				expect.anything()
 			);
-			expect(screen.queryByText(/missing filter/i)).not.toBeInTheDocument();
+			expect(screen.queryByTestId('missing-filter')).not.toBeInTheDocument();
 		});
 
 		test('Shared trash filter has sharedWithMe=true and includes only trashed nodes', async () => {
@@ -165,7 +165,7 @@ describe('Filter view', () => {
 				expect.anything(),
 				expect.anything()
 			);
-			expect(screen.queryByText(/missing filter/i)).not.toBeInTheDocument();
+			expect(screen.queryByTestId('missing-filter')).not.toBeInTheDocument();
 		});
 
 		test('Shared by me filter has sharedByMe=true and excludes trashed nodes', async () => {
@@ -189,7 +189,7 @@ describe('Filter view', () => {
 				expect.anything(),
 				expect.anything()
 			);
-			expect(screen.queryByText(/missing filter/i)).not.toBeInTheDocument();
+			expect(screen.queryByTestId('missing-filter')).not.toBeInTheDocument();
 		});
 
 		test('Shared with me filter has sharedWithMe=true and excludes trashed nodes', async () => {
@@ -213,7 +213,7 @@ describe('Filter view', () => {
 				expect.anything(),
 				expect.anything()
 			);
-			expect(screen.queryByText(/missing filter/i)).not.toBeInTheDocument();
+			expect(screen.queryByTestId('missing-filter')).not.toBeInTheDocument();
 		});
 	});
 

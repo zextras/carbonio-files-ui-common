@@ -9,6 +9,7 @@ import { fireEvent, screen, within } from '@testing-library/react';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 
+import { NODES_SORT_DEFAULT } from '../../constants';
 import GET_CHILDREN from '../../graphql/queries/getChildren.graphql';
 import {
 	populateFile,
@@ -34,7 +35,7 @@ import {
 	setup,
 	selectNodes
 } from '../../utils/testUtils';
-import FilterList from './FilterList';
+import { FilterList } from './FilterList';
 
 describe('Filter List', () => {
 	describe('Move', () => {
@@ -59,7 +60,15 @@ describe('Filter List', () => {
 
 				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), currentFilter)];
 
-				const { user } = setup(<FilterList flagged />, { mocks });
+				const { user } = setup(
+					<FilterList
+						flagged
+						crumbs={[]}
+						sort={NODES_SORT_DEFAULT}
+						emptyListMessage="It looks like there's nothing here."
+					/>,
+					{ mocks }
+				);
 
 				await screen.findByText(file.name);
 				// activate selection mode by selecting items
@@ -98,7 +107,15 @@ describe('Filter List', () => {
 
 				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), currentFilter)];
 
-				const { user } = setup(<FilterList flagged />, { mocks });
+				const { user } = setup(
+					<FilterList
+						flagged
+						crumbs={[]}
+						sort={NODES_SORT_DEFAULT}
+						emptyListMessage="It looks like there's nothing here."
+					/>,
+					{ mocks }
+				);
 
 				await screen.findByText(file.name);
 				await selectNodes([file.id, folder.id], user);
@@ -127,7 +144,15 @@ describe('Filter List', () => {
 
 				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), currentFilter)];
 
-				const { user } = setup(<FilterList flagged />, { mocks });
+				const { user } = setup(
+					<FilterList
+						flagged
+						crumbs={[]}
+						sort={NODES_SORT_DEFAULT}
+						emptyListMessage="It looks like there's nothing here."
+					/>,
+					{ mocks }
+				);
 
 				await screen.findByText(file.name);
 				// activate selection mode by selecting items
@@ -201,9 +226,17 @@ describe('Filter List', () => {
 					)
 				];
 
-				const { getByTextWithMarkup, findByTextWithMarkup, user } = setup(<FilterList flagged />, {
-					mocks
-				});
+				const { getByTextWithMarkup, findByTextWithMarkup, user } = setup(
+					<FilterList
+						flagged
+						crumbs={[]}
+						sort={NODES_SORT_DEFAULT}
+						emptyListMessage="It looks like there's nothing here."
+					/>,
+					{
+						mocks
+					}
+				);
 
 				await screen.findByText(nodeToMove.name);
 
@@ -285,7 +318,15 @@ describe('Filter List', () => {
 
 				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), currentFilter)];
 
-				setup(<FilterList flagged />, { mocks });
+				setup(
+					<FilterList
+						flagged
+						crumbs={[]}
+						sort={NODES_SORT_DEFAULT}
+						emptyListMessage="It looks like there's nothing here."
+					/>,
+					{ mocks }
+				);
 
 				// right click to open contextual menu on file without permission
 				const fileItem = await screen.findByText(file.name);
@@ -347,9 +388,17 @@ describe('Filter List', () => {
 					)
 				];
 
-				const { getByTextWithMarkup, findByTextWithMarkup, user } = setup(<FilterList flagged />, {
-					mocks
-				});
+				const { getByTextWithMarkup, findByTextWithMarkup, user } = setup(
+					<FilterList
+						flagged
+						crumbs={[]}
+						sort={NODES_SORT_DEFAULT}
+						emptyListMessage="It looks like there's nothing here."
+					/>,
+					{
+						mocks
+					}
+				);
 
 				await screen.findByText(nodeToMove.name);
 

@@ -82,9 +82,10 @@ export const ListHeader: React.VFC<ListHeaderProps> = ({
 						data-testid="list-header"
 						flexShrink={0}
 						flexGrow={1}
+						gap="medium"
 					>
 						{firstCustomComponent}
-						<Row mainAlignment="flex-end" wrap="nowrap">
+						<Row mainAlignment="flex-end" wrap="nowrap" width="auto">
 							{headerEndComponent}
 						</Row>
 					</Row>

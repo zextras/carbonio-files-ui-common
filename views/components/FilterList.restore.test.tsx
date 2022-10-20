@@ -10,7 +10,7 @@ import forEach from 'lodash/forEach';
 import last from 'lodash/last';
 import map from 'lodash/map';
 
-import { NODES_LOAD_LIMIT, ROOTS } from '../../constants';
+import { NODES_LOAD_LIMIT, NODES_SORT_DEFAULT, ROOTS } from '../../constants';
 import {
 	populateFile,
 	populateLocalRoot,
@@ -20,7 +20,7 @@ import {
 import { Node } from '../../types/common';
 import { getFindNodesVariables, mockFindNodes, mockRestoreNodes } from '../../utils/mockUtils';
 import { actionRegexp, iconRegexp, setup, selectNodes } from '../../utils/testUtils';
-import FilterList from './FilterList';
+import { FilterList } from './FilterList';
 
 describe('Filter List', () => {
 	describe('Restore', () => {
@@ -50,7 +50,16 @@ describe('Filter List', () => {
 					)
 				];
 
-				const { user } = setup(<FilterList folderId={ROOTS.TRASH} cascade={false} />, { mocks });
+				const { user } = setup(
+					<FilterList
+						folderId={ROOTS.TRASH}
+						cascade={false}
+						crumbs={[]}
+						sort={NODES_SORT_DEFAULT}
+						emptyListMessage="It looks like there's nothing here."
+					/>,
+					{ mocks }
+				);
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -100,7 +109,15 @@ describe('Filter List', () => {
 					)
 				];
 
-				const { user } = setup(<FilterList flagged />, { mocks });
+				const { user } = setup(
+					<FilterList
+						flagged
+						crumbs={[]}
+						sort={NODES_SORT_DEFAULT}
+						emptyListMessage="It looks like there's nothing here."
+					/>,
+					{ mocks }
+				);
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -154,7 +171,15 @@ describe('Filter List', () => {
 
 				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), currentFilter)];
 
-				const { user } = setup(<FilterList flagged />, { mocks });
+				const { user } = setup(
+					<FilterList
+						flagged
+						crumbs={[]}
+						sort={NODES_SORT_DEFAULT}
+						emptyListMessage="It looks like there's nothing here."
+					/>,
+					{ mocks }
+				);
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -191,7 +216,15 @@ describe('Filter List', () => {
 
 				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), [node])];
 
-				setup(<FilterList flagged />, { mocks });
+				setup(
+					<FilterList
+						flagged
+						crumbs={[]}
+						sort={NODES_SORT_DEFAULT}
+						emptyListMessage="It looks like there's nothing here."
+					/>,
+					{ mocks }
+				);
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -229,7 +262,16 @@ describe('Filter List', () => {
 				mockFindNodes(getFindNodesVariables({ folder_id: ROOTS.TRASH, cascade: false }), secondPage)
 			];
 
-			const { user } = setup(<FilterList folderId={ROOTS.TRASH} cascade={false} />, { mocks });
+			const { user } = setup(
+				<FilterList
+					folderId={ROOTS.TRASH}
+					cascade={false}
+					crumbs={[]}
+					sort={NODES_SORT_DEFAULT}
+					emptyListMessage="It looks like there's nothing here."
+				/>,
+				{ mocks }
+			);
 
 			await screen.findByText(firstPage[0].name);
 			expect(screen.getByText(firstPage[0].name)).toBeVisible();

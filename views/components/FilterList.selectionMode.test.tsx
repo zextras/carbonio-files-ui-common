@@ -8,11 +8,11 @@ import React from 'react';
 import { screen } from '@testing-library/react';
 import { Route } from 'react-router-dom';
 
-import { FILTER_TYPE, INTERNAL_PATH, ROOTS } from '../../constants';
+import { FILTER_TYPE, INTERNAL_PATH, NODES_SORT_DEFAULT, ROOTS } from '../../constants';
 import { populateNodes } from '../../mocks/mockUtils';
 import { getFindNodesVariables, mockFindNodes } from '../../utils/mockUtils';
 import { iconRegexp, setup, selectNodes } from '../../utils/testUtils';
-import FilterList from './FilterList';
+import { FilterList } from './FilterList';
 
 describe('Filter List', () => {
 	describe('Selection Mode', () => {
@@ -26,7 +26,14 @@ describe('Filter List', () => {
 			];
 			const { user } = setup(
 				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
-					<FilterList flagged cascade folderId={ROOTS.LOCAL_ROOT} />
+					<FilterList
+						flagged
+						cascade
+						folderId={ROOTS.LOCAL_ROOT}
+						crumbs={[]}
+						sort={NODES_SORT_DEFAULT}
+						emptyListMessage="It looks like there's nothing here."
+					/>
 				</Route>,
 				{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
 			);

@@ -19,7 +19,7 @@ import { ACTION_IDS, ACTION_TYPES } from '../../constants';
 import { useActiveNode } from '../../hooks/useActiveNode';
 import { CreateOptionsContent, useCreateOptions } from '../../hooks/useCreateOptions';
 import { DISPLAYER_WIDTH, FILES_APP_ID, LIST_WIDTH, ROOTS } from '../constants';
-import { ListContext } from '../contexts';
+import { ListContext, ListHeaderActionContext } from '../contexts';
 import { useCreateFolderMutation } from '../hooks/graphql/mutations/useCreateFolderMutation';
 import { useGetChildrenQuery } from '../hooks/graphql/queries/useGetChildrenQuery';
 import { useGetPermissionsQuery } from '../hooks/graphql/queries/useGetPermissionsQuery';
@@ -40,6 +40,7 @@ import { getNewDocumentActionLabel, inputElement } from '../utils/utils';
 import { Displayer } from './components/Displayer';
 import { EmptySpaceFiller } from './components/EmptySpaceFiller';
 import { List } from './components/List';
+import { SortingComponent } from './components/SortingComponent';
 
 const FolderView: React.VFC = () => {
 	const { rootId } = useParams<URLParams>();
@@ -324,6 +325,25 @@ const FolderView: React.VFC = () => {
 		return [];
 	}, [currentFolder]);
 
+	const ListComponent = useMemo(
+		() => (
+			<ListHeaderActionContext.Provider value={<SortingComponent />}>
+				<List
+					nodes={nodes}
+					folderId={currentFolderId}
+					hasMore={hasMore}
+					loadMore={loadMore}
+					loading={loading}
+					canUpload={isCanUploadFile}
+					fillerWithActions={<EmptySpaceFiller actions={actions} />}
+					emptyListMessage={t('empty.folder.hint', "It looks like there's nothing here.")}
+					mainList={isCanUploadFile}
+				/>
+			</ListHeaderActionContext.Provider>
+		),
+		[actions, currentFolderId, hasMore, isCanUploadFile, loadMore, loading, nodes, t]
+	);
+
 	return (
 		<ListContext.Provider value={{ isEmpty, setIsEmpty }}>
 			<Container
@@ -344,17 +364,7 @@ const FolderView: React.VFC = () => {
 						borderRadius="none"
 						background="gray6"
 					>
-						<List
-							nodes={nodes}
-							folderId={currentFolderId}
-							hasMore={hasMore}
-							loadMore={loadMore}
-							loading={loading}
-							canUpload={isCanUploadFile}
-							fillerWithActions={<EmptySpaceFiller actions={actions} />}
-							emptyListMessage={t('empty.folder.hint', "It looks like there's nothing here.")}
-							mainList={isCanUploadFile}
-						/>
+						{ListComponent}
 					</Container>
 					<Container
 						width={DISPLAYER_WIDTH}
@@ -366,19 +376,7 @@ const FolderView: React.VFC = () => {
 						<Displayer translationKey="displayer.folder" />
 					</Container>
 				</Responsive>
-				<Responsive mode="mobile">
-					<List
-						nodes={nodes}
-						folderId={currentFolderId}
-						hasMore={hasMore}
-						loadMore={loadMore}
-						loading={loading}
-						canUpload={isCanUploadFile}
-						fillerWithActions={<EmptySpaceFiller actions={actions} />}
-						emptyListMessage={t('empty.folder.hint', "It looks like there's nothing here.")}
-						mainList={isCanUploadFile}
-					/>
-				</Responsive>
+				<Responsive mode="mobile">{ListComponent}</Responsive>
 			</Container>
 		</ListContext.Provider>
 	);

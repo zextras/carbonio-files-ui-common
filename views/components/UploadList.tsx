@@ -18,7 +18,7 @@ import ListHeader from '../../../components/ListHeader';
 import { useNavigation } from '../../../hooks/useNavigation';
 import { uploadVar } from '../../apollo/uploadVar';
 import { DRAG_TYPES, ROOTS } from '../../constants';
-import { ListContext } from '../../contexts';
+import { ListContext, ListHeaderActionContext } from '../../contexts';
 import useSelection from '../../hooks/useSelection';
 import { useUpload } from '../../hooks/useUpload';
 import { Action, UploadType } from '../../types/common';
@@ -191,16 +191,17 @@ export const UploadList: React.VFC = () => {
 			maxHeight="100%"
 			background="gray6"
 		>
-			<ListHeader
-				crumbs={crumbs}
-				isSelectionModeActive={isSelectionModeActive}
-				unSelectAll={unSelectAll}
-				selectAll={selectAll}
-				permittedSelectionModeActionsItems={permittedSelectionModePrimaryActionsItems}
-				actionComponent={headerAction}
-				exitSelectionMode={exitSelectionMode}
-				isAllSelected={size(selectedIDs) === size(items)}
-			/>
+			<ListHeaderActionContext.Provider value={headerAction}>
+				<ListHeader
+					crumbs={crumbs}
+					isSelectionModeActive={isSelectionModeActive}
+					unSelectAll={unSelectAll}
+					selectAll={selectAll}
+					permittedSelectionModeActionsItems={permittedSelectionModePrimaryActionsItems}
+					exitSelectionMode={exitSelectionMode}
+					isAllSelected={size(selectedIDs) === size(items)}
+				/>
+			</ListHeaderActionContext.Provider>
 			<Dropzone
 				onDrop={uploadWithDragAndDrop}
 				title={dropzoneModal.title}

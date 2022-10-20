@@ -6,6 +6,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { useReactiveVar } from '@apollo/client';
 import { Container, Responsive, Snackbar } from '@zextras/carbonio-design-system';
 import noop from 'lodash/noop';
 import { useTranslation } from 'react-i18next';
@@ -14,21 +15,30 @@ import { useLocation, useParams } from 'react-router-dom';
 import { ACTION_IDS, ACTION_TYPES } from '../../constants';
 import { useCreateOptions } from '../../hooks/useCreateOptions';
 import { useNavigation } from '../../hooks/useNavigation';
-import { DISPLAYER_WIDTH, FILES_APP_ID, FILTER_PARAMS, LIST_WIDTH, ROOTS } from '../constants';
-import { ListContext } from '../contexts';
+import { nodeSortVar } from '../apollo/nodeSortVar';
+import {
+	DISPLAYER_WIDTH,
+	FILES_APP_ID,
+	FILTER_PARAMS,
+	FILTER_TYPE,
+	LIST_WIDTH,
+	ROOTS
+} from '../constants';
+import { ListContext, ListHeaderActionContext } from '../contexts';
 import { useUpload } from '../hooks/useUpload';
-import { DocsType, URLParams } from '../types/common';
+import { Crumb, DocsType, URLParams } from '../types/common';
 import { getNewDocumentActionLabel, inputElement } from '../utils/utils';
 import { Displayer } from './components/Displayer';
-import FilterList from './components/FilterList';
+import { FilterList } from './components/FilterList';
+import { SortingComponent } from './components/SortingComponent';
 
 const FilterView: React.VFC = () => {
-	const { filter } = useParams<URLParams>();
-	const isFlaggedFilter = filter === 'flagged';
-	const isMyTrashFilter = filter === 'myTrash';
-	const isSharedTrashFilter = filter === 'sharedTrash';
-	const isSharedByMeFilter = filter === 'sharedByMe';
-	const isSharedWithMeFilter = filter === 'sharedWithMe';
+	const { filter: filterParam } = useParams<URLParams>();
+	const isFlaggedFilter = `/${filterParam}` === FILTER_TYPE.flagged;
+	const isMyTrashFilter = `/${filterParam}` === FILTER_TYPE.myTrash;
+	const isSharedTrashFilter = `/${filterParam}` === FILTER_TYPE.sharedTrash;
+	const isSharedByMeFilter = `/${filterParam}` === FILTER_TYPE.sharedByMe;
+	const isSharedWithMeFilter = `/${filterParam}` === FILTER_TYPE.sharedWithMe;
 
 	const { setCreateOptions, removeCreateOptions } = useCreateOptions();
 	const [t] = useTranslation();
@@ -187,29 +197,117 @@ const FilterView: React.VFC = () => {
 				ACTION_IDS.CREATE_DOCS_PRESENTATION
 			);
 		};
-	}, [filter, inputElementOnchange, pathname, removeCreateOptions, search, setCreateOptions, t]);
+	}, [
+		filterParam,
+		inputElementOnchange,
+		pathname,
+		removeCreateOptions,
+		search,
+		setCreateOptions,
+		t
+	]);
 
 	const displayerPlaceholdersKey = useMemo(() => {
-		const filterKey = filter && filter.includes('Trash') ? 'trash' : filter;
+		const filterKey = filterParam && filterParam.includes('Trash') ? 'trash' : filterParam;
 		return `displayer.filter.${filterKey}`;
-	}, [filter]);
+	}, [filterParam]);
+
+	const crumbs = useMemo<Crumb[]>(() => {
+		const _crumbs = [];
+		if (isFlaggedFilter) {
+			_crumbs.push({
+				id: 'flagged',
+				label: t('secondaryBar.filtersList.flagged', 'Flagged')
+			});
+		} else if (isMyTrashFilter || isSharedTrashFilter) {
+			_crumbs.push({
+				id: 'trash',
+				label: t('secondaryBar.filtersList.trash', 'Trash')
+			});
+			if (isSharedTrashFilter) {
+				_crumbs.push({
+					id: 'trashSharedWithMe',
+					label: t('secondaryBar.filtersList.sharedElements', 'Shared elements')
+				});
+			} else if (isMyTrashFilter) {
+				_crumbs.push({
+					id: 'trashSharedByMe',
+					label: t('secondaryBar.filtersList.myElements', 'My Elements')
+				});
+			}
+		} else if (isSharedByMeFilter) {
+			_crumbs.push({
+				id: 'sharedByMe',
+				label: t('secondaryBar.filtersList.sharedByMe', 'Shared by me')
+			});
+		} else if (isSharedWithMeFilter) {
+			_crumbs.push({
+				id: 'sharedWithMe',
+				label: t('secondaryBar.filtersList.sharedWithMe', 'Shared with me')
+			});
+		}
+		return _crumbs;
+	}, [
+		isFlaggedFilter,
+		isMyTrashFilter,
+		isSharedTrashFilter,
+		isSharedByMeFilter,
+		isSharedWithMeFilter,
+		t
+	]);
+
+	const emptyListMessage = useMemo(() => {
+		if (isFlaggedFilter) {
+			return t('empty.filter.flagged', 'There are no flagged items.');
+		}
+		if (isMyTrashFilter || isSharedTrashFilter) {
+			return t('empty.filter.trash', 'The trash is empty.');
+		}
+		if (isSharedByMeFilter) {
+			return t(
+				'empty.filter.sharedByMe',
+				"You haven't shared any item with your collaborators yet. "
+			);
+		}
+		if (isSharedWithMeFilter) {
+			return t('empty.filter.sharedWithMe', 'There are no items shared with you yet.');
+		}
+		return t('empty.filter.hint', "It looks like there's nothing here.");
+	}, [
+		isFlaggedFilter,
+		isMyTrashFilter,
+		isSharedByMeFilter,
+		isSharedTrashFilter,
+		isSharedWithMeFilter,
+		t
+	]);
+
+	const nodeSort = useReactiveVar(nodeSortVar);
+	const sort = useMemo(() => nodeSort, [nodeSort]);
+
+	const canUploadFile = useMemo(
+		() => !isMyTrashFilter && !isSharedTrashFilter,
+		[isMyTrashFilter, isSharedTrashFilter]
+	);
+
+	const ActionComponent = useMemo(() => <SortingComponent />, []);
 
 	const ListComponent = useMemo(
 		() =>
-			(isFlaggedFilter && <FilterList canUploadFile {...FILTER_PARAMS.flagged} />) ||
-			(isSharedByMeFilter && <FilterList canUploadFile {...FILTER_PARAMS.sharedByMe} />) ||
-			(isSharedWithMeFilter && <FilterList canUploadFile {...FILTER_PARAMS.sharedWithMe} />) ||
-			(isMyTrashFilter && <FilterList canUploadFile={false} {...FILTER_PARAMS.myTrash} />) ||
-			(isSharedTrashFilter && (
-				<FilterList canUploadFile={false} {...FILTER_PARAMS.sharedTrash} />
-			)) || <Container>Missing Filter</Container>,
-		[
-			isFlaggedFilter,
-			isMyTrashFilter,
-			isSharedByMeFilter,
-			isSharedTrashFilter,
-			isSharedWithMeFilter
-		]
+			filterParam ? (
+				<ListHeaderActionContext.Provider value={ActionComponent}>
+					<FilterList
+						{...FILTER_PARAMS[filterParam]}
+						crumbs={crumbs}
+						canUploadFile={canUploadFile}
+						emptyListMessage={emptyListMessage}
+						sort={sort}
+					/>
+				</ListHeaderActionContext.Provider>
+			) : (
+				<Container data-testid="missing-filter">{emptyListMessage}</Container>
+			),
+		[ActionComponent, canUploadFile, crumbs, emptyListMessage, filterParam, sort]
 	);
 
 	return (
