@@ -7,12 +7,20 @@ import React from 'react';
 
 import { screen, within } from '@testing-library/react';
 import find from 'lodash/find';
+import { graphql } from 'msw';
 import { Route } from 'react-router-dom';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
-import { FILTER_TYPE, INTERNAL_PATH, ROOTS } from '../constants';
+import server from '../../mocks/server';
+import { FILTER_TYPE, INTERNAL_PATH, NODES_LOAD_LIMIT, ROOTS } from '../constants';
+import handleFindNodesRequest from '../mocks/handleFindNodesRequest';
 import { populateNode, populateNodes, populateShares } from '../mocks/mockUtils';
-import { SharedTarget } from '../types/graphql/types';
+import {
+	FindNodesQuery,
+	FindNodesQueryVariables,
+	NodeSort,
+	SharedTarget
+} from '../types/graphql/types';
 import {
 	getFindNodesVariables,
 	getNodeVariables,
@@ -28,6 +36,15 @@ import { setup } from '../utils/testUtils';
 import { getChipLabel } from '../utils/utils';
 import FilterView from './FilterView';
 
+const mockedRequestHandler = jest.fn();
+
+beforeEach(() => {
+	mockedRequestHandler.mockImplementation(handleFindNodesRequest);
+	server.use(
+		graphql.query<FindNodesQuery, FindNodesQueryVariables>('findNodes', mockedRequestHandler)
+	);
+});
+
 jest.mock('../../hooks/useCreateOptions', () => ({
 	useCreateOptions: (): CreateOptionsContent => ({
 		setCreateOptions: jest.fn(),
@@ -37,6 +54,30 @@ jest.mock('../../hooks/useCreateOptions', () => ({
 
 describe('Filter view', () => {
 	describe('Shared By Me filter', () => {
+		test('Shared by me filter has sharedByMe=true and excludes trashed nodes', async () => {
+			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.sharedByMe}`]
+			});
+			await screen.findByText(/view files and folders/i);
+			const expectedVariables = {
+				folder_id: ROOTS.LOCAL_ROOT,
+				cascade: true,
+				shared_by_me: true,
+				sort: NodeSort.NameAsc,
+				limit: NODES_LOAD_LIMIT,
+				shares_limit: 1,
+				direct_share: true
+			};
+			expect(mockedRequestHandler).toHaveBeenCalledWith(
+				expect.objectContaining({
+					variables: expectedVariables
+				}),
+				expect.anything(),
+				expect.anything()
+			);
+			expect(screen.queryByTestId('missing-filter')).not.toBeInTheDocument();
+		});
+
 		test('Deletion of all collaborators remove node from list. Displayer is closed', async () => {
 			const nodes = populateNodes(2);
 			const nodeWithShares = populateNode();

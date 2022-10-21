@@ -8,6 +8,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useReactiveVar } from '@apollo/client';
 import { Container, Responsive, Snackbar } from '@zextras/carbonio-design-system';
+import filter from 'lodash/filter';
 import noop from 'lodash/noop';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useParams } from 'react-router-dom';
@@ -25,12 +26,14 @@ import {
 	ROOTS
 } from '../constants';
 import { ListContext, ListHeaderActionContext } from '../contexts';
+import { useFindNodesQuery } from '../hooks/graphql/queries/useFindNodesQuery';
 import { useUpload } from '../hooks/useUpload';
-import { Crumb, DocsType, URLParams } from '../types/common';
+import { Crumb, DocsType, NodeListItemType, URLParams } from '../types/common';
 import { NodeSort } from '../types/graphql/types';
+import { NonNullableListItem, Unwrap } from '../types/utils';
 import { getNewDocumentActionLabel, inputElement } from '../utils/utils';
 import { Displayer } from './components/Displayer';
-import { FilterList } from './components/FilterList';
+import { List } from './components/List';
 import { SortingComponent } from './components/SortingComponent';
 
 const FilterView: React.VFC = () => {
@@ -308,22 +311,56 @@ const FilterView: React.VFC = () => {
 		[isRecentsFilter]
 	);
 
+	const {
+		data: findNodesResult,
+		loading,
+		hasMore,
+		loadMore
+	} = useFindNodesQuery({
+		...FILTER_PARAMS[filterParam],
+		sort
+	});
+
+	const nodes = useMemo<NodeListItemType[]>(() => {
+		if (findNodesResult?.findNodes?.nodes && findNodesResult.findNodes.nodes.length > 0) {
+			const $nodes = findNodesResult.findNodes.nodes;
+			return filter<Unwrap<typeof $nodes>, NonNullableListItem<typeof $nodes>>(
+				$nodes,
+				(node): node is NonNullableListItem<typeof $nodes> => !!node
+			);
+		}
+		return [];
+	}, [findNodesResult]);
+
 	const ListComponent = useMemo(
 		() =>
 			filterParam ? (
 				<ListHeaderActionContext.Provider value={ActionComponent}>
-					<FilterList
-						{...FILTER_PARAMS[filterParam]}
+					<List
+						nodes={nodes}
+						loading={loading}
+						hasMore={hasMore}
+						loadMore={loadMore}
 						crumbs={crumbs}
-						canUploadFile={canUploadFile}
+						canUpload={canUploadFile}
+						mainList={false}
 						emptyListMessage={emptyListMessage}
-						sort={sort}
 					/>
 				</ListHeaderActionContext.Provider>
 			) : (
 				<Container data-testid="missing-filter">{emptyListMessage}</Container>
 			),
-		[ActionComponent, canUploadFile, crumbs, emptyListMessage, filterParam, sort]
+		[
+			ActionComponent,
+			canUploadFile,
+			crumbs,
+			emptyListMessage,
+			filterParam,
+			hasMore,
+			loadMore,
+			loading,
+			nodes
+		]
 	);
 
 	return (

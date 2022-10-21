@@ -5,15 +5,16 @@
  */
 import React from 'react';
 
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 import { graphql } from 'msw';
 import { Route } from 'react-router-dom';
 
-import server from '../../../mocks/server';
-import { FILTER_TYPE, INTERNAL_PATH, NODES_SORT_DEFAULT, ROOTS } from '../../constants';
-import { populateFolder, populateNodes } from '../../mocks/mockUtils';
+import { CreateOptionsContent } from '../../hooks/useCreateOptions';
+import server from '../../mocks/server';
+import { FILTER_TYPE, INTERNAL_PATH, ROOTS, TIMERS } from '../constants';
+import { populateFolder, populateNodes } from '../mocks/mockUtils';
 import {
 	File as FilesFile,
 	Folder,
@@ -22,18 +23,25 @@ import {
 	GetChildrenQuery,
 	GetChildrenQueryVariables,
 	Maybe
-} from '../../types/graphql/types';
+} from '../types/graphql/types';
 import {
 	getChildrenVariables,
 	getFindNodesVariables,
 	mockFindNodes,
 	mockGetChildren,
 	mockMoveNodes
-} from '../../utils/mockUtils';
-import { setup, selectNodes } from '../../utils/testUtils';
-import { FilterList } from './FilterList';
+} from '../utils/mockUtils';
+import { setup, selectNodes } from '../utils/testUtils';
+import FilterView from './FilterView';
 
-describe('Filter List', () => {
+jest.mock('../../hooks/useCreateOptions', () => ({
+	useCreateOptions: (): CreateOptionsContent => ({
+		setCreateOptions: jest.fn(),
+		removeCreateOptions: jest.fn()
+	})
+}));
+
+describe('Filter View', () => {
 	describe('Drag and drop', () => {
 		test('Drag of files in a filter shows upload dropzone with dropzone message. Drop triggers upload in local root', async () => {
 			const currentFilter = populateNodes(5, 'File');
@@ -66,12 +74,14 @@ describe('Filter List', () => {
 					return res(ctx.data({ getNode: result }));
 				})
 			);
+
 			const mocks = [
 				mockFindNodes(
 					getFindNodesVariables({
 						shared_with_me: true,
 						folder_id: ROOTS.LOCAL_ROOT,
-						cascade: false
+						cascade: true,
+						direct_share: true
 					}),
 					currentFilter
 				)
@@ -82,20 +92,10 @@ describe('Filter List', () => {
 				files
 			};
 
-			setup(
-				<FilterList
-					sharedWithMe
-					folderId={ROOTS.LOCAL_ROOT}
-					canUploadFile
-					cascade={false}
-					crumbs={[]}
-					sort={NODES_SORT_DEFAULT}
-					emptyListMessage="It looks like there's nothing here."
-				/>,
-				{
-					mocks
-				}
-			);
+			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+				mocks,
+				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.sharedWithMe}`]
+			});
 
 			await screen.findByText(currentFilter[0].name);
 
@@ -173,23 +173,10 @@ describe('Filter List', () => {
 				files
 			};
 
-			setup(
-				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
-					<FilterList
-						sharedWithMe={false}
-						folderId={ROOTS.TRASH}
-						canUploadFile={false}
-						cascade={false}
-						crumbs={[]}
-						sort={NODES_SORT_DEFAULT}
-						emptyListMessage="It looks like there's nothing here."
-					/>
-				</Route>,
-				{
-					mocks,
-					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`]
-				}
-			);
+			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+				mocks,
+				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`]
+			});
 
 			await screen.findByText(currentFilter[0].name);
 
@@ -249,7 +236,8 @@ describe('Filter List', () => {
 					getFindNodesVariables({
 						shared_with_me: true,
 						folder_id: ROOTS.LOCAL_ROOT,
-						cascade: true
+						cascade: true,
+						direct_share: true
 					}),
 					currentFilter
 				)
@@ -260,20 +248,10 @@ describe('Filter List', () => {
 				files
 			};
 
-			setup(
-				<FilterList
-					folderId={ROOTS.LOCAL_ROOT}
-					sharedWithMe
-					cascade
-					canUploadFile
-					crumbs={[]}
-					sort={NODES_SORT_DEFAULT}
-					emptyListMessage="It looks like there's nothing here."
-				/>,
-				{
-					mocks
-				}
-			);
+			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+				mocks,
+				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.sharedWithMe}`]
+			});
 
 			await screen.findByText(destinationFolder.name);
 
@@ -319,7 +297,10 @@ describe('Filter List', () => {
 				})
 			);
 			const mocks = [
-				mockFindNodes(getFindNodesVariables({ flagged: true, cascade: true }), currentFilter)
+				mockFindNodes(
+					getFindNodesVariables({ flagged: true, cascade: true, folder_id: ROOTS.LOCAL_ROOT }),
+					currentFilter
+				)
 			];
 
 			const dataTransferObj = {
@@ -327,17 +308,10 @@ describe('Filter List', () => {
 				files
 			};
 
-			setup(
-				<FilterList
-					flagged
-					cascade
-					canUploadFile
-					crumbs={[]}
-					sort={NODES_SORT_DEFAULT}
-					emptyListMessage="It looks like there's nothing here."
-				/>,
-				{ mocks }
-			);
+			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+				mocks,
+				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
+			});
 
 			await screen.findByText(destinationFolder.name);
 
@@ -385,7 +359,7 @@ describe('Filter List', () => {
 			);
 			const mocks = [
 				mockFindNodes(
-					getFindNodesVariables({ folder_id: ROOTS.TRASH, cascade: true }),
+					getFindNodesVariables({ folder_id: ROOTS.TRASH, cascade: false, shared_with_me: false }),
 					currentFilter
 				)
 			];
@@ -395,19 +369,10 @@ describe('Filter List', () => {
 				files
 			};
 
-			setup(
-				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
-					<FilterList
-						folderId={ROOTS.TRASH}
-						cascade
-						canUploadFile={false}
-						crumbs={[]}
-						sort={NODES_SORT_DEFAULT}
-						emptyListMessage="It looks like there's nothing here."
-					/>
-				</Route>,
-				{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`] }
-			);
+			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+				mocks,
+				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`]
+			});
 
 			await screen.findByText(destinationFolder.name);
 
@@ -467,20 +432,10 @@ describe('Filter List', () => {
 				})
 			});
 
-			setup(
-				<FilterList
-					sharedWithMe={false}
-					folderId={ROOTS.TRASH}
-					canUploadFile={false}
-					cascade={false}
-					crumbs={[]}
-					sort={NODES_SORT_DEFAULT}
-					emptyListMessage="It looks like there's nothing here."
-				/>,
-				{
-					mocks
-				}
-			);
+			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+				mocks,
+				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`]
+			});
 
 			const itemToDrag = await screen.findByText(currentFilter[0].name);
 
@@ -495,12 +450,7 @@ describe('Filter List', () => {
 			// dropzone is not shown
 			const destinationItem = screen.getByText(destinationFolder.name);
 			fireEvent.dragEnter(destinationItem, { dataTransfer: dataTransfer() });
-			await waitFor(
-				() =>
-					new Promise((resolve) => {
-						setTimeout(resolve, 100);
-					})
-			);
+			jest.advanceTimersByTime(TIMERS.SHOW_DROPZONE);
 			expect(screen.queryByTestId('dropzone-overlay')).not.toBeInTheDocument();
 			fireEvent.drop(destinationItem, { dataTransfer: dataTransfer() });
 			fireEvent.dragEnd(itemToDrag, { dataTransfer: dataTransfer() });
@@ -555,30 +505,17 @@ describe('Filter List', () => {
 				})
 			});
 
-			setup(
-				<FilterList
-					flagged
-					folderId={ROOTS.LOCAL_ROOT}
-					canUploadFile
-					cascade
-					crumbs={[]}
-					sort={NODES_SORT_DEFAULT}
-					emptyListMessage="It looks like there's nothing here."
-				/>,
-				{
-					mocks
-				}
-			);
+			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+				mocks,
+				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
+			});
 
 			const itemToDrag = await screen.findByText(nodesToDrag[0].name);
 			fireEvent.dragStart(itemToDrag, { dataTransfer: dataTransfer() });
 			fireEvent.dragEnter(itemToDrag, { dataTransfer: dataTransfer() });
-			await waitFor(
-				() =>
-					new Promise((resolve) => {
-						setTimeout(resolve, 100);
-					})
-			);
+			act(() => {
+				jest.advanceTimersByTime(TIMERS.SHOW_DROPZONE);
+			});
 			// two items are visible for the node, the one in the list is disabled, the other one is the one dragged and is not disabled
 			const draggedNodeItems = screen.getAllByText(nodesToDrag[0].name);
 			expect(draggedNodeItems).toHaveLength(2);
@@ -662,30 +599,15 @@ describe('Filter List', () => {
 				})
 			});
 
-			setup(
-				<FilterList
-					flagged
-					folderId={ROOTS.LOCAL_ROOT}
-					canUploadFile
-					cascade
-					crumbs={[]}
-					sort={NODES_SORT_DEFAULT}
-					emptyListMessage="It looks like there's nothing here."
-				/>,
-				{
-					mocks
-				}
-			);
+			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+				mocks,
+				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
+			});
 
 			const itemToDrag = await screen.findByText(nodesToDrag[0].name);
 			fireEvent.dragStart(itemToDrag, { dataTransfer: dataTransfer() });
 			fireEvent.dragEnter(itemToDrag, { dataTransfer: dataTransfer() });
-			await waitFor(
-				() =>
-					new Promise((resolve) => {
-						setTimeout(resolve, 100);
-					})
-			);
+			jest.advanceTimersByTime(TIMERS.SHOW_DROPZONE);
 			// two items are visible for the node, the one in the list is disabled, the other one is the one dragged and is not disabled
 			const draggedNodeItems = screen.getAllByText(nodesToDrag[0].name);
 			expect(draggedNodeItems).toHaveLength(2);
@@ -697,12 +619,7 @@ describe('Filter List', () => {
 			// drag and drop on folder without permissions. Overlay is not shown.
 			const folderWithoutPermissionsItem = screen.getByText(folderWithoutPermission.name);
 			fireEvent.dragEnter(folderWithoutPermissionsItem, { dataTransfer: dataTransfer() });
-			await waitFor(
-				() =>
-					new Promise((resolve) => {
-						setTimeout(resolve, 100);
-					})
-			);
+			jest.advanceTimersByTime(TIMERS.SHOW_DROPZONE);
 			expect(screen.queryByTestId('dropzone-overlay')).not.toBeInTheDocument();
 			fireEvent.drop(folderWithoutPermissionsItem, { dataTransfer: dataTransfer() });
 			fireEvent.dragEnd(itemToDrag, { dataTransfer: dataTransfer() });
@@ -713,12 +630,7 @@ describe('Filter List', () => {
 			const destinationItem = screen.getByText(destinationFolder.name);
 			fireEvent.dragStart(itemToDrag, { dataTransfer: dataTransfer() });
 			fireEvent.dragEnter(destinationItem, { dataTransfer: dataTransfer() });
-			await waitFor(
-				() =>
-					new Promise((resolve) => {
-						setTimeout(resolve, 100);
-					})
-			);
+			jest.advanceTimersByTime(TIMERS.SHOW_DROPZONE);
 			expect(screen.queryByTestId('dropzone-overlay')).not.toBeInTheDocument();
 			fireEvent.drop(destinationItem, { dataTransfer: dataTransfer() });
 			fireEvent.dragEnd(itemToDrag, { dataTransfer: dataTransfer() });
@@ -774,21 +686,8 @@ describe('Filter List', () => {
 			});
 
 			const { user } = setup(
-				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
-					<FilterList
-						flagged
-						folderId={ROOTS.LOCAL_ROOT}
-						canUploadFile
-						cascade
-						crumbs={[]}
-						sort={NODES_SORT_DEFAULT}
-						emptyListMessage="It looks like there's nothing here."
-					/>
-				</Route>,
-				{
-					mocks,
-					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
-				}
+				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+				{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
 			);
 
 			const itemToDrag = await screen.findByText(nodesToDrag[0].name);
@@ -810,12 +709,7 @@ describe('Filter List', () => {
 			// dropzone is not shown
 			const destinationItem = screen.getByText(destinationFolder.name);
 			fireEvent.dragEnter(destinationItem, { dataTransfer: dataTransfer() });
-			await waitFor(
-				() =>
-					new Promise((resolve) => {
-						setTimeout(resolve, 100);
-					})
-			);
+			jest.advanceTimersByTime(TIMERS.SHOW_DROPZONE);
 			expect(screen.queryByTestId('dropzone-overlay')).not.toBeInTheDocument();
 			fireEvent.drop(destinationItem, { dataTransfer: dataTransfer() });
 			fireEvent.dragEnd(itemToDrag, { dataTransfer: dataTransfer() });
@@ -858,29 +752,19 @@ describe('Filter List', () => {
 				})
 			});
 
-			setup(
-				<FilterList
-					flagged
-					folderId={ROOTS.LOCAL_ROOT}
-					canUploadFile
-					cascade
-					crumbs={[]}
-					sort={NODES_SORT_DEFAULT}
-					emptyListMessage="It looks like there's nothing here."
-				/>,
-				{ mocks }
-			);
+			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+				mocks,
+				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
+			});
 
 			const itemToDrag = await screen.findByText(nodesToDrag[0].name);
 			fireEvent.dragStart(itemToDrag, { dataTransfer: dataTransfer() });
 			fireEvent.dragEnter(itemToDrag, { dataTransfer: dataTransfer() });
-			await waitFor(
-				() =>
-					new Promise((resolve) => {
-						setTimeout(resolve, 100);
-					})
-			);
+			act(() => {
+				jest.advanceTimersByTime(TIMERS.SHOW_DROPZONE);
+			});
 			// two items are visible for the node, the one in the list is disabled, the other one is the one dragged and is not disabled
+			await waitFor(() => expect(screen.getAllByText(nodesToDrag[0].name)).toHaveLength(2));
 			const draggedNodeItems = screen.getAllByText(nodesToDrag[0].name);
 			expect(draggedNodeItems).toHaveLength(2);
 			expect(draggedNodeItems[0]).toHaveAttribute('disabled', '');
@@ -890,20 +774,10 @@ describe('Filter List', () => {
 			expect(screen.getByTestId('dropzone-overlay')).toBeVisible();
 			expect(screen.getByText(/drag&drop mode/i)).toBeVisible();
 			expect(screen.getByText(/you cannot drop your items in this area/i)).toBeVisible();
-			await waitFor(
-				() =>
-					new Promise((resolve) => {
-						setTimeout(resolve, 100);
-					})
-			);
+			jest.advanceTimersByTime(TIMERS.SHOW_DROPZONE);
 			fireEvent.drop(itemToDrag, { dataTransfer: dataTransfer() });
 			fireEvent.dragEnd(itemToDrag, { dataTransfer: dataTransfer() });
-			await waitFor(
-				() =>
-					new Promise((resolve) => {
-						setTimeout(resolve, 100);
-					})
-			);
+			jest.advanceTimersByTime(TIMERS.SHOW_DROPZONE);
 			expect(screen.queryByText(/item moved/i)).not.toBeInTheDocument();
 			expect(screen.queryByTestId('dropzone-overlay')).not.toBeInTheDocument();
 		});

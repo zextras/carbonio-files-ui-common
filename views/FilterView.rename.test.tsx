@@ -17,24 +17,39 @@ import {
 import find from 'lodash/find';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
+import { Route } from 'react-router-dom';
 
-import { NODES_LOAD_LIMIT, NODES_SORT_DEFAULT } from '../../constants';
-import GET_CHILDREN from '../../graphql/queries/getChildren.graphql';
-import { populateFile, populateFolder, populateNodes, sortNodes } from '../../mocks/mockUtils';
-import { Node } from '../../types/common';
-import { Folder, GetChildrenQuery, GetChildrenQueryVariables } from '../../types/graphql/types';
+import { CreateOptionsContent } from '../../hooks/useCreateOptions';
+import {
+	FILTER_TYPE,
+	INTERNAL_PATH,
+	NODES_LOAD_LIMIT,
+	NODES_SORT_DEFAULT,
+	ROOTS
+} from '../constants';
+import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
+import { populateFile, populateFolder, populateNodes, sortNodes } from '../mocks/mockUtils';
+import { Node } from '../types/common';
+import { Folder, GetChildrenQuery, GetChildrenQueryVariables } from '../types/graphql/types';
 import {
 	getChildrenVariables,
 	getFindNodesVariables,
 	mockFindNodes,
 	mockUpdateNode,
 	mockUpdateNodeError
-} from '../../utils/mockUtils';
-import { actionRegexp, generateError, renameNode, setup, selectNodes } from '../../utils/testUtils';
-import { addNodeInSortedList } from '../../utils/utils';
-import { FilterList } from './FilterList';
+} from '../utils/mockUtils';
+import { actionRegexp, generateError, renameNode, setup, selectNodes } from '../utils/testUtils';
+import { addNodeInSortedList } from '../utils/utils';
+import FilterView from './FilterView';
 
-describe('Filter List', () => {
+jest.mock('../../hooks/useCreateOptions', () => ({
+	useCreateOptions: (): CreateOptionsContent => ({
+		setCreateOptions: jest.fn(),
+		removeCreateOptions: jest.fn()
+	})
+}));
+
+describe('Filter View', () => {
 	describe('Rename', () => {
 		describe('Selection Mode', () => {
 			test('Rename is hidden when multiple files are selected', async () => {
@@ -46,16 +61,16 @@ describe('Filter List', () => {
 					nodes.push(node);
 				}
 
-				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), nodes)];
+				const mocks = [
+					mockFindNodes(
+						getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+						nodes
+					)
+				];
 
 				const { user } = setup(
-					<FilterList
-						flagged
-						crumbs={[]}
-						sort={NODES_SORT_DEFAULT}
-						emptyListMessage="It looks like there's nothing here."
-					/>,
-					{ mocks }
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
 				);
 
 				// wait for the load to be completed
@@ -86,16 +101,16 @@ describe('Filter List', () => {
 				const node = populateFile();
 				node.permissions.can_write_file = false;
 
-				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), [node])];
+				const mocks = [
+					mockFindNodes(
+						getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+						[node]
+					)
+				];
 
 				const { user } = setup(
-					<FilterList
-						flagged
-						crumbs={[]}
-						sort={NODES_SORT_DEFAULT}
-						emptyListMessage="It looks like there's nothing here."
-					/>,
-					{ mocks }
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
 				);
 
 				// wait for the load to be completed
@@ -132,7 +147,10 @@ describe('Filter List', () => {
 				const newName = nodes[1].name;
 
 				const mocks = [
-					mockFindNodes(getFindNodesVariables({ flagged: true }), nodes),
+					mockFindNodes(
+						getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+						nodes
+					),
 					mockUpdateNodeError(
 						{
 							node_id: element.id,
@@ -143,13 +161,8 @@ describe('Filter List', () => {
 				];
 
 				const { user } = setup(
-					<FilterList
-						flagged
-						crumbs={[]}
-						sort={NODES_SORT_DEFAULT}
-						emptyListMessage="It looks like there's nothing here."
-					/>,
-					{ mocks }
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
 				);
 
 				// wait for the load to be completed
@@ -194,7 +207,10 @@ describe('Filter List', () => {
 				const newName = lastElementName.substring(0, lastElementName.length - 1);
 
 				const mocks = [
-					mockFindNodes(getFindNodesVariables({ flagged: true }), nodes),
+					mockFindNodes(
+						getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+						nodes
+					),
 					mockUpdateNode(
 						{
 							node_id: element.id,
@@ -208,13 +224,8 @@ describe('Filter List', () => {
 				];
 
 				const { user } = setup(
-					<FilterList
-						flagged
-						crumbs={[]}
-						sort={NODES_SORT_DEFAULT}
-						emptyListMessage="It looks like there's nothing here."
-					/>,
-					{ mocks }
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
 				);
 
 				// wait for the load to be completed
@@ -236,28 +247,29 @@ describe('Filter List', () => {
 				expect(nodeItems[0]).toBe(nodeItem);
 				// selection mode is de-activate
 				expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
-				expect(screen.queryByTestId('icon: MoreVertical')).not.toBeInTheDocument();
+				const list = screen.getByTestId('list-');
+				expect(within(list).queryByTestId('icon: MoreVertical')).not.toBeInTheDocument();
 			});
 		});
 
 		describe('Contextual Menu', () => {
-			test.skip('right click on node open the contextual menu for the node, closing a previously opened one. Left click close it', async () => {
+			test('right click on node open the contextual menu for the node, closing a previously opened one. Left click close it', async () => {
 				const nodes = populateNodes(2);
 				// set the node not flagged so that we can findNodes by flag action in the contextual menu of first node
 				nodes[0].flagged = false;
 				// set the second node flagged so that we can findNodes by unflag action in the contextual menu of second node
 				nodes[1].flagged = true;
 
-				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), nodes)];
+				const mocks = [
+					mockFindNodes(
+						getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+						nodes
+					)
+				];
 
 				const { user } = setup(
-					<FilterList
-						flagged
-						crumbs={[]}
-						sort={NODES_SORT_DEFAULT}
-						emptyListMessage="It looks like there's nothing here."
-					/>,
-					{ mocks }
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
 				);
 
 				// wait for the load to be completed
@@ -287,7 +299,6 @@ describe('Filter List', () => {
 				expect(flagAction1).not.toBeInTheDocument();
 				// left click close all the contextual menu
 				await user.click(node2Item);
-				// FIXME: waiting for CDS-72
 				expect(unflagAction2).not.toBeInTheDocument();
 				expect(flagAction1).not.toBeInTheDocument();
 			});
@@ -296,17 +307,17 @@ describe('Filter List', () => {
 				const node = populateFile();
 				node.permissions.can_write_file = false;
 
-				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), [node])];
+				const mocks = [
+					mockFindNodes(
+						getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+						[node]
+					)
+				];
 
-				setup(
-					<FilterList
-						flagged
-						crumbs={[]}
-						sort={NODES_SORT_DEFAULT}
-						emptyListMessage="It looks like there's nothing here."
-					/>,
-					{ mocks }
-				);
+				setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+					mocks,
+					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
+				});
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -334,7 +345,10 @@ describe('Filter List', () => {
 				const newName = lastElementName.substring(0, lastElementName.length - 1);
 
 				const mocks = [
-					mockFindNodes(getFindNodesVariables({ flagged: true }), nodes),
+					mockFindNodes(
+						getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+						nodes
+					),
 					mockUpdateNode(
 						{
 							node_id: element.id,
@@ -348,13 +362,8 @@ describe('Filter List', () => {
 				];
 
 				const { user } = setup(
-					<FilterList
-						flagged
-						crumbs={[]}
-						sort={NODES_SORT_DEFAULT}
-						emptyListMessage="It looks like there's nothing here."
-					/>,
-					{ mocks }
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
 				);
 
 				// wait for the load to be completed
@@ -410,7 +419,10 @@ describe('Filter List', () => {
 				);
 
 				const mocks = [
-					mockFindNodes(getFindNodesVariables({ flagged: true }), currentFilter),
+					mockFindNodes(
+						getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+						currentFilter
+					),
 					mockUpdateNode(
 						{
 							node_id: element.id,
@@ -426,13 +438,8 @@ describe('Filter List', () => {
 				];
 
 				const { user } = setup(
-					<FilterList
-						flagged
-						crumbs={[]}
-						sort={NODES_SORT_DEFAULT}
-						emptyListMessage="It looks like there's nothing here."
-					/>,
-					{ mocks }
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
 				);
 
 				// wait for the load to be completed
@@ -514,7 +521,10 @@ describe('Filter List', () => {
 				});
 
 				const mocks = [
-					mockFindNodes(getFindNodesVariables({ flagged: true }), currentFilter),
+					mockFindNodes(
+						getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+						currentFilter
+					),
 					mockUpdateNode(
 						{
 							node_id: element.id,
@@ -530,13 +540,8 @@ describe('Filter List', () => {
 				];
 
 				const { user } = setup(
-					<FilterList
-						flagged
-						crumbs={[]}
-						sort={NODES_SORT_DEFAULT}
-						emptyListMessage="It looks like there's nothing here."
-					/>,
-					{ mocks }
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
 				);
 
 				// wait for the load to be completed

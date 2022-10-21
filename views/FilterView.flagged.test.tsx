@@ -11,12 +11,12 @@ import { Route } from 'react-router-dom';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import server from '../../mocks/server';
-import { FILTER_PARAMS, FILTER_TYPE, INTERNAL_PATH, NODES_LOAD_LIMIT, ROOTS } from '../constants';
+import { FILTER_TYPE, INTERNAL_PATH, NODES_LOAD_LIMIT, ROOTS } from '../constants';
 import handleFindNodesRequest from '../mocks/handleFindNodesRequest';
 import { populateNodes } from '../mocks/mockUtils';
 import { FindNodesQuery, FindNodesQueryVariables, NodeSort } from '../types/graphql/types';
 import { getFindNodesVariables, mockFindNodes } from '../utils/mockUtils';
-import { setup } from '../utils/testUtils';
+import { buildBreadCrumbRegExp, setup } from '../utils/testUtils';
 import FilterView from './FilterView';
 
 const mockedRequestHandler = jest.fn();
@@ -35,17 +35,19 @@ jest.mock('../../hooks/useCreateOptions', () => ({
 	})
 }));
 
-describe('Filter View', () => {
-	describe('Recents filter', () => {
-		test('Recents filter is sort by updated_at_desc and excludes trashed nodes', async () => {
+describe('Filter view', () => {
+	describe('Flagged filter', () => {
+		test('Flagged filter has flagged=true and excludes trashed nodes', async () => {
 			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
-				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.recents}`]
+				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
 			});
+
 			await screen.findByText(/view files and folders/i);
 			const expectedVariables = {
+				flagged: true,
 				folder_id: ROOTS.LOCAL_ROOT,
 				cascade: true,
-				sort: NodeSort.UpdatedAtDesc,
+				sort: NodeSort.NameAsc,
 				limit: NODES_LOAD_LIMIT,
 				shares_limit: 1
 			};
@@ -56,37 +58,29 @@ describe('Filter View', () => {
 				expect.anything(),
 				expect.anything()
 			);
-			expect(screen.queryByText('missing-filter')).not.toBeInTheDocument();
+			expect(screen.queryByTestId('missing-filter')).not.toBeInTheDocument();
 		});
 
-		test('Sorting component is hidden', async () => {
-			const nodes = populateNodes(10);
+		test('breadcrumb show Flagged', async () => {
+			const nodes = populateNodes(1);
 			const mocks = [
 				mockFindNodes(
-					getFindNodesVariables({
-						...FILTER_PARAMS.recents,
-						sort: NodeSort.UpdatedAtDesc
-					}),
-					nodes
-				),
-				mockFindNodes(
-					getFindNodesVariables({
-						folder_id: ROOTS.LOCAL_ROOT,
-						cascade: true,
-						sort: NodeSort.UpdatedAtDesc
-					}),
+					getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
 					nodes
 				)
 			];
 
-			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
-				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.recents}`],
-				mocks
-			});
+			const { getByTextWithMarkup } = setup(
+				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+				{
+					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`],
+					mocks
+				}
+			);
 
 			await screen.findByText(nodes[0].name);
-			expect(screen.queryByTestId('icon: AzListOutline')).not.toBeInTheDocument();
-			expect(screen.queryByTestId('icon: ZaListOutline')).not.toBeInTheDocument();
+			const breadcrumbRegExp = buildBreadCrumbRegExp('Flagged');
+			expect(getByTextWithMarkup(breadcrumbRegExp)).toBeVisible();
 		});
 	});
 });

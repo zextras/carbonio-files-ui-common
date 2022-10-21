@@ -9,15 +9,24 @@ import { act, fireEvent, screen, waitForElementToBeRemoved, within } from '@test
 import forEach from 'lodash/forEach';
 import last from 'lodash/last';
 import map from 'lodash/map';
+import { Route } from 'react-router-dom';
 
-import { NODES_LOAD_LIMIT, NODES_SORT_DEFAULT, ROOTS } from '../../constants';
-import { populateFile, populateNodes } from '../../mocks/mockUtils';
-import { Node } from '../../types/common';
-import { getFindNodesVariables, mockDeletePermanently, mockFindNodes } from '../../utils/mockUtils';
-import { actionRegexp, setup, selectNodes } from '../../utils/testUtils';
-import { FilterList } from './FilterList';
+import { CreateOptionsContent } from '../../hooks/useCreateOptions';
+import { FILTER_TYPE, INTERNAL_PATH, NODES_LOAD_LIMIT, ROOTS } from '../constants';
+import { populateFile, populateNodes } from '../mocks/mockUtils';
+import { Node } from '../types/common';
+import { getFindNodesVariables, mockDeletePermanently, mockFindNodes } from '../utils/mockUtils';
+import { actionRegexp, setup, selectNodes } from '../utils/testUtils';
+import FilterView from './FilterView';
 
-describe('Filter List', () => {
+jest.mock('../../hooks/useCreateOptions', () => ({
+	useCreateOptions: (): CreateOptionsContent => ({
+		setCreateOptions: jest.fn(),
+		removeCreateOptions: jest.fn()
+	})
+}));
+
+describe('Filter View', () => {
 	describe('Delete Permanently', () => {
 		describe('Selection Mode', () => {
 			test('Delete Permanently remove selected items from the filter list', async () => {
@@ -34,7 +43,11 @@ describe('Filter List', () => {
 
 				const mocks = [
 					mockFindNodes(
-						getFindNodesVariables({ folder_id: ROOTS.TRASH, cascade: false }),
+						getFindNodesVariables({
+							folder_id: ROOTS.TRASH,
+							cascade: false,
+							shared_with_me: false
+						}),
 						currentFilter
 					),
 					mockDeletePermanently(
@@ -46,14 +59,8 @@ describe('Filter List', () => {
 				];
 
 				const { user } = setup(
-					<FilterList
-						folderId={ROOTS.TRASH}
-						cascade={false}
-						crumbs={[]}
-						sort={NODES_SORT_DEFAULT}
-						emptyListMessage="It looks like there's nothing here."
-					/>,
-					{ mocks }
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`] }
 				);
 
 				// wait for the load to be completed
@@ -108,16 +115,16 @@ describe('Filter List', () => {
 
 				const nodesIdsToDeletePermanently = [currentFilter[0].id, currentFilter[1].id];
 
-				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), currentFilter)];
+				const mocks = [
+					mockFindNodes(
+						getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+						currentFilter
+					)
+				];
 
 				const { user } = setup(
-					<FilterList
-						flagged
-						crumbs={[]}
-						sort={NODES_SORT_DEFAULT}
-						emptyListMessage="It looks like there's nothing here."
-					/>,
-					{ mocks }
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
 				);
 
 				// wait for the load to be completed
@@ -157,17 +164,17 @@ describe('Filter List', () => {
 				node.permissions.can_write_file = true;
 				node.rootId = ROOTS.LOCAL_ROOT;
 
-				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), [node])];
+				const mocks = [
+					mockFindNodes(
+						getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+						[node]
+					)
+				];
 
-				setup(
-					<FilterList
-						flagged
-						crumbs={[]}
-						sort={NODES_SORT_DEFAULT}
-						emptyListMessage="It looks like there's nothing here."
-					/>,
-					{ mocks }
-				);
+				setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+					mocks,
+					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
+				});
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -198,20 +205,20 @@ describe('Filter List', () => {
 			const nodesToDelete = map(firstPage, (node) => node.id);
 
 			const mocks = [
-				mockFindNodes(getFindNodesVariables({ folder_id: ROOTS.TRASH, cascade: false }), firstPage),
+				mockFindNodes(
+					getFindNodesVariables({ folder_id: ROOTS.TRASH, cascade: false, shared_with_me: false }),
+					firstPage
+				),
 				mockDeletePermanently({ node_ids: nodesToDelete }, nodesToDelete),
-				mockFindNodes(getFindNodesVariables({ folder_id: ROOTS.TRASH, cascade: false }), secondPage)
+				mockFindNodes(
+					getFindNodesVariables({ folder_id: ROOTS.TRASH, cascade: false, shared_with_me: false }),
+					secondPage
+				)
 			];
 
 			const { user } = setup(
-				<FilterList
-					folderId={ROOTS.TRASH}
-					cascade={false}
-					crumbs={[]}
-					sort={NODES_SORT_DEFAULT}
-					emptyListMessage="It looks like there's nothing here."
-				/>,
-				{ mocks }
+				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+				{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`] }
 			);
 
 			await screen.findByText(firstPage[0].name);
