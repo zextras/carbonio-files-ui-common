@@ -283,10 +283,14 @@ const FilterView: React.VFC = () => {
 		if (isSharedWithMeFilter) {
 			return t('empty.filter.sharedWithMe', 'There are no items shared with you yet.');
 		}
+		if (isRecentsFilter) {
+			return t('empty.filter.recents', "It looks like there's nothing here.");
+		}
 		return t('empty.filter.hint', "It looks like there's nothing here.");
 	}, [
 		isFlaggedFilter,
 		isMyTrashFilter,
+		isRecentsFilter,
 		isSharedByMeFilter,
 		isSharedTrashFilter,
 		isSharedWithMeFilter,
