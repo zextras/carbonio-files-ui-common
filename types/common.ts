@@ -311,7 +311,7 @@ export type RootsType = {
 };
 
 export type URLParams = {
-	filter: 'flagged' | 'myTrash' | 'sharedTrash' | 'sharedByMe' | 'sharedWithMe';
+	filter: 'flagged' | 'myTrash' | 'sharedTrash' | 'sharedByMe' | 'sharedWithMe' | 'recents';
 	rootId: RootsType[keyof RootsType];
 };
 

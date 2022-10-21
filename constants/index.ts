@@ -76,6 +76,10 @@ export const FILTER_PARAMS: Record<URLParams['filter'], SearchParams> = {
 		folderId: ROOTS.TRASH,
 		sharedWithMe: true,
 		cascade: false
+	},
+	recents: {
+		folderId: ROOTS.LOCAL_ROOT,
+		cascade: true
 	}
 } as const;
 export const TIMERS = {
@@ -123,7 +127,8 @@ export const FILTER_TYPE: { [K in URLParams['filter']]: `/${K}` } = {
 	sharedByMe: '/sharedByMe',
 	sharedWithMe: '/sharedWithMe',
 	myTrash: '/myTrash',
-	sharedTrash: '/sharedTrash'
+	sharedTrash: '/sharedTrash',
+	recents: '/recents'
 } as const;
 
 export const FILES_ROUTE = 'files';

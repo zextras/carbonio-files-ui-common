@@ -215,6 +215,28 @@ describe('Filter view', () => {
 			);
 			expect(screen.queryByTestId('missing-filter')).not.toBeInTheDocument();
 		});
+
+		test('Recents filter is sort by updated_at_desc and excludes trashed nodes', async () => {
+			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.recents}`]
+			});
+			await screen.findByText(/view files and folders/i);
+			const expectedVariables = {
+				folder_id: ROOTS.LOCAL_ROOT,
+				cascade: true,
+				sort: NodeSort.UpdatedAtDesc,
+				limit: NODES_LOAD_LIMIT,
+				shares_limit: 1
+			};
+			expect(mockedRequestHandler).toHaveBeenCalledWith(
+				expect.objectContaining({
+					variables: expectedVariables
+				}),
+				expect.anything(),
+				expect.anything()
+			);
+			expect(screen.queryByText('missing-filter')).not.toBeInTheDocument();
+		});
 	});
 
 	describe('Create Folder', () => {

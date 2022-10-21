@@ -27,6 +27,7 @@ import {
 import { ListContext, ListHeaderActionContext } from '../contexts';
 import { useUpload } from '../hooks/useUpload';
 import { Crumb, DocsType, URLParams } from '../types/common';
+import { NodeSort } from '../types/graphql/types';
 import { getNewDocumentActionLabel, inputElement } from '../utils/utils';
 import { Displayer } from './components/Displayer';
 import { FilterList } from './components/FilterList';
@@ -39,6 +40,7 @@ const FilterView: React.VFC = () => {
 	const isSharedTrashFilter = `/${filterParam}` === FILTER_TYPE.sharedTrash;
 	const isSharedByMeFilter = `/${filterParam}` === FILTER_TYPE.sharedByMe;
 	const isSharedWithMeFilter = `/${filterParam}` === FILTER_TYPE.sharedWithMe;
+	const isRecentsFilter = `/${filterParam}` === FILTER_TYPE.recents;
 
 	const { setCreateOptions, removeCreateOptions } = useCreateOptions();
 	const [t] = useTranslation();
@@ -245,6 +247,11 @@ const FilterView: React.VFC = () => {
 				id: 'sharedWithMe',
 				label: t('secondaryBar.filtersList.sharedWithMe', 'Shared with me')
 			});
+		} else if (isRecentsFilter) {
+			_crumbs.push({
+				id: 'recents',
+				label: t('secondaryBar.filtersList.recents', 'Recents')
+			});
 		}
 		return _crumbs;
 	}, [
@@ -253,6 +260,7 @@ const FilterView: React.VFC = () => {
 		isSharedTrashFilter,
 		isSharedByMeFilter,
 		isSharedWithMeFilter,
+		isRecentsFilter,
 		t
 	]);
 
@@ -283,14 +291,22 @@ const FilterView: React.VFC = () => {
 	]);
 
 	const nodeSort = useReactiveVar(nodeSortVar);
-	const sort = useMemo(() => nodeSort, [nodeSort]);
+	const sort = useMemo(() => {
+		if (isRecentsFilter) {
+			return NodeSort.UpdatedAtDesc;
+		}
+		return nodeSort;
+	}, [isRecentsFilter, nodeSort]);
 
 	const canUploadFile = useMemo(
 		() => !isMyTrashFilter && !isSharedTrashFilter,
 		[isMyTrashFilter, isSharedTrashFilter]
 	);
 
-	const ActionComponent = useMemo(() => <SortingComponent />, []);
+	const ActionComponent = useMemo(
+		() => !isRecentsFilter && <SortingComponent />,
+		[isRecentsFilter]
+	);
 
 	const ListComponent = useMemo(
 		() =>
