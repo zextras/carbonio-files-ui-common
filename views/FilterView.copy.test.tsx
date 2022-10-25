@@ -8,17 +8,19 @@ import React from 'react';
 import { fireEvent, screen, within } from '@testing-library/react';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
+import { Route } from 'react-router-dom';
 
-import { ROOTS } from '../../constants';
-import GET_CHILDREN from '../../graphql/queries/getChildren.graphql';
+import { CreateOptionsContent } from '../../hooks/useCreateOptions';
+import { FILTER_TYPE, INTERNAL_PATH, ROOTS } from '../constants';
+import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import {
 	populateFile,
 	populateFolder,
 	populateNodePage,
 	populateNodes,
 	populateParents
-} from '../../mocks/mockUtils';
-import { Folder, GetChildrenQuery, GetChildrenQueryVariables } from '../../types/graphql/types';
+} from '../mocks/mockUtils';
+import { Folder, GetChildrenQuery, GetChildrenQueryVariables } from '../types/graphql/types';
 import {
 	getChildrenVariables,
 	getFindNodesVariables,
@@ -26,17 +28,24 @@ import {
 	mockFindNodes,
 	mockGetChildren,
 	mockGetPath
-} from '../../utils/mockUtils';
+} from '../utils/mockUtils';
 import {
 	actionRegexp,
 	buildBreadCrumbRegExp,
 	iconRegexp,
-	setup,
-	selectNodes
-} from '../../utils/testUtils';
-import FilterList from './FilterList';
+	selectNodes,
+	setup
+} from '../utils/testUtils';
+import FilterView from './FilterView';
 
-describe('Filter List', () => {
+jest.mock('../../hooks/useCreateOptions', () => ({
+	useCreateOptions: (): CreateOptionsContent => ({
+		setCreateOptions: jest.fn(),
+		removeCreateOptions: jest.fn()
+	})
+}));
+
+describe('Filter View', () => {
 	describe('Copy', () => {
 		describe('Selection Mode', () => {
 			test('Copy is enabled when multiple files are selected', async () => {
@@ -47,9 +56,17 @@ describe('Filter List', () => {
 				folder.parent = populateFolder();
 				currentFilter.push(file, folder);
 
-				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), currentFilter)];
+				const mocks = [
+					mockFindNodes(
+						getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+						currentFilter
+					)
+				];
 
-				const { user } = setup(<FilterList flagged />, { mocks });
+				const { user } = setup(
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
+				);
 
 				await screen.findByText(file.name);
 				await selectNodes([file.id, folder.id], user);
@@ -81,7 +98,10 @@ describe('Filter List', () => {
 					}
 				});
 				const mocks = [
-					mockFindNodes(getFindNodesVariables({ flagged: true }), currentFilter),
+					mockFindNodes(
+						getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+						currentFilter
+					),
 					mockGetPath({ node_id: parentFolder.id }, path.slice(0, path.length - 1)),
 					mockGetChildren(getChildrenVariables(parentFolder.id), parentFolder),
 					mockCopyNodes(
@@ -93,9 +113,10 @@ describe('Filter List', () => {
 					)
 				];
 
-				const { getByTextWithMarkup, findByTextWithMarkup, user } = setup(<FilterList flagged />, {
-					mocks
-				});
+				const { getByTextWithMarkup, findByTextWithMarkup, user } = setup(
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
+				);
 
 				await screen.findByText(nodeToCopy.name);
 
@@ -184,7 +205,10 @@ describe('Filter List', () => {
 				});
 
 				const mocks = [
-					mockFindNodes(getFindNodesVariables({ flagged: true }), currentFilter),
+					mockFindNodes(
+						getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+						currentFilter
+					),
 					mockGetPath({ node_id: parentFolder.id }, [parentFolder]),
 					mockGetChildren(getChildrenVariables(parentFolder.id), parentFolder),
 					mockCopyNodes(
@@ -196,9 +220,10 @@ describe('Filter List', () => {
 					)
 				];
 
-				const { findByTextWithMarkup, user } = setup(<FilterList flagged />, {
-					mocks
-				});
+				const { findByTextWithMarkup, user } = setup(
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
+				);
 
 				await screen.findByText(nodesToCopy[0].name);
 
@@ -280,7 +305,10 @@ describe('Filter List', () => {
 				});
 
 				const mocks = [
-					mockFindNodes(getFindNodesVariables({ flagged: true }), currentFilter),
+					mockFindNodes(
+						getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+						currentFilter
+					),
 					mockGetChildren(getChildrenVariables(localRoot.id), localRoot),
 					mockCopyNodes(
 						{
@@ -292,9 +320,10 @@ describe('Filter List', () => {
 					mockGetPath({ node_id: localRoot.id }, [localRoot])
 				];
 
-				const { getByTextWithMarkup, user } = setup(<FilterList flagged />, {
-					mocks
-				});
+				const { getByTextWithMarkup, user } = setup(
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
+				);
 
 				await screen.findByText(nodesToCopy[0].name);
 
@@ -389,7 +418,10 @@ describe('Filter List', () => {
 					}
 				});
 				const mocks = [
-					mockFindNodes(getFindNodesVariables({ flagged: true }), currentFilter),
+					mockFindNodes(
+						getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+						currentFilter
+					),
 					mockGetPath({ node_id: parentFolder.id }, path.slice(0, path.length - 1)),
 					mockGetChildren(getChildrenVariables(parentFolder.id), parentFolder),
 					mockCopyNodes(
@@ -401,9 +433,10 @@ describe('Filter List', () => {
 					)
 				];
 
-				const { getByTextWithMarkup, findByTextWithMarkup, user } = setup(<FilterList flagged />, {
-					mocks
-				});
+				const { getByTextWithMarkup, findByTextWithMarkup, user } = setup(
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
+				);
 
 				await screen.findByText(nodeToCopy.name);
 

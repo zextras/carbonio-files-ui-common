@@ -6,14 +6,13 @@
 
 import { useCallback } from 'react';
 
-import { ApolloQueryResult, QueryResult, useQuery, useReactiveVar } from '@apollo/client';
+import { ApolloQueryResult, QueryResult, useQuery } from '@apollo/client';
 import isEqual from 'lodash/isEqual';
 
-import { nodeSortVar } from '../../../apollo/nodeSortVar';
 import { NODES_LOAD_LIMIT } from '../../../constants';
 import FIND_NODES from '../../../graphql/queries/findNodes.graphql';
 import { SearchParams } from '../../../types/common';
-import { FindNodesQuery, FindNodesQueryVariables } from '../../../types/graphql/types';
+import { FindNodesQuery, FindNodesQueryVariables, NodeSort } from '../../../types/graphql/types';
 import { useErrorHandler } from '../../useErrorHandler';
 import { useMemoCompare } from '../../useMemoCompare';
 
@@ -24,6 +23,10 @@ export interface FindNodesQueryHookReturnType
 	pageToken: string | null | undefined;
 }
 
+interface FindNodesQueryHookParams extends SearchParams {
+	sort: NodeSort;
+}
+
 export function useFindNodesQuery({
 	flagged,
 	sharedWithMe,
@@ -31,10 +34,9 @@ export function useFindNodesQuery({
 	folderId,
 	cascade,
 	keywords,
-	directShare
-}: SearchParams): FindNodesQueryHookReturnType {
-	const nodeSort = useReactiveVar(nodeSortVar);
-
+	directShare,
+	sort
+}: FindNodesQueryHookParams): FindNodesQueryHookReturnType {
 	const { data, fetchMore, ...queryResult } = useQuery<FindNodesQuery, FindNodesQueryVariables>(
 		FIND_NODES,
 		{
@@ -49,15 +51,16 @@ export function useFindNodesQuery({
 				folder_id: folderId,
 				cascade,
 				limit: NODES_LOAD_LIMIT,
-				sort: nodeSort,
+				sort,
 				direct_share: directShare
 			},
 			skip:
-				!flagged &&
-				!sharedWithMe &&
-				!sharedByMe &&
-				!folderId &&
-				(!keywords || keywords.length === 0),
+				flagged === undefined &&
+				sharedWithMe === undefined &&
+				sharedByMe === undefined &&
+				folderId === undefined &&
+				(keywords === undefined || keywords === null || keywords.length === 0) &&
+				cascade === undefined,
 			notifyOnNetworkStatusChange: true,
 			errorPolicy: 'all'
 		}

@@ -6,6 +6,7 @@
 
 import React, { useContext, useEffect, useMemo } from 'react';
 
+import { useReactiveVar } from '@apollo/client';
 import { sample } from 'lodash';
 import filter from 'lodash/filter';
 import isArray from 'lodash/isArray';
@@ -14,6 +15,7 @@ import reduce from 'lodash/reduce';
 import { useTranslation } from 'react-i18next';
 
 import { useSearch } from '../../../hooks/useSearch';
+import { nodeSortVar } from '../../apollo/nodeSortVar';
 import { ListContext } from '../../contexts';
 import { useFindNodesQuery } from '../../hooks/graphql/queries/useFindNodesQuery';
 import { NodeListItemType } from '../../types/common';
@@ -24,6 +26,7 @@ export const SearchList: React.VFC = () => {
 	const [t] = useTranslation();
 	const { searchParams } = useSearch();
 	const { queryCalled, setQueryCalled } = useContext(ListContext);
+	const nodeSort = useReactiveVar(nodeSortVar);
 	const {
 		data: searchResult,
 		loadMore,
@@ -45,7 +48,8 @@ export const SearchList: React.VFC = () => {
 		sharedByMe: searchParams.sharedByMe?.value,
 		folderId: searchParams.folderId?.value,
 		cascade: searchParams.cascade?.value,
-		sharedWithMe: searchParams.sharedWithMe?.value
+		sharedWithMe: searchParams.sharedWithMe?.value,
+		sort: nodeSort
 	});
 
 	useEffect(() => {

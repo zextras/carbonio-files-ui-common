@@ -72,7 +72,7 @@ export const HeaderBreadcrumbs: React.VFC<HeaderBreadcrumbsProps> = ({ folderId,
 		<Row
 			wrap="nowrap"
 			ref={containerRef}
-			width="fill"
+			width="auto"
 			height="fill"
 			mainAlignment="flex-start"
 			minWidth={0}

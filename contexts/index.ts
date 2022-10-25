@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: AGPL-3.0-only
  */
-import { createContext } from 'react';
+import React, { createContext } from 'react';
 
 export const ListContext = createContext<{
 	isEmpty: boolean;
@@ -25,3 +25,5 @@ export const NodeAvatarIconContext = createContext<{
 		| boolean
 		| (({ disabled, selectable }: { disabled: boolean; selectable: boolean }) => boolean);
 }>({ tooltipDisabled: true });
+
+export const ListHeaderActionContext = createContext<React.ReactNode>(null);

@@ -9,23 +9,27 @@ import { fireEvent, screen, waitForElementToBeRemoved, within } from '@testing-l
 import forEach from 'lodash/forEach';
 import last from 'lodash/last';
 import map from 'lodash/map';
+import { Route } from 'react-router-dom';
 
-import { NODES_LOAD_LIMIT, ROOTS } from '../../constants';
-import {
-	populateFile,
-	populateLocalRoot,
-	populateNode,
-	populateNodes
-} from '../../mocks/mockUtils';
-import { Node } from '../../types/common';
-import { getFindNodesVariables, mockFindNodes, mockRestoreNodes } from '../../utils/mockUtils';
-import { actionRegexp, iconRegexp, setup, selectNodes } from '../../utils/testUtils';
-import FilterList from './FilterList';
+import { CreateOptionsContent } from '../../hooks/useCreateOptions';
+import { FILTER_TYPE, INTERNAL_PATH, NODES_LOAD_LIMIT, ROOTS } from '../constants';
+import { populateFile, populateLocalRoot, populateNode, populateNodes } from '../mocks/mockUtils';
+import { Node } from '../types/common';
+import { getFindNodesVariables, mockFindNodes, mockRestoreNodes } from '../utils/mockUtils';
+import { actionRegexp, iconRegexp, setup, selectNodes } from '../utils/testUtils';
+import FilterView from './FilterView';
 
-describe('Filter List', () => {
+jest.mock('../../hooks/useCreateOptions', () => ({
+	useCreateOptions: (): CreateOptionsContent => ({
+		setCreateOptions: jest.fn(),
+		removeCreateOptions: jest.fn()
+	})
+}));
+
+describe('Filter View', () => {
 	describe('Restore', () => {
 		describe('Selection Mode', () => {
-			test('Restore remove selected items from the filter list', async () => {
+			test('Restore remove selected items from the list', async () => {
 				const currentFilter = populateNodes(3);
 				forEach(currentFilter, (mockedNode) => {
 					mockedNode.rootId = ROOTS.TRASH;
@@ -39,7 +43,11 @@ describe('Filter List', () => {
 
 				const mocks = [
 					mockFindNodes(
-						getFindNodesVariables({ folder_id: ROOTS.TRASH, cascade: false }),
+						getFindNodesVariables({
+							folder_id: ROOTS.TRASH,
+							cascade: false,
+							shared_with_me: false
+						}),
 						currentFilter
 					),
 					mockRestoreNodes(
@@ -50,7 +58,10 @@ describe('Filter List', () => {
 					)
 				];
 
-				const { user } = setup(<FilterList folderId={ROOTS.TRASH} cascade={false} />, { mocks });
+				const { user } = setup(
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`] }
+				);
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -78,64 +89,6 @@ describe('Filter List', () => {
 				expect.assertions(6);
 			});
 
-			test('Restore do not remove selected items from the filter list if is a filter without trashed param', async () => {
-				const currentFilter = populateNodes(3);
-				forEach(currentFilter, (mockedNode) => {
-					mockedNode.flagged = true;
-					mockedNode.rootId = ROOTS.TRASH;
-				});
-
-				currentFilter[0].permissions.can_write_folder = true;
-				currentFilter[0].permissions.can_write_file = true;
-
-				const nodesIdsToRestore = [currentFilter[0].id];
-
-				const mocks = [
-					mockFindNodes(getFindNodesVariables({ flagged: true }), currentFilter),
-					mockRestoreNodes(
-						{
-							node_ids: nodesIdsToRestore
-						},
-						[currentFilter[0]]
-					)
-				];
-
-				const { user } = setup(<FilterList flagged />, { mocks });
-
-				// wait for the load to be completed
-				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
-				// activate selection mode by selecting items
-				await selectNodes(nodesIdsToRestore, user);
-				// check that all wanted items are selected
-				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
-
-				const selectionModeActiveListHeader = screen.getByTestId('list-header-selectionModeActive');
-
-				const restoreIcon = within(selectionModeActiveListHeader).getByTestId(
-					'icon: RestoreOutline'
-				);
-				expect(restoreIcon).toBeInTheDocument();
-				expect(restoreIcon).toBeVisible();
-				expect(restoreIcon).not.toHaveAttribute('disabled', '');
-
-				const unselectAllIcon = screen.getByTestId('icon: ArrowBackOutline');
-				expect(unselectAllIcon).toBeInTheDocument();
-				expect(unselectAllIcon).toBeVisible();
-
-				await user.click(restoreIcon);
-
-				await screen.findByText(/^success$/i);
-
-				const elementsWithSelectionModeOff = await screen.findAllByTestId('file-icon-preview');
-				const restoredItem = screen.queryByText(currentFilter[0].name);
-				expect(restoredItem).toBeInTheDocument();
-				expect(restoredItem).toBeVisible();
-
-				expect(screen.queryAllByTestId('node-item', { exact: false })).toHaveLength(3);
-				expect(elementsWithSelectionModeOff).toHaveLength(3);
-				expect.assertions(10);
-			});
-
 			test('Restore is hidden if not all nodes are trashed', async () => {
 				const currentFilter = populateNodes(3);
 				forEach(currentFilter, (mockedNode) => {
@@ -152,9 +105,17 @@ describe('Filter List', () => {
 
 				const nodesIdsToRestore = [currentFilter[0].id, currentFilter[1].id];
 
-				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), currentFilter)];
+				const mocks = [
+					mockFindNodes(
+						getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+						currentFilter
+					)
+				];
 
-				const { user } = setup(<FilterList flagged />, { mocks });
+				const { user } = setup(
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
+				);
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -189,9 +150,17 @@ describe('Filter List', () => {
 				node.permissions.can_write_file = true;
 				node.rootId = ROOTS.LOCAL_ROOT;
 
-				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), [node])];
+				const mocks = [
+					mockFindNodes(
+						getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+						[node]
+					)
+				];
 
-				setup(<FilterList flagged />, { mocks });
+				setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+					mocks,
+					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
+				});
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -224,12 +193,21 @@ describe('Filter List', () => {
 			const nodesToRestore = map(firstPage, (node) => node.id);
 
 			const mocks = [
-				mockFindNodes(getFindNodesVariables({ folder_id: ROOTS.TRASH, cascade: false }), firstPage),
+				mockFindNodes(
+					getFindNodesVariables({ folder_id: ROOTS.TRASH, cascade: false, shared_with_me: false }),
+					firstPage
+				),
 				mockRestoreNodes({ node_ids: nodesToRestore }, firstPage),
-				mockFindNodes(getFindNodesVariables({ folder_id: ROOTS.TRASH, cascade: false }), secondPage)
+				mockFindNodes(
+					getFindNodesVariables({ folder_id: ROOTS.TRASH, cascade: false, shared_with_me: false }),
+					secondPage
+				)
 			];
 
-			const { user } = setup(<FilterList folderId={ROOTS.TRASH} cascade={false} />, { mocks });
+			const { user } = setup(
+				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+				{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`] }
+			);
 
 			await screen.findByText(firstPage[0].name);
 			expect(screen.getByText(firstPage[0].name)).toBeVisible();

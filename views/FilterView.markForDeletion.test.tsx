@@ -9,15 +9,24 @@ import { fireEvent, screen, waitForElementToBeRemoved, within } from '@testing-l
 import forEach from 'lodash/forEach';
 import last from 'lodash/last';
 import map from 'lodash/map';
+import { Route } from 'react-router-dom';
 
-import { NODES_LOAD_LIMIT, ROOTS } from '../../constants';
-import { populateFile, populateNodes } from '../../mocks/mockUtils';
-import { Node } from '../../types/common';
-import { getFindNodesVariables, mockFindNodes, mockTrashNodes } from '../../utils/mockUtils';
-import { actionRegexp, setup, selectNodes } from '../../utils/testUtils';
-import FilterList from './FilterList';
+import { CreateOptionsContent } from '../../hooks/useCreateOptions';
+import { FILTER_TYPE, INTERNAL_PATH, NODES_LOAD_LIMIT, ROOTS } from '../constants';
+import { populateFile, populateNodes } from '../mocks/mockUtils';
+import { Node } from '../types/common';
+import { getFindNodesVariables, mockFindNodes, mockTrashNodes } from '../utils/mockUtils';
+import { actionRegexp, setup, selectNodes } from '../utils/testUtils';
+import FilterView from './FilterView';
 
-describe('Filter List', () => {
+jest.mock('../../hooks/useCreateOptions', () => ({
+	useCreateOptions: (): CreateOptionsContent => ({
+		setCreateOptions: jest.fn(),
+		removeCreateOptions: jest.fn()
+	})
+}));
+
+describe('Filter View', () => {
 	describe('Mark for deletion', () => {
 		describe('Selection mode', () => {
 			test('Mark for deletion remove selected items from the filter list', async () => {
@@ -44,9 +53,10 @@ describe('Filter List', () => {
 					)
 				];
 
-				const { user } = setup(<FilterList flagged folderId={ROOTS.LOCAL_ROOT} cascade />, {
-					mocks
-				});
+				const { user } = setup(
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
+				);
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -88,9 +98,17 @@ describe('Filter List', () => {
 
 				const nodesIdsToMFD = [currentFilter[0].id, currentFilter[1].id];
 
-				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), currentFilter)];
+				const mocks = [
+					mockFindNodes(
+						getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+						currentFilter
+					)
+				];
 
-				const { user } = setup(<FilterList flagged />, { mocks });
+				const { user } = setup(
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
+				);
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -115,9 +133,17 @@ describe('Filter List', () => {
 				node.permissions.can_write_file = true;
 				node.rootId = ROOTS.TRASH;
 
-				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), [node])];
+				const mocks = [
+					mockFindNodes(
+						getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+						[node]
+					)
+				];
 
-				setup(<FilterList flagged />, { mocks });
+				setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+					mocks,
+					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
+				});
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -157,7 +183,10 @@ describe('Filter List', () => {
 				)
 			];
 
-			const { user } = setup(<FilterList flagged folderId={ROOTS.LOCAL_ROOT} cascade />, { mocks });
+			const { user } = setup(
+				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+				{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
+			);
 
 			await screen.findByText(firstPage[0].name);
 			expect(screen.getByText(firstPage[0].name)).toBeVisible();
