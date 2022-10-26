@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/tabindex-no-positive */
 /*
  * SPDX-FileCopyrightText: 2022 Zextras <https://www.zextras.com>
  *
@@ -399,6 +400,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 						padding={{ all: 'small' }}
 						width="fill"
 						background={isActive ? 'highlight' : 'gray6'}
+						tabIndex={0}
 					>
 						<NodeAvatarIcon
 							selectionModeActive={isSelectionModeActive}

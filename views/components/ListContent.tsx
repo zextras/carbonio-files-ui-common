@@ -6,6 +6,7 @@
 
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
+import { useCombinedRefs } from '@zextras/carbonio-design-system';
 import filter from 'lodash/filter';
 import forEach from 'lodash/forEach';
 import includes from 'lodash/includes';
@@ -16,6 +17,7 @@ import useUserInfo from '../../../hooks/useUserInfo';
 import { draggedItemsVar } from '../../apollo/dragAndDropVar';
 import { DRAG_TYPES } from '../../constants';
 import { DeleteNodesType } from '../../hooks/graphql/mutations/useDeleteNodesMutation';
+import { useListShortcuts } from '../../hooks/useListShortcuts';
 import { Action, GetNodeParentType, NodeListItemType, PickIdNodeType } from '../../types/common';
 import { Node } from '../../types/graphql/types';
 import { DeepPick, OneOrMany } from '../../types/utils';
@@ -100,6 +102,7 @@ export const ListContent = React.forwardRef<HTMLDivElement, ListContentProps>(
 		ref
 	) {
 		const dragImageRef = useRef<HTMLDivElement>(null);
+		const listRef = useCombinedRefs(ref);
 
 		const { me } = useUserInfo();
 
@@ -162,6 +165,8 @@ export const ListContent = React.forwardRef<HTMLDivElement, ListContentProps>(
 			setDragImage([]);
 			draggedItemsVar(null);
 		}, []);
+
+		useListShortcuts(listRef);
 
 		const items = useMemo(
 			() =>
@@ -233,7 +238,7 @@ export const ListContent = React.forwardRef<HTMLDivElement, ListContentProps>(
 					loading={loading}
 					hasMore={hasMore}
 					loadMore={loadMore}
-					ref={ref}
+					ref={listRef}
 					fillerWithActions={fillerWithActions}
 				>
 					{items}

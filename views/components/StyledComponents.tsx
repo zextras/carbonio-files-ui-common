@@ -11,7 +11,8 @@ import {
 	Text,
 	getColor,
 	Shimmer,
-	ModalBody
+	ModalBody,
+	pseudoClasses
 } from '@zextras/carbonio-design-system';
 import styled, { css, SimpleInterpolation } from 'styled-components';
 
@@ -28,6 +29,8 @@ export const DisplayerContentContainer = styled(Container)`
 
 export const HoverContainer = styled(Row)`
 	width: 100%;
+
+	${({ theme, background }): SimpleInterpolation => background && pseudoClasses(theme, background)}
 `;
 
 export const HoverBarContainer = styled(Row)`
