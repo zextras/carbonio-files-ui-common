@@ -8,7 +8,13 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { FetchResult } from '@apollo/client';
-import { Divider, Input, ModalBody, ModalFooter } from '@zextras/carbonio-design-system';
+import {
+	Divider,
+	Input,
+	ModalBody,
+	ModalFooter,
+	ModalHeader
+} from '@zextras/carbonio-design-system';
 import trim from 'lodash/trim';
 import { useTranslation } from 'react-i18next';
 
@@ -26,6 +32,7 @@ interface UpdateNodeNameModalProps<T extends UpdateNameMutation> {
 	confirmLabel: string;
 	confirmAction: (nodeId: string, newName: string) => Promise<FetchResult<T>>;
 	closeAction?: () => void;
+	title: string;
 }
 
 export const UpdateNodeNameModalContent = <T extends UpdateNameMutation>({
@@ -34,7 +41,8 @@ export const UpdateNodeNameModalContent = <T extends UpdateNameMutation>({
 	inputLabel,
 	confirmLabel,
 	confirmAction,
-	closeAction
+	closeAction,
+	title
 }: UpdateNodeNameModalProps<T>): JSX.Element => {
 	const [t] = useTranslation();
 	const [newName, setNewName] = useState(nodeName || '');
@@ -90,6 +98,13 @@ export const UpdateNodeNameModalContent = <T extends UpdateNameMutation>({
 
 	return (
 		<>
+			<ModalHeader
+				title={title}
+				showCloseIcon
+				onClose={closeAction}
+				closeIconTooltip={t('modal.close.tooltip', 'Close')}
+			/>
+			<Divider />
 			<ModalBody>
 				<Input
 					value={newName}
