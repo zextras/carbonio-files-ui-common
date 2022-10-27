@@ -92,8 +92,10 @@ export const ListItemContainer = styled(Container).attrs<
 
 export const CheckedAvatar = styled(Avatar)`
 	border-radius: 0.5rem;
-	height: ${LIST_ITEM_AVATAR_HEIGHT};
-	width: ${LIST_ITEM_AVATAR_HEIGHT};
+	min-height: ${LIST_ITEM_AVATAR_HEIGHT};
+	max-height: ${LIST_ITEM_AVATAR_HEIGHT};
+	min-width: ${LIST_ITEM_AVATAR_HEIGHT};
+	max-width: ${LIST_ITEM_AVATAR_HEIGHT};
 	flex: 0 0 auto;
 	align-self: center;
 
@@ -105,8 +107,10 @@ export const CheckedAvatar = styled(Avatar)`
 
 export const UncheckedAvatar = styled(Avatar)`
 	border-radius: 0.5rem;
-	height: ${LIST_ITEM_AVATAR_HEIGHT};
-	width: ${LIST_ITEM_AVATAR_HEIGHT};
+	min-height: ${LIST_ITEM_AVATAR_HEIGHT};
+	max-height: ${LIST_ITEM_AVATAR_HEIGHT};
+	min-width: ${LIST_ITEM_AVATAR_HEIGHT};
+	max-width: ${LIST_ITEM_AVATAR_HEIGHT};
 	flex: 0 0 auto;
 	align-self: center;
 	border: 0.0625rem solid ${(props): string => props.theme.palette.primary.regular};
@@ -115,17 +119,21 @@ export const UncheckedAvatar = styled(Avatar)`
 
 export const FileIconPreview = styled(Avatar)<{ $compact?: boolean }>`
 	border-radius: 0.5rem;
-	height: ${({ $compact }): string =>
+	min-height: ${({ $compact }): string =>
 		$compact ? LIST_ITEM_AVATAR_HEIGHT_COMPACT : LIST_ITEM_AVATAR_HEIGHT};
-	width: ${({ $compact }): string =>
+	max-height: ${({ $compact }): string =>
+		$compact ? LIST_ITEM_AVATAR_HEIGHT_COMPACT : LIST_ITEM_AVATAR_HEIGHT};
+	min-width: ${({ $compact }): string =>
+		$compact ? LIST_ITEM_AVATAR_HEIGHT_COMPACT : LIST_ITEM_AVATAR_HEIGHT};
+	max-width: ${({ $compact }): string =>
 		$compact ? LIST_ITEM_AVATAR_HEIGHT_COMPACT : LIST_ITEM_AVATAR_HEIGHT};
 	flex: 0 0 auto;
 	align-self: center;
 
 	& > svg {
-		width: ${({ $compact }): string =>
+		max-width: ${({ $compact }): string =>
 			$compact ? LIST_ITEM_AVATAR_ICON_HEIGHT_COMPACT : LIST_ITEM_AVATAR_ICON_HEIGHT};
-		height: ${({ $compact }): string =>
+		max-height: ${({ $compact }): string =>
 			$compact ? LIST_ITEM_AVATAR_ICON_HEIGHT_COMPACT : LIST_ITEM_AVATAR_ICON_HEIGHT};
 		min-width: ${({ $compact }): string =>
 			$compact ? LIST_ITEM_AVATAR_ICON_HEIGHT_COMPACT : LIST_ITEM_AVATAR_ICON_HEIGHT};
