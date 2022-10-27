@@ -167,7 +167,7 @@ export const DisplayerPreview: React.VFC<DisplayerPreviewProps> = ({
 					</Text>
 					{!loading && (
 						<Button
-							size="extrasmall"
+							size="small"
 							label={t('preview.button.refresh', 'Refresh preview')}
 							onClick={reloadPreview}
 						/>
