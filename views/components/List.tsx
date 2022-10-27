@@ -80,7 +80,6 @@ import {
 import { Dropzone } from './Dropzone';
 import { EmptyFolder } from './EmptyFolder';
 import { ListContent } from './ListContent';
-import { SortingComponent } from './SortingComponent';
 
 const MainContainer = styled(Container)`
 	border-left: 0.0625rem solid ${(props): string => props.theme.palette.gray6.regular};
@@ -709,7 +708,6 @@ export const List: React.VFC<ListProps> = ({
 				selectAll={selectAll}
 				exitSelectionMode={exitSelectionMode}
 				permittedSelectionModeActionsItems={permittedSelectionModeActionsItems}
-				actionComponent={<SortingComponent />}
 			/>
 			<Dropzone
 				onDrop={dropHandler}

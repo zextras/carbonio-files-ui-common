@@ -25,6 +25,7 @@ import {
 	DOCS_ENDPOINT,
 	DOCS_EXTENSIONS,
 	DOWNLOAD_PATH,
+	INTERNAL_PATH,
 	OPEN_FILE_PATH,
 	PREVIEW_PATH,
 	PREVIEW_TYPE,
@@ -437,7 +438,7 @@ export function addNodeInSortedList(
 }
 
 export function isSearchView(location: Location): boolean {
-	return location.pathname.includes('/search');
+	return location.pathname.includes(INTERNAL_PATH.SEARCH);
 }
 
 export function isTrashView(params: { filter?: string }): boolean {

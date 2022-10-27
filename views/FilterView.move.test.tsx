@@ -8,8 +8,11 @@ import React from 'react';
 import { fireEvent, screen, within } from '@testing-library/react';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
+import { Route } from 'react-router-dom';
 
-import GET_CHILDREN from '../../graphql/queries/getChildren.graphql';
+import { CreateOptionsContent } from '../../hooks/useCreateOptions';
+import { FILTER_TYPE, INTERNAL_PATH, ROOTS } from '../constants';
+import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import {
 	populateFile,
 	populateFolder,
@@ -17,8 +20,8 @@ import {
 	populateNodePage,
 	populateNodes,
 	populateParents
-} from '../../mocks/mockUtils';
-import { Folder, GetChildrenQuery, GetChildrenQueryVariables } from '../../types/graphql/types';
+} from '../mocks/mockUtils';
+import { Folder, GetChildrenQuery, GetChildrenQueryVariables } from '../types/graphql/types';
 import {
 	getChildrenVariables,
 	getFindNodesVariables,
@@ -26,17 +29,24 @@ import {
 	mockGetChildren,
 	mockGetPath,
 	mockMoveNodes
-} from '../../utils/mockUtils';
+} from '../utils/mockUtils';
 import {
 	actionRegexp,
 	buildBreadCrumbRegExp,
 	iconRegexp,
 	setup,
 	selectNodes
-} from '../../utils/testUtils';
-import FilterList from './FilterList';
+} from '../utils/testUtils';
+import FilterView from './FilterView';
 
-describe('Filter List', () => {
+jest.mock('../../hooks/useCreateOptions', () => ({
+	useCreateOptions: (): CreateOptionsContent => ({
+		setCreateOptions: jest.fn(),
+		removeCreateOptions: jest.fn()
+	})
+}));
+
+describe('Filter View', () => {
 	describe('Move', () => {
 		describe('Selection Mode', () => {
 			test('Move is hidden if node has not permissions', async () => {
@@ -57,9 +67,17 @@ describe('Filter List', () => {
 				node.parent.permissions.can_write_file = true;
 				currentFilter.push(file, folder, node);
 
-				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), currentFilter)];
+				const mocks = [
+					mockFindNodes(
+						getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+						currentFilter
+					)
+				];
 
-				const { user } = setup(<FilterList flagged />, { mocks });
+				const { user } = setup(
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
+				);
 
 				await screen.findByText(file.name);
 				// activate selection mode by selecting items
@@ -96,9 +114,17 @@ describe('Filter List', () => {
 				folder.parent = parent;
 				currentFilter.push(file, folder);
 
-				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), currentFilter)];
+				const mocks = [
+					mockFindNodes(
+						getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+						currentFilter
+					)
+				];
 
-				const { user } = setup(<FilterList flagged />, { mocks });
+				const { user } = setup(
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
+				);
 
 				await screen.findByText(file.name);
 				await selectNodes([file.id, folder.id], user);
@@ -125,9 +151,17 @@ describe('Filter List', () => {
 				node.parent = null;
 				currentFilter.push(file, folder, node);
 
-				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), currentFilter)];
+				const mocks = [
+					mockFindNodes(
+						getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+						currentFilter
+					)
+				];
 
-				const { user } = setup(<FilterList flagged />, { mocks });
+				const { user } = setup(
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
+				);
 
 				await screen.findByText(file.name);
 				// activate selection mode by selecting items
@@ -189,7 +223,10 @@ describe('Filter List', () => {
 					}
 				});
 				const mocks = [
-					mockFindNodes(getFindNodesVariables({ flagged: true }), currentFilter),
+					mockFindNodes(
+						getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+						currentFilter
+					),
 					mockGetPath({ node_id: parentFolder.id }, path.slice(0, path.length - 1)),
 					mockGetChildren(getChildrenVariables(parentFolder.id), parentFolder),
 					mockMoveNodes(
@@ -201,9 +238,10 @@ describe('Filter List', () => {
 					)
 				];
 
-				const { getByTextWithMarkup, findByTextWithMarkup, user } = setup(<FilterList flagged />, {
-					mocks
-				});
+				const { getByTextWithMarkup, findByTextWithMarkup, user } = setup(
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
+				);
 
 				await screen.findByText(nodeToMove.name);
 
@@ -283,9 +321,17 @@ describe('Filter List', () => {
 				node.parent.permissions.can_write_file = true;
 				currentFilter.push(file, folder, node);
 
-				const mocks = [mockFindNodes(getFindNodesVariables({ flagged: true }), currentFilter)];
+				const mocks = [
+					mockFindNodes(
+						getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+						currentFilter
+					)
+				];
 
-				setup(<FilterList flagged />, { mocks });
+				setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+					mocks,
+					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
+				});
 
 				// right click to open contextual menu on file without permission
 				const fileItem = await screen.findByText(file.name);
@@ -335,7 +381,10 @@ describe('Filter List', () => {
 					}
 				});
 				const mocks = [
-					mockFindNodes(getFindNodesVariables({ flagged: true }), currentFilter),
+					mockFindNodes(
+						getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+						currentFilter
+					),
 					mockGetPath({ node_id: parentFolder.id }, path.slice(0, path.length - 1)),
 					mockGetChildren(getChildrenVariables(parentFolder.id), parentFolder),
 					mockMoveNodes(
@@ -347,9 +396,10 @@ describe('Filter List', () => {
 					)
 				];
 
-				const { getByTextWithMarkup, findByTextWithMarkup, user } = setup(<FilterList flagged />, {
-					mocks
-				});
+				const { getByTextWithMarkup, findByTextWithMarkup, user } = setup(
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
+				);
 
 				await screen.findByText(nodeToMove.name);
 

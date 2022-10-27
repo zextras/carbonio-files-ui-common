@@ -20,7 +20,7 @@ import { graphql } from 'msw';
 
 import server from '../../../mocks/server';
 import { searchParamsVar } from '../../apollo/searchVar';
-import { NODES_LOAD_LIMIT, ROOTS } from '../../constants';
+import { INTERNAL_PATH, NODES_LOAD_LIMIT, ROOTS } from '../../constants';
 import { populateFolder, populateNodes } from '../../mocks/mockUtils';
 import { AdvancedFilters } from '../../types/common';
 import {
@@ -807,7 +807,10 @@ describe('Search list', () => {
 			const searchParams: AdvancedFilters = { keywords: buildChipsFromKeywords(keywords) };
 			searchParamsVar(searchParams);
 			const mocks = [mockFindNodes(getFindNodesVariables({ keywords }), nodes)];
-			const { user } = setup(<SearchList />, { mocks, initialRouterEntries: ['/search'] });
+			const { user } = setup(<SearchList />, {
+				mocks,
+				initialRouterEntries: [INTERNAL_PATH.SEARCH]
+			});
 			await screen.findByText(nodes[0].name);
 			await screen.findByText(/[1-9] advanced filter(s)?/i);
 			expect(screen.getByText(nodes[0].name)).toBeVisible();
@@ -1043,7 +1046,10 @@ describe('Search list', () => {
 				mockFlagNodes({ node_ids: nodesToUnflag, flag: false }, nodesToUnflag)
 			];
 
-			const { user } = setup(<SearchList />, { mocks, initialRouterEntries: ['/search'] });
+			const { user } = setup(<SearchList />, {
+				mocks,
+				initialRouterEntries: [INTERNAL_PATH.SEARCH]
+			});
 
 			await screen.findByText(firstPage[0].name);
 			expect(screen.getByText(firstPage[0].name)).toBeVisible();

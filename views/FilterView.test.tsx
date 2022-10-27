@@ -6,64 +6,30 @@
 
 import React from 'react';
 
-import {
-	fireEvent,
-	screen,
-	waitFor,
-	waitForElementToBeRemoved,
-	within
-} from '@testing-library/react';
+import { screen, waitFor, waitForElementToBeRemoved, within } from '@testing-library/react';
+import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 import { graphql } from 'msw';
-import { Route } from 'react-router-dom';
+import { Link, Route, Switch } from 'react-router-dom';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import server from '../../mocks/server';
-import { NODES_LOAD_LIMIT, ROOTS } from '../constants';
-import FIND_NODES from '../graphql/queries/findNodes.graphql';
-import GET_NODE from '../graphql/queries/getNode.graphql';
+import { FILTER_TYPE, INTERNAL_PATH, NODES_LOAD_LIMIT, ROOTS } from '../constants';
 import handleFindNodesRequest from '../mocks/handleFindNodesRequest';
+import { populateFolder, populateNode, populateNodes } from '../mocks/mockUtils';
+import { FindNodesQuery, FindNodesQueryVariables } from '../types/graphql/types';
 import {
-	populateFolder,
-	populateNode,
-	populateNodePage,
-	populateNodes,
-	populateParents,
-	populateShare,
-	populateUser
-} from '../mocks/mockUtils';
-import { Node } from '../types/common';
-import {
-	FindNodesQuery,
-	FindNodesQueryVariables,
-	Folder,
-	GetChildrenQuery,
-	GetChildrenQueryVariables,
-	GetNodeQuery,
-	GetNodeQueryVariables,
-	GetPathQuery,
-	GetPathQueryVariables,
-	NodeSort
-} from '../types/graphql/types';
-import {
+	getChildrenVariables,
 	getFindNodesVariables,
-	getNodeVariables,
-	getSharesVariables,
-	mockDeleteShare,
 	mockFindNodes,
-	mockGetNode,
-	mockGetNodeCollaborationLinks,
-	mockGetNodeLinks,
-	mockGetShares
+	mockFlagNodes,
+	mockGetChild,
+	mockGetChildren,
+	mockGetPermissions
 } from '../utils/mockUtils';
-import {
-	actionRegexp,
-	buildBreadCrumbRegExp,
-	moveNode,
-	setup,
-	selectNodes
-} from '../utils/testUtils';
+import { iconRegexp, selectNodes, setup, triggerLoadMore } from '../utils/testUtils';
 import FilterView from './FilterView';
+import FolderView from './FolderView';
 
 let mockedRequestHandler: jest.Mock;
 let mockedCreateOptions: CreateOptionsContent['createOptions'];
@@ -88,574 +54,209 @@ jest.mock('../../hooks/useCreateOptions', () => ({
 }));
 
 describe('Filter view', () => {
-	describe('Filter route param define findNodes query variables', () => {
-		test('No param render a "Missing filter" message', async () => {
-			setup(<Route path="/filter/:filter?" component={FilterView} />, {
-				initialRouterEntries: ['/filter/']
-			});
-			const message = await screen.findByText(/missing filter/i);
-			expect(mockedRequestHandler).not.toHaveBeenCalled();
-			expect(message).toBeVisible();
+	test('No url param render a "Missing filter" message', async () => {
+		setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			initialRouterEntries: [`${INTERNAL_PATH.FILTER}/`]
+		});
+		await screen.findByTestId('missing-filter');
+		expect(screen.getByText(/it looks like there's nothing here/i)).toBeVisible();
+		expect(mockedRequestHandler).not.toHaveBeenCalled();
+	});
+
+	test('Create folder option is always disabled', async () => {
+		setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
+		});
+		await screen.findByText(/view files and folders/i);
+		expect(map(mockedCreateOptions, (createOption) => createOption.action({}))).toEqual(
+			expect.arrayContaining([expect.objectContaining({ id: 'create-folder', disabled: true })])
+		);
+	});
+
+	test('first access to a filter show loading state and than show nodes', async () => {
+		const nodes = populateNodes();
+		const mocks = [
+			mockFindNodes(
+				getFindNodesVariables({ flagged: true, cascade: true, folder_id: ROOTS.LOCAL_ROOT }),
+				nodes
+			)
+		];
+
+		setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`],
+			mocks
 		});
 
-		test('Flagged filter has flagged=true and excludes trashed nodes', async () => {
-			setup(<Route path="/filter/:filter?" component={FilterView} />, {
-				initialRouterEntries: ['/filter/flagged']
-			});
-
-			await screen.findByText(/view files and folders/i);
-			const expectedVariables = {
-				flagged: true,
-				folder_id: ROOTS.LOCAL_ROOT,
-				cascade: true,
-				sort: NodeSort.NameAsc,
-				limit: NODES_LOAD_LIMIT,
-				shares_limit: 1
-			};
-			expect(mockedRequestHandler).toHaveBeenCalledWith(
-				expect.objectContaining({
-					variables: expectedVariables
-				}),
-				expect.anything(),
-				expect.anything()
-			);
-			expect(screen.queryByText(/missing filter/i)).not.toBeInTheDocument();
-		});
-
-		test('My Trash filter sharedWithMe=false and includes only trashed nodes', async () => {
-			setup(<Route path="/filter/:filter?" component={FilterView} />, {
-				initialRouterEntries: ['/filter/myTrash']
-			});
-			await screen.findByText(/view files and folders/i);
-			const expectedVariables = {
-				folder_id: ROOTS.TRASH,
-				cascade: false,
-				shared_with_me: false,
-				sort: NodeSort.NameAsc,
-				limit: NODES_LOAD_LIMIT,
-				shares_limit: 1
-			};
-			expect(mockedRequestHandler).toHaveBeenCalledWith(
-				expect.objectContaining({
-					variables: expectedVariables
-				}),
-				expect.anything(),
-				expect.anything()
-			);
-			expect(screen.queryByText(/missing filter/i)).not.toBeInTheDocument();
-		});
-
-		test('Shared trash filter has sharedWithMe=true and includes only trashed nodes', async () => {
-			setup(<Route path="/filter/:filter?" component={FilterView} />, {
-				initialRouterEntries: ['/filter/sharedTrash']
-			});
-			await screen.findByText(/view files and folders/i);
-			const expectedVariables = {
-				folder_id: ROOTS.TRASH,
-				cascade: false,
-				shared_with_me: true,
-				sort: NodeSort.NameAsc,
-				limit: NODES_LOAD_LIMIT,
-				shares_limit: 1
-			};
-			expect(mockedRequestHandler).toHaveBeenCalledWith(
-				expect.objectContaining({
-					variables: expectedVariables
-				}),
-				expect.anything(),
-				expect.anything()
-			);
-			expect(screen.queryByText(/missing filter/i)).not.toBeInTheDocument();
-		});
-
-		test('Shared by me filter has sharedByMe=true and excludes trashed nodes', async () => {
-			setup(<Route path="/filter/:filter?" component={FilterView} />, {
-				initialRouterEntries: ['/filter/sharedByMe']
-			});
-			await screen.findByText(/view files and folders/i);
-			const expectedVariables = {
-				folder_id: ROOTS.LOCAL_ROOT,
-				cascade: true,
-				shared_by_me: true,
-				sort: NodeSort.NameAsc,
-				limit: NODES_LOAD_LIMIT,
-				shares_limit: 1,
-				direct_share: true
-			};
-			expect(mockedRequestHandler).toHaveBeenCalledWith(
-				expect.objectContaining({
-					variables: expectedVariables
-				}),
-				expect.anything(),
-				expect.anything()
-			);
-			expect(screen.queryByText(/missing filter/i)).not.toBeInTheDocument();
-		});
-
-		test('Shared with me filter has sharedWithMe=true and excludes trashed nodes', async () => {
-			setup(<Route path="/filter/:filter?" component={FilterView} />, {
-				initialRouterEntries: ['/filter/sharedWithMe']
-			});
-			await screen.findByText(/view files and folders/i);
-			const expectedVariables = {
-				folder_id: ROOTS.LOCAL_ROOT,
-				cascade: true,
-				shared_with_me: true,
-				sort: NodeSort.NameAsc,
-				limit: NODES_LOAD_LIMIT,
-				shares_limit: 1,
-				direct_share: true
-			};
-			expect(mockedRequestHandler).toHaveBeenCalledWith(
-				expect.objectContaining({
-					variables: expectedVariables
-				}),
-				expect.anything(),
-				expect.anything()
-			);
-			expect(screen.queryByText(/missing filter/i)).not.toBeInTheDocument();
+		const listHeader = screen.getByTestId('list-header');
+		expect(within(listHeader).getByTestId('icon: Refresh')).toBeVisible();
+		await waitFor(() => expect(screen.getByTestId(`list-`)).not.toBeEmptyDOMElement());
+		await screen.findByText(nodes[0].name);
+		expect(within(listHeader).queryByTestId('icon: Refresh')).not.toBeInTheDocument();
+		forEach(nodes, (node) => {
+			expect(screen.getByTestId(`node-item-${node.id}`)).toBeInTheDocument();
+			expect(screen.getByTestId(`node-item-${node.id}`)).toHaveTextContent(node.name);
 		});
 	});
 
-	describe('Create Folder', () => {
-		test('Create folder option is always disabled', async () => {
-			setup(<FilterView />);
-			await screen.findByText(/view files and folders/i);
-			expect(map(mockedCreateOptions, (createOption) => createOption.action({}))).toEqual(
-				expect.arrayContaining([expect.objectContaining({ id: 'create-folder', disabled: true })])
-			);
+	test('intersectionObserver trigger the fetchMore function to load more elements when observed element is intersected', async () => {
+		const currentFilter = populateNodes(NODES_LOAD_LIMIT + Math.floor(NODES_LOAD_LIMIT / 2));
+
+		const mocks = [
+			mockFindNodes(
+				getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+				currentFilter.slice(0, NODES_LOAD_LIMIT)
+			),
+			mockFindNodes(
+				getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }, true),
+				currentFilter.slice(NODES_LOAD_LIMIT)
+			)
+		];
+
+		setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`],
+			mocks
 		});
+
+		// this is the loading refresh icon
+		expect(screen.getByTestId('list-header')).toContainElement(screen.getByTestId('icon: Refresh'));
+		expect(within(screen.getByTestId('list-header')).getByTestId('icon: Refresh')).toBeVisible();
+		await waitForElementToBeRemoved(
+			within(screen.getByTestId('list-header')).queryByTestId('icon: Refresh')
+		);
+		// wait the rendering of the first item
+		await screen.findByTestId(`node-item-${currentFilter[0].id}`);
+		expect(screen.getByTestId(`node-item-${currentFilter[NODES_LOAD_LIMIT - 1].id}`)).toBeVisible();
+		// the loading icon should be still visible at the bottom of the list because we have load the max limit of items per page
+		expect(screen.getByTestId('icon: Refresh')).toBeVisible();
+
+		// elements after the limit should not be rendered
+		expect(screen.queryByTestId(currentFilter[NODES_LOAD_LIMIT].id)).not.toBeInTheDocument();
+		await triggerLoadMore();
+
+		// wait for the response
+		await screen.findByTestId(`node-item-${currentFilter[NODES_LOAD_LIMIT].id}`);
+
+		// now all elements are loaded so last node and first node should be visible and no loading icon should be rendered
+		expect(
+			screen.getByTestId(`node-item-${currentFilter[currentFilter.length - 1].id}`)
+		).toBeVisible();
+		expect(screen.getByTestId(`node-item-${currentFilter[0].id}`)).toBeVisible();
+		expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(currentFilter.length);
+		expect(screen.queryByTestId('Icon: Refresh')).not.toBeInTheDocument();
 	});
 
-	describe('Displayer', () => {
-		test('Single click on a node opens the details tab on displayer', async () => {
+	test('filter is re-fetched on subsequent navigations', async () => {
+		const nodes = populateNodes(1);
+		const currentFolder = populateFolder();
+		const node = populateNode();
+		node.flagged = false;
+		currentFolder.children.nodes.push(node);
+
+		const mocks = [
+			mockFindNodes(
+				getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+				nodes
+			),
+			mockGetChildren(getChildrenVariables(currentFolder.id), currentFolder),
+			mockGetChild({ node_id: currentFolder.id }, currentFolder),
+			mockGetPermissions({ node_id: currentFolder.id }, currentFolder),
+			mockFlagNodes(
+				{
+					node_ids: [node.id],
+					flag: true
+				},
+				[node.id]
+			),
+			mockFindNodes(
+				getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+				[...nodes, node]
+			)
+		];
+
+		const { user } = setup(
+			<div>
+				<Link
+					to={{
+						pathname: '/folder',
+						search: `?folder=${currentFolder.id}`
+					}}
+				>
+					Go to folder
+				</Link>
+				<Link to={`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`}>Go to filter</Link>
+				<Switch>
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />
+					<Route path="/folder" component={FolderView} />
+				</Switch>
+			</div>,
+			{ initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`], mocks }
+		);
+
+		// filter list, first load to write data in cache
+		await screen.findByTestId(`node-item-${nodes[0].id}`);
+		// only 1 item load
+		expect(screen.getByTestId('node-item', { exact: false })).toBeInTheDocument();
+		// navigate to folder
+		await user.click(screen.getByRole('link', { name: 'Go to folder' }));
+		// folder list, first load
+		await screen.findByTestId(`node-item-${node.id}`);
+		expect(screen.getByTestId('node-item', { exact: false })).toBeInTheDocument();
+		// flag the node through the hover bar
+		await user.click(screen.getByTestId('icon: FlagOutline'));
+		await screen.findByTestId('icon: Flag');
+		// navigate to filter again
+		await user.click(screen.getByRole('link', { name: 'Go to filter' }));
+		// filter list, second load but with a new network request. Wait for loading icon to be removed
+		await screen.findByText(node.name);
+		const nodesItems = screen.getAllByTestId('node-item', { exact: false });
+		expect(nodesItems).toHaveLength(2);
+		expect(screen.getByTestId(`node-item-${node.id}`)).toBe(nodesItems[1]);
+	});
+
+	describe('Selection mode', () => {
+		test('if there is no element selected, all actions are visible and disabled', async () => {
 			const nodes = populateNodes(10);
-			const node = nodes[0];
-			server.use(
-				graphql.query<FindNodesQuery, FindNodesQueryVariables>('findNodes', (req, res, ctx) =>
-					res(ctx.data({ findNodes: populateNodePage(nodes) }))
-				),
-				graphql.query<GetNodeQuery, GetNodeQueryVariables>('getNode', (req, res, ctx) => {
-					const { node_id: id } = req.variables;
-					const result = id === node.id ? node : null;
-					return res(ctx.data({ getNode: result as Node }));
-				})
-			);
-			const { getByTextWithMarkup, user } = setup(
-				<Route path="/filter/:filter?">
-					<FilterView />
-				</Route>,
-				{
-					initialRouterEntries: [`/filter/flagged`]
-				}
-			);
-			// wait the content to be rendered
-			await screen.findByText(/view files and folders/i);
-			await screen.findAllByTestId('node-item', { exact: false });
-			expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(nodes.length);
-			const nodeItem = screen.getByText(node.name);
-			expect(nodeItem).toBeVisible();
-			expect(screen.queryByText(/details/)).not.toBeInTheDocument();
-			await user.click(nodeItem);
-			await waitForElementToBeRemoved(screen.queryByText(/view files and folders/i));
-			await screen.findByText(/details/i);
-			expect(screen.getByText(/details/i)).toBeVisible();
-			const displayer = screen.getByTestId('displayer');
-			await within(displayer).findAllByText(node.name);
-			expect(within(displayer).getAllByText(node.name)).toHaveLength(2);
-			expect(getByTextWithMarkup(buildBreadCrumbRegExp(node.name))).toBeVisible();
-			expect.assertions(6);
-		});
-
-		test('Move action does not close the displayer if node is not removed from the main list', async () => {
-			const nodes = populateNodes(2);
-			const node = nodes[0];
-			node.parent = populateFolder();
-			const { path: parentPath } = populateParents(node.parent);
-			const destinationFolder = populateFolder();
-			destinationFolder.permissions.can_write_folder = true;
-			destinationFolder.permissions.can_write_file = true;
-			(node.parent as Folder).children.nodes.push(destinationFolder);
-			node.parent.permissions.can_write_folder = true;
-			node.parent.permissions.can_write_file = true;
-			node.permissions.can_write_folder = true;
-			node.permissions.can_write_file = true;
-			node.flagged = true;
-			const path = [...parentPath, node];
-			const pathUpdated = [...parentPath, destinationFolder, node];
-			const pathResponse = [path, pathUpdated];
-			server.use(
-				graphql.query<FindNodesQuery, FindNodesQueryVariables>('findNodes', (req, res, ctx) =>
-					res(ctx.data({ findNodes: populateNodePage(nodes) }))
-				),
-				graphql.query<GetNodeQuery, GetNodeQueryVariables>('getNode', (req, res, ctx) => {
-					let result = null;
-					const { node_id: id } = req.variables;
-					switch (id) {
-						case node.id:
-							result = node;
-							break;
-						case (node.parent as Folder).id:
-							result = node.parent;
-							break;
-						case destinationFolder.id:
-							result = destinationFolder;
-							break;
-						default:
-							break;
-					}
-					return res(ctx.data({ getNode: result as Node }));
-				}),
-				graphql.query<GetPathQuery, GetPathQueryVariables>('getPath', (req, res, ctx) => {
-					let result = null;
-					const { node_id: id } = req.variables;
-					switch (id) {
-						case node.id:
-							result = pathResponse.shift() || [];
-							break;
-						case (node.parent as Folder).id:
-							result = parentPath;
-							break;
-						case destinationFolder.id:
-							result = [...parentPath, destinationFolder];
-							break;
-						default:
-							break;
-					}
-					return res(ctx.data({ getPath: result || [] }));
-				}),
-				graphql.query<GetChildrenQuery, GetChildrenQueryVariables>('getChildren', (req, res, ctx) =>
-					res(ctx.data({ getNode: node.parent }))
-				)
-			);
-
-			const { getByTextWithMarkup, queryByTextWithMarkup, findByTextWithMarkup, user } = setup(
-				<Route path="/filter/:filter?">
-					<FilterView />
-				</Route>,
-				{
-					initialRouterEntries: ['/filter/flagged']
-				}
-			);
-			// wait the content to be rendered
-			await screen.findByText(/view files and folders/i);
-			await screen.findAllByTestId('node-item', { exact: false });
-			expect(nodes).not.toBeNull();
-			expect(nodes.length).toBeGreaterThan(0);
-
-			const nodeItem = screen.getByText(node.name);
-			expect(nodeItem).toBeVisible();
-			expect(screen.queryByText(/details/)).not.toBeInTheDocument();
-			await user.click(nodeItem);
-
-			await screen.findByText(/details/i);
-			expect(screen.getByText(/details/i)).toBeVisible();
-			const displayer = screen.getByTestId('displayer');
-			expect(within(displayer).getAllByText(node.name)).toHaveLength(2);
-			expect(getByTextWithMarkup(buildBreadCrumbRegExp(node.name))).toBeVisible();
-			const showPathButton = screen.getByRole('button', { name: /show path/i });
-			expect(showPathButton).toBeVisible();
-			await user.click(showPathButton);
-			await within(displayer).findByText(node.parent.name);
-			const fullPathOriginalRegexp = buildBreadCrumbRegExp(...map(path, (parent) => parent.name));
-			await findByTextWithMarkup(fullPathOriginalRegexp);
-			expect(getByTextWithMarkup(fullPathOriginalRegexp)).toBeVisible();
-			// right click to open contextual menu
-			const nodeToMoveItem = screen.getByTestId(`node-item-${node.id}`);
-			fireEvent.contextMenu(nodeToMoveItem);
-			await moveNode(destinationFolder, user);
-			await screen.findByText(/item moved/i);
-			const fullPathUpdatedItem = await findByTextWithMarkup(
-				buildBreadCrumbRegExp(...map(pathUpdated, (parent) => parent.name))
-			);
-			// old breadcrumb is not visible anymore
-			expect(queryByTextWithMarkup(fullPathOriginalRegexp)).not.toBeInTheDocument();
-			// updated breadcrumb is visible instead
-			expect(fullPathUpdatedItem).toBeVisible();
-			expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(nodes.length);
-			expect(within(screen.getByTestId('list-')).getByText(node.name)).toBeVisible();
-			expect(within(displayer).getAllByText(node.name)).toHaveLength(2);
-		});
-
-		test('Restore close the displayer from trash views', async () => {
-			const { user } = setup(
-				<Route path="/filter/:filter?">
-					<FilterView />
-				</Route>,
-				{
-					initialRouterEntries: ['/filter/myTrash']
-				}
-			);
-			// wait the content to be rendered
-			await screen.findByText(/view files and folders/i);
-			await screen.findAllByTestId('node-item', { exact: false });
-			const queryResult = global.apolloClient.readQuery<FindNodesQuery, FindNodesQueryVariables>({
-				query: FIND_NODES,
-				variables: getFindNodesVariables({
-					shared_with_me: false,
-					folder_id: ROOTS.TRASH,
-					cascade: false
-				})
-			});
-			expect(queryResult?.findNodes?.nodes || null).not.toBeNull();
-			const nodes = queryResult?.findNodes?.nodes as Node[];
-			expect(nodes.length).toBeGreaterThan(0);
-			const cachedNode = nodes[0];
-			const node = populateNode(cachedNode.__typename, cachedNode.id, cachedNode.name);
-			node.rootId = ROOTS.TRASH;
-			node.permissions.can_write_file = true;
-			node.permissions.can_write_folder = true;
-			global.apolloClient.writeQuery<GetNodeQuery, GetNodeQueryVariables>({
-				query: GET_NODE,
-				variables: getNodeVariables(node.id),
-				data: {
-					getNode: { ...node, description: '' }
-				}
-			});
-
-			const nodeItem = screen.getByText(node.name);
-			expect(nodeItem).toBeVisible();
-			expect(screen.queryByText(/details/)).not.toBeInTheDocument();
-			await user.click(nodeItem);
-			await screen.findByText(/details/i);
-			expect(screen.getByText(/details/i)).toBeVisible();
-			const displayer = screen.getByTestId('displayer');
-			expect(within(displayer).getAllByText(node.name)).toHaveLength(2);
-			const restoreAction = within(displayer).getByTestId('icon: RestoreOutline');
-			expect(restoreAction).toBeVisible();
-			await user.click(restoreAction);
-			await waitFor(() =>
-				expect(screen.queryAllByTestId('node-item-', { exact: false })).toHaveLength(
-					nodes.length - 1
-				)
-			);
-			await screen.findByText(/^success$/i);
-			await screen.findByText(/view files and folders/i);
-			expect(within(displayer).queryByText(node.name)).not.toBeInTheDocument();
-			expect(restoreAction).not.toBeInTheDocument();
-			expect(
-				screen.getByText(/View files and folders, share them with your contacts/i)
-			).toBeVisible();
-		});
-
-		test('Delete permanently close the displayer from trash views', async () => {
-			const { user } = setup(
-				<Route path="/filter/:filter?">
-					<FilterView />
-				</Route>,
-				{
-					initialRouterEntries: ['/filter/myTrash']
-				}
-			);
-			// wait the content to be rendered
-			await screen.findByText(/view files and folders/i);
-			await screen.findAllByTestId('node-item', { exact: false });
-			const queryResult = global.apolloClient.readQuery<FindNodesQuery, FindNodesQueryVariables>({
-				query: FIND_NODES,
-				variables: getFindNodesVariables({
-					shared_with_me: false,
-					folder_id: ROOTS.TRASH,
-					cascade: false
-				})
-			});
-			expect(queryResult?.findNodes?.nodes || null).not.toBeNull();
-			const nodes = queryResult?.findNodes?.nodes as Node[];
-			expect(nodes.length).toBeGreaterThan(0);
-			const cachedNode = nodes[0];
-			const node = populateNode(cachedNode.__typename, cachedNode.id, cachedNode.name);
-			node.rootId = ROOTS.TRASH;
-			node.permissions.can_write_file = true;
-			node.permissions.can_write_folder = true;
-			node.permissions.can_delete = true;
-			global.apolloClient.writeQuery<GetNodeQuery, GetNodeQueryVariables>({
-				query: GET_NODE,
-				variables: getNodeVariables(node.id),
-				data: {
-					getNode: { ...node, description: '' }
-				}
-			});
-
-			const nodeItem = screen.getByText(node.name);
-			expect(nodeItem).toBeVisible();
-			expect(screen.queryByText(/details/)).not.toBeInTheDocument();
-			await user.click(nodeItem);
-			await screen.findByText(/details/i);
-			expect(screen.getByText(/details/i)).toBeVisible();
-			const displayer = screen.getByTestId('displayer');
-			expect(within(displayer).getAllByText(node.name)).toHaveLength(2);
-			const deletePermanentlyAction = within(displayer).getByTestId(
-				'icon: DeletePermanentlyOutline'
-			);
-			expect(deletePermanentlyAction).toBeVisible();
-			await user.click(deletePermanentlyAction);
-			const deletePermanentlyConfirm = await screen.findByRole('button', {
-				name: actionRegexp.deletePermanently
-			});
-			await user.click(deletePermanentlyConfirm);
-			await waitFor(() =>
-				expect(screen.queryAllByTestId('node-item-', { exact: false })).toHaveLength(
-					nodes.length - 1
-				)
-			);
-			await screen.findByText(/^success$/i);
-			await screen.findByText(/view files and folders/i);
-			expect(deletePermanentlyConfirm).not.toBeInTheDocument();
-			expect(within(displayer).queryByText(node.name)).not.toBeInTheDocument();
-			expect(deletePermanentlyAction).not.toBeInTheDocument();
-			expect(
-				screen.getByText(/View files and folders, share them with your contacts/i)
-			).toBeVisible();
-		});
-	});
-
-	describe('Context dependant actions', () => {
-		test('in trash filter only restore and delete permanently actions are visible', async () => {
-			const { user } = setup(
-				<Route path="/filter/:filter?">
-					<FilterView />
-				</Route>,
-				{ initialRouterEntries: ['/filter/myTrash'] }
-			);
-			// right click to open contextual menu
-			await screen.findByText(/view files and folders/i);
-			const nodeItems = await screen.findAllByTestId('node-item', { exact: false });
-			fireEvent.contextMenu(nodeItems[0]);
-			// check that restore action becomes visible
-			const restoreAction = await screen.findByText(actionRegexp.restore);
-			expect(restoreAction).toBeVisible();
-			expect(screen.getByText(actionRegexp.deletePermanently)).toBeVisible();
-			expect(screen.queryByText(actionRegexp.rename)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.flag)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.unflag)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.move)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.moveToTrash)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.download)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.copy)).not.toBeInTheDocument();
-
-			const queryResult = global.apolloClient.readQuery<FindNodesQuery, FindNodesQueryVariables>({
-				query: FIND_NODES,
-				variables: getFindNodesVariables({
-					shared_with_me: false,
-					folder_id: ROOTS.TRASH,
-					cascade: false
-				})
-			});
-			expect(queryResult?.findNodes?.nodes || null).not.toBeNull();
-			const nodes = queryResult?.findNodes?.nodes as Node[];
-			// selection mode
-			await selectNodes([nodes[0].id], user);
-			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
-			expect(screen.queryByTestId('icon: MoreVertical')).not.toBeInTheDocument();
-			const restoreActionSelection = await within(
-				screen.getByTestId('list-header-selectionModeActive')
-			).findByTestId('icon: RestoreOutline');
-			expect(restoreActionSelection).toBeVisible();
-			expect(
-				within(screen.getByTestId('list-header-selectionModeActive')).getByTestId(
-					'icon: DeletePermanentlyOutline'
-				)
-			).toBeVisible();
-			expect(screen.queryByText(actionRegexp.rename)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.flag)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.unflag)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.move)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.moveToTrash)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.download)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.copy)).not.toBeInTheDocument();
-			// exit selection mode
-			await user.click(screen.getByTestId('icon: ArrowBackOutline'));
-			expect(restoreActionSelection).not.toBeInTheDocument();
-			expect(screen.queryByTestId('icon: MoreVertical')).not.toBeInTheDocument();
-			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
-
-			const node = populateNode(nodes[0].__typename, nodes[0].id, nodes[0].name);
-			node.permissions.can_write_folder = true;
-			node.permissions.can_write_file = true;
-			node.permissions.can_delete = true;
-			node.rootId = ROOTS.TRASH;
-			global.apolloClient.writeQuery<GetNodeQuery, GetNodeQueryVariables>({
-				query: GET_NODE,
-				variables: getNodeVariables(node.id),
-				data: {
-					getNode: node
-				}
-			});
-
-			// displayer
-			await user.click(nodeItems[0]);
-			await screen.findByText(/details/i);
-			const displayer = screen.getByTestId('displayer');
-			await within(displayer).findAllByText(nodes[0].name);
-			expect(screen.queryByTestId('icon: MoreVertical')).not.toBeInTheDocument();
-			expect(within(displayer).getByTestId('icon: RestoreOutline')).toBeVisible();
-			expect(within(displayer).getByTestId('icon: DeletePermanentlyOutline')).toBeVisible();
-			expect(screen.queryByText(actionRegexp.rename)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.flag)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.unflag)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.move)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.moveToTrash)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.download)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.copy)).not.toBeInTheDocument();
-		});
-	});
-
-	describe('Share with me filter', () => {
-		test('Node is removed from the list if user remove his share', async () => {
-			const currentFilter = populateNodes(2);
-			const node = currentFilter[0];
-			node.owner = populateUser();
-			const mockedUserLogged = populateUser(
-				global.mockedUserLogged.id,
-				global.mockedUserLogged.name
-			);
-			node.shares = [populateShare({ ...node, shares: [] }, 'share-to-remove', mockedUserLogged)];
-
 			const mocks = [
 				mockFindNodes(
-					getFindNodesVariables({
-						folder_id: ROOTS.LOCAL_ROOT,
-						direct_share: true,
-						shared_with_me: true,
-						cascade: true
-					}),
-					currentFilter
-				),
-				mockGetNode(getNodeVariables(node.id), node as Node),
-				mockGetShares(getSharesVariables(node.id), node),
-				mockGetNodeCollaborationLinks({ node_id: node.id }, node),
-				mockGetNodeLinks({ node_id: node.id }, node),
-				mockDeleteShare({ node_id: node.id, share_target_id: mockedUserLogged.id }, true)
+					getFindNodesVariables({ flagged: true, folder_id: ROOTS.LOCAL_ROOT, cascade: true }),
+					nodes
+				)
 			];
-
 			const { user } = setup(
-				<Route path="/filter/:filter?">
-					<FilterView />
-				</Route>,
-				{ initialRouterEntries: ['/filter/sharedWithMe'], mocks }
+				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+				{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
 			);
-			await screen.findByText(/view files and folders/i);
-			await screen.findByText(node.name);
-			// open displayer
-			await user.click(screen.getByText(node.name));
-			await screen.findByText(/sharing/i);
-			// go to share tab
-			await user.click(screen.getByText(/sharing/i));
-			// logged user chip is shown
-			await screen.findByText(/you$/i);
-			const sharingContent = screen.getByTestId('node-sharing');
-			// owner chip is visible
-			expect(within(sharingContent).getByText(node.owner.full_name)).toBeVisible();
-			// close button is visible on logged user chip
-			expect(within(sharingContent).getByTestId('icon: Close')).toBeVisible();
-			await user.click(within(sharingContent).getByTestId('icon: Close'));
-			// confirmation modal
-			await screen.findByRole('button', { name: /remove/i });
-			await user.click(screen.getByRole('button', { name: /remove/i }));
-			await screen.findByText(/success/i);
-			// node is removed from the list and displayer is closed
-			expect(screen.queryByText(node.name)).not.toBeInTheDocument();
-			expect(screen.queryByText(/you$/i)).not.toBeInTheDocument();
-			expect(screen.queryByText(/details/i)).not.toBeInTheDocument();
+			await screen.findByText(nodes[0].name);
+			expect(screen.getByText(nodes[0].name)).toBeVisible();
+			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+			await selectNodes([nodes[0].id], user);
+			// check that all wanted items are selected
+			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+			expect(screen.getByText(/select all/i)).toBeVisible();
+			// deselect node. Selection mode remains active
+			await selectNodes([nodes[0].id], user);
+			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+			expect(screen.getAllByTestId('unCheckedAvatar')).toHaveLength(nodes.length);
+			expect(screen.getByText(/select all/i)).toBeVisible();
+
+			expect(screen.queryByTestId(iconRegexp.moveToTrash)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(iconRegexp.moreVertical)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(iconRegexp.rename)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(iconRegexp.copy)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(iconRegexp.move)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(iconRegexp.flag)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(iconRegexp.unflag)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(iconRegexp.download)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(iconRegexp.openDocument)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(iconRegexp.restore)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(iconRegexp.deletePermanently)).not.toBeInTheDocument();
+
+			const arrowBack = screen.getByTestId('icon: ArrowBackOutline');
+			expect(arrowBack).toBeVisible();
+			await user.click(arrowBack);
+			expect(screen.queryByTestId('unCheckedAvatar')).not.toBeInTheDocument();
+			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+			expect(screen.queryByText(/select all/i)).not.toBeInTheDocument();
 		});
 	});
 });

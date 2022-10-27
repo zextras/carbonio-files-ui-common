@@ -11,14 +11,22 @@ import last from 'lodash/last';
 import map from 'lodash/map';
 import { Route } from 'react-router-dom';
 
-import { NODES_LOAD_LIMIT, ROOTS } from '../../constants';
-import { populateNodes } from '../../mocks/mockUtils';
-import { Node } from '../../types/common';
-import { getFindNodesVariables, mockFindNodes, mockFlagNodes } from '../../utils/mockUtils';
-import { actionRegexp, iconRegexp, setup, selectNodes } from '../../utils/testUtils';
-import FilterList from './FilterList';
+import { CreateOptionsContent } from '../../hooks/useCreateOptions';
+import { FILTER_TYPE, INTERNAL_PATH, NODES_LOAD_LIMIT, ROOTS } from '../constants';
+import { populateNodes } from '../mocks/mockUtils';
+import { Node } from '../types/common';
+import { getFindNodesVariables, mockFindNodes, mockFlagNodes } from '../utils/mockUtils';
+import { actionRegexp, iconRegexp, setup, selectNodes } from '../utils/testUtils';
+import FilterView from './FilterView';
 
-describe('Filter List', () => {
+jest.mock('../../hooks/useCreateOptions', () => ({
+	useCreateOptions: (): CreateOptionsContent => ({
+		setCreateOptions: jest.fn(),
+		removeCreateOptions: jest.fn()
+	})
+}));
+
+describe('Filter View', () => {
 	describe('Flag', () => {
 		describe('Selection mode', () => {
 			test('Unflag action show a success snackbar and remove unflagged nodes form the list', async () => {
@@ -46,14 +54,9 @@ describe('Filter List', () => {
 					)
 				];
 
-				// Warning: Failed prop type: Invalid prop `target` of type `Window` supplied to `ForwardRef(SnackbarFn)`, expected instance of `Window`
-				// This warning is printed in the console for this render. This happens because window element is a jsdom representation of the window
-				// and it's an object instead of a Window class instance, so the check on the prop type fail for the target prop
 				const { user } = setup(
-					<Route path="/filter/:filter?">
-						<FilterList flagged folderId={ROOTS.LOCAL_ROOT} cascade />
-					</Route>,
-					{ initialRouterEntries: ['/filter/flagged'], mocks }
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
 				);
 
 				// wait for the load to be completed
@@ -102,14 +105,9 @@ describe('Filter List', () => {
 					)
 				];
 
-				// Warning: Failed prop type: Invalid prop `target` of type `Window` supplied to `ForwardRef(SnackbarFn)`, expected instance of `Window`
-				// This warning is printed in the console for this render. This happens because window element is a jsdom representation of the window
-				// and it's an object instead of a Window class instance, so the check on the prop type fail for the target prop
 				const { user } = setup(
-					<Route path="/filter/:filter?">
-						<FilterList flagged folderId={ROOTS.LOCAL_ROOT} cascade />
-					</Route>,
-					{ initialRouterEntries: ['/filter/flagged'], mocks }
+					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
 				);
 
 				// wait for the load to be completed
@@ -155,7 +153,10 @@ describe('Filter List', () => {
 				)
 			];
 
-			const { user } = setup(<FilterList flagged folderId={ROOTS.LOCAL_ROOT} cascade />, { mocks });
+			const { user } = setup(
+				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+				{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
+			);
 
 			await screen.findByText(firstPage[0].name);
 			expect(screen.getByText(firstPage[0].name)).toBeVisible();

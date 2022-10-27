@@ -76,6 +76,10 @@ export const FILTER_PARAMS: Record<URLParams['filter'], SearchParams> = {
 		folderId: ROOTS.TRASH,
 		sharedWithMe: true,
 		cascade: false
+	},
+	recents: {
+		folderId: ROOTS.LOCAL_ROOT,
+		cascade: true
 	}
 } as const;
 export const TIMERS = {
@@ -110,6 +114,21 @@ export const PREVIEW_TYPE = {
 	IMAGE: 'image',
 	PDF: 'pdf',
 	DOCUMENT: 'document'
+} as const;
+// internal paths
+export const INTERNAL_PATH = {
+	ROOT: '/root',
+	UPLOADS: '/uploads',
+	SEARCH: '/search',
+	FILTER: '/filter'
+} as const;
+export const FILTER_TYPE: { [K in URLParams['filter']]: `/${K}` } = {
+	flagged: '/flagged',
+	sharedByMe: '/sharedByMe',
+	sharedWithMe: '/sharedWithMe',
+	myTrash: '/myTrash',
+	sharedTrash: '/sharedTrash',
+	recents: '/recents'
 } as const;
 
 export const FILES_ROUTE = 'files';

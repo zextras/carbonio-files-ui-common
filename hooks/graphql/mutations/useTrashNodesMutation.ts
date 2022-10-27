@@ -19,7 +19,7 @@ import { useLocation } from 'react-router-dom';
 import { useActiveNode } from '../../../../hooks/useActiveNode';
 import { useNavigation } from '../../../../hooks/useNavigation';
 import useUserInfo from '../../../../hooks/useUserInfo';
-import { ROOTS } from '../../../constants';
+import { ROOTS, INTERNAL_PATH, FILTER_TYPE } from '../../../constants';
 import PARENT_ID from '../../../graphql/fragments/parentId.graphql';
 import TRASH_NODES from '../../../graphql/mutations/trashNodes.graphql';
 import FIND_NODES from '../../../graphql/queries/findNodes.graphql';
@@ -181,7 +181,11 @@ export function useTrashNodesMutation(): TrashNodesType {
 						replace: true,
 						hideButton: ownedNodes.length > 0 && sharedNodes.length > 0,
 						onActionClick: () => {
-							navigateTo(ownedNodes.length > 0 ? '/filter/myTrash' : '/filter/sharedTrash');
+							navigateTo(
+								ownedNodes.length > 0
+									? `${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`
+									: `${INTERNAL_PATH.FILTER}${FILTER_TYPE.sharedTrash}`
+							);
 						},
 						actionLabel: t('snackbar.markForDeletion.showTrash', 'Open Trash Folder')
 					});
