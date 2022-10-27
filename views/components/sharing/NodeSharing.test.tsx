@@ -575,7 +575,7 @@ describe('Node Sharing', () => {
 			// the chip is updated immediately so the icon share is shown
 			await screen.findByTestId('icon: Share');
 			// click outside to close popover
-			await user.click(screen.getByText(/the standard message/i));
+			await user.click(screen.getByText(/Collaborators/i));
 			// popover is closed
 			expect(screen.queryByText(/viewer/i)).not.toBeInTheDocument();
 			expect(screen.queryByText(/editor/i)).not.toBeInTheDocument();
