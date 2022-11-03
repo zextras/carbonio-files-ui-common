@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useReactiveVar } from '@apollo/client';
-import { Container, useSnackbar } from '@zextras/carbonio-design-system';
+import { Container, KeyboardPreset, useSnackbar } from '@zextras/carbonio-design-system';
 import { PreviewsManagerContext } from '@zextras/carbonio-ui-preview';
 import { PreviewManagerContextType } from '@zextras/carbonio-ui-preview/lib/preview/PreviewManager';
 import filter from 'lodash/filter';
@@ -54,6 +54,7 @@ import { OpenCopyModal, useCopyModal } from '../../hooks/modals/useCopyModal';
 import { useDeletePermanentlyModal } from '../../hooks/modals/useDeletePermanentlyModal';
 import { OpenMoveModal, useMoveModal } from '../../hooks/modals/useMoveModal';
 import { OpenRenameModal, useRenameModal } from '../../hooks/modals/useRenameModal';
+import { useListShortcuts } from '../../hooks/useListShortcuts';
 import useSelection from '../../hooks/useSelection';
 import { useUpload } from '../../hooks/useUpload';
 import { Action, Crumb, NodeListItemType } from '../../types/common';
@@ -691,6 +692,37 @@ export const List: React.VFC<ListProps> = ({
 		[dropzoneEnabled, moveNodesAction, uploadWithDragAndDrop]
 	);
 
+	const listContentRef = useRef<HTMLDivElement>(null);
+
+	const handleSelectAllFromKeyboard = useCallback<(e: KeyboardEvent) => void>(
+		(e) => {
+			const listElement = listContentRef.current;
+			if (listElement) {
+				const focusedElement = document.activeElement as HTMLElement | null;
+				const listHasFocus = some(listElement.children, (child) => child.contains(focusedElement));
+				if (listHasFocus) {
+					selectAll();
+					e.preventDefault();
+				}
+			}
+		},
+		[selectAll]
+	);
+
+	const extraKeys = useMemo<KeyboardPreset>(
+		() => [
+			{
+				type: 'keydown',
+				callback: handleSelectAllFromKeyboard,
+				keys: ['a'],
+				modifier: true
+			}
+		],
+		[handleSelectAllFromKeyboard]
+	);
+
+	useListShortcuts(listContentRef, extraKeys);
+
 	return (
 		<MainContainer
 			mainAlignment="flex-start"
@@ -752,6 +784,7 @@ export const List: React.VFC<ListProps> = ({
 									customCheckers={actionCheckers}
 									selectionContextualMenuActionsItems={permittedSelectionModeActionsItems}
 									fillerWithActions={fillerWithActions}
+									ref={listContentRef}
 								/>
 								{fillerWithActions &&
 									React.cloneElement(fillerWithActions, {

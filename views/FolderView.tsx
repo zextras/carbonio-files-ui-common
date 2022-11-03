@@ -122,7 +122,7 @@ const FolderView: React.VFC = () => {
 		}
 	}, [currentFolderId, newFolder, openCreateFolderModal]);
 
-	const createFolderAction = useCallback((event) => {
+	const createFolderAction = useCallback((event: React.SyntheticEvent | KeyboardEvent) => {
 		event && event.stopPropagation();
 		setNewFolder(true);
 	}, []);
@@ -343,6 +343,25 @@ const FolderView: React.VFC = () => {
 		),
 		[actions, currentFolderId, hasMore, isCanUploadFile, loadMore, loading, nodes, t]
 	);
+
+	const createNewFolderFromKeyboard = useCallback<(e: KeyboardEvent) => void>(
+		(e) => {
+			console.log(e.code, e.key);
+			if (e.key === 'f' && e.ctrlKey) {
+				e.preventDefault();
+				createFolderAction(e);
+			}
+		},
+		[createFolderAction]
+	);
+
+	useEffect(() => {
+		window.addEventListener('keydown', createNewFolderFromKeyboard);
+
+		return (): void => {
+			window.removeEventListener('keydown', createNewFolderFromKeyboard);
+		};
+	}, [createNewFolderFromKeyboard]);
 
 	return (
 		<ListContext.Provider value={{ isEmpty, setIsEmpty }}>

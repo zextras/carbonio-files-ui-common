@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import React, { useCallback, useContext, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Container, Icon, Padding, Row, Text, useSnackbar } from '@zextras/carbonio-design-system';
 import { PreviewsManagerContext } from '@zextras/carbonio-ui-preview';
@@ -135,7 +135,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 	const userInfo = useUserInfo();
 	const [isContextualMenuActive, setIsContextualMenuActive] = useState(false);
 	const selectIdCallback = useCallback(
-		(event: React.SyntheticEvent) => {
+		(event: React.SyntheticEvent | KeyboardEvent) => {
 			if (selectId) {
 				event.preventDefault();
 				selectId(id);
@@ -370,8 +370,74 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 		}
 	}, []);
 
+	const nodeRef = useRef<HTMLDivElement>(null);
+	const hoverBarContainerRef = useRef<HTMLDivElement>(null);
+
+	const handleEnter = useCallback<(e: KeyboardEvent) => void>(
+		(e) => {
+			const nodeElement = nodeRef.current;
+			const hoverBarContainerElement = hoverBarContainerRef.current;
+			const focusedElement = document.activeElement as HTMLElement | null;
+			if (focusedElement && nodeElement) {
+				const isFocusOnNode = nodeElement.contains(focusedElement);
+				if (isFocusOnNode) {
+					if (e.ctrlKey) {
+						const isFocusOnHoverAction =
+							hoverBarContainerElement &&
+							some(
+								hoverBarContainerElement.querySelectorAll<HTMLElement>('[tabindex]'),
+								(hoverActionElement) => hoverActionElement === focusedElement
+							);
+						if (!isFocusOnHoverAction) {
+							selectIdCallback(e);
+						}
+					} else {
+						setActive(e);
+					}
+				}
+			}
+		},
+		[selectIdCallback, setActive]
+	);
+
+	const handleArrowRight = useCallback(() => {
+		if (hoverBarContainerRef.current) {
+			const firstAction = hoverBarContainerRef.current.querySelector<HTMLElement>('[tabindex]');
+			if (firstAction) {
+				hoverBarContainerRef.current.style.display = 'flex';
+				firstAction.focus();
+			}
+		}
+	}, []);
+
+	const handleKeyboard = useCallback(
+		(event: KeyboardEvent) => {
+			if (event.code === 'ArrowRight') {
+				handleArrowRight();
+			}
+			if (event.code === 'Enter') {
+				handleEnter(event);
+			}
+		},
+		[handleArrowRight, handleEnter]
+	);
+
+	useEffect(() => {
+		const nodeElement = nodeRef.current;
+
+		if (nodeElement) {
+			nodeElement.addEventListener('keydown', handleKeyboard);
+		}
+
+		return (): void => {
+			if (nodeElement) {
+				nodeElement.removeEventListener('keydown', handleKeyboard);
+			}
+		};
+	}, [handleKeyboard]);
+
 	return (
-		<Container data-testid={id}>
+		<Container data-testid={id} ref={nodeRef}>
 			<ContextualMenu
 				disabled={
 					(disabled || isSelectionModeActive || compact) &&
@@ -519,6 +585,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 							mainAlignment="flex-end"
 							height="fill"
 							data-testid="hover-bar"
+							ref={hoverBarContainerRef}
 						>
 							<NodeHoverBar actions={permittedHoverBarActionsItems} />
 						</HoverBarContainer>

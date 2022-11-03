@@ -5,9 +5,14 @@
  */
 import React, { useCallback, useEffect } from 'react';
 
+import { KeyboardPreset } from '@zextras/carbonio-design-system';
 import find from 'lodash/find';
+import forEach from 'lodash/forEach';
 
-export const useListShortcuts = (listRef: React.RefObject<HTMLElement>): void => {
+export const useListShortcuts = (
+	listRef: React.RefObject<HTMLElement>,
+	extraKeys: KeyboardPreset
+): void => {
 	const getFocusableElement = useCallback(
 		(
 			focusedElement: HTMLElement,
@@ -29,7 +34,7 @@ export const useListShortcuts = (listRef: React.RefObject<HTMLElement>): void =>
 		[]
 	);
 
-	const handleArrowUp = useCallback(() => {
+	const handleArrowUp = useCallback<(e: KeyboardEvent) => void>(() => {
 		const listElement = listRef.current;
 		if (listElement) {
 			const focusedElement = document.activeElement as HTMLElement | null;
@@ -58,7 +63,7 @@ export const useListShortcuts = (listRef: React.RefObject<HTMLElement>): void =>
 		}
 	}, [getFocusableElement, listRef]);
 
-	const handleArrowDown = useCallback(() => {
+	const handleArrowDown = useCallback<(e: KeyboardEvent) => void>(() => {
 		const listElement = listRef.current;
 		if (listElement) {
 			const focusedElement = document.activeElement as HTMLElement | null;
@@ -89,14 +94,19 @@ export const useListShortcuts = (listRef: React.RefObject<HTMLElement>): void =>
 	const handleKeyboard = useCallback(
 		(e: KeyboardEvent) => {
 			if (e.key === 'ArrowUp') {
-				return handleArrowUp();
+				handleArrowUp(e);
 			}
 			if (e.key === 'ArrowDown') {
-				return handleArrowDown();
+				handleArrowDown(e);
 			}
-			return null;
+
+			forEach(extraKeys, (extraKey) => {
+				if (extraKey.keys.includes(e.key) && extraKey.modifier === e.ctrlKey) {
+					extraKey.callback(e);
+				}
+			});
 		},
-		[handleArrowDown, handleArrowUp]
+		[extraKeys, handleArrowDown, handleArrowUp]
 	);
 
 	useEffect(() => {
