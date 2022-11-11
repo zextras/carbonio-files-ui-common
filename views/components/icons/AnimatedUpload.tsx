@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import React from 'react';
+import React, { HTMLAttributes } from 'react';
 
 import animatedUpload from '../../../assets/images/animated-upload.svg';
 
-export const AnimatedUpload: React.VFC = (props) => (
+export const AnimatedUpload = (props: HTMLAttributes<HTMLObjectElement>): JSX.Element => (
 	<object type="image/svg+xml" data={animatedUpload} {...props}>
 		animated-loader
 	</object>
