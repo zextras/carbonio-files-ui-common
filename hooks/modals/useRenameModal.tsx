@@ -36,28 +36,29 @@ export function useRenameModal(
 
 	const openRenameModal = useCallback<OpenRenameModal>(
 		(node) => {
-			const closeModal = createModal({
-				title: t('node.rename.modal.title', 'Rename item'),
-				onClose: () => {
-					renameActionCallback && renameActionCallback();
-					closeModal();
+			const closeModal = createModal(
+				{
+					onClose: () => {
+						renameActionCallback && renameActionCallback();
+						closeModal();
+					},
+					children: (
+						<UpdateNodeNameModalContent
+							inputLabel={t('node.rename.modal.input.label.name', 'Item name')}
+							nodeName={node.name}
+							confirmAction={confirmAction}
+							confirmLabel={t('node.rename.modal.button.confirm', 'Rename')}
+							nodeId={node.id}
+							closeAction={(): void => {
+								renameActionCallback && renameActionCallback();
+								closeModal();
+							}}
+							title={t('node.rename.modal.title', 'Rename item')}
+						/>
+					)
 				},
-				children: (
-					<UpdateNodeNameModalContent
-						inputLabel={t('node.rename.modal.input.label.name', 'Item name')}
-						nodeName={node.name}
-						confirmAction={confirmAction}
-						confirmLabel={t('node.rename.modal.button.confirm', 'Rename')}
-						nodeId={node.id}
-						closeAction={(): void => {
-							renameActionCallback && renameActionCallback();
-							closeModal();
-						}}
-					/>
-				),
-				hideFooter: true,
-				showCloseIcon: true
-			});
+				true
+			);
 		},
 		[confirmAction, createModal, renameActionCallback, t]
 	);
