@@ -26,7 +26,7 @@ export function useMoveModal(moveNodesActionCallback?: () => void): {
 	const createSnackbar = useSnackbar();
 	const [t] = useTranslation();
 
-	const { resetAll, resetCurrent } = useDestinationVarManager();
+	const { resetAll, resetCurrent } = useDestinationVarManager<string>();
 
 	const openMoveNodesModal = useCallback<OpenMoveModal>(
 		(nodes, fromFolder) => {
@@ -53,7 +53,7 @@ export function useMoveModal(moveNodesActionCallback?: () => void): {
 			if (folderToOpen) {
 				const closeModal = createModal(
 					{
-						minHeight: '400px',
+						minHeight: '25rem',
 						maxHeight: '60vh',
 						onClose: () => {
 							resetAll();

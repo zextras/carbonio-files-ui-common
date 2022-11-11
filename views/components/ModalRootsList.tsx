@@ -211,12 +211,12 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 			crossAlignment="flex-start"
 			data-testid="modal-list-roots"
 			maxHeight="100%"
-			minHeight={`${BREADCRUMB_ROW_HEIGHT + LIST_ITEM_HEIGHT_COMPACT}px`}
+			minHeight={`calc(${BREADCRUMB_ROW_HEIGHT} + ${LIST_ITEM_HEIGHT_COMPACT})`}
 		>
 			<OverFlowHiddenRow
 				width="fill"
 				wrap="nowrap"
-				height={`${BREADCRUMB_ROW_HEIGHT}px`}
+				height={BREADCRUMB_ROW_HEIGHT}
 				mainAlignment="flex-start"
 				flexShrink={0}
 				data-testid="modal-listHeader-roots"

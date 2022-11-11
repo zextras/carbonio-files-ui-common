@@ -127,12 +127,12 @@ export const ModalList: React.VFC<ModalListProps> = ({
 			crossAlignment="flex-start"
 			data-testid={`modal-list-${folderId}`}
 			maxHeight="100%"
-			minHeight={`${BREADCRUMB_ROW_HEIGHT + LIST_ITEM_HEIGHT_COMPACT}px`}
+			minHeight={`calc(${BREADCRUMB_ROW_HEIGHT} + ${LIST_ITEM_HEIGHT_COMPACT})`}
 		>
 			<OverFlowHiddenRow
 				width="fill"
 				wrap="nowrap"
-				height={`${BREADCRUMB_ROW_HEIGHT}px`}
+				height={BREADCRUMB_ROW_HEIGHT}
 				mainAlignment="flex-start"
 				flexShrink={0}
 				data-testid="modal-listHeader"

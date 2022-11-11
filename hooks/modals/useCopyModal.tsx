@@ -22,13 +22,13 @@ export function useCopyModal(copyNodesActionCallback?: () => void): {
 } {
 	const createModal = useModal();
 
-	const { resetAll, resetCurrent } = useDestinationVarManager();
+	const { resetAll, resetCurrent } = useDestinationVarManager<string>();
 
 	const openCopyNodesModal = useCallback<OpenCopyModal>(
 		(nodes, fromFolder) => {
 			const closeModal = createModal(
 				{
-					minHeight: '400px',
+					minHeight: '25rem',
 					maxHeight: '60vh',
 					onClose: () => {
 						resetAll();

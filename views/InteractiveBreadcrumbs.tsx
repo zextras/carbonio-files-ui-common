@@ -14,7 +14,7 @@ import { Breadcrumbs } from '../design_system_fork/Breadcrumbs';
 
 const CustomBreadcrumbs = styled(Breadcrumbs)`
 	.breadcrumbCrumb {
-		border-radius: 2px;
+		border-radius: 0.125rem;
 		cursor: pointer;
 		&:hover {
 			background-color: ${getColor('gray5.hover')};
@@ -28,7 +28,7 @@ const CustomBreadcrumbs = styled(Breadcrumbs)`
 	}
 
 	.breadcrumbCollapser {
-		border-radius: 2px;
+		border-radius: 0.125rem;
 		&:active,
 		&.active {
 			background-color: ${getColor('gray4.active')};

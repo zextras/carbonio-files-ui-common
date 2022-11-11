@@ -23,7 +23,7 @@ import {
 } from '../../constants';
 
 export const DisplayerContentContainer = styled(Container)`
-	padding-bottom: 32px;
+	padding-bottom: 2rem;
 `;
 
 export const HoverContainer = styled(Row)`
@@ -38,7 +38,7 @@ export const HoverBarContainer = styled(Row)`
 	height: 45%;
 	// set the width to start just after the avatar/file icon preview to not overlay the selection mode elements
 	width: calc(
-		100% - ${LIST_ITEM_AVATAR_HEIGHT}px - ${(props): string => props.theme.sizes.padding.small}
+		100% - ${LIST_ITEM_AVATAR_HEIGHT} - ${(props): string => props.theme.sizes.padding.small}
 	);
 	background: linear-gradient(
 		to right,
@@ -91,46 +91,54 @@ export const ListItemContainer = styled(Container).attrs<
 `;
 
 export const CheckedAvatar = styled(Avatar)`
-	border-radius: 8px;
-	height: ${LIST_ITEM_AVATAR_HEIGHT}px;
-	width: ${LIST_ITEM_AVATAR_HEIGHT}px;
+	border-radius: 0.5rem;
+	min-height: ${LIST_ITEM_AVATAR_HEIGHT};
+	max-height: ${LIST_ITEM_AVATAR_HEIGHT};
+	min-width: ${LIST_ITEM_AVATAR_HEIGHT};
+	max-width: ${LIST_ITEM_AVATAR_HEIGHT};
 	flex: 0 0 auto;
 	align-self: center;
 
 	& > svg {
-		width: 24px;
-		height: 24px;
+		width: 1.5rem;
+		height: 1.5rem;
 	}
 `;
 
 export const UncheckedAvatar = styled(Avatar)`
-	border-radius: 8px;
-	height: ${LIST_ITEM_AVATAR_HEIGHT}px;
-	width: ${LIST_ITEM_AVATAR_HEIGHT}px;
+	border-radius: 0.5rem;
+	min-height: ${LIST_ITEM_AVATAR_HEIGHT};
+	max-height: ${LIST_ITEM_AVATAR_HEIGHT};
+	min-width: ${LIST_ITEM_AVATAR_HEIGHT};
+	max-width: ${LIST_ITEM_AVATAR_HEIGHT};
 	flex: 0 0 auto;
 	align-self: center;
-	border: 1px solid ${(props): string => props.theme.palette.primary.regular};
+	border: 0.0625rem solid ${(props): string => props.theme.palette.primary.regular};
 	box-sizing: border-box;
 `;
 
 export const FileIconPreview = styled(Avatar)<{ $compact?: boolean }>`
-	border-radius: 8px;
-	height: ${({ $compact }): number =>
-		$compact ? LIST_ITEM_AVATAR_HEIGHT_COMPACT : LIST_ITEM_AVATAR_HEIGHT}px;
-	width: ${({ $compact }): number =>
-		$compact ? LIST_ITEM_AVATAR_HEIGHT_COMPACT : LIST_ITEM_AVATAR_HEIGHT}px;
+	border-radius: 0.5rem;
+	min-height: ${({ $compact }): string =>
+		$compact ? LIST_ITEM_AVATAR_HEIGHT_COMPACT : LIST_ITEM_AVATAR_HEIGHT};
+	max-height: ${({ $compact }): string =>
+		$compact ? LIST_ITEM_AVATAR_HEIGHT_COMPACT : LIST_ITEM_AVATAR_HEIGHT};
+	min-width: ${({ $compact }): string =>
+		$compact ? LIST_ITEM_AVATAR_HEIGHT_COMPACT : LIST_ITEM_AVATAR_HEIGHT};
+	max-width: ${({ $compact }): string =>
+		$compact ? LIST_ITEM_AVATAR_HEIGHT_COMPACT : LIST_ITEM_AVATAR_HEIGHT};
 	flex: 0 0 auto;
 	align-self: center;
 
 	& > svg {
-		width: ${({ $compact }): number =>
-			$compact ? LIST_ITEM_AVATAR_ICON_HEIGHT_COMPACT : LIST_ITEM_AVATAR_ICON_HEIGHT}px;
-		height: ${({ $compact }): number =>
-			$compact ? LIST_ITEM_AVATAR_ICON_HEIGHT_COMPACT : LIST_ITEM_AVATAR_ICON_HEIGHT}px;
-		min-width: ${({ $compact }): number =>
-			$compact ? LIST_ITEM_AVATAR_ICON_HEIGHT_COMPACT : LIST_ITEM_AVATAR_ICON_HEIGHT}px;
-		min-height: ${({ $compact }): number =>
-			$compact ? LIST_ITEM_AVATAR_ICON_HEIGHT_COMPACT : LIST_ITEM_AVATAR_ICON_HEIGHT}px;
+		max-width: ${({ $compact }): string =>
+			$compact ? LIST_ITEM_AVATAR_ICON_HEIGHT_COMPACT : LIST_ITEM_AVATAR_ICON_HEIGHT};
+		max-height: ${({ $compact }): string =>
+			$compact ? LIST_ITEM_AVATAR_ICON_HEIGHT_COMPACT : LIST_ITEM_AVATAR_ICON_HEIGHT};
+		min-width: ${({ $compact }): string =>
+			$compact ? LIST_ITEM_AVATAR_ICON_HEIGHT_COMPACT : LIST_ITEM_AVATAR_ICON_HEIGHT};
+		min-height: ${({ $compact }): string =>
+			$compact ? LIST_ITEM_AVATAR_ICON_HEIGHT_COMPACT : LIST_ITEM_AVATAR_ICON_HEIGHT};
 	}
 `;
 

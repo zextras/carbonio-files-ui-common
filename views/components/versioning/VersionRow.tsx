@@ -27,7 +27,7 @@ import { downloadNode, formatDate, humanFileSize, openNodeWithDocs } from '../..
 import { GridItem } from './GridElements';
 
 const CustomText = styled(Text).attrs({ weight: 'light', size: 'small' })`
-	line-height: 21px;
+	line-height: 1.5;
 `;
 
 interface DropdownItemComponentProps {

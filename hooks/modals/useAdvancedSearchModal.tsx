@@ -21,7 +21,7 @@ export function useAdvancedSearchModal(): {
 	const openAdvancedSearchModal = useCallback(() => {
 		const closeModal = createModal(
 			{
-				minHeight: '400px',
+				minHeight: '16rem',
 				maxHeight: '90vh',
 				onClose: () => {
 					closeModal();

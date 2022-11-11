@@ -47,7 +47,7 @@ const CustomAccordionItem = styled(AccordionItem)<{ $dragging: boolean }>`
 	flex-basis: auto !important;
 	background-color: ${({ theme, $dragging }): string =>
 		$dragging ? getColor('gray5', theme) : 'inherit'};
-	height: 40px;
+	height: 2.5rem;
 `;
 
 interface SecondaryBarItemProps {

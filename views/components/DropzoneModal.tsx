@@ -15,11 +15,11 @@ const BackDropLayoutInnerBox = styled(Container)`
 	top: 50%;
 	left: 50%;
 	transform: translate(-50%, -50%);
-	border-radius: 20px;
+	border-radius: 1.25rem;
 `;
 
 const BackDropLayoutContentBox = styled(Container)<{ $disabled?: boolean }>`
-	border-radius: 10px;
+	border-radius: 0.625rem;
 	box-sizing: border-box;
 	//box-sizing: border-box;
 	background-image: ${({ $disabled }): FlattenSimpleInterpolation =>
@@ -29,8 +29,8 @@ const BackDropLayoutContentBox = styled(Container)<{ $disabled?: boolean }>`
 `;
 
 const DropBoxIconGroup = styled(Container)`
-	margin-bottom: 8px;
-	height: 40px;
+	margin-bottom: 0.5rem;
+	height: 2.5rem;
 `;
 
 const DetailText = styled(Text)`
@@ -64,8 +64,8 @@ export const DropzoneModal: React.VFC<DropzoneModalProps> = ({
 					(icons.length % 2 === 0 &&
 						(index === icons.length / 2 || index === icons.length / 2 - 1)) ||
 					(icons.length % 2 > 0 && index === Math.floor(icons.length / 2))
-						? '35px'
-						: '28px';
+						? '2.1875rem'
+						: '1.75rem';
 				return (
 					<Padding right="small" left="small" key={`icon-${index}`}>
 						<Icon icon={icon} height={size} width={size} color={color} />

@@ -23,13 +23,13 @@ import styled, { SimpleInterpolation } from 'styled-components';
 
 const ExclusiveSelectionContainer = styled(Container)<{ $disabled?: boolean; background: string }>`
 	cursor: ${({ $disabled }): string => (!$disabled ? 'pointer' : 'default')};
-	max-width: 256px;
+	max-width: 16rem;
 	${({ theme, background, $disabled }): SimpleInterpolation =>
 		!$disabled && pseudoClasses(theme, background, 'background')};
 `;
 
 const CheckboxContainer = styled(Container)`
-	max-width: 256px;
+	max-width: 16rem;
 	cursor: default;
 `;
 

@@ -21,7 +21,7 @@ const AnimatedLoaderSvg = styled.svg`
 	animation: ${rotate} 3s ease-in-out infinite normal forwards;
 `;
 
-export const AnimatedLoader: React.VFC = (props) => (
+export const AnimatedLoader = (props: React.SVGAttributes<SVGSVGElement>): JSX.Element => (
 	<AnimatedLoaderSvg
 		id="e9AcbENh5Z71"
 		xmlns="http://www.w3.org/2000/svg"

@@ -209,7 +209,7 @@ export const CollaborationLinks: React.FC<CollaborationLinksProps> = ({
 				orientation="horizontal"
 				mainAlignment="flex-start"
 				crossAlignment="flex-start"
-				gap="8px"
+				gap="0.5rem"
 				padding={{ all: 'small' }}
 				data-testid="read-share-collaboration-link-container"
 			>
@@ -281,7 +281,7 @@ export const CollaborationLinks: React.FC<CollaborationLinksProps> = ({
 					orientation="horizontal"
 					mainAlignment="flex-start"
 					crossAlignment="flex-start"
-					gap="8px"
+					gap="0.5rem"
 					padding={{ all: 'small' }}
 					data-testid="read-write-share-collaboration-link-container"
 				>

@@ -49,7 +49,7 @@ export const FolderSelectionModalContent: React.VFC<FolderSelectionModalContentP
 	closeAction
 }) => {
 	const [t] = useTranslation();
-	const { setCurrent, setDefault } = useDestinationVarManager<DestinationVar<SelectedNode>>();
+	const { setCurrent, setDefault } = useDestinationVarManager<SelectedNode>();
 	const { currentValue } = useReactiveVar<DestinationVar<SelectedNode>>(
 		destinationVar as ReactiveVar<DestinationVar<SelectedNode>>
 	);

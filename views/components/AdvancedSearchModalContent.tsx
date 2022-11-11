@@ -319,7 +319,7 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 				}
 			/>
 			<CustomModal
-				minHeight="500px"
+				minHeight="32rem"
 				maxHeight="60vh"
 				onClose={closeFolderSelectionModal}
 				open={folderSelectionModalOpen}

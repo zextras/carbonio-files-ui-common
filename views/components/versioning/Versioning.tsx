@@ -313,10 +313,10 @@ export const Versioning: React.VFC<VersioningProps> = ({ node }) => {
 	));
 
 	return (
-		<MainContainer mainAlignment="flex-start" background="gray5" height="calc(100% - 50px)">
+		<MainContainer mainAlignment="flex-start" background="gray5" height="calc(100% - 3.125rem)">
 			<Container height="fit" background="gray6" crossAlignment="flex-start">
 				<Padding left="large" top="large">
-					<Text style={{ lineHeight: '21px' }} weight="light" overflow="break-word" size="small">
+					<Text style={{ lineHeight: 1.5 }} weight="light" overflow="break-word" size="small">
 						{t(
 							'displayer.version.mainHint',
 							'Files saves the last {{maxVersions}} versions of your files. You can manually delete any file version or restore one as the current version. Select one or more versions that you want to keep forever.',

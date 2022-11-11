@@ -39,7 +39,7 @@ const ContentContainer = styled(Container)<{ $dragging?: boolean; $disabled?: bo
 const DropzoneOverlay = styled(Container)<{ $borderSize: keyof DefaultTheme['sizes']['padding'] }>`
 	position: absolute;
 	opacity: 0.4;
-	border-radius: 4px;
+	border-radius: 0.25rem;
 	height: calc(
 		100% - (${({ theme, $borderSize }): string => theme.sizes.padding[$borderSize]} * 2)
 	);

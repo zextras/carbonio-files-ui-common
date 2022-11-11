@@ -8,8 +8,8 @@ import { useCallback } from 'react';
 import { destinationVar, DestinationVar } from '../apollo/destinationVar';
 
 interface DestinationVarManager<T> {
-	setCurrent: (value: DestinationVar['currentValue']) => void;
-	setDefault: (value: DestinationVar['defaultValue']) => void;
+	setCurrent: (value: DestinationVar<T>['currentValue']) => void;
+	setDefault: (value: DestinationVar<T>['defaultValue']) => void;
 	resetCurrent: () => void;
 	resetAll: () => void;
 }
