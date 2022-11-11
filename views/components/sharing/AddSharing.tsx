@@ -13,8 +13,6 @@ import {
 	ChipInputProps,
 	ChipItem,
 	Container,
-	Input,
-	Padding,
 	Row,
 	Text
 } from '@zextras/carbonio-design-system';
@@ -546,35 +544,6 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 				/>
 			</Container>
 
-			<Container
-				orientation="horizontal"
-				crossAlignment="baseline"
-				mainAlignment="baseline"
-				padding={{ top: 'medium', bottom: 'medium', right: 'medium' }}
-			>
-				<Padding right="small">
-					<Text weight="bold" size="extrasmall" color="gray0">
-						{t('displayer.share.addShare.note', 'Note:')}
-					</Text>
-				</Padding>
-				<Text overflow="break-word" size="extrasmall" color="gray1">
-					{t(
-						'displayer.share.addShare.noteDescription',
-						'The standard message displays your name, the name of the shared item, permissions granted to the recipients and sign in information, if necessary.'
-					)}
-				</Text>
-			</Container>
-
-			<Input
-				backgroundColor="gray5"
-				autoComplete="on"
-				label={t(
-					'displayer.share.addShare.input.label',
-					'Add a custom message to this notification'
-				)}
-				value={mailTextValue}
-				onChange={customMessageChangeHandler}
-			/>
 			<Container orientation="horizontal" mainAlignment="flex-end" padding={{ top: 'small' }}>
 				<Button
 					label="Share"
