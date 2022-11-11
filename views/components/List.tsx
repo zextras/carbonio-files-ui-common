@@ -395,6 +395,7 @@ export const List: React.VFC<ListProps> = ({
 								});
 							}
 							accumulator.push({
+								forceCache: false,
 								previewType: 'pdf',
 								filename: node.name,
 								extension: node.extension || undefined,
