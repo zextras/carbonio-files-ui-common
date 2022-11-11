@@ -42,30 +42,31 @@ export function useCreateModal(
 	const openCreateModal = useCallback(
 		(parentFolderId: string) => {
 			if (!modalOpenRef.current && parentFolderId) {
-				const closeModal = createModal({
-					title,
-					onClose: () => {
-						createActionCallback && createActionCallback();
-						closeModal();
-						modalOpenRef.current = false;
+				const closeModal = createModal(
+					{
+						onClose: () => {
+							createActionCallback && createActionCallback();
+							closeModal();
+							modalOpenRef.current = false;
+						},
+						children: (
+							<UpdateNodeNameModalContent
+								inputLabel={inputLabel}
+								nodeName=""
+								confirmAction={confirmAction}
+								confirmLabel={t('folder.create.modal.button.confirm', 'Create')}
+								nodeId={parentFolderId}
+								closeAction={(): void => {
+									createActionCallback && createActionCallback();
+									closeModal();
+									modalOpenRef.current = false;
+								}}
+								title={title}
+							/>
+						)
 					},
-					children: (
-						<UpdateNodeNameModalContent
-							inputLabel={inputLabel}
-							nodeName=""
-							confirmAction={confirmAction}
-							confirmLabel={t('folder.create.modal.button.confirm', 'Create')}
-							nodeId={parentFolderId}
-							closeAction={(): void => {
-								createActionCallback && createActionCallback();
-								closeModal();
-								modalOpenRef.current = false;
-							}}
-						/>
-					),
-					hideFooter: true,
-					showCloseIcon: true
-				});
+					true
+				);
 				modalOpenRef.current = true;
 			}
 		},

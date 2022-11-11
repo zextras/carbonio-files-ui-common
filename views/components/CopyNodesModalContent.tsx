@@ -66,7 +66,7 @@ export const CopyNodesModalContent: React.VFC<CopyNodesModalContentProps> = ({
 
 	const title = useMemo(
 		() => (
-			<TextWithTooltip>
+			<TextWithTooltip weight="bold">
 				{t('node.copy.modal.title', 'Copy items', {
 					count: nodesToCopy.length,
 					replace: { node: nodesToCopy.length === 1 && nodesToCopy[0] }

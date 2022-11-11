@@ -80,6 +80,7 @@ export const RouteLeavingGuard: FC<{
 			{/* Your own alert/dialog/modal component */}
 			<Modal
 				showCloseIcon
+				closeIconTooltip={t('modal.close.tooltip', 'Close')}
 				open={modalVisible}
 				title={
 					dataHasError
