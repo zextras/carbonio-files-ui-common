@@ -7,6 +7,7 @@
 import {
 	ApolloClient,
 	FieldFunctionOptions,
+	HttpLink,
 	InMemoryCache,
 	NormalizedCacheObject,
 	Reference
@@ -261,11 +262,15 @@ let apolloClient: ApolloClient<NormalizedCacheObject>;
 const buildClient: () => ApolloClient<NormalizedCacheObject> = () => {
 	const uri = process.env.NODE_ENV === 'test' ? 'http://localhost:9000' : '';
 	if (apolloClient == null) {
-		apolloClient = new ApolloClient<NormalizedCacheObject>({
+		const httpLink = new HttpLink({
 			uri: `${uri}${GRAPHQL_ENDPOINT}`,
+			credentials: 'same-origin'
+		});
+
+		apolloClient = new ApolloClient<NormalizedCacheObject>({
 			cache,
-			credentials: 'same-origin',
-			connectToDevTools: true
+			connectToDevTools: true,
+			link: httpLink
 		});
 	}
 	return apolloClient;
