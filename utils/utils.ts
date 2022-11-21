@@ -614,8 +614,9 @@ const uploadToCompleted = (
 export function uploadToTargetModule(args: {
 	nodeId: string;
 	targetModule: TargetModule;
+	destinationId?: string;
 }): Promise<{ attachmentId: string }> {
-	const { nodeId, targetModule } = args;
+	const { nodeId, targetModule, destinationId } = args;
 
 	return new Promise<{ attachmentId: string }>((resolve, reject) => {
 		const xhr = new XMLHttpRequest();
@@ -624,7 +625,9 @@ export function uploadToTargetModule(args: {
 		xhr.setRequestHeader('Content-Type', 'application/json');
 		const body = {
 			nodeId,
-			targetModule
+			targetModule,
+			// JSON.stringify remove destinationId if value is undefined
+			destinationId
 		};
 
 		xhr.addEventListener('load', () => {
