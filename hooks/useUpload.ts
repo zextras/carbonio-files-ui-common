@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client';
 import { useSnackbar } from '@zextras/carbonio-design-system';
@@ -41,7 +41,7 @@ import {
 	GetVersionsQueryVariables,
 	NodeSort
 } from '../types/graphql/types';
-import { DeepPick } from '../types/utils';
+import { DeepPick, MakeRequired } from '../types/utils';
 import { isFolder } from '../utils/ActionsFactory';
 import { encodeBase64 } from '../utils/utils';
 import { UpdateFolderContentType, useUpdateFolderContent } from './graphql/useUpdateFolderContent';
@@ -256,7 +256,7 @@ const upload = (
 };
 
 const uploadVersion = (
-	fileEnriched: Required<UploadType>,
+	fileEnriched: MakeRequired<UploadType, 'nodeId'>,
 	apolloClient: ApolloClient<NormalizedCacheObject>,
 	nodeSort: NodeSort,
 	addNodeToFolder: UpdateFolderContentType['addNodeToFolder'],
@@ -293,8 +293,40 @@ const uploadVersion = (
 	};
 };
 
+function isDragEvent(event: React.SyntheticEvent): event is React.DragEvent {
+	return 'dataTransfer' in event;
+}
+
+function getFileSystemEntries(
+	event: React.DragEvent | React.ChangeEvent<HTMLInputElement>
+): Array<FileSystemEntry | null> {
+	if (isDragEvent(event)) {
+		return map<
+			DataTransferItem & { getAsEntry?: () => FileSystemEntry | null },
+			FileSystemEntry | null
+		>(event.dataTransfer.items, (item) => {
+			if (item.getAsEntry) {
+				return item.getAsEntry();
+			}
+			if (item.webkitGetAsEntry) {
+				return item.webkitGetAsEntry();
+			}
+			return null;
+		});
+	}
+	if (event.target.webkitEntries) {
+		return [...event.target.webkitEntries];
+	}
+	return [];
+}
+
 export type UseUploadHook = () => {
-	add: (files: FileList, parentId: string, checkForFolders?: boolean) => void;
+	add: (
+		files: FileList,
+		parentId: string,
+		checkForFolders?: boolean,
+		event?: React.DragEvent | React.ChangeEvent<HTMLInputElement>
+	) => void;
 	update: (
 		node: Pick<FilesFile, '__typename' | 'id'> & DeepPick<FilesFile, 'parent', 'id'>,
 		file: File,
@@ -338,21 +370,19 @@ export const useUpload: UseUploadHook = () => {
 
 	const uploadFolder = useCallback<(folder: UploadType) => ReturnType<UploadFunctions['retry']>>(
 		(folder) => {
-			createSnackbarForUploadError(
-				t('snackbar.upload.foldersNotAllowed', 'Folders cannot be uploaded')
-			);
 			uploadVarReducer({
 				type: 'update',
 				value: { id: folder.id, status: UploadStatus.FAILED, percentage: 0 }
 			});
 			return noop;
 		},
-		[createSnackbarForUploadError, t]
+		[]
 	);
 
 	const add = useCallback<ReturnType<UseUploadHook>['add']>(
-		(files, parentId, checkForFolders) => {
+		(files, parentId, checkForFolders, event) => {
 			// Upload only valid files
+			const fileSystemEntries = event && getFileSystemEntries(event);
 			const filesEnriched: { [id: string]: UploadType } = {};
 			const uploadFunctions: { [id: string]: UploadFunctions } = {};
 			let validFilesCount = 0;
@@ -371,7 +401,8 @@ export const useUpload: UseUploadHook = () => {
 						: size(loadingQueue) < UPLOAD_QUEUE_LIMIT
 						? UploadStatus.LOADING
 						: UploadStatus.QUEUED,
-					id: `${index}-${new Date().getTime()}`
+					id: `${index}-${new Date().getTime()}`,
+					fileSystemEntry: fileSystemEntries && fileSystemEntries[index]
 				};
 				const abortFunction: UploadFunctions['abort'] = canBeLoaded
 					? upload(fileEnriched, apolloClient, nodeSortVar(), addNodeToFolder)
@@ -414,7 +445,8 @@ export const useUpload: UseUploadHook = () => {
 				status: UploadStatus.LOADING,
 				id: `${node.id}-${new Date().getTime()}`,
 				nodeId: node.id,
-				parentId: (node.parent as Folder).id
+				parentId: (node.parent as Folder).id,
+				fileSystemEntry: null
 			};
 			uploadVarReducer({ type: 'add', value: { [fileEnriched.id]: fileEnriched } });
 			const abortFunction: UploadFunctions['abort'] = uploadVersion(
@@ -427,7 +459,7 @@ export const useUpload: UseUploadHook = () => {
 			const retryFunction: UploadFunctions['retry'] = (newFile) =>
 				uploadVersion(
 					// add default node id, but there should be already included in newFile obj
-					{ nodeId: node.id, ...newFile },
+					{ nodeId: node.id, fileSystemEntry: null, ...newFile },
 					apolloClient,
 					nodeSortVar(),
 					addNodeToFolder,

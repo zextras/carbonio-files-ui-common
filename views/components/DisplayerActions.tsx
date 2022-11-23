@@ -147,7 +147,7 @@ export const DisplayerActions: React.VFC<DisplayerActionsParams> = ({ node }) =>
 				icon: 'Download',
 				label: t('actions.download', 'Download'),
 				onClick: (): void => {
-					// download node without version to be sure last version is downloaded
+					// download node without version to be sure last version is downlaoded
 					downloadNode(node.id);
 				}
 			},

@@ -116,7 +116,9 @@ export const PREVIEW_TYPE = {
 	DOCUMENT: 'document'
 } as const;
 // internal paths
-export const INTERNAL_PATH = {
+export const INTERNAL_PATH: {
+	[K in Uppercase<NonNullable<URLParams['view']>>]: `/${Lowercase<K>}`;
+} = {
 	ROOT: '/root',
 	UPLOADS: '/uploads',
 	SEARCH: '/search',

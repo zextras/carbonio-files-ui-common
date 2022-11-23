@@ -292,7 +292,7 @@ export const NodeListItemWrapper: React.VFC<NodeListItemWrapperProps> = ({
 					lastEditor={node.last_editor}
 					incomingShare={me !== node.owner?.id}
 					outgoingShare={me === node.owner?.id && node.shares && node.shares.length > 0}
-					size={(isFile(node) && node.size) || undefined}
+					size={isFile(node) ? node.size : undefined}
 					flagActive={node.flagged}
 					toggleFlagTrue={toggleFlagTrue}
 					toggleFlagFalse={toggleFlagFalse}
@@ -317,7 +317,7 @@ export const NodeListItemWrapper: React.VFC<NodeListItemWrapperProps> = ({
 					trashed={node.rootId === ROOTS.TRASH}
 					selectionContextualMenuActionsItems={selectionContextualMenuActionsItems}
 					dragging={dragging}
-					version={(isFile(node) && node.version) || undefined}
+					version={isFile(node) ? node.version : undefined}
 				/>
 			)}
 		</Dropzone>

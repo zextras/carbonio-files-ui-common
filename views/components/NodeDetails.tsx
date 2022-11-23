@@ -8,6 +8,7 @@ import React, { useMemo } from 'react';
 
 import { ApolloError } from '@apollo/client';
 import { Container } from '@zextras/carbonio-design-system';
+import map from 'lodash/map';
 import { useTranslation } from 'react-i18next';
 
 import { NodeDetailsUserRow } from '../../../components/NodeDetailsUserRow';
@@ -20,6 +21,7 @@ import { DisplayerPreview } from './DisplayerPreview';
 import { InternalLinkShortcut } from './InternalLinkShortcut';
 import { NodeContent } from './NodeContent';
 import { NodeDetailsDescription } from './NodeDetailsDescription';
+import { NodeDetailsListItem } from './NodeDetailsListItem';
 import { PathRow } from './PathRow';
 import { DisplayerContentContainer } from './StyledComponents';
 import { TextRowWithShim } from './TextRowWithShim';
@@ -80,6 +82,25 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 	const nodeIsFile = useMemo(() => isFile({ __typename: typeName }), [typeName]);
 	const nodeIsFolder = useMemo(() => isFolder({ __typename: typeName }), [typeName]);
 
+	const nodeContentItems = useMemo(
+		() =>
+			map(
+				nodes,
+				(node) =>
+					node && (
+						<NodeDetailsListItem
+							key={node.id}
+							id={node.id}
+							name={node.name}
+							type={node.type}
+							owner={node.owner}
+							updatedAt={node.updated_at}
+						/>
+					)
+			),
+		[nodes]
+	);
+
 	return (
 		<Container
 			mainAlignment={'flex-start'}
@@ -113,7 +134,7 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 						<TextRowWithShim
 							loading={loading}
 							label={t('displayer.details.size', 'Size')}
-							content={(size && humanFileSize(size)) || undefined}
+							content={(size !== undefined && humanFileSize(size)) || undefined}
 							shimmerWidth="5rem"
 						/>
 					)}
@@ -148,13 +169,9 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 				</DisplayerContentContainer>
 			</Container>
 			{nodeIsFolder && (nodes || loading) && (
-				<NodeContent
-					nodes={nodes}
-					id={id}
-					loading={loading}
-					hasMore={hasMore}
-					loadMore={loadMore}
-				/>
+				<NodeContent id={id} loading={loading} hasMore={hasMore} loadMore={loadMore}>
+					{nodeContentItems}
+				</NodeContent>
 			)}
 		</Container>
 	);

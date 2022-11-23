@@ -113,6 +113,7 @@ export type UploadType = {
 	percentage: number; // (should be rounded down)
 	id: string;
 	nodeId?: string;
+	fileSystemEntry?: FileSystemEntry | null;
 };
 
 export enum DocsType {
@@ -311,6 +312,7 @@ export type RootsType = {
 };
 
 export type URLParams = {
+	view?: 'root' | 'uploads' | 'search' | 'filter';
 	filter: 'flagged' | 'myTrash' | 'sharedTrash' | 'sharedByMe' | 'sharedWithMe' | 'recents';
 	rootId: RootsType[keyof RootsType];
 };

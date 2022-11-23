@@ -24,7 +24,7 @@ export interface PathRowProps {
 	id: Node['id'];
 	name: Node['name'];
 	type: Node['type'];
-	rootId: Node['rootId'];
+	rootId?: Node['rootId'];
 }
 
 export const PathRow = ({ id, name, type, rootId }: PathRowProps): JSX.Element => {

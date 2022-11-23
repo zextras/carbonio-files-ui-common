@@ -29,7 +29,7 @@ export type ActionsFactoryNodeType = Pick<
 	(Pick<FilesFile, '__typename'> | Pick<Folder, '__typename'>) &
 	MakeOptional<Pick<FilesFile, 'mime_type'>, 'mime_type'>;
 
-export type ActionsFactoryUploadType = Pick<UploadType, 'status' | 'parentId'>;
+export type ActionsFactoryUploadType = Pick<Partial<UploadType>, 'status' | 'parentId'>;
 
 export type ActionsFactoryGlobalType = ActionsFactoryNodeType | ActionsFactoryUploadType;
 

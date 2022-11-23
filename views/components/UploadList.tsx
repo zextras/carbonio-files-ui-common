@@ -106,7 +106,9 @@ export const UploadList: React.VFC = () => {
 
 	const goToFolderSelection = useCallback(() => {
 		unSelectAll();
-		navigateToFolder(selectedItems[0].parentId);
+		if (selectedItems[0].parentId) {
+			navigateToFolder(selectedItems[0].parentId);
+		}
 	}, [navigateToFolder, selectedItems, unSelectAll]);
 
 	const itemsMap = useMemo<Partial<Record<Action, DSAction>>>(
@@ -142,7 +144,7 @@ export const UploadList: React.VFC = () => {
 
 	const uploadWithDragAndDrop = useCallback(
 		(event) => {
-			add(event.dataTransfer.files, ROOTS.LOCAL_ROOT, true);
+			add(event.dataTransfer.files, ROOTS.LOCAL_ROOT, true, event);
 			createSnackbar({
 				key: new Date().toLocaleString(),
 				type: 'info',
@@ -190,7 +192,7 @@ export const UploadList: React.VFC = () => {
 			mainAlignment="flex-start"
 			data-testid={'list-uploads'}
 			maxHeight="100%"
-			background="gray6"
+			background={'gray6'}
 		>
 			<ListHeaderActionContext.Provider value={headerAction}>
 				<ListHeader

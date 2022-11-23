@@ -136,7 +136,7 @@ export const ListContent = React.forwardRef<HTMLDivElement, ListContentProps>(
 								outgoingShare={
 									me === nodeToDrag.owner?.id && nodeToDrag.shares && nodeToDrag.shares.length > 0
 								}
-								size={(isFile(nodeToDrag) && nodeToDrag.size) || undefined}
+								size={isFile(nodeToDrag) ? nodeToDrag.size : undefined}
 								flagActive={nodeToDrag.flagged}
 							/>
 						);

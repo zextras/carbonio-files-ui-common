@@ -49,7 +49,7 @@ import {
 import { ContextualMenu } from './ContextualMenu';
 import { NodeAvatarIcon } from './NodeAvatarIcon';
 import { NodeHoverBar } from './NodeHoverBar';
-import { HoverBarContainer, HoverContainer, ListItemContainer } from './StyledComponents';
+import { HoverContainer, ListItemContainer } from './StyledComponents';
 
 const CustomText = styled(Text)`
 	text-transform: uppercase;
@@ -407,11 +407,11 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 				actions={selectionContextualMenuActionsItems || permittedContextualMenuActionsItems}
 			>
 				<ListItemContainer
-					height="fit"
+					height={'fit'}
 					onClick={compact ? setActive : setActiveDebounced}
 					onDoubleClick={doubleClickHandler}
 					data-testid={`node-item-${id}`}
-					crossAlignment="flex-end"
+					crossAlignment={'flex-end'}
 					$contextualMenuActive={isContextualMenuActive}
 					$disableHover={isContextualMenuActive || dragging || disabled}
 					$disabled={disabled}
@@ -536,16 +536,8 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 							)}
 						</Container>
 					</HoverContainer>
-
 					{!compact && !isSelectionModeActive && !dragging && (
-						<HoverBarContainer
-							wrap="nowrap"
-							mainAlignment="flex-end"
-							height="fill"
-							data-testid="hover-bar"
-						>
-							<NodeHoverBar actions={permittedHoverBarActionsItems} />
-						</HoverBarContainer>
+						<NodeHoverBar actions={permittedHoverBarActionsItems} />
 					)}
 				</ListItemContainer>
 			</ContextualMenu>

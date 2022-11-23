@@ -42,7 +42,8 @@ import {
 	OrderType,
 	Role,
 	SortableNode,
-	TargetModule
+	TargetModule,
+	UploadType
 } from '../types/common';
 import { Maybe, Node, NodeSort, NodeType, SharePermission } from '../types/graphql/types';
 
@@ -336,7 +337,7 @@ export function propertyComparator<T extends SortableNode[keyof SortableNode]>(
 		propertyModifier
 	}: {
 		defaultIfNull?: T;
-		propertyModifier?: (p: T) => T;
+		propertyModifier?: (p: NonNullable<T>) => NonNullable<T>;
 	} = {}
 ): number {
 	let propA = (a == null || a[property] == null ? defaultIfNull : (a[property] as T)) || null;
@@ -586,7 +587,7 @@ export const previewHandledMimeTypes = [
 /**
  * 	Error codes:
  *	400 if target  does not match
- *  404 if nodeId does not exists
+ *  404 if nodeId does not exist
  *  413 if payload is Too Large
  *  500 if the store does not respond
  */
@@ -732,4 +733,8 @@ export function getNewDocumentActionLabel(t: TFunction, docsType: DocsType): str
 			ext: `(.${DOCS_EXTENSIONS[docsType]})`
 		}
 	});
+}
+
+export function getUploadNodeType(item: Pick<UploadType, 'fileSystemEntry'>): NodeType {
+	return item.fileSystemEntry?.isDirectory ? NodeType.Folder : NodeType.Other;
 }
