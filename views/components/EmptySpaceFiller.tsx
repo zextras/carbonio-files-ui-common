@@ -9,11 +9,10 @@ import React from 'react';
 import { Container } from '@zextras/carbonio-design-system';
 import noop from 'lodash/noop';
 
-import { ActionItem } from '../../utils/ActionsFactory';
-import { ContextualMenu } from './ContextualMenu';
+import { ContextualMenu, ContextualMenuProps } from './ContextualMenu';
 
 interface EmptySpaceFillerProps {
-	actions: Array<ActionItem>;
+	actions: ContextualMenuProps['actions'];
 	children?: React.ReactElement;
 }
 

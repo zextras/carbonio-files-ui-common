@@ -4,24 +4,20 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import {
+	Action as DSAction,
 	Button,
+	CollapsingActions,
 	Divider,
-	Dropdown,
 	IconButton,
 	Row,
 	Tooltip
 } from '@zextras/carbonio-design-system';
-import drop from 'lodash/drop';
-import map from 'lodash/map';
-import size from 'lodash/size';
-import take from 'lodash/take';
 import { useTranslation } from 'react-i18next';
 
 import { BREADCRUMB_ROW_HEIGHT } from '../../constants';
-import { ActionItem } from '../../utils/ActionsFactory';
 
 export interface ListHeaderProps {
 	isSelectionModeActive: boolean;
@@ -29,7 +25,7 @@ export interface ListHeaderProps {
 	selectAll: () => void;
 	isAllSelected: boolean;
 	exitSelectionMode: () => void;
-	permittedSelectionModeActionsItems: ActionItem[];
+	permittedSelectionModeActionsItems: DSAction[];
 	hide?: boolean;
 	firstCustomComponent?: React.ReactNode;
 	secondCustomComponent?: React.ReactNode;
@@ -49,22 +45,6 @@ export const ListHeader: React.VFC<ListHeaderProps> = ({
 	headerEndComponent
 }) => {
 	const [t] = useTranslation();
-
-	const permittedSelectionModePrimaryActionsIconButtons = useMemo(
-		() =>
-			map(take(permittedSelectionModeActionsItems, 3), (actionItem) => (
-				<Tooltip label={actionItem.label} key={actionItem.id}>
-					<IconButton
-						icon={actionItem.icon}
-						size="large"
-						iconColor="primary"
-						onClick={actionItem.click || ((): void => undefined)}
-						disabled={actionItem.disabled}
-					/>
-				</Tooltip>
-			)),
-		[permittedSelectionModeActionsItems]
-	);
 
 	return !isSelectionModeActive ? (
 		<>
@@ -98,14 +78,15 @@ export const ListHeader: React.VFC<ListHeaderProps> = ({
 		<>
 			<Row
 				height={BREADCRUMB_ROW_HEIGHT}
-				background="gray5"
+				background={'gray5'}
 				mainAlignment="space-between"
 				padding={{ vertical: 'medium' }}
 				wrap="nowrap"
 				width="fill"
+				maxWidth={'100%'}
 				data-testid="list-header-selectionModeActive"
 			>
-				<Row mainAlignment="flex-start" wrap="nowrap" flexGrow={1}>
+				<Row mainAlignment="flex-start" wrap="nowrap" flexGrow={1} flexShrink={0}>
 					<Tooltip label={t('selectionMode.header.exit', 'Exit selection mode')}>
 						<IconButton
 							icon="ArrowBackOutline"
@@ -120,6 +101,7 @@ export const ListHeader: React.VFC<ListHeaderProps> = ({
 							label={t('selectionMode.header.unselectAll', 'Deselect all')}
 							color="primary"
 							onClick={unSelectAll}
+							minWidth={'fit-content'}
 						/>
 					) : (
 						<Button
@@ -127,21 +109,25 @@ export const ListHeader: React.VFC<ListHeaderProps> = ({
 							label={t('selectionMode.header.selectAll', 'Select all')}
 							color="primary"
 							onClick={selectAll}
+							minWidth={'fit-content'}
 						/>
 					)}
 				</Row>
-				<Row mainAlignment="flex-end" wrap="nowrap" flexGrow={1}>
-					{permittedSelectionModePrimaryActionsIconButtons}
-					{size(drop(permittedSelectionModeActionsItems, 3)) > 0 && (
-						<Dropdown items={drop(permittedSelectionModeActionsItems, 3)} placement="bottom-end">
-							<IconButton
-								icon="MoreVertical"
-								size="large"
-								iconColor="primary"
-								onClick={(): void => undefined}
-							/>
-						</Dropdown>
-					)}
+				<Row
+					mainAlignment="flex-end"
+					wrap="nowrap"
+					flexGrow={1}
+					flexBasis={'100%'}
+					flexShrink={1}
+					width={'100%'}
+					minWidth={0}
+				>
+					<CollapsingActions
+						actions={permittedSelectionModeActionsItems}
+						size={'large'}
+						color={'primary'}
+						maxVisible={3}
+					/>
 				</Row>
 			</Row>
 			<Divider color="gray3" />
