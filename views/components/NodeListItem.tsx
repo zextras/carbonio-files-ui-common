@@ -36,7 +36,8 @@ import {
 	humanFileSize,
 	openNodeWithDocs,
 	isSupportedByPreview,
-	isSearchView
+	isSearchView,
+	cssCalcBuilder
 } from '../../utils/utils';
 import { ContextualMenu } from './ContextualMenu';
 import { NodeAvatarIcon } from './NodeAvatarIcon';
@@ -417,7 +418,7 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 							padding={{ left: 'large' }}
 							minWidth="auto"
 							width="fill"
-							maxWidth={`calc(100% - ${LIST_ITEM_AVATAR_HEIGHT})`}
+							maxWidth={cssCalcBuilder('100%', ['-', LIST_ITEM_AVATAR_HEIGHT])}
 						>
 							<Row
 								padding={{ vertical: 'extrasmall' }}

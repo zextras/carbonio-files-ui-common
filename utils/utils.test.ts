@@ -139,3 +139,7 @@ describe('Sort algorithm', () => {
 		expect(filePos).toBe(6);
 	});
 });
+
+describe('CssCalc builder', () => {
+	test.todo('if only first value is provided, returns the single value');
+});

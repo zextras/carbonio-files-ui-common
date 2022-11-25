@@ -12,6 +12,7 @@ import intersection from 'lodash/intersection';
 import styled, { DefaultTheme } from 'styled-components';
 
 import { TIMERS } from '../../constants';
+import { cssCalcBuilder } from '../../utils/utils';
 import { DropzoneModal } from './DropzoneModal';
 
 interface DropzoneProps {
@@ -40,10 +41,10 @@ const DropzoneOverlay = styled(Container)<{ $borderSize: keyof DefaultTheme['siz
 	position: absolute;
 	opacity: 0.4;
 	border-radius: 0.25rem;
-	height: calc(
-		100% - (${({ theme, $borderSize }): string => theme.sizes.padding[$borderSize]} * 2)
-	);
-	width: calc(100% - (${({ theme, $borderSize }): string => theme.sizes.padding[$borderSize]} * 2));
+	height: ${({ theme, $borderSize }): string =>
+		cssCalcBuilder('100%', ['-', theme.sizes.padding[$borderSize]], ['*', 2])};
+	width: ${({ theme, $borderSize }): string =>
+		cssCalcBuilder('100%', ['-', theme.sizes.padding[$borderSize]], ['*', 2])}
 	top: ${({ theme, $borderSize }): string => theme.sizes.padding[$borderSize]};
 	pointer-events: none;
 `;

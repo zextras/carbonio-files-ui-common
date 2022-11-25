@@ -14,6 +14,7 @@ import findIndex from 'lodash/findIndex';
 import first from 'lodash/first';
 import includes from 'lodash/includes';
 import map from 'lodash/map';
+import reduce from 'lodash/reduce';
 import size from 'lodash/size';
 import toLower from 'lodash/toLower';
 import trim from 'lodash/trim';
@@ -732,4 +733,22 @@ export function getNewDocumentActionLabel(t: TFunction, docsType: DocsType): str
 			ext: `(.${DOCS_EXTENSIONS[docsType]})`
 		}
 	});
+}
+
+type CalcOperator = '+' | '-' | '*' | '/';
+type OperationTuple = [operator: CalcOperator, secondValue: string | number];
+export function cssCalcBuilder(
+	firstValue: string | number,
+	...operations: OperationTuple[]
+): `calc(${string})` | string {
+	if (operations.length === 0) {
+		return `${firstValue}`;
+	}
+	const operationsString = reduce(
+		operations,
+		(accumulator, [operator, secondValue]) => `${accumulator} ${operator} ${secondValue}`,
+		`${firstValue}`
+	);
+
+	return `calc(${operationsString})`;
 }
