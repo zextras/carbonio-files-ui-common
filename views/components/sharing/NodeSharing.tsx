@@ -27,7 +27,7 @@ import { useGetSharesQuery } from '../../../hooks/graphql/queries/useGetSharesQu
 import { Node } from '../../../types/common';
 import { Share, SharedTarget } from '../../../types/graphql/types';
 import { isFile } from '../../../utils/ActionsFactory';
-import { getChipLabel, getChipTooltip } from '../../../utils/utils';
+import { cssCalcBuilder, getChipLabel, getChipTooltip } from '../../../utils/utils';
 import { AddSharing } from './AddSharing';
 import { CollaborationLinks } from './collaborationLinks/CollaborationLinks';
 import { EditShareChip } from './EditShareChip';
@@ -42,7 +42,7 @@ const ScrollContainer = styled(Container)`
 	overflow-y: auto;
 
 	> div {
-		margin: calc(${(props): string => props.theme.sizes.padding.extrasmall} / 2);
+		margin: ${({ theme }): string => cssCalcBuilder(theme.sizes.padding.extrasmall, ['/', 2])};
 		margin-left: 0;
 	}
 `;
@@ -126,7 +126,7 @@ export const NodeSharing: React.VFC<NodeSharingProps> = ({ node }) => {
 		<MainContainer
 			mainAlignment="flex-start"
 			background="gray5"
-			height="calc(100% - 3.125rem)"
+			height={cssCalcBuilder('100%', ['-', '3.125rem'])}
 			data-testid="node-sharing"
 		>
 			<Container

@@ -24,6 +24,7 @@ import { useFindNodesQuery } from '../../hooks/graphql/queries/useFindNodesQuery
 import { Crumb, NodeListItemType, RootListItemType } from '../../types/common';
 import { MakeOptional, NodeType } from '../../types/graphql/types';
 import { OneOrMany } from '../../types/utils';
+import { cssCalcBuilder } from '../../utils/utils';
 import { InteractiveBreadcrumbs } from '../InteractiveBreadcrumbs';
 import { EmptyFolder } from './EmptyFolder';
 import { ListContent } from './ListContent';
@@ -211,7 +212,7 @@ export const ModalRootsList: React.VFC<RootsListProps> = ({
 			crossAlignment="flex-start"
 			data-testid="modal-list-roots"
 			maxHeight="100%"
-			minHeight={`calc(${BREADCRUMB_ROW_HEIGHT} + ${LIST_ITEM_HEIGHT_COMPACT})`}
+			minHeight={cssCalcBuilder(BREADCRUMB_ROW_HEIGHT, ['+', LIST_ITEM_HEIGHT_COMPACT])}
 		>
 			<OverFlowHiddenRow
 				width="fill"
