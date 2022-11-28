@@ -24,6 +24,11 @@ export type CreateFolderType = (
 	name: string
 ) => Promise<FetchResult<CreateFolderMutation>>;
 
+export type CreateFolderWithoutUpdateType = (
+	parentId: string,
+	name: string
+) => Promise<FetchResult<CreateFolderMutation>>;
+
 type CreateFolderMutationOptions = {
 	showSnackbar?: boolean;
 };
@@ -35,6 +40,7 @@ export function useCreateFolderMutation(
 	{ showSnackbar = true }: CreateFolderMutationOptions = { showSnackbar: true }
 ): {
 	createFolder: CreateFolderType;
+	createFolderWithoutUpdate: CreateFolderWithoutUpdateType;
 } & Pick<MutationResult<CreateFolderMutation>, 'error' | 'loading' | 'reset'> {
 	const [createFolderMutation, { error: createFolderError, loading, reset }] = useMutation<
 		CreateFolderMutation,
@@ -66,7 +72,19 @@ export function useCreateFolderMutation(
 		[createFolderMutation, addNodeToFolder]
 	);
 
+	const createFolderWithoutUpdate: CreateFolderWithoutUpdateType = useCallback(
+		(parentId: string, name: string) => {
+			return createFolderMutation({
+				variables: {
+					destination_id: parentId,
+					name
+				}
+			});
+		},
+		[createFolderMutation]
+	);
+
 	useErrorHandler(createFolderError, 'CREATE_FOLDER', { showSnackbar });
 
-	return { createFolder, error: createFolderError, loading, reset };
+	return { createFolder, error: createFolderError, loading, reset, createFolderWithoutUpdate };
 }
