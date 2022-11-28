@@ -10,8 +10,10 @@ import { ApolloError } from '@apollo/client';
 import { Location } from 'history';
 import { chain } from 'lodash';
 import debounce from 'lodash/debounce';
+import filter from 'lodash/filter';
 import findIndex from 'lodash/findIndex';
 import first from 'lodash/first';
+import forEach from 'lodash/forEach';
 import includes from 'lodash/includes';
 import map from 'lodash/map';
 import size from 'lodash/size';
@@ -611,6 +613,87 @@ const uploadToCompleted = (
 		}
 	}
 };
+
+async function readEntries(
+	directoryReader: FileSystemDirectoryReader
+): Promise<Array<FileSystemEntry>> {
+	return new Promise<Array<FileSystemEntry>>((resolve, reject) => {
+		directoryReader.readEntries((entries): void => {
+			resolve(entries);
+		});
+	});
+}
+
+interface FileSystemDirectoryEntryWithChildren extends FileSystemDirectoryEntry {
+	children?: Array<TreeNode>;
+}
+
+type TreeNode = FileSystemFileEntry | FileSystemDirectoryEntryWithChildren;
+
+export function isFileSystemFileEntry(entry: FileSystemEntry): entry is FileSystemFileEntry {
+	return entry.isFile;
+}
+
+export function isFileSystemDirectoryEntry(
+	entry: FileSystemEntry
+): entry is FileSystemDirectoryEntry {
+	return entry.isDirectory;
+}
+
+export async function scan(item: FileSystemEntry): Promise<TreeNode> {
+	if (isFileSystemFileEntry(item)) {
+		return item;
+	}
+	if (isFileSystemDirectoryEntry(item)) {
+		const array: Array<TreeNode> = [];
+		const directoryReader = item.createReader();
+		let flag = true;
+		const entries: Array<FileSystemEntry> = [];
+		while (flag) {
+			// https://eslint.org/docs/latest/rules/no-await-in-loop#:~:text=In%20many%20cases%20the%20iterations%20of%20a%20loop%20are%20not%20actually%20independent%20of%20each%2Dother.%20For%20example%2C%20the%20output%20of%20one%20iteration%20might%20be%20used%20as%20the%20input%20to%20another
+			// eslint-disable-next-line no-await-in-loop
+			const newEntries = await readEntries(directoryReader);
+			if (size(newEntries) === 0) {
+				flag = false;
+			} else {
+				entries.push(...newEntries);
+			}
+		}
+		if (size(entries) > 0) {
+			const fileEntries = filter<FileSystemEntry, FileSystemFileEntry>(
+				entries,
+				isFileSystemFileEntry
+			);
+			forEach(fileEntries, (file) => array.push(file));
+
+			const directoryEntries = filter<FileSystemEntry, FileSystemDirectoryEntry>(
+				entries,
+				isFileSystemDirectoryEntry
+			);
+
+			const scanResults = await Promise.all(map(directoryEntries, (directory) => scan(directory)));
+			scanResults.forEach((itemOfRes) => array.push(itemOfRes));
+		}
+		const returnValue: FileSystemDirectoryEntryWithChildren = item;
+		returnValue.children = array;
+		return returnValue;
+	}
+	throw new Error('is not FileSystemEntry or FileSystemDirectoryEntry');
+}
+
+export function flat(tree: TreeNode): Array<TreeNode> {
+	const result: Array<TreeNode> = [];
+	if (isFileSystemFileEntry(tree)) {
+		result.push(tree);
+	} else {
+		result.push(tree);
+		forEach(tree.children, (child) => {
+			const temp = flat(child);
+			result.push(...temp);
+		});
+	}
+	return result;
+}
 
 export function uploadToTargetModule(args: {
 	nodeId: string;

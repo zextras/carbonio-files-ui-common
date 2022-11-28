@@ -12,6 +12,7 @@ import { PreviewsManagerContext } from '@zextras/carbonio-ui-preview';
 import { PreviewManagerContextType } from '@zextras/carbonio-ui-preview/lib/preview/PreviewManager';
 import filter from 'lodash/filter';
 import find from 'lodash/find';
+import forEach from 'lodash/forEach';
 import includes from 'lodash/includes';
 import isEmpty from 'lodash/isEmpty';
 import reduce from 'lodash/reduce';
@@ -73,6 +74,7 @@ import {
 	getImgPreviewSrc,
 	getPdfPreviewSrc,
 	humanFileSize,
+	isFileSystemDirectoryEntry,
 	isSupportedByPreview,
 	openNodeWithDocs
 } from '../../utils/utils';
@@ -546,11 +548,20 @@ export const List: React.VFC<ListProps> = ({
 		[itemsMap, permittedSelectionModeActions]
 	);
 
-	const { add } = useUpload();
+	const { add, addFolders } = useUpload();
 
 	const uploadWithDragAndDrop = useCallback<React.DragEventHandler>(
 		(event) => {
 			if (canUpload) {
+				const { items } = event.dataTransfer;
+				const fileSystemDirectoryEntries: Array<FileSystemDirectoryEntry> = [];
+				forEach(items, (itemOfItems) => {
+					const item: FileSystemEntry | null = itemOfItems.webkitGetAsEntry();
+					if (item && isFileSystemDirectoryEntry(item)) {
+						fileSystemDirectoryEntries.push(item);
+					}
+				});
+				addFolders(fileSystemDirectoryEntries, folderId || ROOTS.LOCAL_ROOT);
 				add(event.dataTransfer.files, folderId || ROOTS.LOCAL_ROOT, true);
 				if (!folderId) {
 					createSnackbar({
@@ -567,7 +578,7 @@ export const List: React.VFC<ListProps> = ({
 				}
 			}
 		},
-		[add, canUpload, createSnackbar, folderId, navigateToFolder, t]
+		[add, addFolders, canUpload, createSnackbar, folderId, navigateToFolder, t]
 	);
 
 	const { moveNodes: moveNodesMutation } = useMoveNodesMutation();
