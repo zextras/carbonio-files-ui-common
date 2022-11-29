@@ -13,17 +13,14 @@ import { LIST_ITEM_AVATAR_HEIGHT_COMPACT } from '../../constants';
 import { Breadcrumbs } from '../../design_system_fork/Breadcrumbs';
 import { useUploadActions } from '../../hooks/useUploadActions';
 import { Crumb, UploadType } from '../../types/common';
-import { MakeOptional } from '../../types/utils';
 import { getIconByFileType, getUploadNodeType } from '../../utils/utils';
 import { NodeAvatarIcon } from './NodeAvatarIcon';
 import { NodeHoverBar } from './NodeHoverBar';
 import { HoverContainer, ListItemContainer } from './StyledComponents';
 import { UploadStatusIcon } from './UploadStatusIcon';
 
-type UploadContentType = MakeOptional<UploadType, 'parentId'>;
-
 interface UploadNodeDetailsListItemProps {
-	node: UploadContentType;
+	node: NonNullable<UploadType['children']>[number];
 }
 
 export const UploadNodeDetailsListItem = ({
@@ -84,7 +81,7 @@ export const UploadNodeDetailsListItem = ({
 					minWidth={0}
 				>
 					<Text overflow="ellipsis" size="small">
-						{file.name}
+						{file?.name || fileSystemEntry?.name}
 					</Text>
 					<Breadcrumbs crumbs={crumbs} $size={'extrasmall'} color={'gray0.disabled'} />
 				</Container>

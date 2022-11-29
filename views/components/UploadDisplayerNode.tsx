@@ -3,19 +3,17 @@
  *
  * SPDX-License-Identifier: AGPL-3.0-only
  */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 
 import { CollapsingActions, Container } from '@zextras/carbonio-design-system';
-import { flatten } from 'lodash';
 import map from 'lodash/map';
 import { useTranslation } from 'react-i18next';
 
 import { useActiveNode } from '../../../hooks/useActiveNode';
 import { useGetBaseNodeQuery } from '../../hooks/graphql/queries/useGetBaseNodeQuery';
 import { useUploadActions } from '../../hooks/useUploadActions';
-import { UploadStatus, UploadType } from '../../types/common';
+import { UploadType } from '../../types/common';
 import { NodeType } from '../../types/graphql/types';
-import { MakeOptional } from '../../types/utils';
 import { getUploadNodeType, humanFileSize } from '../../utils/utils';
 import { DisplayerHeader } from './DisplayerHeader';
 import { NodeContent } from './NodeContent';
@@ -24,94 +22,22 @@ import { DisplayerContentContainer } from './StyledComponents';
 import { TextRowWithShim } from './TextRowWithShim';
 import { UploadNodeDetailsListItem } from './UploadNodeDetailsListItem';
 
-function getDirectoryContent(
-	fsDirectoryEntry: FileSystemDirectoryEntry
-): Promise<FileSystemEntry[]> {
-	const promises: Promise<FileSystemEntry[]>[] = [];
-	const directoryReader = fsDirectoryEntry.createReader();
-	const promise = new Promise((resolve) => {
-		directoryReader.readEntries((entries) => {
-			if (entries) {
-				for (let i = 0; i < entries.length; i += 1) {
-					const entry = entries[i];
-					if (entry.isDirectory && entry instanceof FileSystemDirectoryEntry) {
-						promises.push(getDirectoryContent(entry));
-					}
-				}
-			}
-			promises.push(Promise.resolve(entries));
-			resolve(entries);
-		});
-	});
-	return promise.then(() =>
-		Promise.all(flatten(promises)).then((resultArray) => flatten(resultArray))
-	);
-}
-
-function getFilePromise(entry: FileSystemEntry): Promise<File> {
-	return new Promise<File>((resolve, reject) => {
-		if (entry.isFile && entry instanceof FileSystemFileEntry) {
-			entry.file((entryFile) => {
-				resolve(entryFile);
-			});
-		} else if (entry.isDirectory && entry instanceof FileSystemDirectoryEntry) {
-			resolve(new File([], entry.name));
-		} else {
-			reject(new Error('cannot detect type for this FileSystemEntry'));
-		}
-	});
-}
-
-type UploadDisplayerType = MakeOptional<UploadType, 'parentId'>;
-
 interface UploadDisplayerNodeProps {
-	node: NonNullable<UploadDisplayerType>;
+	node: UploadType;
 }
 
 export const UploadDisplayerNode = ({ node }: UploadDisplayerNodeProps): JSX.Element => {
 	const [t] = useTranslation();
 	const { removeActiveNode } = useActiveNode();
-	const [content, setContent] = useState<UploadDisplayerType[] | null>(null);
 
 	const actions = useUploadActions([node]);
 
-	useEffect(() => {
-		if (
-			node.fileSystemEntry &&
-			node.fileSystemEntry.isDirectory &&
-			!node.fileSystemEntry.isFile &&
-			node.fileSystemEntry instanceof FileSystemDirectoryEntry
-		) {
-			getDirectoryContent(node.fileSystemEntry)
-				.then((flattenContent) => {
-					const uploadListPromises: Promise<UploadDisplayerType>[] = [];
-					for (let i = 0; i < flattenContent.length; i += 1) {
-						const entry = flattenContent[i];
-						uploadListPromises.push(
-							getFilePromise(entry).then((file) => ({
-								id: `${node.id}-${i}-${Date.now()}`,
-								nodeId: undefined,
-								file,
-								fileSystemEntry: entry,
-								status: UploadStatus.LOADING,
-								parentId: undefined,
-								percentage: 0
-							}))
-						);
-					}
-					return Promise.all(uploadListPromises);
-				})
-				.then((uploadItemList) => {
-					setContent(uploadItemList);
-				});
-		} else {
-			setContent(null);
-		}
-	}, [node.fileSystemEntry, node.id]);
-
 	const contentItems = useMemo(
-		() => map(content, (uploadItem) => <UploadNodeDetailsListItem node={uploadItem} />),
-		[content]
+		() =>
+			node.children
+				? map(node.children, (uploadItem) => <UploadNodeDetailsListItem node={uploadItem} />)
+				: undefined,
+		[node.children]
 	);
 
 	const { data: parentData, loading: loadingParent } = useGetBaseNodeQuery(node.parentId);
@@ -201,7 +127,7 @@ export const UploadDisplayerNode = ({ node }: UploadDisplayerNodeProps): JSX.Ele
 							rootId={parentNode.rootId}
 						/>
 					</DisplayerContentContainer>
-					{content !== null && (
+					{contentItems !== undefined && (
 						<NodeContent id={node.id} loading={false} hasMore={false}>
 							{contentItems}
 						</NodeContent>

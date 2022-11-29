@@ -7,7 +7,7 @@
 /* eslint-disable arrow-body-style */
 import { useCallback } from 'react';
 
-import { FetchResult, MutationResult, useMutation } from '@apollo/client';
+import { FetchResult, MutationHookOptions, MutationResult, useApolloClient, useMutation } from "@apollo/client";
 
 import CREATE_FOLDER from '../../../graphql/mutations/createFolder.graphql';
 import {
@@ -15,41 +15,37 @@ import {
 	CreateFolderMutationVariables,
 	Folder
 } from '../../../types/graphql/types';
+import { MakeOptional } from '../../../types/utils';
 import { scrollToNodeItem } from '../../../utils/utils';
 import { useErrorHandler } from '../../useErrorHandler';
-import { useUpdateFolderContent } from '../useUpdateFolderContent';
+import { CachedFolder, useUpdateFolderContent } from '../useUpdateFolderContent';
 
 export type CreateFolderType = (
-	parentFolder: Folder,
+	parentFolder: MakeOptional<Pick<Folder, '__typename' | 'id' | 'children'>, 'children'>,
 	name: string
 ) => Promise<FetchResult<CreateFolderMutation>>;
 
-export type CreateFolderWithoutUpdateType = (
-	parentId: string,
-	name: string
-) => Promise<FetchResult<CreateFolderMutation>>;
-
-type CreateFolderMutationOptions = {
+interface CreateFolderMutationOptions
+	extends MutationHookOptions<CreateFolderMutation, CreateFolderMutationVariables> {
 	showSnackbar?: boolean;
-};
+}
 
 /**
  * Can return error: ErrorCode.FILE_VERSION_NOT_FOUND, ErrorCode.NODE_NOT_FOUND
  */
 export function useCreateFolderMutation(
-	{ showSnackbar = true }: CreateFolderMutationOptions = { showSnackbar: true }
+	{ showSnackbar = true, ...mutationOptions }: CreateFolderMutationOptions = { showSnackbar: true }
 ): {
 	createFolder: CreateFolderType;
-	createFolderWithoutUpdate: CreateFolderWithoutUpdateType;
 } & Pick<MutationResult<CreateFolderMutation>, 'error' | 'loading' | 'reset'> {
 	const [createFolderMutation, { error: createFolderError, loading, reset }] = useMutation<
 		CreateFolderMutation,
 		CreateFolderMutationVariables
-	>(CREATE_FOLDER);
-	const { addNodeToFolder } = useUpdateFolderContent();
+	>(CREATE_FOLDER, mutationOptions);
+	const { addNodeToFolder } = useUpdateFolderContent(mutationOptions.client);
 
-	const createFolder: CreateFolderType = useCallback(
-		(parentFolder: Pick<Folder, '__typename' | 'id' | 'children'>, name: string) => {
+	const createFolder = useCallback<CreateFolderType>(
+		(parentFolder: Parameters<CreateFolderType>[0], name: string) => {
 			return createFolderMutation({
 				variables: {
 					destination_id: parentFolder.id,
@@ -59,8 +55,8 @@ export function useCreateFolderMutation(
 				// If so, write the folder in cache,
 				// otherwise this new folder will be loaded with next fetchMore calls
 				update(cache, { data }) {
-					if (data?.createFolder) {
-						const newPosition = addNodeToFolder(parentFolder, data.createFolder);
+					if (data?.createFolder && parentFolder.children !== undefined) {
+						const newPosition = addNodeToFolder(parentFolder as CachedFolder, data.createFolder);
 						scrollToNodeItem(
 							data.createFolder.id,
 							newPosition === parentFolder.children.nodes.length
@@ -72,19 +68,7 @@ export function useCreateFolderMutation(
 		[createFolderMutation, addNodeToFolder]
 	);
 
-	const createFolderWithoutUpdate: CreateFolderWithoutUpdateType = useCallback(
-		(parentId: string, name: string) => {
-			return createFolderMutation({
-				variables: {
-					destination_id: parentId,
-					name
-				}
-			});
-		},
-		[createFolderMutation]
-	);
-
 	useErrorHandler(createFolderError, 'CREATE_FOLDER', { showSnackbar });
 
-	return { createFolder, error: createFolderError, loading, reset, createFolderWithoutUpdate };
+	return { createFolder, error: createFolderError, loading, reset };
 }

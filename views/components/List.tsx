@@ -81,6 +81,7 @@ import {
 import { Dropzone } from './Dropzone';
 import { EmptyFolder } from './EmptyFolder';
 import { ListContent } from './ListContent';
+import { getUploadAddType } from "../../utils/uploadUtils";
 
 const MainContainer = styled(Container)`
 	border-left: 0.0625rem solid ${(props): string => props.theme.palette.gray6.regular};
@@ -548,7 +549,7 @@ export const List: React.VFC<ListProps> = ({
 		[itemsMap, permittedSelectionModeActions]
 	);
 
-	const { add, addFolders } = useUpload();
+	const { add } = useUpload();
 
 	const uploadWithDragAndDrop = useCallback<React.DragEventHandler>(
 		(event) => {
@@ -561,8 +562,7 @@ export const List: React.VFC<ListProps> = ({
 						fileSystemDirectoryEntries.push(item);
 					}
 				});
-				addFolders(fileSystemDirectoryEntries, folderId || ROOTS.LOCAL_ROOT);
-				add(event.dataTransfer.files, folderId || ROOTS.LOCAL_ROOT, true);
+				add(getUploadAddType(event.dataTransfer), folderId || ROOTS.LOCAL_ROOT);
 				if (!folderId) {
 					createSnackbar({
 						key: new Date().toLocaleString(),
@@ -578,7 +578,7 @@ export const List: React.VFC<ListProps> = ({
 				}
 			}
 		},
-		[add, addFolders, canUpload, createSnackbar, folderId, navigateToFolder, t]
+		[add, canUpload, createSnackbar, folderId, navigateToFolder, t]
 	);
 
 	const { moveNodes: moveNodesMutation } = useMoveNodesMutation();

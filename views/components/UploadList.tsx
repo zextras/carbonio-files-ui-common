@@ -28,6 +28,7 @@ import useSelection from '../../hooks/useSelection';
 import { useUpload } from '../../hooks/useUpload';
 import { Action, UploadType } from '../../types/common';
 import { buildActionItems, getPermittedUploadActions } from '../../utils/ActionsFactory';
+import { getUploadAddType } from '../../utils/uploadUtils';
 import { Dropzone } from './Dropzone';
 import { EmptyFolder } from './EmptyFolder';
 import { ScrollContainer } from './ScrollContainer';
@@ -144,7 +145,7 @@ export const UploadList: React.VFC = () => {
 
 	const uploadWithDragAndDrop = useCallback(
 		(event) => {
-			add(event.dataTransfer.files, ROOTS.LOCAL_ROOT, true, event);
+			add(getUploadAddType(event.dataTransfer), ROOTS.LOCAL_ROOT);
 			createSnackbar({
 				key: new Date().toLocaleString(),
 				type: 'info',

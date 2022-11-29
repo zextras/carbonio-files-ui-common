@@ -628,7 +628,7 @@ interface FileSystemDirectoryEntryWithChildren extends FileSystemDirectoryEntry 
 	children?: Array<TreeNode>;
 }
 
-type TreeNode = FileSystemFileEntry | FileSystemDirectoryEntryWithChildren;
+export type TreeNode = FileSystemFileEntry | FileSystemDirectoryEntryWithChildren;
 
 export function isFileSystemFileEntry(entry: FileSystemEntry): entry is FileSystemFileEntry {
 	return entry.isFile;

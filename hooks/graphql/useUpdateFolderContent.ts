@@ -6,14 +6,14 @@
 
 import { useCallback } from 'react';
 
-import { ApolloClient, NormalizedCacheObject, useApolloClient } from '@apollo/client';
+import { ApolloClient, useApolloClient } from '@apollo/client';
 
 import { addNodeInCachedChildren, removeNodesFromFolder } from '../../apollo/cacheUtils';
 import { nodeSortVar } from '../../apollo/nodeSortVar';
 import { ChildFragment, Folder, Maybe } from '../../types/graphql/types';
 import { addNodeInSortedList } from '../../utils/utils';
 
-type CachedFolder = Pick<Folder, 'id' | '__typename'> & {
+export type CachedFolder = Pick<Folder, 'id' | '__typename'> & {
 	children: { nodes: Array<Maybe<Partial<File | Folder> & ChildFragment> | undefined> };
 };
 
@@ -26,7 +26,7 @@ export type UpdateFolderContentType = {
 };
 
 export const useUpdateFolderContent = (
-	apolloClientArg?: ApolloClient<NormalizedCacheObject>
+	apolloClientArg?: ApolloClient<object>
 ): UpdateFolderContentType => {
 	// TODO remove apolloClientArg when useApolloClient is safe(provider moved up)
 	// eslint-disable-next-line react-hooks/rules-of-hooks

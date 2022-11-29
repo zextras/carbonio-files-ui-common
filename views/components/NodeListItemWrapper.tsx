@@ -218,7 +218,7 @@ export const NodeListItemWrapper: React.VFC<NodeListItemWrapperProps> = ({
 
 	const uploadAction = useCallback(
 		(event) => {
-			add(event.dataTransfer.files, node.id, true);
+			add(event.dataTransfer.files, node.id);
 			createSnackbar({
 				key: new Date().toLocaleString(),
 				type: 'info',
