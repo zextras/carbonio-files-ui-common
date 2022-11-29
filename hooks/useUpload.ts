@@ -364,9 +364,8 @@ export const useUpload: UseUploadHook = () => {
 	);
 
 	const add = useCallback<ReturnType<UseUploadHook>['add']>(
-		(files, parentId, checkForFolders, event) => {
+		(files, parentId, checkForFolders) => {
 			// Upload only valid files
-			const fileSystemEntries = event && getFileSystemEntries(event);
 			const filesEnriched: { [id: string]: UploadType } = {};
 			const uploadFunctions: { [id: string]: UploadFunctions } = {};
 			let validFilesCount = 0;
@@ -478,12 +477,12 @@ export const useUpload: UseUploadHook = () => {
 				// }
 			});
 		},
-		[]
+		[apolloClient]
 	);
 
 	const update = useCallback<ReturnType<UseUploadHook>['update']>(
 		(node, file, overwriteVersion) => {
-			const fileEnriched: Required<UploadType> = {
+			const fileEnriched: MakeRequired<UploadType, 'nodeId'> = {
 				file,
 				percentage: 0,
 				status: UploadStatus.LOADING,
