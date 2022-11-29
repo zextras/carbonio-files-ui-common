@@ -7,6 +7,7 @@
 import React from 'react';
 
 import { screen, waitForElementToBeRemoved, within } from '@testing-library/react';
+import { DropdownItem } from '@zextras/carbonio-design-system';
 import find from 'lodash/find';
 import { graphql, rest } from 'msw';
 
@@ -30,7 +31,6 @@ import {
 	sortNodes
 } from '../mocks/mockUtils';
 import { Folder, GetNodeQuery, GetNodeQueryVariables } from '../types/graphql/types';
-import { ActionItem } from '../utils/ActionsFactory';
 import {
 	getChildrenVariables,
 	mockGetChild,
@@ -70,10 +70,10 @@ jest.mock('./components/Displayer', () => ({
 					);
 					if (createDocsDocument) {
 						const createLibreDocsDocument = (
-							createDocsDocument.action('target').items as ActionItem[]
+							createDocsDocument.action('target').items as DropdownItem[]
 						).find((item) => item.id === 'create-docs-document-libre');
-						if (createLibreDocsDocument?.click) {
-							createLibreDocsDocument.click(ev);
+						if (createLibreDocsDocument?.onClick) {
+							createLibreDocsDocument.onClick(ev);
 						}
 					}
 				}

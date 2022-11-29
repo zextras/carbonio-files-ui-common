@@ -44,7 +44,7 @@ jest.mock('../../../hooks/useNavigation', () => ({
 describe('Upload List Item Wrapper', () => {
 	test('File name, destination folder, percentage and size are visible', async () => {
 		const destinationFolder = populateFolder();
-		const file = {
+		const file: UploadType = {
 			file: new File(['uploading file'], 'file1.txt', { type: 'text/plain' }),
 			percentage: 20,
 			parentId: destinationFolder.id,
@@ -127,7 +127,7 @@ describe('Upload List Item Wrapper', () => {
 
 	test('File name, destination folder, queued label and size are visible', async () => {
 		const destinationFolder = populateFolder();
-		const file = {
+		const file: UploadType = {
 			file: new File(['uploading file'], 'file1.txt', { type: 'text/plain' }),
 			percentage: 0,
 			parentId: destinationFolder.id,

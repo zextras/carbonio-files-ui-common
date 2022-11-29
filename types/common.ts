@@ -15,13 +15,12 @@ import {
 	FindNodesQueryVariables,
 	Folder,
 	GetNodeQuery,
-	MakeOptional,
 	Maybe,
 	Permissions,
 	Share,
 	User
 } from './graphql/types';
-import { SnakeToCamelCase } from './utils';
+import { MakeOptional, SnakeToCamelCase } from './utils';
 
 export type Node = FilesFile | Folder;
 
@@ -108,11 +107,13 @@ export enum UploadStatus {
 
 export type UploadType = {
 	file: File;
+	fileSystemEntry?: FileSystemEntry | null;
 	parentId: string;
 	status: UploadStatus;
 	percentage: number; // (should be rounded down)
 	id: string;
 	nodeId?: string;
+	children?: MakeOptional<UploadType, 'file' | 'parentId'>[];
 };
 
 export enum DocsType {
@@ -311,6 +312,7 @@ export type RootsType = {
 };
 
 export type URLParams = {
+	view?: 'root' | 'uploads' | 'search' | 'filter';
 	filter: 'flagged' | 'myTrash' | 'sharedTrash' | 'sharedByMe' | 'sharedWithMe' | 'recents';
 	rootId: RootsType[keyof RootsType];
 };

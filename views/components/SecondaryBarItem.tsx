@@ -41,6 +41,7 @@ import {
 	isFolder
 } from '../../utils/ActionsFactory';
 import { Dropzone } from './Dropzone';
+import { getUploadAddType } from "../../utils/uploadUtils";
 
 // TODO: replace with updated DS Accordion once available
 const CustomAccordionItem = styled(AccordionItem)<{ $dragging: boolean }>`
@@ -101,7 +102,7 @@ export const SecondaryBarItem: React.VFC<SecondaryBarItemProps> = ({ item, expan
 				});
 			} else if (getBaseNodeData?.getNode) {
 				if (isUploadingFiles) {
-					add(event.dataTransfer.files, item.id, true);
+					add(getUploadAddType(event.dataTransfer), item.id);
 				} else if (movingNodes) {
 					const nodesToMove: Array<Partial<Node> & PickIdNodeType> = JSON.parse(movingNodes);
 					moveNodesMutation(getBaseNodeData.getNode as Folder, ...nodesToMove).then(() => {

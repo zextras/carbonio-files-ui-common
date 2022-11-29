@@ -24,22 +24,22 @@ import {
 
 export const DisplayerContentContainer = styled(Container)`
 	padding-bottom: 2rem;
+	overflow-y: auto;
 `;
 
 export const HoverContainer = styled(Row)`
 	width: 100%;
 `;
 
-export const HoverBarContainer = styled(Row)`
+export const HoverBarContainer = styled(Row).attrs(({ height = '45%', width, theme }) => ({
+	height,
+	width: width || `calc(100% - ${LIST_ITEM_AVATAR_HEIGHT} - ${theme.sizes.padding.small})`
+}))`
 	display: none;
 	position: absolute;
 	top: 0;
 	right: 0;
-	height: 45%;
-	// set the width to start just after the avatar/file icon preview to not overlay the selection mode elements
-	width: calc(
-		100% - ${LIST_ITEM_AVATAR_HEIGHT} - ${(props): string => props.theme.sizes.padding.small}
-	);
+
 	background: linear-gradient(
 		to right,
 		transparent,
@@ -47,22 +47,22 @@ export const HoverBarContainer = styled(Row)`
 	);
 `;
 
+interface ListItemContainerProps {
+	$contextualMenuActive?: boolean;
+	$disabled?: boolean;
+	$disableHover?: boolean;
+}
+
 export const ListItemContainer = styled(Container).attrs<
-	{
-		$contextualMenuActive: boolean;
-		$disabled?: boolean;
-	},
+	ListItemContainerProps,
 	{ backgroundColor?: string }
 >(({ $contextualMenuActive, $disabled, theme }) => ({
 	backgroundColor:
 		($disabled && getColor('gray6.disabled', theme)) ||
 		($contextualMenuActive && getColor('gray6.hover', theme)) ||
 		undefined
-}))<{
-	$contextualMenuActive: boolean;
-	$disabled?: boolean;
-	$disableHover?: boolean;
-}>`
+}))<ListItemContainerProps>`
+	position: relative;
 	${HoverContainer} {
 		background-color: ${({ backgroundColor }): SimpleInterpolation => backgroundColor};
 	}

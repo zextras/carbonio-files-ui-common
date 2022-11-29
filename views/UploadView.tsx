@@ -18,7 +18,7 @@ import { ListContext } from '../contexts';
 import { useUpload } from '../hooks/useUpload';
 import { DocsType } from '../types/common';
 import { getNewDocumentActionLabel, inputElement } from '../utils/utils';
-import { Displayer } from './components/Displayer';
+import { UploadDisplayer } from './components/UploadDisplayer';
 import { UploadList } from './components/UploadList';
 
 const UploadView: React.VFC = () => {
@@ -211,7 +211,7 @@ const UploadView: React.VFC = () => {
 						borderRadius="none"
 						style={{ maxHeight: '100%' }}
 					>
-						<Displayer
+						<UploadDisplayer
 							translationKey="displayer.uploads"
 							icons={['ImageOutline', 'FileAddOutline', 'FilmOutline']}
 						/>

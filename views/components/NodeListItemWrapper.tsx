@@ -7,7 +7,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useReactiveVar } from '@apollo/client';
-import { useSnackbar } from '@zextras/carbonio-design-system';
+import { Action as DSAction, useSnackbar } from '@zextras/carbonio-design-system';
 import isEmpty from 'lodash/isEmpty';
 import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
@@ -22,7 +22,6 @@ import { useDeletePermanentlyModal } from '../../hooks/modals/useDeletePermanent
 import { useUpload } from '../../hooks/useUpload';
 import { Action, NodeListItemType, URLParams } from '../../types/common';
 import {
-	ActionItem,
 	canBeMoveDestination,
 	canUploadFile,
 	getAllPermittedActions,
@@ -52,7 +51,7 @@ interface NodeListItemWrapperProps {
 	setActive?: (node: NodeListItemType, event: React.SyntheticEvent) => void;
 	compact?: boolean;
 	navigateTo?: (id: string, event?: React.SyntheticEvent | Event) => void;
-	selectionContextualMenuActionsItems?: ActionItem[];
+	selectionContextualMenuActionsItems?: DSAction[];
 }
 
 export const NodeListItemWrapper: React.VFC<NodeListItemWrapperProps> = ({
@@ -219,7 +218,7 @@ export const NodeListItemWrapper: React.VFC<NodeListItemWrapperProps> = ({
 
 	const uploadAction = useCallback(
 		(event) => {
-			add(event.dataTransfer.files, node.id, true);
+			add(event.dataTransfer.files, node.id);
 			createSnackbar({
 				key: new Date().toLocaleString(),
 				type: 'info',
@@ -293,7 +292,7 @@ export const NodeListItemWrapper: React.VFC<NodeListItemWrapperProps> = ({
 					lastEditor={node.last_editor}
 					incomingShare={me !== node.owner?.id}
 					outgoingShare={me === node.owner?.id && node.shares && node.shares.length > 0}
-					size={(isFile(node) && node.size) || undefined}
+					size={isFile(node) ? node.size : undefined}
 					flagActive={node.flagged}
 					toggleFlagTrue={toggleFlagTrue}
 					toggleFlagFalse={toggleFlagFalse}
@@ -318,7 +317,7 @@ export const NodeListItemWrapper: React.VFC<NodeListItemWrapperProps> = ({
 					trashed={node.rootId === ROOTS.TRASH}
 					selectionContextualMenuActionsItems={selectionContextualMenuActionsItems}
 					dragging={dragging}
-					version={(isFile(node) && node.version) || undefined}
+					version={isFile(node) ? node.version : undefined}
 				/>
 			)}
 		</Dropzone>

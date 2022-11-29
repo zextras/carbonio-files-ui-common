@@ -9,7 +9,6 @@ import { Container, Divider, TabBar, TabBarProps } from '@zextras/carbonio-desig
 import filter from 'lodash/filter';
 import map from 'lodash/map';
 import { useTranslation } from 'react-i18next';
-import styled from 'styled-components';
 
 import { useActiveNode } from '../../../hooks/useActiveNode';
 import { DISPLAYER_TABS, ROOTS } from '../../constants';
@@ -28,10 +27,6 @@ interface DisplayerNodeProps {
 	loadMore: () => void;
 	hasMore: boolean;
 }
-
-const ContentContainer = styled(DisplayerContentContainer)`
-	overflow-y: auto;
-`;
 
 export const DisplayerNode: React.VFC<DisplayerNodeProps> = ({
 	node,
@@ -105,7 +100,7 @@ export const DisplayerNode: React.VFC<DisplayerNodeProps> = ({
 				trashed={node.rootId === ROOTS.TRASH}
 			/>
 			<DisplayerActions node={node} />
-			<ContentContainer
+			<DisplayerContentContainer
 				height="fill"
 				background="gray5"
 				padding={{ horizontal: 'large' }}
@@ -150,7 +145,7 @@ export const DisplayerNode: React.VFC<DisplayerNodeProps> = ({
 					{isSharingTab && <NodeSharing node={node} />}
 					{isVersioningTab && activeNodeIsFile && <Versioning node={node} />}
 				</Container>
-			</ContentContainer>
+			</DisplayerContentContainer>
 		</>
 	);
 };

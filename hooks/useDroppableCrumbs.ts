@@ -27,6 +27,7 @@ import { canBeMoveDestination, canUploadFile, isFolder } from '../utils/ActionsF
 import { hexToRGBA } from '../utils/utils';
 import { useMoveNodesMutation } from './graphql/mutations/useMoveNodesMutation';
 import { useUpload } from './useUpload';
+import { getUploadAddType } from "../utils/uploadUtils";
 
 const NODE_OWNER = gql`
 	fragment NodeOwner on Node {
@@ -247,7 +248,7 @@ export function useDroppableCrumbs(
 			event: React.DragEvent<HTMLElement>
 		) => {
 			if (node && canUploadFile(node)) {
-				add(event.dataTransfer.files, node.id, true);
+				add(getUploadAddType(event.dataTransfer), node.id);
 				createSnackbar({
 					key: new Date().toLocaleString(),
 					type: 'info',

@@ -62,7 +62,7 @@ export const NodeAvatarIcon: React.VFC<NodeAvatarIconParams> = ({
 				<FileIconPreview
 					icon={icon}
 					color="gray1"
-					background="gray3"
+					background={'gray3'}
 					label=""
 					onClick={onClick}
 					data-testid="file-icon-preview"

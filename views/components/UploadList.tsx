@@ -7,7 +7,12 @@
 import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 
 import { useReactiveVar } from '@apollo/client';
-import { Button, Container, useSnackbar } from '@zextras/carbonio-design-system';
+import {
+	Action as DSAction,
+	Button,
+	Container,
+	useSnackbar
+} from '@zextras/carbonio-design-system';
 import filter from 'lodash/filter';
 import includes from 'lodash/includes';
 import map from 'lodash/map';
@@ -22,11 +27,8 @@ import { ListContext, ListHeaderActionContext } from '../../contexts';
 import useSelection from '../../hooks/useSelection';
 import { useUpload } from '../../hooks/useUpload';
 import { Action, UploadType } from '../../types/common';
-import {
-	ActionItem,
-	buildActionItems,
-	getPermittedUploadActions
-} from '../../utils/ActionsFactory';
+import { buildActionItems, getPermittedUploadActions } from '../../utils/ActionsFactory';
+import { getUploadAddType } from '../../utils/uploadUtils';
 import { Dropzone } from './Dropzone';
 import { EmptyFolder } from './EmptyFolder';
 import { ScrollContainer } from './ScrollContainer';
@@ -105,28 +107,30 @@ export const UploadList: React.VFC = () => {
 
 	const goToFolderSelection = useCallback(() => {
 		unSelectAll();
-		navigateToFolder(selectedItems[0].parentId);
+		if (selectedItems[0].parentId) {
+			navigateToFolder(selectedItems[0].parentId);
+		}
 	}, [navigateToFolder, selectedItems, unSelectAll]);
 
-	const itemsMap = useMemo<Partial<Record<Action, ActionItem>>>(
+	const itemsMap = useMemo<Partial<Record<Action, DSAction>>>(
 		() => ({
 			[Action.removeUpload]: {
 				id: 'removeUpload',
 				icon: 'CloseCircleOutline',
 				label: t('actions.removeUpload', 'Remove upload'),
-				click: removeUploadSelection
+				onClick: removeUploadSelection
 			},
 			[Action.RetryUpload]: {
 				id: 'RetryUpload',
 				icon: 'PlayCircleOutline',
 				label: t('actions.retryUpload', 'Retry upload'),
-				click: retryUploadSelection
+				onClick: retryUploadSelection
 			},
 			[Action.GoToFolder]: {
 				id: 'GoToFolder ',
 				icon: 'FolderOutline',
 				label: t('actions.goToFolder', 'Go to destination folder'),
-				click: goToFolderSelection
+				onClick: goToFolderSelection
 			}
 		}),
 		[removeUploadSelection, goToFolderSelection, retryUploadSelection, t]
@@ -141,7 +145,7 @@ export const UploadList: React.VFC = () => {
 
 	const uploadWithDragAndDrop = useCallback(
 		(event) => {
-			add(event.dataTransfer.files, ROOTS.LOCAL_ROOT, true);
+			add(getUploadAddType(event.dataTransfer), ROOTS.LOCAL_ROOT);
 			createSnackbar({
 				key: new Date().toLocaleString(),
 				type: 'info',
@@ -189,7 +193,7 @@ export const UploadList: React.VFC = () => {
 			mainAlignment="flex-start"
 			data-testid={'list-uploads'}
 			maxHeight="100%"
-			background="gray6"
+			background={'gray6'}
 		>
 			<ListHeaderActionContext.Provider value={headerAction}>
 				<ListHeader

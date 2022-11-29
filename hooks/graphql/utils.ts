@@ -6,7 +6,7 @@
 import { ObservableQuery, OperationVariables } from '@apollo/client';
 import { DocumentNode } from 'graphql';
 
-export function isOperationVariables<TVariables>(
+export function isOperationVariables<TVariables extends OperationVariables>(
 	query: ObservableQuery['options']['query'],
 	variables: OperationVariables | undefined,
 	documentNode: DocumentNode
@@ -14,7 +14,7 @@ export function isOperationVariables<TVariables>(
 	return query === documentNode;
 }
 
-export function isQueryResult<TData>(
+export function isQueryResult<TData extends OperationVariables>(
 	query: ObservableQuery['options']['query'],
 	result: unknown,
 	documentNode: DocumentNode

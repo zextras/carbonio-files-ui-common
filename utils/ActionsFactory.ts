@@ -4,10 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-/* eslint-disable no-else-return */
-import React from 'react';
-
-import { DropdownItem } from '@zextras/carbonio-design-system';
+import type { Action as DSAction } from '@zextras/carbonio-design-system';
 import every from 'lodash/every';
 import find from 'lodash/find';
 import forEach from 'lodash/forEach';
@@ -24,17 +21,6 @@ import { File as FilesFile, File, Folder, MakeOptional, Root } from '../types/gr
 import { OneOrMany } from '../types/utils';
 import { docsHandledMimeTypes, isSupportedByPreview } from './utils';
 
-export interface ActionItem {
-	id: string;
-	label: string;
-	icon: string;
-	click?: (event: React.SyntheticEvent | KeyboardEvent, ...args: unknown[]) => unknown;
-	selected?: boolean;
-	customComponent?: React.ReactNode;
-	disabled?: boolean;
-	items?: DropdownItem['items'];
-}
-
 export type ActionsFactoryNodeType = Pick<
 	Node,
 	'permissions' | 'flagged' | 'type' | 'owner' | 'id' | 'rootId'
@@ -43,7 +29,7 @@ export type ActionsFactoryNodeType = Pick<
 	(Pick<FilesFile, '__typename'> | Pick<Folder, '__typename'>) &
 	MakeOptional<Pick<FilesFile, 'mime_type'>, 'mime_type'>;
 
-export type ActionsFactoryUploadType = Pick<UploadType, 'status' | 'parentId'>;
+export type ActionsFactoryUploadType = Pick<Partial<UploadType>, 'status' | 'parentId'>;
 
 export type ActionsFactoryGlobalType = ActionsFactoryNodeType | ActionsFactoryUploadType;
 
@@ -102,14 +88,14 @@ export function hasWritePermission(
 				throw Error('can_write_file not defined');
 			}
 			return nodes.permissions.can_write_file;
-		} else if (isFolder(nodes)) {
+		}
+		if (isFolder(nodes)) {
 			if (!isBoolean(nodes.permissions.can_write_folder)) {
 				throw Error('can_write_folder not defined');
 			}
 			return nodes.permissions.can_write_folder;
-		} else {
-			throw Error(`cannot evaluate ${actionName} on UnknownType`);
 		}
+		throw Error(`cannot evaluate ${actionName} on UnknownType`);
 	} else {
 		let result = true;
 		// eslint-disable-next-line consistent-return
@@ -303,9 +289,8 @@ export function canDeletePermanently(nodes: OneOrMany<ActionsFactoryGlobalType>)
 				throw Error('can_delete not defined');
 			}
 			return $nodes.permissions.can_delete && $nodes.rootId === ROOTS.TRASH;
-		} else {
-			throw Error(`cannot evaluate DeletePermanently on UnknownType`);
 		}
+		throw Error(`cannot evaluate DeletePermanently on UnknownType`);
 	} else {
 		return every($nodes, (node) => canDeletePermanently(node));
 	}
@@ -589,13 +574,13 @@ export function getPermittedUploadActions(nodes: ActionsFactoryUploadType[]): Ac
 }
 
 export function buildActionItems(
-	itemsMap: Partial<Record<Action, ActionItem>>,
+	itemsMap: Partial<Record<Action, DSAction>>,
 	actions: Action[] = []
-): ActionItem[] {
-	return reduce(
+): DSAction[] {
+	return reduce<Action, DSAction[]>(
 		actions,
-		(accumulator: ActionItem[], action) => {
-			const actionItem = itemsMap[action as Action];
+		(accumulator, action) => {
+			const actionItem = itemsMap[action];
 			if (actionItem) {
 				accumulator.push(actionItem);
 			}

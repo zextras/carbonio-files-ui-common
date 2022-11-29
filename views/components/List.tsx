@@ -7,7 +7,7 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { useReactiveVar } from '@apollo/client';
-import { Container, useSnackbar } from '@zextras/carbonio-design-system';
+import { Action as DSAction, Container, useSnackbar } from '@zextras/carbonio-design-system';
 import { PreviewsManagerContext } from '@zextras/carbonio-ui-preview';
 import { PreviewManagerContextType } from '@zextras/carbonio-ui-preview/lib/preview/PreviewManager';
 import filter from 'lodash/filter';
@@ -60,7 +60,6 @@ import { useUpload } from '../../hooks/useUpload';
 import { Action, Crumb, NodeListItemType } from '../../types/common';
 import { File } from '../../types/graphql/types';
 import {
-	ActionItem,
 	ActionsFactoryChecker,
 	ActionsFactoryCheckerMap,
 	buildActionItems,
@@ -82,6 +81,7 @@ import {
 import { Dropzone } from './Dropzone';
 import { EmptyFolder } from './EmptyFolder';
 import { ListContent } from './ListContent';
+import { getUploadAddType } from "../../utils/uploadUtils";
 
 const MainContainer = styled(Container)`
 	border-left: 0.0625rem solid ${(props): string => props.theme.palette.gray6.regular};
@@ -436,43 +436,43 @@ export const List: React.VFC<ListProps> = ({
 		}
 	}, [nodes, permittedSelectionModeActions, selectedIDs, openPreview]);
 
-	const itemsMap = useMemo<Partial<Record<Action, ActionItem>>>(
+	const itemsMap = useMemo<Partial<Record<Action, DSAction>>>(
 		() => ({
 			[Action.Edit]: {
 				id: 'Edit',
 				icon: 'Edit2Outline',
 				label: t('actions.edit', 'Edit'),
-				click: openWithDocsSelection
+				onClick: openWithDocsSelection
 			},
 			[Action.Preview]: {
 				id: 'Preview',
 				icon: 'MaximizeOutline',
 				label: t('actions.preview', 'Preview'),
-				click: previewSelection
+				onClick: previewSelection
 			},
 			[Action.SendViaMail]: {
 				id: 'SendViaMail',
 				icon: 'EmailOutline',
 				label: t('actions.sendViaMail', 'Send via mail'),
-				click: sendViaMailCallback
+				onClick: sendViaMailCallback
 			},
 			[Action.Download]: {
 				id: 'Download',
 				icon: 'Download',
 				label: t('actions.download', 'Download'),
-				click: downloadSelection
+				onClick: downloadSelection
 			},
 			[Action.ManageShares]: {
 				id: 'ManageShares',
 				icon: 'ShareOutline',
 				label: t('actions.manageShares', 'Manage Shares'),
-				click: manageSharesSelection
+				onClick: manageSharesSelection
 			},
 			[Action.Flag]: {
 				id: 'Flag',
 				icon: 'FlagOutline',
 				label: t('actions.flag', 'Flag'),
-				click: (): void => {
+				onClick: (): void => {
 					toggleFlagSelection(true);
 				}
 			},
@@ -480,7 +480,7 @@ export const List: React.VFC<ListProps> = ({
 				id: 'UnFlag',
 				icon: 'UnflagOutline',
 				label: t('actions.unflag', 'Unflag'),
-				click: (): void => {
+				onClick: (): void => {
 					toggleFlagSelection(false);
 				}
 			},
@@ -488,43 +488,43 @@ export const List: React.VFC<ListProps> = ({
 				id: 'OpenWithDocs',
 				icon: 'BookOpenOutline',
 				label: t('actions.openWithDocs', 'Open document'),
-				click: openWithDocsSelection
+				onClick: openWithDocsSelection
 			},
 			[Action.Copy]: {
 				id: 'Copy',
 				icon: 'Copy',
 				label: t('actions.copy', 'Copy'),
-				click: openCopyNodesModalSelection
+				onClick: openCopyNodesModalSelection
 			},
 			[Action.Move]: {
 				id: 'Move',
 				icon: 'MoveOutline',
 				label: t('actions.move', 'Move'),
-				click: openMoveNodesModalSelection
+				onClick: openMoveNodesModalSelection
 			},
 			[Action.Rename]: {
 				id: 'Rename',
 				icon: 'EditOutline',
 				label: t('actions.rename', 'Rename'),
-				click: openRenameModalSelection
+				onClick: openRenameModalSelection
 			},
 			[Action.MoveToTrash]: {
 				id: 'MarkForDeletion',
 				icon: 'Trash2Outline',
 				label: t('actions.moveToTrash', 'Move to Trash'),
-				click: markForDeletionSelection
+				onClick: markForDeletionSelection
 			},
 			[Action.Restore]: {
 				id: 'Restore',
 				icon: 'RestoreOutline',
 				label: t('actions.restore', 'Restore'),
-				click: restoreSelection
+				onClick: restoreSelection
 			},
 			[Action.DeletePermanently]: {
 				id: 'DeletePermanently',
 				icon: 'DeletePermanentlyOutline',
 				label: t('actions.deletePermanently', 'Delete Permanently'),
-				click: openDeletePermanentlyModal
+				onClick: openDeletePermanentlyModal
 			}
 		}),
 		[
@@ -544,12 +544,12 @@ export const List: React.VFC<ListProps> = ({
 		]
 	);
 
-	const permittedSelectionModeActionsItems = useMemo(
+	const permittedSelectionModeActionsItems = useMemo<DSAction[]>(
 		() => buildActionItems(itemsMap, permittedSelectionModeActions),
 		[itemsMap, permittedSelectionModeActions]
 	);
 
-	const { add, addFolders } = useUpload();
+	const { add } = useUpload();
 
 	const uploadWithDragAndDrop = useCallback<React.DragEventHandler>(
 		(event) => {
@@ -562,8 +562,7 @@ export const List: React.VFC<ListProps> = ({
 						fileSystemDirectoryEntries.push(item);
 					}
 				});
-				addFolders(fileSystemDirectoryEntries, folderId || ROOTS.LOCAL_ROOT);
-				add(event.dataTransfer.files, folderId || ROOTS.LOCAL_ROOT, true);
+				add(getUploadAddType(event.dataTransfer), folderId || ROOTS.LOCAL_ROOT);
 				if (!folderId) {
 					createSnackbar({
 						key: new Date().toLocaleString(),
@@ -579,7 +578,7 @@ export const List: React.VFC<ListProps> = ({
 				}
 			}
 		},
-		[add, addFolders, canUpload, createSnackbar, folderId, navigateToFolder, t]
+		[add, canUpload, createSnackbar, folderId, navigateToFolder, t]
 	);
 
 	const { moveNodes: moveNodesMutation } = useMoveNodesMutation();

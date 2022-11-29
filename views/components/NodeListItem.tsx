@@ -6,7 +6,15 @@
 
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
-import { Container, Icon, Padding, Row, Text, useSnackbar } from '@zextras/carbonio-design-system';
+import {
+	Action as DSAction,
+	Container,
+	Icon,
+	Padding,
+	Row,
+	Text,
+	useSnackbar
+} from '@zextras/carbonio-design-system';
 import { PreviewsManagerContext } from '@zextras/carbonio-ui-preview';
 import debounce from 'lodash/debounce';
 import includes from 'lodash/includes';
@@ -27,7 +35,7 @@ import {
 } from '../../constants';
 import { Action } from '../../types/common';
 import { NodeType, User } from '../../types/graphql/types';
-import { ActionItem, buildActionItems } from '../../utils/ActionsFactory';
+import { buildActionItems } from '../../utils/ActionsFactory';
 import {
 	downloadNode,
 	formatDate,
@@ -41,7 +49,7 @@ import {
 import { ContextualMenu } from './ContextualMenu';
 import { NodeAvatarIcon } from './NodeAvatarIcon';
 import { NodeHoverBar } from './NodeHoverBar';
-import { HoverBarContainer, HoverContainer, ListItemContainer } from './StyledComponents';
+import { HoverContainer, ListItemContainer } from './StyledComponents';
 
 const CustomText = styled(Text)`
 	text-transform: uppercase;
@@ -83,7 +91,7 @@ interface NodeListItemProps {
 	selectable?: boolean;
 	trashed?: boolean;
 	deletePermanentlyCallback?: () => void;
-	selectionContextualMenuActionsItems?: ActionItem[];
+	selectionContextualMenuActionsItems?: DSAction[];
 	dragging?: boolean;
 	version?: number;
 }
@@ -196,13 +204,13 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 		]
 	);
 
-	const itemsMap = useMemo<Partial<Record<Action, ActionItem>>>(
+	const itemsMap = useMemo<Partial<Record<Action, DSAction>>>(
 		() => ({
 			[Action.Edit]: {
 				id: 'Edit',
 				icon: 'Edit2Outline',
 				label: t('actions.edit', 'Edit'),
-				click: (): void => {
+				onClick: (): void => {
 					openNodeWithDocs(id);
 				}
 			},
@@ -210,19 +218,19 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 				id: 'Preview',
 				icon: 'MaximizeOutline',
 				label: t('actions.preview', 'Preview'),
-				click: openNode
+				onClick: openNode
 			},
 			[Action.SendViaMail]: {
 				id: 'SendViaMail',
 				icon: 'EmailOutline',
 				label: t('actions.sendViaMail', 'Send via mail'),
-				click: sendViaMailCallback
+				onClick: sendViaMailCallback
 			},
 			[Action.Download]: {
 				id: 'Download',
 				icon: 'Download',
 				label: t('actions.download', 'Download'),
-				click: (): void => {
+				onClick: (): void => {
 					// download node without version to be sure last version is downloaded
 					downloadNode(id);
 					createSnackbar({
@@ -238,25 +246,31 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 				id: 'ManageShares',
 				icon: 'ShareOutline',
 				label: t('actions.manageShares', 'Manage Shares'),
-				click: manageSharesCallback
+				onClick: (): void => {
+					manageSharesCallback && manageSharesCallback();
+				}
 			},
 			[Action.Flag]: {
 				id: 'Flag',
 				icon: 'FlagOutline',
 				label: t('actions.flag', 'Flag'),
-				click: toggleFlagTrue
+				onClick: (): void => {
+					toggleFlagTrue && toggleFlagTrue();
+				}
 			},
 			[Action.UnFlag]: {
 				id: 'Unflag',
 				icon: 'UnflagOutline',
 				label: t('actions.unflag', 'Unflag'),
-				click: toggleFlagFalse
+				onClick: (): void => {
+					toggleFlagFalse && toggleFlagFalse();
+				}
 			},
 			[Action.OpenWithDocs]: {
 				id: 'OpenWithDocs',
 				icon: 'BookOpenOutline',
 				label: t('actions.openWithDocs', 'Open document'),
-				click: (): void => {
+				onClick: (): void => {
 					openNodeWithDocs(id);
 				}
 			},
@@ -264,37 +278,49 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 				id: 'Copy',
 				icon: 'Copy',
 				label: t('actions.copy', 'Copy'),
-				click: copyNodesCallback
+				onClick: (): void => {
+					copyNodesCallback && copyNodesCallback();
+				}
 			},
 			[Action.Move]: {
 				id: 'Move',
 				icon: 'MoveOutline',
 				label: t('actions.move', 'Move'),
-				click: moveNodesCallback
+				onClick: (): void => {
+					moveNodesCallback && moveNodesCallback();
+				}
 			},
 			[Action.Rename]: {
 				id: 'Rename',
 				icon: 'Edit2Outline',
 				label: t('actions.rename', 'Rename'),
-				click: renameNode
+				onClick: (): void => {
+					renameNode && renameNode();
+				}
 			},
 			[Action.MoveToTrash]: {
 				id: 'MarkForDeletion',
 				icon: 'Trash2Outline',
 				label: t('actions.moveToTrash', 'Move to Trash'),
-				click: markNodesForDeletionCallback
+				onClick: (): void => {
+					markNodesForDeletionCallback && markNodesForDeletionCallback();
+				}
 			},
 			[Action.Restore]: {
 				id: 'Restore',
 				icon: 'RestoreOutline',
 				label: t('actions.restore', 'Restore'),
-				click: restoreNodeCallback
+				onClick: (): void => {
+					restoreNodeCallback && restoreNodeCallback();
+				}
 			},
 			[Action.DeletePermanently]: {
 				id: 'DeletePermanently',
 				icon: 'DeletePermanentlyOutline',
 				label: t('actions.deletePermanently', 'Delete Permanently'),
-				click: deletePermanentlyCallback
+				onClick: (): void => {
+					deletePermanentlyCallback && deletePermanentlyCallback();
+				}
 			}
 		}),
 		[
@@ -381,11 +407,11 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 				actions={selectionContextualMenuActionsItems || permittedContextualMenuActionsItems}
 			>
 				<ListItemContainer
-					height="fit"
+					height={'fit'}
 					onClick={compact ? setActive : setActiveDebounced}
 					onDoubleClick={doubleClickHandler}
 					data-testid={`node-item-${id}`}
-					crossAlignment="flex-end"
+					crossAlignment={'flex-end'}
 					$contextualMenuActive={isContextualMenuActive}
 					$disableHover={isContextualMenuActive || dragging || disabled}
 					$disabled={disabled}
@@ -510,16 +536,8 @@ const NodeListItemComponent: React.VFC<NodeListItemProps> = ({
 							)}
 						</Container>
 					</HoverContainer>
-
 					{!compact && !isSelectionModeActive && !dragging && (
-						<HoverBarContainer
-							wrap="nowrap"
-							mainAlignment="flex-end"
-							height="fill"
-							data-testid="hover-bar"
-						>
-							<NodeHoverBar actions={permittedHoverBarActionsItems} />
-						</HoverBarContainer>
+						<NodeHoverBar actions={permittedHoverBarActionsItems} />
 					)}
 				</ListItemContainer>
 			</ContextualMenu>

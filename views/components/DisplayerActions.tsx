@@ -4,23 +4,11 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-/* eslint-disable arrow-body-style,camelcase */
-
 import React, { useCallback, useContext, useMemo } from 'react';
 
-import {
-	Container,
-	Dropdown,
-	DropdownItem,
-	IconButton,
-	Padding,
-	Tooltip
-} from '@zextras/carbonio-design-system';
+import { Action as DSAction, CollapsingActions, Container } from '@zextras/carbonio-design-system';
 import { PreviewsManagerContext } from '@zextras/carbonio-ui-preview';
-import drop from 'lodash/drop';
 import includes from 'lodash/includes';
-import map from 'lodash/map';
-import take from 'lodash/take';
 import { useTranslation } from 'react-i18next';
 
 import { useActiveNode } from '../../../hooks/useActiveNode';
@@ -39,7 +27,6 @@ import { useRenameModal } from '../../hooks/modals/useRenameModal';
 import { Action, GetNodeParentType } from '../../types/common';
 import { File, MakeOptional, Node } from '../../types/graphql/types';
 import {
-	ActionItem,
 	ActionsFactoryNodeType,
 	buildActionItems,
 	getAllPermittedActions,
@@ -133,13 +120,13 @@ export const DisplayerActions: React.VFC<DisplayerActionsParams> = ({ node }) =>
 		}
 	}, [$isSupportedByPreview, permittedDisplayerActions, openPreview, node.id]);
 
-	const itemsMap = useMemo<Partial<Record<Action, ActionItem>>>(
+	const itemsMap = useMemo<Partial<Record<Action, DSAction>>>(
 		() => ({
 			[Action.Edit]: {
 				id: 'Edit',
 				icon: 'Edit2Outline',
 				label: t('actions.edit', 'Edit'),
-				click: (): void => {
+				onClick: (): void => {
 					openNodeWithDocs(node.id);
 				}
 			},
@@ -147,19 +134,19 @@ export const DisplayerActions: React.VFC<DisplayerActionsParams> = ({ node }) =>
 				id: 'Preview',
 				icon: 'MaximizeOutline',
 				label: t('actions.preview', 'Preview'),
-				click: preview
+				onClick: preview
 			},
 			[Action.SendViaMail]: {
 				id: 'SendViaMail',
 				icon: 'EmailOutline',
 				label: t('actions.sendViaMail', 'Send via mail'),
-				click: sendViaMailCallback
+				onClick: sendViaMailCallback
 			},
 			[Action.Download]: {
 				id: 'Download',
 				icon: 'Download',
 				label: t('actions.download', 'Download'),
-				click: (): void => {
+				onClick: (): void => {
 					// download node without version to be sure last version is downlaoded
 					downloadNode(node.id);
 				}
@@ -168,13 +155,13 @@ export const DisplayerActions: React.VFC<DisplayerActionsParams> = ({ node }) =>
 				id: 'ManageShares',
 				icon: 'ShareOutline',
 				label: t('actions.manageShares', 'Manage Shares'),
-				click: manageShares
+				onClick: manageShares
 			},
 			[Action.Flag]: {
 				id: 'Flag',
 				icon: 'FlagOutline',
 				label: t('actions.flag', 'Flag'),
-				click: (): void => {
+				onClick: (): void => {
 					toggleFlag(true, node);
 				}
 			},
@@ -182,7 +169,7 @@ export const DisplayerActions: React.VFC<DisplayerActionsParams> = ({ node }) =>
 				id: 'UnFlag',
 				icon: 'UnflagOutline',
 				label: t('actions.unflag', 'Unflag'),
-				click: (): void => {
+				onClick: (): void => {
 					toggleFlag(false, node);
 				}
 			},
@@ -190,7 +177,7 @@ export const DisplayerActions: React.VFC<DisplayerActionsParams> = ({ node }) =>
 				id: 'OpenWithDocs',
 				icon: 'BookOpenOutline',
 				label: t('actions.openWithDocs', 'Open document'),
-				click: (): void => {
+				onClick: (): void => {
 					openNodeWithDocs(node.id);
 				}
 			},
@@ -198,7 +185,7 @@ export const DisplayerActions: React.VFC<DisplayerActionsParams> = ({ node }) =>
 				id: 'Copy',
 				icon: 'Copy',
 				label: t('actions.copy', 'Copy'),
-				click: (): void => {
+				onClick: (): void => {
 					openCopyNodesModal([node], node.parent?.id);
 				}
 			},
@@ -206,7 +193,7 @@ export const DisplayerActions: React.VFC<DisplayerActionsParams> = ({ node }) =>
 				id: 'Move',
 				icon: 'MoveOutline',
 				label: t('actions.move', 'Move'),
-				click: (): void => {
+				onClick: (): void => {
 					openMoveNodesModal([node], node.parent?.id);
 				}
 			},
@@ -214,7 +201,7 @@ export const DisplayerActions: React.VFC<DisplayerActionsParams> = ({ node }) =>
 				id: 'Rename',
 				icon: 'EditOutline',
 				label: t('actions.rename', 'Rename'),
-				click: (): void => {
+				onClick: (): void => {
 					openRenameModal(node);
 				}
 			},
@@ -222,28 +209,20 @@ export const DisplayerActions: React.VFC<DisplayerActionsParams> = ({ node }) =>
 				id: 'MarkForDeletion',
 				icon: 'Trash2Outline',
 				label: t('actions.moveToTrash', 'Move to Trash'),
-				click: markNodesForDeletionCallback
+				onClick: markNodesForDeletionCallback
 			},
 			[Action.Restore]: {
 				id: 'Restore',
 				icon: 'RestoreOutline',
 				label: t('actions.restore', 'Restore'),
-				click: restoreNodeCallback
+				onClick: restoreNodeCallback
 			},
 			[Action.DeletePermanently]: {
 				id: 'DeletePermanently',
 				icon: 'DeletePermanentlyOutline',
 				label: t('actions.deletePermanently', 'Delete Permanently'),
-				click: openDeletePermanentlyModal
+				onClick: openDeletePermanentlyModal
 			}
-			// [Action.UpsertDescription]: {
-			// 	id: 'Upsert',
-			// 	icon: 'MoveOutline',
-			// 	label: t('actions.updateDescription', 'Update description'),
-			// 	click: (): void => {
-			// 		// click:
-			// 	}
-			// }
 		}),
 		[
 			manageShares,
@@ -261,36 +240,8 @@ export const DisplayerActions: React.VFC<DisplayerActionsParams> = ({ node }) =>
 		]
 	);
 
-	const permittedDisplayerPrimaryActionsIconButtons = map(
-		take(permittedDisplayerActions, 3),
-		(value: Action) => {
-			const item = itemsMap[value];
-			return (
-				(item && (
-					<Padding left="extrasmall" key={item.label}>
-						<Tooltip label={item.label}>
-							<IconButton
-								icon={item.icon}
-								size="medium"
-								key={value}
-								onClick={(ev: React.MouseEvent<HTMLButtonElement> | KeyboardEvent): void => {
-									if (ev) ev.preventDefault();
-									if (itemsMap && item.click) {
-										const clickFn = item.click as () => void;
-										clickFn();
-									}
-								}}
-							/>
-						</Tooltip>
-					</Padding>
-				)) ||
-				null
-			);
-		}
-	);
-
-	const permittedDisplayerSecondaryActionsItems = useMemo<DropdownItem[]>(
-		() => buildActionItems(itemsMap, drop(permittedDisplayerActions, 3)),
+	const permittedDisplayerActionsItems = useMemo<DSAction[]>(
+		() => buildActionItems(itemsMap, permittedDisplayerActions),
 		[itemsMap, permittedDisplayerActions]
 	);
 
@@ -303,15 +254,13 @@ export const DisplayerActions: React.VFC<DisplayerActionsParams> = ({ node }) =>
 			padding={{ horizontal: 'large', vertical: 'small' }}
 			data-testid="displayer-actions-header"
 		>
-			{permittedDisplayerPrimaryActionsIconButtons}
-
-			{permittedDisplayerSecondaryActionsItems.length > 0 && (
-				<Padding left="extrasmall">
-					<Dropdown placement="bottom-end" items={permittedDisplayerSecondaryActionsItems}>
-						<IconButton size="medium" icon="MoreVertical" onClick={(): void => undefined} />
-					</Dropdown>
-				</Padding>
-			)}
+			<CollapsingActions
+				actions={permittedDisplayerActionsItems}
+				size={'medium'}
+				color={'text'}
+				maxVisible={3}
+				gap={'0.25rem'}
+			/>
 		</Container>
 	);
 };

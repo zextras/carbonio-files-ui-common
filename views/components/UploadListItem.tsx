@@ -6,22 +6,20 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Container, Icon, Padding, Row, Text } from '@zextras/carbonio-design-system';
+import { Action as DSAction, Container, Padding, Row, Text } from '@zextras/carbonio-design-system';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 
-import { useNavigation } from '../../../hooks/useNavigation';
 import { LIST_ITEM_HEIGHT } from '../../constants';
 import { Breadcrumbs } from '../../design_system_fork/Breadcrumbs';
-import { useUpload } from '../../hooks/useUpload';
-import { Action, UploadStatus } from '../../types/common';
-import { Maybe, Node } from '../../types/graphql/types';
-import { buildActionItems } from '../../utils/ActionsFactory';
-import { buildCrumbs, humanFileSize, scrollToNodeItem } from '../../utils/utils';
+import { Node, UploadStatus } from '../../types/common';
+import { Maybe } from '../../types/graphql/types';
+import { buildCrumbs, humanFileSize } from '../../utils/utils';
 import { ContextualMenu } from './ContextualMenu';
 import { NodeAvatarIcon } from './NodeAvatarIcon';
 import { NodeHoverBar } from './NodeHoverBar';
-import { HoverBarContainer, HoverContainer, ListItemContainer } from './StyledComponents';
+import { HoverContainer, ListItemContainer } from './StyledComponents';
+import { UploadStatusIcon } from './UploadStatusIcon';
 
 interface UploadListItemProps {
 	id: string;
@@ -33,11 +31,13 @@ interface UploadListItemProps {
 	mimeType: string;
 	status: UploadStatus;
 	percentage: number;
-	permittedContextualMenuActions: Action[];
-	permittedHoverBarActions: Action[];
+	permittedContextualMenuActionItems: DSAction[];
+	permittedHoverBarActionItems: DSAction[];
 	isSelected: boolean;
 	isSelectionModeActive: boolean;
 	selectId: (id: string) => void;
+	isActive: boolean;
+	setActive: (event: React.SyntheticEvent | KeyboardEvent) => void;
 }
 
 const CustomText = styled(Text)`
@@ -48,10 +48,9 @@ const CustomBreadcrumbs = styled(Breadcrumbs)`
 	width: auto;
 `;
 
-export const UploadListItem: React.VFC<UploadListItemProps> = React.memo(
+export const UploadListItem = React.memo<UploadListItemProps>(
 	({
 		id,
-		nodeId,
 		name,
 		parent,
 		size,
@@ -62,12 +61,13 @@ export const UploadListItem: React.VFC<UploadListItemProps> = React.memo(
 		isSelected,
 		isSelectionModeActive,
 		selectId,
-		permittedHoverBarActions,
-		permittedContextualMenuActions
+		permittedHoverBarActionItems,
+		permittedContextualMenuActionItems,
+		isActive,
+		setActive
 	}) => {
 		const [t] = useTranslation();
 		const [isContextualMenuActive, setIsContextualMenuActive] = useState(false);
-		const { navigateToFolder, navigateTo } = useNavigation();
 
 		const openContextualMenuHandler = useCallback(() => {
 			setIsContextualMenuActive(true);
@@ -76,54 +76,6 @@ export const UploadListItem: React.VFC<UploadListItemProps> = React.memo(
 		const closeContextualMenuHandler = useCallback(() => {
 			setIsContextualMenuActive(false);
 		}, []);
-
-		const { removeById, retryById } = useUpload();
-
-		const items = useMemo(
-			() => ({
-				[Action.GoToFolder]: {
-					id: 'GoToFolder ',
-					icon: 'FolderOutline',
-					label: t('actions.goToFolder', 'Go to destination folder'),
-					click: (): void => {
-						if (parent && nodeId) {
-							const destination = `/?folder=${parent.id}&node=${nodeId}`;
-							navigateTo(destination);
-							scrollToNodeItem(nodeId);
-						} else if (parent) {
-							navigateToFolder(parent.id);
-						}
-					}
-				},
-				[Action.RetryUpload]: {
-					id: 'RetryUpload',
-					icon: 'PlayCircleOutline',
-					label: t('actions.retryUpload', 'Retry upload'),
-					click: (): void => {
-						retryById([id]);
-					}
-				},
-
-				[Action.removeUpload]: {
-					id: 'removeUpload',
-					icon: 'CloseCircleOutline',
-					label: t('actions.removeUpload', 'Remove upload'),
-					click: (): void => {
-						removeById([id]);
-					}
-				}
-			}),
-			[id, navigateTo, navigateToFolder, nodeId, parent, removeById, retryById, t]
-		);
-
-		const permittedContextualMenuActionItems = useMemo(
-			() => buildActionItems(items, permittedContextualMenuActions),
-			[items, permittedContextualMenuActions]
-		);
-		const permittedHoverBarActionItems = useMemo(
-			() => buildActionItems(items, permittedHoverBarActions),
-			[items, permittedHoverBarActions]
-		);
 
 		const selectIdCallback = useCallback(
 			(event) => {
@@ -134,19 +86,6 @@ export const UploadListItem: React.VFC<UploadListItemProps> = React.memo(
 		);
 
 		const crumbs = useMemo(() => (parent ? buildCrumbs(parent, undefined, t) : []), [parent, t]);
-
-		const statusIcon = useMemo(() => {
-			switch (status) {
-				case UploadStatus.COMPLETED:
-					return <Icon icon="CheckmarkCircle2" color="success" />;
-				case UploadStatus.LOADING:
-					return <Icon icon="AnimatedLoader" />;
-				case UploadStatus.FAILED:
-					return <Icon icon="AlertCircle" color="error" />;
-				default:
-					return <Icon icon="AnimatedLoader" />;
-			}
-		}, [status]);
 
 		return (
 			<ContextualMenu
@@ -160,14 +99,17 @@ export const UploadListItem: React.VFC<UploadListItemProps> = React.memo(
 					crossAlignment="flex-end"
 					$contextualMenuActive={isContextualMenuActive}
 					data-testid={`node-item-${id}`}
+					onClick={setActive}
+					$disableHover={isContextualMenuActive}
 				>
 					<HoverContainer
 						height={LIST_ITEM_HEIGHT}
-						wrap="nowrap"
-						mainAlignment="flex-start"
-						crossAlignment="center"
+						wrap={'nowrap'}
+						mainAlignment={'flex-start'}
+						crossAlignment={'center'}
 						padding={{ all: 'small' }}
-						width="fill"
+						width={'fill'}
+						background={isActive ? 'highlight' : 'gray6'}
 					>
 						<NodeAvatarIcon
 							selectionModeActive={isSelectionModeActive}
@@ -202,7 +144,9 @@ export const UploadListItem: React.VFC<UploadListItemProps> = React.memo(
 										? t('uploadItem.queued', 'Queued')
 										: `${percentage}%`}
 								</Text>
-								<Padding left="extrasmall">{statusIcon}</Padding>
+								<Padding left="extrasmall">
+									<UploadStatusIcon status={status} />
+								</Padding>
 							</Container>
 							<Container
 								orientation="horizontal"
@@ -215,16 +159,7 @@ export const UploadListItem: React.VFC<UploadListItemProps> = React.memo(
 							</Container>
 						</Container>
 					</HoverContainer>
-					{!isSelectionModeActive && (
-						<HoverBarContainer
-							wrap="nowrap"
-							mainAlignment="flex-end"
-							height="fill"
-							data-testid="hover-bar"
-						>
-							<NodeHoverBar actions={permittedHoverBarActionItems} />
-						</HoverBarContainer>
-					)}
+					{!isSelectionModeActive && <NodeHoverBar actions={permittedHoverBarActionItems} />}
 				</ListItemContainer>
 			</ContextualMenu>
 		);

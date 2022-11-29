@@ -7,33 +7,33 @@
 import React from 'react';
 
 import { screen } from '@testing-library/react';
+import type { Action as DSAction } from '@zextras/carbonio-design-system';
 
-import { ActionItem } from '../../utils/ActionsFactory';
 import { setup } from '../../utils/testUtils';
 import { NodeHoverBar } from './NodeHoverBar';
 
 describe('Node Hover Bar', () => {
 	test('render nothing if no actions are provided', () => {
-		const { container } = setup(<NodeHoverBar actions={[]} />);
-		expect(container).toBeEmptyDOMElement();
+		setup(<NodeHoverBar actions={[]} />);
+		expect(screen.queryByTestId(/icon:/i)).not.toBeInTheDocument();
 	});
 
 	test('render all actions icons', async () => {
 		const action1Fn = jest.fn();
 		const action2Fn = jest.fn();
 
-		const actions: ActionItem[] = [
+		const actions: DSAction[] = [
 			{
 				id: 'action1',
 				label: 'action1',
 				icon: 'action1Icon',
-				click: action1Fn
+				onClick: action1Fn
 			},
 			{
 				id: 'action2',
 				label: 'action2',
 				icon: 'action2Icon',
-				click: action2Fn
+				onClick: action2Fn
 			}
 		];
 
