@@ -47,8 +47,12 @@ import {
 } from '../types/graphql/types';
 import { DeepPick } from '../types/utils';
 import { isFolder } from '../utils/ActionsFactory';
-import { encodeBase64, flat, isFileSystemFileEntry, scan } from '../utils/utils';
-import { useCreateFolderMutation } from './graphql/mutations/useCreateFolderMutation';
+import { encodeBase64, flat, isFileSystemDirectoryEntry, scan } from '../utils/utils';
+import {
+	CreateFolderType,
+	CreateFolderWithoutUpdateType,
+	useCreateFolderMutation
+} from './graphql/mutations/useCreateFolderMutation';
 import { UpdateFolderContentType, useUpdateFolderContent } from './graphql/useUpdateFolderContent';
 import { useMoreInfoModal } from './modals/useMoreInfoModal';
 
@@ -322,12 +326,9 @@ export const useUpload: UseUploadHook = () => {
 
 	const { addNodeToFolder } = useUpdateFolderContent(apolloClient);
 
-	const {
-		createFolder,
-		loading: createFolderPendingRequest,
-		error: createFolderError,
-		reset: resetCreateFolderError
-	} = useCreateFolderMutation({ showSnackbar: false });
+	const { createFolder, createFolderWithoutUpdate } = useCreateFolderMutation({
+		showSnackbar: false
+	});
 
 	const [t] = useTranslation();
 	const createSnackbar = useSnackbar();
@@ -438,23 +439,17 @@ export const useUpload: UseUploadHook = () => {
 				);
 				fullPathParentIdMap['/'] = { key: '/', value: parentId };
 
-				function myPromise(
-					entry: FileSystemDirectoryEntry,
-					promiseFunction: (entry: FileSystemDirectoryEntry) => Promise<any>,
-					callback: () => void
-				): Promise<any> {
-					return promiseFunction(entry).then(callback);
-				}
-
 				function isRoot(fullPath: string): boolean {
 					return (fullPath.match(/\//g) || []).length === 1;
 				}
 
 				function getParentFullPath(fullPath: string): string {
-					return fullPath.substring(0, findLastIndex(fullPath, '/'));
+					const lastIndex = fullPath.lastIndexOf('/');
+					const result = fullPath.substring(0, lastIndex);
+					return result;
 				}
 
-				function getParentId(entry: FileSystemDirectoryEntry): string | undefined {
+				function getParentId(entry: FileSystemEntry): string | undefined {
 					if (isRoot(entry.fullPath)) {
 						return fullPathParentIdMap['/'].value;
 					}
@@ -462,25 +457,88 @@ export const useUpload: UseUploadHook = () => {
 					return fullPathParentIdMap[a]?.value;
 				}
 
-				function getFolder(id: string): Folder | null {
-					return apolloClient.readFragment<ChildFragment>({
-						fragmentName: 'Child',
-						fragment: CHILD,
-						id: `Folder:${id}`
-					}) as Folder;
+				function getFolder(id: string): Folder | undefined {
+					const cachedFolder = apolloClient.cache.readQuery<
+						GetChildrenQuery,
+						GetChildrenQueryVariables
+					>({
+						query: GET_CHILDREN,
+						variables: {
+							node_id: id,
+							children_limit: Number.MAX_SAFE_INTEGER,
+							sort: nodeSortVar()
+						}
+					});
+
+					if (cachedFolder && cachedFolder.getNode && isFolder(cachedFolder.getNode)) {
+						return cachedFolder.getNode;
+					}
+					return undefined;
 				}
 
-				const [files, dirs] = partition<FileSystemEntry, FileSystemFileEntry>(
+				function getCreateFolderArgs(entry: FileSystemDirectoryEntry): {
+					parentFolder: Folder | undefined;
+					name: string;
+					parentId: string;
+				} {
+					const parentId = getParentId(entry);
+					if (parentId) {
+						return { name: entry.name, parentFolder: getFolder(parentId), parentId };
+					}
+					throw new Error('');
+				}
+
+				const [dirs, files] = partition<FileSystemEntry, FileSystemDirectoryEntry>(
 					flatResult,
-					isFileSystemFileEntry
+					isFileSystemDirectoryEntry
 				);
 
-				// for (const res of dirs) {
-				// 	await myPromise(res, createFolder));
-				// }
+				function myPromise(
+					entry: FileSystemDirectoryEntry,
+					createFolderFunction: CreateFolderType,
+					createFolderWithoutUpdateFunction: CreateFolderWithoutUpdateType,
+					getCreateFolderArgsFunction: (entry: FileSystemDirectoryEntry) => {
+						parentFolder: Folder | undefined;
+						name: string;
+						parentId: string;
+					}
+				): Promise<any> {
+					const { parentFolder, name, parentId } = getCreateFolderArgsFunction(entry);
+					if (parentFolder) {
+						return createFolderFunction(parentFolder, name).then((createFolderFunctionResult) => {
+							fullPathParentIdMap[entry.fullPath].value =
+								createFolderFunctionResult.data?.createFolder.id;
+						});
+					}
+					return createFolderWithoutUpdateFunction(parentId, name).then(
+						(createFolderFunctionResult) => {
+							fullPathParentIdMap[entry.fullPath].value =
+								createFolderFunctionResult.data?.createFolder.id;
+						}
+					);
+				}
+
+				for (const res of dirs) {
+					await myPromise(res, createFolder, createFolderWithoutUpdate, getCreateFolderArgs);
+				}
+
+				for (const res of files) {
+					const parentId = getParentId(res);
+					if (parentId) {
+						const xhr = new XMLHttpRequest();
+						const url = `${REST_ENDPOINT}${UPLOAD_PATH}`;
+						xhr.open('POST', url, true);
+
+						xhr.setRequestHeader('Filename', encodeBase64(res.name));
+						xhr.setRequestHeader('ParentId', parentId);
+						(res as FileSystemFileEntry).file((file) => {
+							xhr.send(file);
+						});
+					}
+				}
 			});
 		},
-		[]
+		[apolloClient, createFolder, createFolderWithoutUpdate]
 	);
 
 	const update = useCallback<ReturnType<UseUploadHook>['update']>(
