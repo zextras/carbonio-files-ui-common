@@ -29,7 +29,7 @@ import { useConfirmationModal } from '../../../hooks/useConfirmationModal';
 import { DeleteVersionsMutation, GetVersionsQuery } from '../../../types/graphql/types';
 import { NonNullableList, NonNullableListItem } from '../../../types/utils';
 import { ActionsFactoryNodeType, canOpenVersionWithDocs } from '../../../utils/ActionsFactory';
-import { getChipLabel } from '../../../utils/utils';
+import { cssCalcBuilder, getChipLabel } from '../../../utils/utils';
 import { GridContainer } from './GridElements';
 import UploadVersionButton, { UploadVersionButtonProps } from './UploadVersionButton';
 import { SectionRow, VersionRow } from './VersionRow';
@@ -313,7 +313,11 @@ export const Versioning: React.VFC<VersioningProps> = ({ node }) => {
 	));
 
 	return (
-		<MainContainer mainAlignment="flex-start" background="gray5" height="calc(100% - 3.125rem)">
+		<MainContainer
+			mainAlignment="flex-start"
+			background="gray5"
+			height={cssCalcBuilder('100%', ['-', '3.125rem'])}
+		>
 			<Container height="fit" background="gray6" crossAlignment="flex-start">
 				<Padding left="large" top="large">
 					<Text style={{ lineHeight: 1.5 }} weight="light" overflow="break-word" size="small">
