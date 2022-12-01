@@ -6,30 +6,33 @@
 
 import React, { useMemo } from 'react';
 
+import { useReactiveVar } from '@apollo/client';
 import { Container, Text } from '@zextras/carbonio-design-system';
 import reduce from 'lodash/reduce';
 
+import { uploadVar } from '../../apollo/uploadVar';
 import { LIST_ITEM_AVATAR_HEIGHT_COMPACT } from '../../constants';
 import { Breadcrumbs } from '../../design_system_fork/Breadcrumbs';
 import { useUploadActions } from '../../hooks/useUploadActions';
-import { Crumb, UploadType } from '../../types/common';
-import { getIconByFileType, getUploadNodeType } from '../../utils/utils';
+import { Crumb } from '../../types/common';
+import { getUploadNodeType } from '../../utils/uploadUtils';
+import { getIconByFileType } from '../../utils/utils';
 import { NodeAvatarIcon } from './NodeAvatarIcon';
 import { NodeHoverBar } from './NodeHoverBar';
 import { HoverContainer, ListItemContainer } from './StyledComponents';
 import { UploadStatusIcon } from './UploadStatusIcon';
 
 interface UploadNodeDetailsListItemProps {
-	node: NonNullable<UploadType['children']>[number];
+	id: string;
 }
 
-export const UploadNodeDetailsListItem = ({
-	node
-}: UploadNodeDetailsListItemProps): JSX.Element => {
-	const { id, status, percentage, file, fileSystemEntry } = node;
+export const UploadNodeDetailsListItem = ({ id }: UploadNodeDetailsListItemProps): JSX.Element => {
+	const uploadStatus = useReactiveVar(uploadVar);
+
+	const uploadChildItem = useMemo(() => uploadStatus[id], [id, uploadStatus]);
 
 	const crumbs = useMemo<Crumb[]>(() => {
-		const path = fileSystemEntry?.fullPath.split('/') || [];
+		const path: string[] = uploadChildItem.fullPath.split('/');
 		return reduce<string, Crumb[]>(
 			path,
 			(accumulator, pathEntry, index) => {
@@ -45,9 +48,9 @@ export const UploadNodeDetailsListItem = ({
 			},
 			[]
 		);
-	}, [fileSystemEntry?.fullPath]);
+	}, [uploadChildItem.fullPath]);
 
-	const hoverActions = useUploadActions([node]);
+	const hoverActions = useUploadActions([uploadChildItem]);
 
 	return (
 		<ListItemContainer
@@ -68,7 +71,7 @@ export const UploadNodeDetailsListItem = ({
 				<NodeAvatarIcon
 					selectionModeActive={false}
 					selected={false}
-					icon={`${getIconByFileType(getUploadNodeType(node))}Outline`}
+					icon={`${getIconByFileType(getUploadNodeType(uploadChildItem))}Outline`}
 					compact
 				/>
 				<Container
@@ -81,12 +84,12 @@ export const UploadNodeDetailsListItem = ({
 					minWidth={0}
 				>
 					<Text overflow="ellipsis" size="small">
-						{file?.name || fileSystemEntry?.name}
+						{uploadChildItem.name}
 					</Text>
 					<Breadcrumbs crumbs={crumbs} $size={'extrasmall'} color={'gray0.disabled'} />
 				</Container>
-				<Text size={'small'}>{percentage}</Text>
-				<UploadStatusIcon status={status} />
+				<Text size={'small'}>{uploadChildItem.progress}</Text>
+				<UploadStatusIcon status={uploadChildItem.status} />
 			</HoverContainer>
 			<NodeHoverBar
 				actions={hoverActions}

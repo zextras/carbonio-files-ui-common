@@ -10,7 +10,6 @@ import { ApolloError } from '@apollo/client';
 import { Location } from 'history';
 import { chain } from 'lodash';
 import debounce from 'lodash/debounce';
-import filter from 'lodash/filter';
 import findIndex from 'lodash/findIndex';
 import first from 'lodash/first';
 import forEach from 'lodash/forEach';
@@ -44,8 +43,7 @@ import {
 	OrderType,
 	Role,
 	SortableNode,
-	TargetModule,
-	UploadType
+	TargetModule
 } from '../types/common';
 import { Maybe, Node, NodeSort, NodeType, SharePermission } from '../types/graphql/types';
 
@@ -645,7 +643,6 @@ export async function scan(item: FileSystemEntry): Promise<TreeNode> {
 		return item;
 	}
 	if (isFileSystemDirectoryEntry(item)) {
-		const array: Array<TreeNode> = [];
 		const directoryReader = item.createReader();
 		let flag = true;
 		const entries: Array<FileSystemEntry> = [];
@@ -659,23 +656,9 @@ export async function scan(item: FileSystemEntry): Promise<TreeNode> {
 				entries.push(...newEntries);
 			}
 		}
-		if (size(entries) > 0) {
-			const fileEntries = filter<FileSystemEntry, FileSystemFileEntry>(
-				entries,
-				isFileSystemFileEntry
-			);
-			forEach(fileEntries, (file) => array.push(file));
-
-			const directoryEntries = filter<FileSystemEntry, FileSystemDirectoryEntry>(
-				entries,
-				isFileSystemDirectoryEntry
-			);
-
-			const scanResults = await Promise.all(map(directoryEntries, (directory) => scan(directory)));
-			scanResults.forEach((itemOfRes) => array.push(itemOfRes));
-		}
+		const treeNodes = await Promise.all(map(entries, (entry) => scan(entry)));
 		const returnValue: FileSystemDirectoryEntryWithChildren = item;
-		returnValue.children = array;
+		returnValue.children = treeNodes;
 		return returnValue;
 	}
 	throw new Error('is not FileSystemEntry or FileSystemDirectoryEntry');
@@ -816,8 +799,4 @@ export function getNewDocumentActionLabel(t: TFunction, docsType: DocsType): str
 			ext: `(.${DOCS_EXTENSIONS[docsType]})`
 		}
 	});
-}
-
-export function getUploadNodeType(item: Pick<UploadType, 'fileSystemEntry'>): NodeType {
-	return item.fileSystemEntry?.isDirectory ? NodeType.Folder : NodeType.Other;
 }

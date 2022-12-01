@@ -31,7 +31,7 @@ import {
 	UploadResponse
 } from '../../mocks/handleUploadFileRequest';
 import { populateFolder, populateLocalRoot, populateNodes } from '../../mocks/mockUtils';
-import { UploadStatus, UploadType } from '../../types/common';
+import { UploadStatus, UploadItem } from '../../types/common';
 import {
 	File as FilesFile,
 	Folder,
@@ -133,7 +133,7 @@ describe('Upload list', () => {
 				files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 			});
 
-			const uploadMap: { [id: string]: UploadType } = {};
+			const uploadMap: { [id: string]: UploadItem } = {};
 			forEach(uploadedFiles, (file, index) => {
 				uploadMap[file.id] = {
 					file: files[index],
@@ -379,7 +379,7 @@ describe('Upload list', () => {
 			const queuedElement = find(uploadStatus, ['status', UploadStatus.QUEUED]);
 			expect(queuedElement).toBeDefined();
 			expect(queuedElement).not.toBeNull();
-			const queuedItem = await screen.findByTestId(`node-item-${(queuedElement as UploadType).id}`);
+			const queuedItem = await screen.findByTestId(`node-item-${(queuedElement as UploadItem).id}`);
 			expect(within(queuedItem).getByText(/queued/i)).toBeInTheDocument();
 			const queuedIconLoader = within(queuedItem).getByTestId('icon: AnimatedLoader');
 			expect(queuedIconLoader).toBeInTheDocument();

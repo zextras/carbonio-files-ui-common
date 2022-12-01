@@ -6,15 +6,15 @@
 
 import { makeVar } from '@apollo/client';
 
-import { UploadType } from '../types/common';
+import { UploadItem } from '../types/common';
 
-export type UploadRecord = { [id: string]: UploadType };
+export type UploadRecord = { [id: string]: UploadItem };
 
 export const uploadVar = makeVar<UploadRecord>({});
 
 export interface UploadFunctions {
-	abort: Promise<() => void>;
-	retry: (file: UploadType) => UploadFunctions['abort'];
+	abort: Promise<() => void> | null;
+	retry: (file: UploadItem) => UploadFunctions['abort'];
 }
 
 export const uploadFunctionsVar = makeVar<{ [id: string]: UploadFunctions }>({});

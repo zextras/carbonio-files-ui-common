@@ -10,13 +10,13 @@ import map from 'lodash/map';
 import { useTranslation } from 'react-i18next';
 
 import { useNavigation } from '../../hooks/useNavigation';
-import { Action, UploadType } from '../types/common';
+import { Action, UploadItem } from '../types/common';
 import { MakeRequired } from '../types/utils';
 import { buildActionItems, getPermittedUploadActions } from '../utils/ActionsFactory';
 import { scrollToNodeItem } from '../utils/utils';
 import { useUpload } from './useUpload';
 
-export function useUploadActions(nodes: MakeRequired<Partial<UploadType>, 'id'>[]): DSAction[] {
+export function useUploadActions(nodes: MakeRequired<Partial<UploadItem>, 'id'>[]): DSAction[] {
 	const [t] = useTranslation();
 	const { removeById, retryById } = useUpload();
 	const node = nodes.length > 0 ? nodes[0] : undefined;

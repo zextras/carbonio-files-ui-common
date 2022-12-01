@@ -105,16 +105,23 @@ export enum UploadStatus {
 	// PAUSED: 'Paused'(tentative)
 }
 
-export type UploadType = {
-	file: File;
-	fileSystemEntry?: FileSystemEntry | null;
-	parentId: string;
+export interface UploadItem {
+	file: File | null;
+	// reference to the id of the parent node of Files after it is created
+	parentId: string | null;
+	parentNodeId: string | null;
 	status: UploadStatus;
-	percentage: number; // (should be rounded down)
+	progress: number; // (should be rounded down)
 	id: string;
-	nodeId?: string;
-	children?: MakeOptional<UploadType, 'file' | 'parentId'>[];
-};
+	// reference to the id of the node of Files after it is created
+	nodeId: string | null;
+	name: string;
+	fullPath: string;
+}
+
+export interface UploadFolderItem extends UploadItem {
+	children: Array<UploadItem['id']>;
+}
 
 export enum DocsType {
 	LIBRE_DOCUMENT = 'LIBRE_DOCUMENT',

@@ -11,7 +11,7 @@ import { fireEvent, screen } from '@testing-library/react';
 import { UseNavigationHook } from '../../../hooks/useNavigation';
 import { UseUploadHook } from '../../hooks/useUpload';
 import { populateFolder } from '../../mocks/mockUtils';
-import { UploadStatus, UploadType } from '../../types/common';
+import { UploadStatus, UploadItem } from '../../types/common';
 import { GetBaseNodeQuery, GetBaseNodeQueryVariables } from '../../types/graphql/types';
 import { mockGetBaseNode } from '../../utils/mockUtils';
 import { buildBreadCrumbRegExp, setup } from '../../utils/testUtils';
@@ -44,7 +44,7 @@ jest.mock('../../../hooks/useNavigation', () => ({
 describe('Upload List Item Wrapper', () => {
 	test('File name, destination folder, percentage and size are visible', async () => {
 		const destinationFolder = populateFolder();
-		const file: UploadType = {
+		const file: UploadItem = {
 			file: new File(['uploading file'], 'file1.txt', { type: 'text/plain' }),
 			percentage: 20,
 			parentId: destinationFolder.id,
@@ -77,7 +77,7 @@ describe('Upload List Item Wrapper', () => {
 
 	test('Retry action is hidden if uploading is in progress', async () => {
 		const destinationFolder = populateFolder();
-		const file: UploadType = {
+		const file: UploadItem = {
 			file: new File(['uploading file'], 'file1.txt', { type: 'text/plain' }),
 			percentage: 20,
 			parentId: destinationFolder.id,
@@ -127,7 +127,7 @@ describe('Upload List Item Wrapper', () => {
 
 	test('File name, destination folder, queued label and size are visible', async () => {
 		const destinationFolder = populateFolder();
-		const file: UploadType = {
+		const file: UploadItem = {
 			file: new File(['uploading file'], 'file1.txt', { type: 'text/plain' }),
 			percentage: 0,
 			parentId: destinationFolder.id,

@@ -23,7 +23,7 @@ import GET_CHILD from '../graphql/queries/getChild.graphql';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import GET_VERSIONS from '../graphql/queries/getVersions.graphql';
 import { UpdateFolderContentType } from '../hooks/graphql/useUpdateFolderContent';
-import { UploadStatus, UploadType } from '../types/common';
+import { UploadFolderItem, UploadItem, UploadStatus } from '../types/common';
 import {
 	GetChildQuery,
 	GetChildQueryVariables,
@@ -31,13 +31,13 @@ import {
 	GetChildrenQueryVariables,
 	GetVersionsQuery,
 	GetVersionsQueryVariables,
-	NodeSort
+	NodeSort,
+	NodeType
 } from '../types/graphql/types';
-import { MakeRequired } from '../types/utils';
 import { isFolder } from './ActionsFactory';
 import { encodeBase64 } from './utils';
 
-export type UploadAddType = Array<{ file: File; fileSystemEntry?: FileSystemEntry | null }>;
+export type UploadAddType = { file: File; fileSystemEntry?: FileSystemEntry | null };
 
 export const waitingQueue: Array<string> = [];
 export const loadingQueue: Array<string> = [];
@@ -45,7 +45,7 @@ export const loadingQueue: Array<string> = [];
 type UploadAction =
 	| { type: 'add'; value: UploadRecord }
 	| { type: 'remove'; value: string[] }
-	| { type: 'update'; value: { id: string } & Partial<UploadType> };
+	| { type: 'update'; value: { id: string; path?: [] } & Partial<UploadItem> };
 
 export function uploadVarReducer(action: UploadAction): UploadRecord {
 	switch (action.type) {
@@ -92,7 +92,7 @@ export function addVersionToCache(
 	});
 }
 
-export function updateProgress(ev: ProgressEvent, fileEnriched: UploadType): void {
+export function updateProgress(ev: ProgressEvent, fileEnriched: UploadItem): void {
 	if (ev.lengthComputable) {
 		const updatedValue = {
 			...fileEnriched,
@@ -112,7 +112,7 @@ export function singleRetry(id: string): void {
 		throw new Error('unable to retry, upload must be Failed');
 	}
 
-	uploadVarReducer({ type: 'update', value: { id, status: UploadStatus.LOADING, percentage: 0 } });
+	uploadVarReducer({ type: 'update', value: { id, status: UploadStatus.LOADING, progress: 0 } });
 
 	const newRetryFile = find(uploadVar(), (item) => item.id === id);
 	if (newRetryFile) {
@@ -127,7 +127,7 @@ export function singleRetry(id: string): void {
 
 export function uploadCompleted(
 	xhr: XMLHttpRequest,
-	fileEnriched: UploadType,
+	fileEnriched: UploadItem,
 	apolloClient: ApolloClient<NormalizedCacheObject>,
 	nodeSort: NodeSort,
 	addNodeToFolder: UpdateFolderContentType['addNodeToFolder'],
@@ -142,7 +142,7 @@ export function uploadCompleted(
 
 		uploadVarReducer({
 			type: 'update',
-			value: { id: fileEnriched.id, status: UploadStatus.COMPLETED, percentage: 100, nodeId }
+			value: { id: fileEnriched.id, status: UploadStatus.COMPLETED, progress: 100, nodeId }
 		});
 
 		apolloClient
@@ -207,17 +207,20 @@ export function uploadCompleted(
 }
 
 export function upload(
-	fileEnriched: UploadType,
+	fileEnriched: UploadItem,
 	apolloClient: ApolloClient<NormalizedCacheObject>,
 	nodeSort: NodeSort,
 	addNodeToFolder: UpdateFolderContentType['addNodeToFolder']
 ): UploadFunctions['abort'] {
+	if (fileEnriched.file === null || fileEnriched.parentNodeId === null) {
+		throw new Error('cannot upload without a file or a parentNodeId');
+	}
 	const xhr = new XMLHttpRequest();
 	const url = `${REST_ENDPOINT}${UPLOAD_PATH}`;
 	xhr.open('POST', url, true);
 
 	xhr.setRequestHeader('Filename', encodeBase64(fileEnriched.file.name));
-	xhr.setRequestHeader('ParentId', fileEnriched.parentId);
+	xhr.setRequestHeader('ParentId', fileEnriched.parentNodeId);
 
 	// FIXME: fix in order to be able to test the upload with msw
 	//   see https://github.com/mswjs/interceptors/issues/187
@@ -241,12 +244,15 @@ export function upload(
 }
 
 export function uploadVersion(
-	fileEnriched: MakeRequired<UploadType, 'nodeId'>,
+	fileEnriched: UploadItem,
 	apolloClient: ApolloClient<NormalizedCacheObject>,
 	nodeSort: NodeSort,
 	addNodeToFolder: UpdateFolderContentType['addNodeToFolder'],
 	overwriteVersion = false
 ): UploadFunctions['abort'] {
+	if (fileEnriched.nodeId === null || fileEnriched.file === null) {
+		throw new Error('cannot upload a version without file or nodeId');
+	}
 	const xhr = new XMLHttpRequest();
 	const url = `${REST_ENDPOINT}${UPLOAD_VERSION_PATH}`;
 	xhr.open('POST', url, true);
@@ -276,8 +282,8 @@ export function uploadVersion(
 	return Promise.resolve(xhr.abort);
 }
 
-export function getUploadAddType(dataTransfer: DataTransfer): UploadAddType {
-	const fileEntries: UploadAddType = [];
+export function getUploadAddType(dataTransfer: DataTransfer): UploadAddType[] {
+	const fileEntries: UploadAddType[] = [];
 	forEach(dataTransfer.items, (droppedItem, index) => {
 		const item: FileSystemEntry | null = droppedItem.webkitGetAsEntry();
 		if (item?.name !== dataTransfer.files[index].name) {
@@ -286,4 +292,12 @@ export function getUploadAddType(dataTransfer: DataTransfer): UploadAddType {
 		fileEntries.push({ fileSystemEntry: item, file: dataTransfer.files[index] });
 	});
 	return fileEntries;
+}
+
+export function isUploadFolderItem(item: Partial<UploadItem>): item is UploadFolderItem {
+	return typeof (item as UploadFolderItem).children !== 'undefined';
+}
+
+export function getUploadNodeType(item: Partial<UploadItem>): NodeType {
+	return isUploadFolderItem(item) ? NodeType.Folder : NodeType.Other;
 }

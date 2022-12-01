@@ -12,9 +12,10 @@ import { useTranslation } from 'react-i18next';
 import { useActiveNode } from '../../../hooks/useActiveNode';
 import { useGetBaseNodeQuery } from '../../hooks/graphql/queries/useGetBaseNodeQuery';
 import { useUploadActions } from '../../hooks/useUploadActions';
-import { UploadType } from '../../types/common';
+import { UploadItem } from '../../types/common';
 import { NodeType } from '../../types/graphql/types';
-import { getUploadNodeType, humanFileSize } from '../../utils/utils';
+import { getUploadNodeType, isUploadFolderItem } from '../../utils/uploadUtils';
+import { humanFileSize } from '../../utils/utils';
 import { DisplayerHeader } from './DisplayerHeader';
 import { NodeContent } from './NodeContent';
 import { PathRow, PathRowProps } from './PathRow';
@@ -23,45 +24,47 @@ import { TextRowWithShim } from './TextRowWithShim';
 import { UploadNodeDetailsListItem } from './UploadNodeDetailsListItem';
 
 interface UploadDisplayerNodeProps {
-	node: UploadType;
+	uploadItem: UploadItem;
 }
 
-export const UploadDisplayerNode = ({ node }: UploadDisplayerNodeProps): JSX.Element => {
+export const UploadDisplayerNode = ({ uploadItem }: UploadDisplayerNodeProps): JSX.Element => {
 	const [t] = useTranslation();
 	const { removeActiveNode } = useActiveNode();
 
-	const actions = useUploadActions([node]);
+	const actions = useUploadActions([uploadItem]);
 
 	const contentItems = useMemo(
 		() =>
-			node.children
-				? map(node.children, (uploadItem) => <UploadNodeDetailsListItem node={uploadItem} />)
+			isUploadFolderItem(uploadItem)
+				? map(uploadItem.children, (childItem) => <UploadNodeDetailsListItem id={childItem} />)
 				: undefined,
-		[node.children]
+		[uploadItem]
 	);
 
-	const { data: parentData, loading: loadingParent } = useGetBaseNodeQuery(node.parentId);
+	const { data: parentData, loading: loadingParent } = useGetBaseNodeQuery(
+		uploadItem.parentNodeId || ''
+	);
 
 	const parentNode = useMemo<PathRowProps>(() => {
 		if (!loadingParent) {
 			if (parentData?.getNode) {
 				return parentData.getNode;
 			}
-			const path = node.fileSystemEntry?.fullPath.split('/') || [];
+			const path: string[] = uploadItem.fullPath.split('/');
 			if (path.length > 0) {
 				if (path.length > 1) {
 					return {
 						name: path[path.length - 2],
 						type: NodeType.Folder,
 						rootId: undefined,
-						id: node.parentId || `${node.id}-parent-${Date.now().toLocaleString()}`
+						id: uploadItem.parentId || `${uploadItem.id}-parent-${Date.now().toLocaleString()}`
 					};
 				}
 				return {
 					name: path[path.length - 1],
 					type: NodeType.Other,
 					rootId: undefined,
-					id: node.id
+					id: uploadItem.id
 				};
 			}
 		}
@@ -71,15 +74,15 @@ export const UploadDisplayerNode = ({ node }: UploadDisplayerNodeProps): JSX.Ele
 			rootId: undefined,
 			id: ''
 		};
-	}, [loadingParent, node.fileSystemEntry?.fullPath, node.id, node.parentId, parentData?.getNode]);
+	}, [loadingParent, uploadItem.id, uploadItem.parentId, parentData]);
 
 	return (
 		<>
 			<DisplayerHeader
-				name={node.file.name}
-				type={getUploadNodeType(node)}
+				name={uploadItem.file?.name || ''}
+				type={getUploadNodeType(uploadItem)}
 				closeAction={removeActiveNode}
-				mimeType={node.file.type}
+				mimeType={uploadItem.file?.type}
 			/>
 			<Container
 				orientation="horizontal"
@@ -112,11 +115,11 @@ export const UploadDisplayerNode = ({ node }: UploadDisplayerNodeProps): JSX.Ele
 						padding={{ all: 'large' }}
 						background={'gray6'}
 					>
-						{node.file.type && (
+						{uploadItem.file?.type && (
 							<TextRowWithShim
 								loading={false}
 								label={t('displayer.details.size', 'Size')}
-								content={humanFileSize(node.file.size ?? 0)}
+								content={humanFileSize(uploadItem.file.size ?? 0)}
 								shimmerWidth="5rem"
 							/>
 						)}
@@ -128,7 +131,7 @@ export const UploadDisplayerNode = ({ node }: UploadDisplayerNodeProps): JSX.Ele
 						/>
 					</DisplayerContentContainer>
 					{contentItems !== undefined && (
-						<NodeContent id={node.id} loading={false} hasMore={false}>
+						<NodeContent id={uploadItem.id} loading={false} hasMore={false}>
 							{contentItems}
 						</NodeContent>
 					)}

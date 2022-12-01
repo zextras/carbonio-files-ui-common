@@ -13,16 +13,13 @@ import { nodeSortVar } from '../../apollo/nodeSortVar';
 import { ChildFragment, Folder, Maybe } from '../../types/graphql/types';
 import { addNodeInSortedList } from '../../utils/utils';
 
-export type CachedFolder = Pick<Folder, 'id' | '__typename'> & {
+export type CachedFolder = Pick<Folder, 'id'> & {
 	children: { nodes: Array<Maybe<Partial<File | Folder> & ChildFragment> | undefined> };
 };
 
 export type UpdateFolderContentType = {
 	addNodeToFolder: (folder: CachedFolder, newNode: ChildFragment) => number;
-	removeNodesFromFolder: (
-		folder: Pick<CachedFolder, 'id' | '__typename'>,
-		nodeIdsToRemove: string[]
-	) => void;
+	removeNodesFromFolder: (folder: Pick<CachedFolder, 'id'>, nodeIdsToRemove: string[]) => void;
 };
 
 export const useUpdateFolderContent = (

@@ -26,7 +26,7 @@ import { DRAG_TYPES, ROOTS } from '../../constants';
 import { ListContext, ListHeaderActionContext } from '../../contexts';
 import useSelection from '../../hooks/useSelection';
 import { useUpload } from '../../hooks/useUpload';
-import { Action, UploadType } from '../../types/common';
+import { Action, UploadItem } from '../../types/common';
 import { buildActionItems, getPermittedUploadActions } from '../../utils/ActionsFactory';
 import { getUploadAddType } from '../../utils/uploadUtils';
 import { Dropzone } from './Dropzone';
@@ -38,7 +38,7 @@ export const UploadList: React.VFC = () => {
 	const [t] = useTranslation();
 
 	const { add, removeById, removeAllCompleted, retryById } = useUpload();
-	const uploadStatusMap = useReactiveVar<{ [id: string]: UploadType }>(uploadVar);
+	const uploadStatusMap = useReactiveVar<{ [id: string]: UploadItem }>(uploadVar);
 	const uploadStatus = useMemo(() => map(uploadStatusMap, (value) => value), [uploadStatusMap]);
 
 	const uploadStatusSizeIsZero = useMemo(() => uploadStatus.length === 0, [uploadStatus]);
@@ -81,15 +81,20 @@ export const UploadList: React.VFC = () => {
 
 	const items = useMemo(
 		() =>
-			map(uploadStatus, (item) => (
-				<UploadListItemWrapper
-					key={item.id}
-					node={item}
-					isSelected={selectedMap && selectedMap[item.id]}
-					isSelectionModeActive={isSelectionModeActive}
-					selectId={selectId}
-				/>
-			)),
+			map(
+				uploadStatus,
+				(item) =>
+					(item.parentId === null && (
+						<UploadListItemWrapper
+							key={item.id}
+							node={item}
+							isSelected={selectedMap && selectedMap[item.id]}
+							isSelectionModeActive={isSelectionModeActive}
+							selectId={selectId}
+						/>
+					)) ||
+					undefined
+			),
 		[isSelectionModeActive, uploadStatus, selectId, selectedMap]
 	);
 
@@ -107,8 +112,8 @@ export const UploadList: React.VFC = () => {
 
 	const goToFolderSelection = useCallback(() => {
 		unSelectAll();
-		if (selectedItems[0].parentId) {
-			navigateToFolder(selectedItems[0].parentId);
+		if (selectedItems[0].parentNodeId) {
+			navigateToFolder(selectedItems[0].parentNodeId);
 		}
 	}, [navigateToFolder, selectedItems, unSelectAll]);
 

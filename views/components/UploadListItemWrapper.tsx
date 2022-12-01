@@ -9,11 +9,11 @@ import React, { useCallback } from 'react';
 import { useActiveNode } from '../../../hooks/useActiveNode';
 import { useGetBaseNodeQuery } from '../../hooks/graphql/queries/useGetBaseNodeQuery';
 import { useUploadActions } from '../../hooks/useUploadActions';
-import { UploadType } from '../../types/common';
+import { UploadItem } from '../../types/common';
 import { UploadListItem } from './UploadListItem';
 
 interface UploadListItemWrapperProps {
-	node: UploadType;
+	node: UploadItem;
 	isSelected: boolean;
 	isSelectionModeActive: boolean;
 	selectId: (id: string) => void;
@@ -27,7 +27,7 @@ export const UploadListItemWrapper: React.VFC<UploadListItemWrapperProps> = ({
 }) => {
 	const permittedUploadActionItems = useUploadActions([node]);
 
-	const { data: parentData } = useGetBaseNodeQuery(node.parentId);
+	const { data: parentData } = useGetBaseNodeQuery(node.parentNodeId || '');
 
 	const { setActiveNode, activeNodeId } = useActiveNode();
 
@@ -38,12 +38,12 @@ export const UploadListItemWrapper: React.VFC<UploadListItemWrapperProps> = ({
 	return (
 		<UploadListItem
 			id={node.id}
-			nodeId={node.nodeId}
-			name={node.file?.name || ''}
+			nodeId={node.nodeId || undefined}
+			name={node.name}
 			mimeType={node.file?.type || ''}
 			size={node.file?.size || 0}
 			status={node.status}
-			percentage={node.percentage}
+			percentage={node.progress}
 			parent={parentData?.getNode}
 			isSelected={isSelected}
 			selectId={selectId}

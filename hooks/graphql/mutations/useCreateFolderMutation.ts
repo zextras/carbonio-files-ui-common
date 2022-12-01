@@ -7,7 +7,7 @@
 /* eslint-disable arrow-body-style */
 import { useCallback } from 'react';
 
-import { FetchResult, MutationHookOptions, MutationResult, useApolloClient, useMutation } from "@apollo/client";
+import { FetchResult, MutationHookOptions, MutationResult, useMutation } from '@apollo/client';
 
 import CREATE_FOLDER from '../../../graphql/mutations/createFolder.graphql';
 import {
@@ -21,7 +21,7 @@ import { useErrorHandler } from '../../useErrorHandler';
 import { CachedFolder, useUpdateFolderContent } from '../useUpdateFolderContent';
 
 export type CreateFolderType = (
-	parentFolder: MakeOptional<Pick<Folder, '__typename' | 'id' | 'children'>, 'children'>,
+	parentFolder: MakeOptional<Pick<Folder, 'id' | 'children'>, 'children'>,
 	name: string
 ) => Promise<FetchResult<CreateFolderMutation>>;
 

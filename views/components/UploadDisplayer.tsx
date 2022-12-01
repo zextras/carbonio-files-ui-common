@@ -11,7 +11,7 @@ import { Container } from '@zextras/carbonio-design-system';
 
 import { useActiveNode } from '../../../hooks/useActiveNode';
 import { uploadVar } from '../../apollo/uploadVar';
-import { UploadType } from '../../types/common';
+import { UploadItem } from '../../types/common';
 import { EmptyDisplayer } from './EmptyDisplayer';
 import { UploadDisplayerNode } from './UploadDisplayerNode';
 
@@ -22,7 +22,7 @@ export interface DisplayerProps {
 
 export const UploadDisplayer: React.VFC<DisplayerProps> = ({ translationKey, icons = [] }) => {
 	const { activeNodeId } = useActiveNode();
-	const uploadStatusMap = useReactiveVar<{ [id: string]: UploadType }>(uploadVar);
+	const uploadStatusMap = useReactiveVar<{ [id: string]: UploadItem }>(uploadVar);
 	const node = useMemo(
 		() => (activeNodeId && uploadStatusMap[activeNodeId]) || undefined,
 		[activeNodeId, uploadStatusMap]
@@ -36,7 +36,7 @@ export const UploadDisplayer: React.VFC<DisplayerProps> = ({ translationKey, ico
 			data-testid="displayer"
 		>
 			{node ? (
-				<UploadDisplayerNode node={node} />
+				<UploadDisplayerNode uploadItem={node} />
 			) : (
 				<EmptyDisplayer icons={icons} translationKey={translationKey} />
 			)}

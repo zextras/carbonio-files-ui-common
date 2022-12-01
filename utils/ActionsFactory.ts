@@ -16,7 +16,7 @@ import some from 'lodash/some';
 
 import { ACTIONS_TO_REMOVE_DUE_TO_PRODUCT_CONTEXT } from '../../constants';
 import { ROOTS } from '../constants';
-import { Action, GetNodeParentType, Node, UploadStatus, UploadType } from '../types/common';
+import { Action, GetNodeParentType, Node, UploadStatus, UploadItem } from '../types/common';
 import { File as FilesFile, File, Folder, MakeOptional, Root } from '../types/graphql/types';
 import { OneOrMany } from '../types/utils';
 import { docsHandledMimeTypes, isSupportedByPreview } from './utils';
@@ -29,9 +29,9 @@ export type ActionsFactoryNodeType = Pick<
 	(Pick<FilesFile, '__typename'> | Pick<Folder, '__typename'>) &
 	MakeOptional<Pick<FilesFile, 'mime_type'>, 'mime_type'>;
 
-export type ActionsFactoryUploadType = Pick<Partial<UploadType>, 'status' | 'parentId'>;
+export type ActionsFactoryUploadItem = Pick<Partial<UploadItem>, 'status' | 'parentNodeId'>;
 
-export type ActionsFactoryGlobalType = ActionsFactoryNodeType | ActionsFactoryUploadType;
+export type ActionsFactoryGlobalType = ActionsFactoryNodeType | ActionsFactoryUploadItem;
 
 export type ActionsFactoryChecker = (nodes: ActionsFactoryGlobalType[]) => boolean;
 
@@ -453,7 +453,7 @@ export function canRetryUpload(nodes: OneOrMany<ActionsFactoryGlobalType>): bool
 	if (size(nodes) === 0) {
 		throw Error('cannot evaluate canRetryUpload on empty nodes array');
 	}
-	const $nodes = nodes as ActionsFactoryUploadType[];
+	const $nodes = nodes as ActionsFactoryUploadItem[];
 	// can retry only if all selected nodes are failed
 	return find($nodes, (node) => node.status !== UploadStatus.FAILED) === undefined;
 }
@@ -465,12 +465,12 @@ export function canGoToFolder(nodes: OneOrMany<ActionsFactoryGlobalType>): boole
 	if (size(nodes) === 0) {
 		throw Error('cannot evaluate canGoToFolder on empty nodes array');
 	}
-	const $nodes = nodes as ActionsFactoryUploadType[];
+	const $nodes = nodes as ActionsFactoryUploadItem[];
 	// can go to folder only if all selected nodes have the same parent
 	return every(
 		$nodes,
 		(node, index, array) =>
-			node.parentId && array[0].parentId && node.parentId === array[0].parentId
+			node.parentNodeId && array[0].parentNodeId && node.parentNodeId === array[0].parentNodeId
 	);
 }
 
@@ -569,7 +569,7 @@ export function getPermittedHoverBarActions(node: ActionsFactoryNodeType): Actio
 	return getPermittedActions([node as ActionsFactoryGlobalType], hoverBarActions);
 }
 
-export function getPermittedUploadActions(nodes: ActionsFactoryUploadType[]): Action[] {
+export function getPermittedUploadActions(nodes: ActionsFactoryUploadItem[]): Action[] {
 	return getPermittedActions(nodes as ActionsFactoryGlobalType[], uploadActions);
 }
 
