@@ -9,6 +9,7 @@ import { Container, Row, useCombinedRefs } from '@zextras/carbonio-design-system
 import styled from 'styled-components';
 
 import { LIST_ITEM_HEIGHT } from '../../constants';
+import { cssCalcBuilder } from '../../utils/utils';
 import { LoadingIcon } from './LoadingIcon';
 
 export const SCScrollContainer = styled(Container)`
@@ -80,7 +81,7 @@ export const ScrollContainer = React.forwardRef<HTMLDivElement, ScrollContainerP
 				)}
 				{fillerWithActions &&
 					React.cloneElement(fillerWithActions, {
-						children: <Row height={`calc(${LIST_ITEM_HEIGHT} / 2`} />
+						children: <Row height={cssCalcBuilder(LIST_ITEM_HEIGHT, ['/', 2])} />
 					})}
 			</SCScrollContainer>
 		);

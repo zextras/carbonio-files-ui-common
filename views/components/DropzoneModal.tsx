@@ -10,6 +10,8 @@ import { Container, Icon, Padding, Text } from '@zextras/carbonio-design-system'
 import map from 'lodash/map';
 import styled, { css, FlattenSimpleInterpolation } from 'styled-components';
 
+import { cssCalcBuilder } from '../../utils/utils';
+
 const BackDropLayoutInnerBox = styled(Container)`
 	position: absolute;
 	top: 50%;
@@ -36,10 +38,12 @@ const DropBoxIconGroup = styled(Container)`
 const DetailText = styled(Text)`
 	text-align: center;
 	white-space: pre-line;
-	line-height: calc(
-		${({ theme, size }): string => theme.sizes.font[size || 'medium']} +
-			(${({ theme, size }): string => theme.sizes.font[size || 'medium']} / 2)
-	);
+	line-height: ${({ theme, size }): string =>
+		cssCalcBuilder(
+			theme.sizes.font[size || 'medium'],
+			['+', theme.sizes.font[size || 'medium']],
+			['/', 2]
+		)};
 `;
 
 interface DropzoneModalProps {

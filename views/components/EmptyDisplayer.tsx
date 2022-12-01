@@ -14,6 +14,7 @@ import styled from 'styled-components';
 
 import { ListContext } from '../../contexts';
 import { OneOrMany } from '../../types/utils';
+import { cssCalcBuilder } from '../../utils/utils';
 import { CenteredText } from './StyledComponents';
 
 interface EmptyDisplayerProps {
@@ -22,8 +23,8 @@ interface EmptyDisplayerProps {
 }
 
 const CustomIcon = styled(Icon)`
-	height: calc(${({ theme }): string => theme.sizes.icon.medium} * 2);
-	width: calc(${({ theme }): string => theme.sizes.icon.medium} * 2);
+	height: ${({ theme }): string => cssCalcBuilder(theme.sizes.icon.medium, ['*', 2])};
+	width: ${({ theme }): string => cssCalcBuilder(theme.sizes.icon.medium, ['*', 2])};
 `;
 
 export const EmptyDisplayer: React.VFC<EmptyDisplayerProps> = ({ icons, translationKey }) => {
