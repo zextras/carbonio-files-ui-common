@@ -572,7 +572,7 @@ export const docsHandledMimeTypes = [
 	'application/vnd.sun.xml.writer.template'
 ];
 
-export const previewHandledMimeTypes = [
+export const previewHandledMimeTypes: string[] = [
 	'application/msword',
 	'application/vnd.ms-excel',
 	'application/vnd.ms-powerpoint',
@@ -584,10 +584,12 @@ export const previewHandledMimeTypes = [
 	'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 ];
 
+export const thumbnailHandledMimeTypes: string[] = [];
+
 /**
  * 	Error codes:
  *	400 if target  does not match
- *  404 if nodeId does not exists
+ *  404 if nodeId does not exist
  *  413 if payload is Too Large
  *  500 if the store does not respond
  */
@@ -644,21 +646,21 @@ export function uploadToTargetModule(args: {
 
 /**
  * Check if a file is supported by preview by its mime type
- * @param mimeType
- * @return {[boolean, typeof PREVIEW_TYPE[keyof typeof PREVIEW_TYPE] | undefined]}
  *
  * [0]: tells whether the given mime type is supported or not
  *
  * [1]: if mime type is supported, tells which type of preview this mime type is associated to
  */
 export function isSupportedByPreview(
-	mimeType: string | undefined
+	mimeType: string | undefined,
+	type: 'thumbnail' | 'preview' = 'preview'
 ): [boolean, typeof PREVIEW_TYPE[keyof typeof PREVIEW_TYPE] | undefined] {
 	return [
 		!!mimeType &&
 			((mimeType.startsWith('image') && mimeType !== 'image/svg+xml') ||
 				mimeType.includes('pdf') ||
-				previewHandledMimeTypes.includes(mimeType)),
+				(type === 'preview' && previewHandledMimeTypes.includes(mimeType)) ||
+				(type === 'thumbnail' && thumbnailHandledMimeTypes.includes(mimeType))),
 		(mimeType &&
 			((mimeType.startsWith('image') && PREVIEW_TYPE.IMAGE) ||
 				(mimeType.includes('pdf') && PREVIEW_TYPE.PDF) ||
@@ -711,7 +713,7 @@ export const getPreviewThumbnailSrc = (
 		if (includes(mimeType, 'pdf')) {
 			return `${REST_ENDPOINT}${PREVIEW_PATH}/${PREVIEW_TYPE.PDF}/${id}/${version}/${width}x${height}/thumbnail/${optionalParamsStr}`;
 		}
-		if (includes(previewHandledMimeTypes, mimeType)) {
+		if (includes(thumbnailHandledMimeTypes, mimeType)) {
 			return `${REST_ENDPOINT}${PREVIEW_PATH}/${PREVIEW_TYPE.DOCUMENT}/${id}/${version}/${width}x${height}/thumbnail/${optionalParamsStr}`;
 		}
 	}
