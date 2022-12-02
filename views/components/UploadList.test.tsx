@@ -141,7 +141,10 @@ describe('Upload list', () => {
 					nodeId: file.id,
 					status: UploadStatus.COMPLETED,
 					progress: 100,
-					id: file.id
+					id: file.id,
+					name: files[index].name,
+					fullPath: files[index].webkitRelativePath,
+					parentNodeId: null
 				};
 			});
 

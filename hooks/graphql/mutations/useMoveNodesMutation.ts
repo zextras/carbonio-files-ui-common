@@ -31,7 +31,7 @@ import {
 	Node,
 	QueryGetPathArgs
 } from '../../../types/graphql/types';
-import { isFolder } from '../../../utils/ActionsFactory';
+import { isFolder } from '../../../utils/utils';
 import { useErrorHandler } from '../../useErrorHandler';
 import useQueryParam from '../../useQueryParam';
 import { useUpdateFolderContent } from '../useUpdateFolderContent';

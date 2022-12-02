@@ -25,11 +25,9 @@ import {
 	canBeMoveDestination,
 	canUploadFile,
 	getAllPermittedActions,
-	getPermittedHoverBarActions,
-	isFile,
-	isFolder
+	getPermittedHoverBarActions
 } from '../../utils/ActionsFactory';
-import { isTrashView } from '../../utils/utils';
+import { isFile, isFolder, isTrashView } from '../../utils/utils';
 import { Dropzone } from './Dropzone';
 import { NodeListItem } from './NodeListItem';
 

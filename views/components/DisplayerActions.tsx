@@ -29,10 +29,9 @@ import { File, MakeOptional, Node } from '../../types/graphql/types';
 import {
 	ActionsFactoryNodeType,
 	buildActionItems,
-	getAllPermittedActions,
-	isFile
+	getAllPermittedActions
 } from '../../utils/ActionsFactory';
-import { downloadNode, isSupportedByPreview, openNodeWithDocs } from '../../utils/utils';
+import { downloadNode, isFile, isSupportedByPreview, openNodeWithDocs } from '../../utils/utils';
 
 interface DisplayerActionsParams {
 	node: ActionsFactoryNodeType &

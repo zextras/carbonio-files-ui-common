@@ -43,11 +43,17 @@ import {
 	OrderType,
 	Role,
 	SortableNode,
-	TargetModule,
-	UploadItem
+	TargetModule
 } from '../types/common';
-import { Maybe, Node, NodeSort, NodeType, SharePermission } from '../types/graphql/types';
-import { isUploadFolderItem } from './uploadUtils';
+import {
+	File,
+	Folder,
+	Maybe,
+	Node,
+	NodeSort,
+	NodeType,
+	SharePermission
+} from '../types/graphql/types';
 
 /**
  * Format a size in byte as human-readable
@@ -620,7 +626,7 @@ async function readEntries(
 	return new Promise<Array<FileSystemEntry>>((resolve, reject) => {
 		directoryReader.readEntries((entries): void => {
 			resolve(entries);
-		});
+		}, reject);
 	});
 }
 
@@ -676,41 +682,6 @@ export function flat(tree: TreeNode): Array<TreeNode> {
 			const temp = flat(child);
 			result.push(...temp);
 		});
-	}
-	return result;
-}
-
-export function flatUploadItemChildren(
-	uploadItem: UploadItem,
-	uploadStatusMap: { [id: string]: UploadItem }
-): Array<UploadItem> {
-	const result: Array<UploadItem> = [];
-	if (isUploadFolderItem(uploadItem)) {
-		result.push(uploadItem);
-		forEach(uploadItem.children, (childId) => {
-			const temp = flatUploadItemChildren(uploadStatusMap[childId], uploadStatusMap);
-			result.push(...temp);
-		});
-	} else {
-		result.push(uploadItem);
-	}
-	return result;
-}
-
-export function flatUploadItemChildrenIds(
-	uploadItemId: string,
-	uploadStatusMap: { [id: string]: UploadItem }
-): Array<string> {
-	const result: Array<string> = [];
-	const item = uploadStatusMap[uploadItemId];
-	if (isUploadFolderItem(item)) {
-		result.push(uploadItemId);
-		forEach(item.children, (childId) => {
-			const temp = flatUploadItemChildrenIds(childId, uploadStatusMap);
-			result.push(...temp);
-		});
-	} else {
-		result.push(uploadItemId);
 	}
 	return result;
 }
@@ -836,4 +807,12 @@ export function getNewDocumentActionLabel(t: TFunction, docsType: DocsType): str
 			ext: `(.${DOCS_EXTENSIONS[docsType]})`
 		}
 	});
+}
+
+export function isFile(node: { __typename?: string }): node is File {
+	return node.__typename === 'File';
+}
+
+export function isFolder(node: { __typename?: string }): node is Folder {
+	return node.__typename === 'Folder';
 }

@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useReactiveVar } from '@apollo/client';
 import { Container, Responsive, Snackbar } from '@zextras/carbonio-design-system';
 import filter from 'lodash/filter';
+import map from 'lodash/map';
 import noop from 'lodash/noop';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useParams } from 'react-router-dom';
@@ -31,6 +32,7 @@ import { useUpload } from '../hooks/useUpload';
 import { Crumb, DocsType, NodeListItemType, URLParams } from '../types/common';
 import { NodeSort } from '../types/graphql/types';
 import { NonNullableListItem, Unwrap } from '../types/utils';
+import { UploadAddType } from '../utils/uploadUtils';
 import { getNewDocumentActionLabel, inputElement } from '../utils/utils';
 import { Displayer } from './components/Displayer';
 import { List } from './components/List';
@@ -66,7 +68,11 @@ const FilterView: React.VFC = () => {
 	const inputElementOnchange = useCallback(
 		(ev: Event) => {
 			if (ev.currentTarget instanceof HTMLInputElement && ev.currentTarget.files) {
-				add(ev.currentTarget.files, ROOTS.LOCAL_ROOT);
+				const fileEntries: UploadAddType[] = map(ev.currentTarget.files, (file) => ({
+					file,
+					fileSystemEntry: null
+				}));
+				add(fileEntries, ROOTS.LOCAL_ROOT);
 				// required to select 2 times the same file/files
 				if (ev.target instanceof HTMLInputElement) {
 					ev.target.value = '';

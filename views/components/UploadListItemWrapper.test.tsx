@@ -44,12 +44,17 @@ jest.mock('../../../hooks/useNavigation', () => ({
 describe('Upload List Item Wrapper', () => {
 	test('File name, destination folder, progress and size are visible', async () => {
 		const destinationFolder = populateFolder();
+		const fileBlob = new File(['uploading file'], 'file1.txt', { type: 'text/plain' });
 		const file: UploadItem = {
-			file: new File(['uploading file'], 'file1.txt', { type: 'text/plain' }),
+			file: fileBlob,
 			progress: 20,
 			parentId: destinationFolder.id,
 			id: 'fileToUploadId',
-			status: UploadStatus.LOADING
+			status: UploadStatus.LOADING,
+			name: fileBlob.name,
+			parentNodeId: destinationFolder.id,
+			fullPath: fileBlob.webkitRelativePath,
+			nodeId: null
 		};
 		const mockSelectId = jest.fn();
 
@@ -65,24 +70,31 @@ describe('Upload List Item Wrapper', () => {
 			{ mocks }
 		);
 
-		expect(screen.getByText(file.file.name)).toBeVisible();
+		expect(screen.getByText(file.name)).toBeVisible();
 		const destinationFolderItem = await findByTextWithMarkup(
 			buildBreadCrumbRegExp(destinationFolder.name)
 		);
 		expect(destinationFolderItem).toBeVisible();
-		expect(screen.getByText(humanFileSize(file.file.size))).toBeVisible();
+		if (file.file) {
+			expect(screen.getByText(humanFileSize(file.file.size))).toBeVisible();
+		}
 		expect(screen.getByText(new RegExp(`${file.progress}\\s*%`, 'm'))).toBeVisible();
 		expect(screen.getByTestId('icon: AnimatedLoader')).toBeVisible();
 	});
 
 	test('Retry action is hidden if uploading is in progress', async () => {
 		const destinationFolder = populateFolder();
+		const fileBlob = new File(['uploading file'], 'file1.txt', { type: 'text/plain' });
 		const file: UploadItem = {
-			file: new File(['uploading file'], 'file1.txt', { type: 'text/plain' }),
+			file: fileBlob,
 			progress: 20,
 			parentId: destinationFolder.id,
 			id: 'fileToUploadId',
-			status: UploadStatus.LOADING
+			status: UploadStatus.LOADING,
+			name: fileBlob.name,
+			parentNodeId: destinationFolder.id,
+			fullPath: fileBlob.webkitRelativePath,
+			nodeId: null
 		};
 		const mockSelectId = jest.fn();
 
@@ -107,9 +119,9 @@ describe('Upload List Item Wrapper', () => {
 			{ mocks: [] }
 		);
 
-		expect(screen.getByText(file.file.name)).toBeVisible();
+		expect(screen.getByText(file.name)).toBeVisible();
 		// hover bar
-		await user.hover(screen.getByText(file.file.name));
+		await user.hover(screen.getByText(file.name));
 		expect(screen.queryByTestId('icon: PlayCircleOutline')).not.toBeInTheDocument();
 		expect(screen.getByTestId('icon: CloseCircleOutline')).toBeInTheDocument();
 		expect(screen.getByTestId('icon: FolderOutline')).toBeInTheDocument();
@@ -118,7 +130,7 @@ describe('Upload List Item Wrapper', () => {
 		expect(mockedUseUploadHook.removeById).toHaveBeenCalledWith([file.id]);
 		expect(mockedUseNavigationHook.navigateToFolder).toHaveBeenCalledWith(destinationFolder.id);
 		// contextual menu
-		fireEvent.contextMenu(screen.getByText(file.file.name));
+		fireEvent.contextMenu(screen.getByText(file.name));
 		await screen.findByText(/go to destination folder/i);
 		expect(screen.queryByText(/retry upload/i)).not.toBeInTheDocument();
 		expect(screen.getByText(/remove upload/i)).not.toHaveAttribute('disabled', '');
@@ -127,12 +139,17 @@ describe('Upload List Item Wrapper', () => {
 
 	test('File name, destination folder, queued label and size are visible', async () => {
 		const destinationFolder = populateFolder();
+		const fileBlob = new File(['uploading file'], 'file1.txt', { type: 'text/plain' });
 		const file: UploadItem = {
-			file: new File(['uploading file'], 'file1.txt', { type: 'text/plain' }),
+			file: fileBlob,
 			progress: 0,
 			parentId: destinationFolder.id,
 			id: 'fileToUploadId',
-			status: UploadStatus.QUEUED
+			status: UploadStatus.QUEUED,
+			name: 'file1.txt',
+			parentNodeId: destinationFolder.id,
+			nodeId: null,
+			fullPath: fileBlob.webkitRelativePath
 		};
 		const mockSelectId = jest.fn();
 
@@ -148,12 +165,14 @@ describe('Upload List Item Wrapper', () => {
 			{ mocks }
 		);
 
-		expect(screen.getByText(file.file.name)).toBeVisible();
+		expect(screen.getByText(file.name)).toBeVisible();
 		const destinationFolderItem = await findByTextWithMarkup(
 			buildBreadCrumbRegExp(destinationFolder.name)
 		);
 		expect(destinationFolderItem).toBeVisible();
-		expect(screen.getByText(humanFileSize(file.file.size))).toBeVisible();
+		if (file.file) {
+			expect(screen.getByText(humanFileSize(file.file.size))).toBeVisible();
+		}
 		expect(screen.getByText('Queued')).toBeVisible();
 		expect(screen.getByTestId('icon: AnimatedLoader')).toBeVisible();
 	});

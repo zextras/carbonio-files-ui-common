@@ -23,11 +23,11 @@ import { DRAG_TYPES, TIMERS } from '../constants';
 import BASE_NODE from '../graphql/fragments/baseNode.graphql';
 import { Crumb, DroppableCrumb, NodeListItemType } from '../types/common';
 import { BaseNodeFragment, NodeType } from '../types/graphql/types';
-import { canBeMoveDestination, canUploadFile, isFolder } from '../utils/ActionsFactory';
-import { hexToRGBA } from '../utils/utils';
+import { canBeMoveDestination, canUploadFile } from '../utils/ActionsFactory';
+import { getUploadAddType } from '../utils/uploadUtils';
+import { hexToRGBA, isFolder } from '../utils/utils';
 import { useMoveNodesMutation } from './graphql/mutations/useMoveNodesMutation';
 import { useUpload } from './useUpload';
-import { getUploadAddType } from "../utils/uploadUtils";
 
 const NODE_OWNER = gql`
 	fragment NodeOwner on Node {

@@ -26,7 +26,6 @@ import {
 } from '../../mocks/mockUtils';
 import { Node, NodeWithMetadata } from '../../types/common';
 import { GetRootsListQuery, GetRootsListQueryVariables } from '../../types/graphql/types';
-import { isFile, isFolder } from '../../utils/ActionsFactory';
 import {
 	getChildrenVariables,
 	getFindNodesVariables,
@@ -41,6 +40,7 @@ import {
 	mockGetRootsList
 } from '../../utils/mockUtils';
 import { buildBreadCrumbRegExp, generateError, iconRegexp, setup } from '../../utils/testUtils';
+import { isFile, isFolder } from '../../utils/utils';
 import { NodesSelectionModalContent } from './NodesSelectionModalContent';
 import { HoverContainer } from './StyledComponents';
 

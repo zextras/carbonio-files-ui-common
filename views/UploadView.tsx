@@ -7,6 +7,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { Container, Responsive, Snackbar } from '@zextras/carbonio-design-system';
+import map from 'lodash/map';
 import noop from 'lodash/noop';
 import { useTranslation } from 'react-i18next';
 
@@ -17,6 +18,7 @@ import { DISPLAYER_WIDTH, FILES_APP_ID, LIST_WIDTH, ROOTS } from '../constants';
 import { ListContext } from '../contexts';
 import { useUpload } from '../hooks/useUpload';
 import { DocsType } from '../types/common';
+import { UploadAddType } from '../utils/uploadUtils';
 import { getNewDocumentActionLabel, inputElement } from '../utils/utils';
 import { UploadDisplayer } from './components/UploadDisplayer';
 import { UploadList } from './components/UploadList';
@@ -43,7 +45,11 @@ const UploadView: React.VFC = () => {
 	const inputElementOnchange = useCallback(
 		(ev: Event) => {
 			if (ev.currentTarget instanceof HTMLInputElement && ev.currentTarget.files) {
-				add(ev.currentTarget.files, ROOTS.LOCAL_ROOT);
+				const fileEntries: UploadAddType[] = map(ev.currentTarget.files, (file) => ({
+					file,
+					fileSystemEntry: null
+				}));
+				add(fileEntries, ROOTS.LOCAL_ROOT);
 				// required to select 2 times the same file/files
 				if (ev.target instanceof HTMLInputElement) {
 					ev.target.value = '';

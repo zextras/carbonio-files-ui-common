@@ -12,7 +12,7 @@ import { nodeSortVar } from '../../../apollo/nodeSortVar';
 import { NODES_LOAD_LIMIT, SHARES_LOAD_LIMIT } from '../../../constants';
 import GET_NODE from '../../../graphql/queries/getNode.graphql';
 import { GetNodeQuery, GetNodeQueryVariables } from '../../../types/graphql/types';
-import { isFolder } from '../../../utils/ActionsFactory';
+import { isFolder } from '../../../utils/utils';
 import { useErrorHandler } from '../../useErrorHandler';
 
 interface GetNodeQueryHook extends Pick<QueryResult<GetNodeQuery>, 'data' | 'loading' | 'error'> {

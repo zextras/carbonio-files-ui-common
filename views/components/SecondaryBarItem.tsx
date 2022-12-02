@@ -34,14 +34,10 @@ import { useUpload } from '../../hooks/useUpload';
 import { PickIdNodeType } from '../../types/common';
 import { Folder, Node } from '../../types/graphql/types';
 import { DeepPick } from '../../types/utils';
-import {
-	canBeWriteNodeDestination,
-	canUploadFile,
-	isFile,
-	isFolder
-} from '../../utils/ActionsFactory';
+import { canBeWriteNodeDestination, canUploadFile } from '../../utils/ActionsFactory';
+import { getUploadAddType } from '../../utils/uploadUtils';
+import { isFile, isFolder } from '../../utils/utils';
 import { Dropzone } from './Dropzone';
-import { getUploadAddType } from "../../utils/uploadUtils";
 
 // TODO: replace with updated DS Accordion once available
 const CustomAccordionItem = styled(AccordionItem)<{ $dragging: boolean }>`

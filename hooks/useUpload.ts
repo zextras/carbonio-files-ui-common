@@ -21,7 +21,6 @@ import { UploadFunctions, uploadFunctionsVar, uploadVar } from '../apollo/upload
 import { UploadFolderItem, UploadItem, UploadStatus } from '../types/common';
 import { File as FilesFile } from '../types/graphql/types';
 import { DeepPick } from '../types/utils';
-import { isFolder } from '../utils/ActionsFactory';
 import {
 	isUploadFolderItem,
 	loadingQueue,
@@ -33,7 +32,7 @@ import {
 	uploadVersion,
 	waitingQueue
 } from '../utils/uploadUtils';
-import { isFileSystemDirectoryEntry, scan, TreeNode } from '../utils/utils';
+import { isFileSystemDirectoryEntry, isFolder, scan, TreeNode } from '../utils/utils';
 import { useCreateFolderMutation } from './graphql/mutations/useCreateFolderMutation';
 import { useUpdateFolderContent } from './graphql/useUpdateFolderContent';
 

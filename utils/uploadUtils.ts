@@ -32,8 +32,7 @@ import {
 	NodeSort,
 	NodeType
 } from '../types/graphql/types';
-import { isFolder } from './ActionsFactory';
-import { encodeBase64 } from './utils';
+import { encodeBase64, isFolder } from './utils';
 
 export type UploadAddType = { file: File; fileSystemEntry?: FileSystemEntry | null };
 
@@ -328,4 +327,39 @@ export function isUploadFolderItem(item: Partial<UploadItem>): item is UploadFol
 
 export function getUploadNodeType(item: Partial<UploadItem>): NodeType {
 	return isUploadFolderItem(item) ? NodeType.Folder : NodeType.Other;
+}
+
+export function flatUploadItemChildren(
+	uploadItem: UploadItem,
+	uploadStatusMap: { [id: string]: UploadItem }
+): Array<UploadItem> {
+	const result: Array<UploadItem> = [];
+	if (isUploadFolderItem(uploadItem)) {
+		result.push(uploadItem);
+		forEach(uploadItem.children, (childId) => {
+			const temp = flatUploadItemChildren(uploadStatusMap[childId], uploadStatusMap);
+			result.push(...temp);
+		});
+	} else {
+		result.push(uploadItem);
+	}
+	return result;
+}
+
+export function flatUploadItemChildrenIds(
+	uploadItemId: string,
+	uploadStatusMap: { [id: string]: UploadItem }
+): Array<string> {
+	const result: Array<string> = [];
+	const item = uploadStatusMap[uploadItemId];
+	if (isUploadFolderItem(item)) {
+		result.push(uploadItemId);
+		forEach(item.children, (childId) => {
+			const temp = flatUploadItemChildrenIds(childId, uploadStatusMap);
+			result.push(...temp);
+		});
+	} else {
+		result.push(uploadItemId);
+	}
+	return result;
 }

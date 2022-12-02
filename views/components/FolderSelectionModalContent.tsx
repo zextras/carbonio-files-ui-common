@@ -27,7 +27,7 @@ import { useGetPathQuery } from '../../hooks/graphql/queries/useGetPathQuery';
 import { useDestinationVarManager } from '../../hooks/useDestinationVarManager';
 import { NodeListItemType, RootListItemType } from '../../types/common';
 import { BaseNodeFragment, Folder } from '../../types/graphql/types';
-import { isFile, isFolder } from '../../utils/ActionsFactory';
+import { isFile, isFolder } from '../../utils/utils';
 import { ModalFooterCustom } from './ModalFooterCustom';
 import { ModalList } from './ModalList';
 import { ModalRootsList } from './ModalRootsList';

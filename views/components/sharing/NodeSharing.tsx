@@ -26,8 +26,7 @@ import { useDeleteShareMutation } from '../../../hooks/graphql/mutations/useDele
 import { useGetSharesQuery } from '../../../hooks/graphql/queries/useGetSharesQuery';
 import { Node } from '../../../types/common';
 import { Share, SharedTarget } from '../../../types/graphql/types';
-import { isFile } from '../../../utils/ActionsFactory';
-import { getChipLabel, getChipTooltip } from '../../../utils/utils';
+import { getChipLabel, getChipTooltip, isFile } from '../../../utils/utils';
 import { AddSharing } from './AddSharing';
 import { CollaborationLinks } from './collaborationLinks/CollaborationLinks';
 import { EditShareChip } from './EditShareChip';

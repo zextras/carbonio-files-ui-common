@@ -33,8 +33,7 @@ import {
 	SharedTarget,
 	User
 } from '../../../types/graphql/types';
-import { isFolder } from '../../../utils/ActionsFactory';
-import { isSearchView } from '../../../utils/utils';
+import { isFolder, isSearchView } from '../../../utils/utils';
 import { useErrorHandler } from '../../useErrorHandler';
 import { useUpdateFilterContent } from '../useUpdateFilterContent';
 import { useUpdateFolderContent } from '../useUpdateFolderContent';

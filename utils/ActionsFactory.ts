@@ -17,9 +17,9 @@ import some from 'lodash/some';
 import { ACTIONS_TO_REMOVE_DUE_TO_PRODUCT_CONTEXT } from '../../constants';
 import { ROOTS } from '../constants';
 import { Action, GetNodeParentType, Node, UploadStatus, UploadItem } from '../types/common';
-import { File as FilesFile, File, Folder, MakeOptional, Root } from '../types/graphql/types';
+import { File as FilesFile, Folder, MakeOptional, Root } from '../types/graphql/types';
 import { OneOrMany } from '../types/utils';
-import { docsHandledMimeTypes, isSupportedByPreview } from './utils';
+import { docsHandledMimeTypes, isFile, isFolder, isSupportedByPreview } from './utils';
 
 export type ActionsFactoryNodeType = Pick<
 	Node,
@@ -65,14 +65,6 @@ const completeListActions: Action[] = [
 ];
 
 const uploadActions: Action[] = [Action.removeUpload, Action.RetryUpload, Action.GoToFolder];
-
-export function isFile(node: { __typename?: string }): node is File {
-	return node.__typename === 'File';
-}
-
-export function isFolder(node: { __typename?: string }): node is Folder {
-	return node.__typename === 'Folder';
-}
 
 export function isRoot(node: { __typename?: string }): node is Root {
 	return node.__typename === 'Root';

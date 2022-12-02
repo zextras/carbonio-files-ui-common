@@ -12,7 +12,6 @@ import { PreviewsManagerContext } from '@zextras/carbonio-ui-preview';
 import { PreviewManagerContextType } from '@zextras/carbonio-ui-preview/lib/preview/PreviewManager';
 import filter from 'lodash/filter';
 import find from 'lodash/find';
-import forEach from 'lodash/forEach';
 import includes from 'lodash/includes';
 import isEmpty from 'lodash/isEmpty';
 import reduce from 'lodash/reduce';
@@ -64,24 +63,23 @@ import {
 	ActionsFactoryCheckerMap,
 	buildActionItems,
 	canBeMoveDestination,
-	isFolder,
-	getAllPermittedActions,
-	isFile
+	getAllPermittedActions
 } from '../../utils/ActionsFactory';
+import { getUploadAddType } from '../../utils/uploadUtils';
 import {
 	downloadNode,
 	getDocumentPreviewSrc,
 	getImgPreviewSrc,
 	getPdfPreviewSrc,
 	humanFileSize,
-	isFileSystemDirectoryEntry,
+	isFile,
+	isFolder,
 	isSupportedByPreview,
 	openNodeWithDocs
 } from '../../utils/utils';
 import { Dropzone } from './Dropzone';
 import { EmptyFolder } from './EmptyFolder';
 import { ListContent } from './ListContent';
-import { getUploadAddType } from "../../utils/uploadUtils";
 
 const MainContainer = styled(Container)`
 	border-left: 0.0625rem solid ${(props): string => props.theme.palette.gray6.regular};
@@ -554,14 +552,6 @@ export const List: React.VFC<ListProps> = ({
 	const uploadWithDragAndDrop = useCallback<React.DragEventHandler>(
 		(event) => {
 			if (canUpload) {
-				const { items } = event.dataTransfer;
-				const fileSystemDirectoryEntries: Array<FileSystemDirectoryEntry> = [];
-				forEach(items, (itemOfItems) => {
-					const item: FileSystemEntry | null = itemOfItems.webkitGetAsEntry();
-					if (item && isFileSystemDirectoryEntry(item)) {
-						fileSystemDirectoryEntries.push(item);
-					}
-				});
 				add(getUploadAddType(event.dataTransfer), folderId || ROOTS.LOCAL_ROOT);
 				if (!folderId) {
 					createSnackbar({

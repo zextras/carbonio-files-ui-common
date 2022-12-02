@@ -17,8 +17,12 @@ import { useGetBaseNodeQuery } from '../../hooks/graphql/queries/useGetBaseNodeQ
 import { useUploadActions } from '../../hooks/useUploadActions';
 import { UploadItem } from '../../types/common';
 import { NodeType } from '../../types/graphql/types';
-import { getUploadNodeType, isUploadFolderItem } from '../../utils/uploadUtils';
-import { flatUploadItemChildrenIds, humanFileSize } from '../../utils/utils';
+import {
+	flatUploadItemChildrenIds,
+	getUploadNodeType,
+	isUploadFolderItem
+} from '../../utils/uploadUtils';
+import { humanFileSize } from '../../utils/utils';
 import { DisplayerHeader } from './DisplayerHeader';
 import { NodeContent } from './NodeContent';
 import { PathRow, PathRowProps } from './PathRow';
@@ -37,15 +41,14 @@ export const UploadDisplayerNode = ({ uploadItem }: UploadDisplayerNodeProps): J
 	const actions = useUploadActions([uploadItem]);
 	const uploadStatusMap = useReactiveVar<{ [id: string]: UploadItem }>(uploadVar);
 
-	const contentItems = useMemo(
-		() =>
-			isUploadFolderItem(uploadItem)
-				? map(drop(flatUploadItemChildrenIds(uploadItem.id, uploadStatusMap)), (childItemId) => (
-						<UploadNodeDetailsListItem id={childItemId} />
-				  ))
-				: undefined,
-		[uploadItem, uploadStatusMap]
-	);
+	const contentItems = useMemo(() => {
+		if (isUploadFolderItem(uploadItem)) {
+			return map(drop(flatUploadItemChildrenIds(uploadItem.id, uploadStatusMap)), (childItemId) => (
+				<UploadNodeDetailsListItem id={childItemId} />
+			));
+		}
+		return undefined;
+	}, [uploadItem, uploadStatusMap]);
 
 	const { data: parentData, loading: loadingParent } = useGetBaseNodeQuery(
 		uploadItem.parentNodeId || ''

@@ -36,8 +36,7 @@ import {
 	TrashNodesMutationVariables
 } from '../../../types/graphql/types';
 import { DeepPick } from '../../../types/utils';
-import { isFolder } from '../../../utils/ActionsFactory';
-import { isSearchView } from '../../../utils/utils';
+import { isFolder, isSearchView } from '../../../utils/utils';
 import { useErrorHandler } from '../../useErrorHandler';
 import { useUpload } from '../../useUpload';
 import { useUpdateFilterContent } from '../useUpdateFilterContent';
