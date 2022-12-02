@@ -11,6 +11,7 @@ import { useGetBaseNodeQuery } from '../../hooks/graphql/queries/useGetBaseNodeQ
 import { useUploadActions } from '../../hooks/useUploadActions';
 import { UploadItem } from '../../types/common';
 import { UploadListItem } from './UploadListItem';
+import { isUploadFolderItem } from '../../utils/uploadUtils';
 
 interface UploadListItemWrapperProps {
 	node: UploadItem;
@@ -44,6 +45,7 @@ export const UploadListItemWrapper: React.VFC<UploadListItemWrapperProps> = ({
 			size={node.file?.size || 0}
 			status={node.status}
 			progress={node.progress}
+			contentCount={isUploadFolderItem(node) ? node.contentCount : undefined}
 			parent={parentData?.getNode}
 			isSelected={isSelected}
 			selectId={selectId}

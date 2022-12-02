@@ -22,6 +22,8 @@ import { UploadFolderItem, UploadItem, UploadStatus } from '../types/common';
 import { File as FilesFile } from '../types/graphql/types';
 import { DeepPick } from '../types/utils';
 import {
+	deepMapTreeNodes,
+	incrementAllParents,
 	isUploadFolderItem,
 	loadingQueue,
 	singleRetry,
@@ -32,7 +34,7 @@ import {
 	uploadVersion,
 	waitingQueue
 } from '../utils/uploadUtils';
-import { isFileSystemDirectoryEntry, isFolder, scan, TreeNode } from '../utils/utils';
+import { isFileSystemDirectoryEntry, isFolder, scan } from '../utils/utils';
 import { useCreateFolderMutation } from './graphql/mutations/useCreateFolderMutation';
 import { useUpdateFolderContent } from './graphql/useUpdateFolderContent';
 
@@ -54,53 +56,6 @@ export type UseUploadHook = () => {
 	retryById: (ids: Array<string>) => void;
 };
 
-function getFileSystemFileEntryFile(fileSystemEntry: FileSystemFileEntry): Promise<File> {
-	return new Promise((resolve, reject) => {
-		fileSystemEntry.file((file) => {
-			resolve(file);
-		}, reject);
-	});
-}
-
-async function deepMapTreeNodes(
-	treeNodes: TreeNode[] | undefined,
-	parentId: string,
-	uploadItemFlatList: Array<UploadItem>
-): Promise<string[]> {
-	const childrenIds: string[] = [];
-	for (let i = 0; treeNodes && i < treeNodes.length; i += 1) {
-		const treeNode = treeNodes[i];
-		const fileEnriched: UploadItem = {
-			file: null,
-			parentId,
-			progress: 0,
-			status: UploadStatus.QUEUED,
-			id: `upload-${uuidv4()}`,
-			nodeId: null,
-			parentNodeId: null,
-			fullPath: treeNode.fullPath,
-			name: treeNode.name
-		};
-		childrenIds.push(fileEnriched.id);
-		if (isFileSystemDirectoryEntry(treeNode)) {
-			const folderEnriched: UploadFolderItem = { ...fileEnriched, children: [] };
-			uploadItemFlatList.push(folderEnriched);
-
-			// eslint-disable-next-line no-await-in-loop
-			folderEnriched.children = await deepMapTreeNodes(
-				treeNode.children,
-				fileEnriched.id,
-				uploadItemFlatList
-			);
-		} else {
-			// eslint-disable-next-line no-await-in-loop
-			fileEnriched.file = await getFileSystemFileEntryFile(treeNode);
-			uploadItemFlatList.push(fileEnriched);
-		}
-	}
-	return childrenIds;
-}
-
 export const useUpload: UseUploadHook = () => {
 	// TODO use useApolloClient when apollo provider will be moved up in tha app
 	// const apolloClient = useApolloClient();
@@ -112,101 +67,6 @@ export const useUpload: UseUploadHook = () => {
 		showSnackbar: false,
 		client: apolloClient
 	});
-
-	// const createFolderWithChildren = useCallback(
-	// 	(fileEnriched: MakeOptional<UploadItem, 'file'>, parentFolder: Pick<Folder, 'id'>) => {
-	// 		if (fileEnriched.fileSystemEntry) {
-	// 			const { fileSystemEntry } = fileEnriched;
-	// 			if (isFileSystemDirectoryEntry(fileSystemEntry)) {
-	// 				createFolder(parentFolder, fileSystemEntry.name)
-	// 					.then((createFolderFunctionResult) => {
-	// 						if (
-	// 							createFolderFunctionResult.data?.createFolder &&
-	// 							isFolder(createFolderFunctionResult.data.createFolder)
-	// 						) {
-	// 							return createFolderFunctionResult.data?.createFolder;
-	// 						}
-	// 						return undefined;
-	// 					})
-	// 					.then((parentFolderNode) => {
-	// 						if (parentFolderNode) {
-	// 							// TODO: update progress of parent folder
-	// 							// TODO: update children with new info (parentId)
-	// 							// fullPathParentIdMapRef.current[fileSystemEntry.fullPath].value = parentFolderNode;
-	// 							forEach(fileEnriched.children, (childEntry) => {
-	// 								createFolderWithChildren(
-	// 									{ ...childEntry, parentId: parentFolderNode.id },
-	// 									parentFolderNode
-	// 								);
-	// 							});
-	// 						}
-	// 						return parentFolderNode;
-	// 					});
-	// 			} else if (isFileSystemFileEntry(fileSystemEntry)) {
-	// 				fileSystemEntry.file((file) => {
-	// 					// upload(
-	// 					// 	{ ...fileEnriched, file, parentId: parentFolder.id },
-	// 					// 	apolloClient,
-	// 					// 	nodeSortVar(),
-	// 					// 	addNodeToFolder
-	// 					// );
-	// 					const xhr = new XMLHttpRequest();
-	// 					const url = `${REST_ENDPOINT}${UPLOAD_PATH}`;
-	// 					xhr.open('POST', url, true);
-	//
-	// 					xhr.setRequestHeader('Filename', encodeBase64(file.name));
-	// 					xhr.setRequestHeader('ParentId', parentFolder.id);
-	//
-	// 					const fileEnrichedWithFile = { ...fileEnriched, file };
-	// 					if (xhr.upload?.addEventListener) {
-	// 						xhr.upload.addEventListener('progress', (ev: ProgressEvent) =>
-	// 							updateProgress(ev, fileEnrichedWithFile)
-	// 						);
-	// 					}
-	// 					xhr.addEventListener('load', () =>
-	// 						uploadCompleted(
-	// 							xhr,
-	// 							fileEnrichedWithFile,
-	// 							apolloClient,
-	// 							nodeSortVar(),
-	// 							addNodeToFolder,
-	// 							false
-	// 						)
-	// 					);
-	// 					xhr.addEventListener('error', () =>
-	// 						uploadCompleted(
-	// 							xhr,
-	// 							fileEnrichedWithFile,
-	// 							apolloClient,
-	// 							nodeSortVar(),
-	// 							addNodeToFolder,
-	// 							false
-	// 						)
-	// 					);
-	// 					xhr.addEventListener('abort', () =>
-	// 						uploadCompleted(
-	// 							xhr,
-	// 							fileEnrichedWithFile,
-	// 							apolloClient,
-	// 							nodeSortVar(),
-	// 							addNodeToFolder,
-	// 							false
-	// 						)
-	// 					);
-	//
-	// 					xhr.send(file);
-	//
-	// 					// TODO: add listener (onProgress) to update progress of child
-	//
-	// 					// TODO: update and use upload util
-	// 					// TODO: update progress of parent folder
-	// 					// TODO: update children with new info (file)
-	// 				});
-	// 			}
-	// 		}
-	// 	},
-	// 	[createFolder]
-	// );
 
 	const uploadFolder = useCallback<(folder: UploadFolderItem) => UploadFunctions['abort']>(
 		(uploadFolderItem) => {
@@ -239,9 +99,11 @@ export const useUpload: UseUploadHook = () => {
 									...uploadFolderItem,
 									nodeId: parentFolderNode.id,
 									status: UploadStatus.COMPLETED,
-									progress: 100
+									progress: uploadVar()[uploadFolderItem.id].progress + 1
 								}
 							});
+							incrementAllParents(uploadFolderItem);
+
 							forEach(uploadFolderItem.children, (child) => {
 								uploadVarReducer({
 									type: 'update',
@@ -317,17 +179,19 @@ export const useUpload: UseUploadHook = () => {
 			const treeRoot = await scan(fileSystemEntry);
 			const uploadItemFlatList: UploadItem[] = [];
 			if (isFileSystemDirectoryEntry(treeRoot)) {
-				const folderEnriched: UploadFolderItem = { ...fileEnriched, children: [] };
+				const folderEnriched: UploadFolderItem = { ...fileEnriched, children: [], contentCount: 0 };
 				uploadItemFlatList.push(folderEnriched);
-				folderEnriched.children = await deepMapTreeNodes(
+				const { flatChildrenList, directChildrenIds } = await deepMapTreeNodes(
 					treeRoot.children,
-					folderEnriched.id,
-					uploadItemFlatList
+					folderEnriched.id
 				);
+				folderEnriched.children = directChildrenIds;
+				// consider also the folder itself in the count
+				folderEnriched.contentCount = flatChildrenList.length + 1;
+				uploadItemFlatList.push(...flatChildrenList);
 			}
 			return map(uploadItemFlatList, (uploadItem) => ({
 				item: uploadItem,
-				// TODO: implement functions
 				functions: {
 					abort: null,
 					retry: (newFile) => startUploadAndGetAbortFunction(newFile)
@@ -434,8 +298,25 @@ export const useUpload: UseUploadHook = () => {
 	const removeById = useCallback(
 		(ids: Array<string>) => {
 			forEach(ids, (id) => {
-				if (uploadVar()[id].status === UploadStatus.LOADING) {
+				const itemToRemove = uploadVar()[id];
+				if (itemToRemove.status === UploadStatus.LOADING) {
 					abort(id);
+				}
+				if (itemToRemove.parentId !== null) {
+					const parentItem = uploadVar()[itemToRemove.parentId];
+					if (isUploadFolderItem(parentItem)) {
+						// TODO: if itemToRemove is a folder, abort all the children recursively
+						const updatedParent: Partial<UploadFolderItem> & Pick<UploadFolderItem, 'id'> = {
+							id: parentItem.id,
+							children: filter(parentItem.children, (childId) => childId !== id),
+							// TODO: if itemToRemove is a folder, decrease by itemToRemove.contentCount
+							contentCount: parentItem.contentCount - 1
+						};
+						uploadVarReducer({
+							type: 'update',
+							value: updatedParent
+						});
+					}
 				}
 			});
 			uploadVarReducer({ type: 'remove', value: ids });

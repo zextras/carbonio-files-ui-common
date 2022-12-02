@@ -14,6 +14,7 @@ import includes from 'lodash/includes';
 import reduce from 'lodash/reduce';
 import remove from 'lodash/remove';
 import size from 'lodash/size';
+import { v4 as uuidv4 } from 'uuid';
 
 import { UploadFunctions, uploadFunctionsVar, UploadRecord, uploadVar } from '../apollo/uploadVar';
 import { REST_ENDPOINT, UPLOAD_PATH, UPLOAD_QUEUE_LIMIT, UPLOAD_VERSION_PATH } from '../constants';
@@ -32,7 +33,7 @@ import {
 	NodeSort,
 	NodeType
 } from '../types/graphql/types';
-import { encodeBase64, isFolder } from './utils';
+import { encodeBase64, isFileSystemDirectoryEntry, isFolder, TreeNode } from './utils';
 
 export type UploadAddType = { file: File; fileSystemEntry?: FileSystemEntry | null };
 
@@ -50,22 +51,14 @@ export function waitingQueueIsPopulated(): boolean {
 export function canBeProcessed(id: string): boolean {
 	return uploadVar()[id].parentNodeId !== null;
 }
-export function getWaitingQueueFirstReadyEntry(): string | null {
-	let result = null;
-	forEach(waitingQueue, (waitingQueueElementId) => {
-		if (canBeProcessed(waitingQueueElementId)) {
-			result = waitingQueueElementId;
-			return false;
-		}
-		return true;
-	});
-	return result;
+export function getWaitingQueueFirstReadyEntry(): string | undefined {
+	return find(waitingQueue, (waitingQueueElementId) => canBeProcessed(waitingQueueElementId));
 }
 
 type UploadAction =
 	| { type: 'add'; value: UploadRecord }
 	| { type: 'remove'; value: string[] }
-	| { type: 'update'; value: { id: string; path?: [] } & Partial<UploadItem> };
+	| { type: 'update'; value: { id: string; } & Partial<UploadItem> };
 
 export function uploadVarReducer(action: UploadAction): UploadRecord {
 	switch (action.type) {
@@ -96,6 +89,20 @@ export function uploadVarReducer(action: UploadAction): UploadRecord {
 			return uploadVar();
 		default:
 			return uploadVar();
+	}
+}
+
+export function incrementAllParents(uploadItem: UploadItem): void {
+	if (uploadItem.parentId) {
+		const parent = uploadVar()[uploadItem.parentId];
+		uploadVarReducer({
+			type: 'update',
+			value: {
+				id: parent.id,
+				progress: parent.progress + 1
+			}
+		});
+		incrementAllParents(parent);
 	}
 }
 
@@ -146,7 +153,7 @@ export function singleRetry(id: string): void {
 }
 
 export const tickQueues = (): void => {
-	while (loadingQueueHaveAvailableSlot() && getWaitingQueueFirstReadyEntry() !== null) {
+	while (loadingQueueHaveAvailableSlot() && getWaitingQueueFirstReadyEntry() !== undefined) {
 		const firstReadyEntry = getWaitingQueueFirstReadyEntry();
 		if (firstReadyEntry) {
 			remove(waitingQueue, (waitingQueueElementId) => waitingQueueElementId === firstReadyEntry);
@@ -175,6 +182,8 @@ export function uploadCompleted(
 			type: 'update',
 			value: { id: fileEnriched.id, status: UploadStatus.COMPLETED, progress: 100, nodeId }
 		});
+
+		incrementAllParents(fileEnriched);
 
 		apolloClient
 			.query<GetChildQuery, GetChildQueryVariables>({
@@ -362,4 +371,52 @@ export function flatUploadItemChildrenIds(
 		result.push(uploadItemId);
 	}
 	return result;
+}
+
+export function getFileSystemFileEntryFile(fileSystemEntry: FileSystemFileEntry): Promise<File> {
+	return new Promise((resolve, reject) => {
+		fileSystemEntry.file((file) => {
+			resolve(file);
+		}, reject);
+	});
+}
+
+export async function deepMapTreeNodes(
+	treeNodes: TreeNode[] | undefined,
+	parentId: string
+): Promise<{ directChildrenIds: string[]; flatChildrenList: Array<UploadItem> }> {
+	const childrenIds: string[] = [];
+	const flatChildren: Array<UploadItem> = [];
+	for (let i = 0; treeNodes && i < treeNodes.length; i += 1) {
+		const treeNode = treeNodes[i];
+		const fileEnriched: UploadItem = {
+			file: null,
+			parentId,
+			progress: 0,
+			status: UploadStatus.QUEUED,
+			id: `upload-${uuidv4()}`,
+			nodeId: null,
+			parentNodeId: null,
+			fullPath: treeNode.fullPath,
+			name: treeNode.name
+		};
+		childrenIds.push(fileEnriched.id);
+		if (isFileSystemDirectoryEntry(treeNode)) {
+			const folderEnriched: UploadFolderItem = { ...fileEnriched, children: [], contentCount: 0 };
+			// eslint-disable-next-line no-await-in-loop
+			const { directChildrenIds, flatChildrenList } = await deepMapTreeNodes(
+				treeNode.children,
+				fileEnriched.id
+			);
+			folderEnriched.children = directChildrenIds;
+			// consider also the folder itself in the count
+			folderEnriched.contentCount = flatChildrenList.length + 1;
+			flatChildren.push(folderEnriched, ...flatChildrenList);
+		} else {
+			// eslint-disable-next-line no-await-in-loop
+			fileEnriched.file = await getFileSystemFileEntryFile(treeNode);
+			flatChildren.push(fileEnriched);
+		}
+	}
+	return { directChildrenIds: childrenIds, flatChildrenList: flatChildren };
 }

@@ -15,7 +15,7 @@ import { LIST_ITEM_AVATAR_HEIGHT_COMPACT } from '../../constants';
 import { Breadcrumbs } from '../../design_system_fork/Breadcrumbs';
 import { useUploadActions } from '../../hooks/useUploadActions';
 import { Crumb } from '../../types/common';
-import { getUploadNodeType } from '../../utils/uploadUtils';
+import { getUploadNodeType, isUploadFolderItem } from '../../utils/uploadUtils';
 import { getIconByFileType } from '../../utils/utils';
 import { NodeAvatarIcon } from './NodeAvatarIcon';
 import { NodeHoverBar } from './NodeHoverBar';
@@ -27,6 +27,7 @@ interface UploadNodeDetailsListItemProps {
 }
 
 export const UploadNodeDetailsListItem = ({ id }: UploadNodeDetailsListItemProps): JSX.Element => {
+	// TODO: extract and memoized
 	const uploadStatus = useReactiveVar(uploadVar);
 
 	const uploadChildItem = useMemo(() => uploadStatus[id], [id, uploadStatus]);
@@ -88,7 +89,11 @@ export const UploadNodeDetailsListItem = ({ id }: UploadNodeDetailsListItemProps
 					</Text>
 					<Breadcrumbs crumbs={crumbs} $size={'extrasmall'} color={'gray0.disabled'} />
 				</Container>
-				<Text size={'small'}>{uploadChildItem.progress}</Text>
+				<Text size={'small'}>
+					{(isUploadFolderItem(uploadChildItem) &&
+						`${uploadChildItem.progress}/${uploadChildItem.contentCount}`) ||
+						`${uploadChildItem.progress}%`}
+				</Text>
 				<UploadStatusIcon status={uploadChildItem.status} />
 			</HoverContainer>
 			<NodeHoverBar
