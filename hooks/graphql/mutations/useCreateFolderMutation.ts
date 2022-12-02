@@ -15,13 +15,12 @@ import {
 	CreateFolderMutationVariables,
 	Folder
 } from '../../../types/graphql/types';
-import { MakeOptional } from '../../../types/utils';
 import { scrollToNodeItem } from '../../../utils/utils';
 import { useErrorHandler } from '../../useErrorHandler';
-import { CachedFolder, useUpdateFolderContent } from '../useUpdateFolderContent';
+import { useUpdateFolderContent } from '../useUpdateFolderContent';
 
 export type CreateFolderType = (
-	parentFolder: MakeOptional<Pick<Folder, 'id' | 'children'>, 'children'>,
+	parentFolder: Pick<Folder, 'id'>,
 	name: string
 ) => Promise<FetchResult<CreateFolderMutation>>;
 
@@ -55,12 +54,9 @@ export function useCreateFolderMutation(
 				// If so, write the folder in cache,
 				// otherwise this new folder will be loaded with next fetchMore calls
 				update(cache, { data }) {
-					if (data?.createFolder && parentFolder.children !== undefined) {
-						const newPosition = addNodeToFolder(parentFolder as CachedFolder, data.createFolder);
-						scrollToNodeItem(
-							data.createFolder.id,
-							newPosition === parentFolder.children.nodes.length
-						);
+					if (data?.createFolder) {
+						const { isLast } = addNodeToFolder(parentFolder, data.createFolder);
+						scrollToNodeItem(data.createFolder.id, isLast);
 					}
 				}
 			});

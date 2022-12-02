@@ -72,13 +72,10 @@ export function useUpdateNodeMutation(): [
 							});
 							if (parentFolder?.getNode?.__typename === 'Folder') {
 								const parentNode = parentFolder.getNode;
-								const newPosition = addNodeToFolder(parentNode, updatedNode);
+								const { isLast } = addNodeToFolder(parentNode, updatedNode);
 								const currentFolder = folderId || rootId;
 								if (parentNode.id === currentFolder) {
-									scrollToNodeItem(
-										updatedNode.id,
-										newPosition === parentNode.children.nodes.length
-									);
+									scrollToNodeItem(updatedNode.id, isLast);
 								}
 							}
 						}
