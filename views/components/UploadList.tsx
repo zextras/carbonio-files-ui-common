@@ -82,7 +82,7 @@ export const UploadList: React.VFC = () => {
 	const items = useMemo(
 		() =>
 			map(
-				uploadStatus,
+				filter(uploadStatus, (item) => item.parentId === null),
 				(item) =>
 					(item.parentId === null && (
 						<UploadListItemWrapper

@@ -140,7 +140,7 @@ describe('Upload list', () => {
 					parentId: localRoot.id,
 					nodeId: file.id,
 					status: UploadStatus.COMPLETED,
-					percentage: 100,
+					progress: 100,
 					id: file.id
 				};
 			});

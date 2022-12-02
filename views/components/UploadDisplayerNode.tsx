@@ -5,17 +5,20 @@
  */
 import React, { useMemo } from 'react';
 
+import { useReactiveVar } from '@apollo/client';
 import { CollapsingActions, Container } from '@zextras/carbonio-design-system';
+import drop from 'lodash/drop';
 import map from 'lodash/map';
 import { useTranslation } from 'react-i18next';
 
 import { useActiveNode } from '../../../hooks/useActiveNode';
+import { uploadVar } from '../../apollo/uploadVar';
 import { useGetBaseNodeQuery } from '../../hooks/graphql/queries/useGetBaseNodeQuery';
 import { useUploadActions } from '../../hooks/useUploadActions';
 import { UploadItem } from '../../types/common';
 import { NodeType } from '../../types/graphql/types';
 import { getUploadNodeType, isUploadFolderItem } from '../../utils/uploadUtils';
-import { humanFileSize } from '../../utils/utils';
+import { flatUploadItemChildrenIds, humanFileSize } from '../../utils/utils';
 import { DisplayerHeader } from './DisplayerHeader';
 import { NodeContent } from './NodeContent';
 import { PathRow, PathRowProps } from './PathRow';
@@ -32,13 +35,16 @@ export const UploadDisplayerNode = ({ uploadItem }: UploadDisplayerNodeProps): J
 	const { removeActiveNode } = useActiveNode();
 
 	const actions = useUploadActions([uploadItem]);
+	const uploadStatusMap = useReactiveVar<{ [id: string]: UploadItem }>(uploadVar);
 
 	const contentItems = useMemo(
 		() =>
 			isUploadFolderItem(uploadItem)
-				? map(uploadItem.children, (childItem) => <UploadNodeDetailsListItem id={childItem} />)
+				? map(drop(flatUploadItemChildrenIds(uploadItem.id, uploadStatusMap)), (childItemId) => (
+						<UploadNodeDetailsListItem id={childItemId} />
+				  ))
 				: undefined,
-		[uploadItem]
+		[uploadItem, uploadStatusMap]
 	);
 
 	const { data: parentData, loading: loadingParent } = useGetBaseNodeQuery(
@@ -74,7 +80,7 @@ export const UploadDisplayerNode = ({ uploadItem }: UploadDisplayerNodeProps): J
 			rootId: undefined,
 			id: ''
 		};
-	}, [loadingParent, uploadItem.id, uploadItem.parentId, parentData]);
+	}, [loadingParent, parentData, uploadItem.fullPath, uploadItem.id, uploadItem.parentId]);
 
 	return (
 		<>

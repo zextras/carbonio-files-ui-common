@@ -30,7 +30,7 @@ interface UploadListItemProps {
 	extension?: string;
 	mimeType: string;
 	status: UploadStatus;
-	percentage: number;
+	progress: number;
 	permittedContextualMenuActionItems: DSAction[];
 	permittedHoverBarActionItems: DSAction[];
 	isSelected: boolean;
@@ -57,7 +57,7 @@ export const UploadListItem = React.memo<UploadListItemProps>(
 		extension: _extension,
 		mimeType: _mimeType,
 		status,
-		percentage,
+		progress,
 		isSelected,
 		isSelectionModeActive,
 		selectId,
@@ -142,7 +142,7 @@ export const UploadListItem = React.memo<UploadListItemProps>(
 								<Text size="small">
 									{status === UploadStatus.QUEUED
 										? t('uploadItem.queued', 'Queued')
-										: `${percentage}%`}
+										: `${progress}%`}
 								</Text>
 								<Padding left="extrasmall">
 									<UploadStatusIcon status={status} />

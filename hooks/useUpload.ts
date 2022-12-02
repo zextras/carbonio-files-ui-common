@@ -12,33 +12,30 @@ import includes from 'lodash/includes';
 import map from 'lodash/map';
 import noop from 'lodash/noop';
 import partition from 'lodash/partition';
-import size from 'lodash/size';
+import remove from 'lodash/remove';
 import { v4 as uuidv4 } from 'uuid';
 
 import buildClient from '../apollo';
 import { nodeSortVar } from '../apollo/nodeSortVar';
 import { UploadFunctions, uploadFunctionsVar, uploadVar } from '../apollo/uploadVar';
-import { UPLOAD_QUEUE_LIMIT } from '../constants';
 import { UploadFolderItem, UploadItem, UploadStatus } from '../types/common';
-import { File as FilesFile, Folder } from '../types/graphql/types';
+import { File as FilesFile } from '../types/graphql/types';
 import { DeepPick } from '../types/utils';
+import { isFolder } from '../utils/ActionsFactory';
 import {
 	isUploadFolderItem,
 	loadingQueue,
 	singleRetry,
+	tickQueues,
 	upload,
 	UploadAddType,
 	uploadVarReducer,
-	uploadVersion
+	uploadVersion,
+	waitingQueue
 } from '../utils/uploadUtils';
 import { isFileSystemDirectoryEntry, scan, TreeNode } from '../utils/utils';
 import { useCreateFolderMutation } from './graphql/mutations/useCreateFolderMutation';
 import { useUpdateFolderContent } from './graphql/useUpdateFolderContent';
-
-type FullPathMap = Record<
-	string,
-	{ key: string; value: Pick<Folder, '__typename' | 'id'> | undefined }
->;
 
 type UploadVarObject = {
 	filesEnriched: { [id: string]: UploadItem };
@@ -116,8 +113,6 @@ export const useUpload: UseUploadHook = () => {
 		showSnackbar: false,
 		client: apolloClient
 	});
-
-	// const fullPathParentIdMapRef = useRef<FullPathMap>({});
 
 	// const createFolderWithChildren = useCallback(
 	// 	(fileEnriched: MakeOptional<UploadItem, 'file'>, parentFolder: Pick<Folder, 'id'>) => {
@@ -214,43 +209,69 @@ export const useUpload: UseUploadHook = () => {
 	// 	[createFolder]
 	// );
 
-	const uploadFolder = useCallback<(folder: UploadItem) => UploadFunctions['abort']>(
-		async (folder) =>
-			// if (folder.fileSystemEntry) {
-			// const treeRoot = await scan(folder.fileSystemEntry);
+	const uploadFolder = useCallback<(folder: UploadFolderItem) => UploadFunctions['abort']>(
+		(uploadFolderItem) => {
+			if (uploadFolderItem.parentNodeId) {
+				const updatedFolder: UploadFolderItem = {
+					...uploadFolderItem,
+					status: UploadStatus.LOADING,
+					progress: 0
+				};
+				uploadVarReducer({
+					type: 'update',
+					value: updatedFolder
+				});
 
-			// const childrenEnriched = isFileSystemDirectoryEntry(treeRoot)
-			// 	? deepMapTreeNodes(treeRoot.children, [folder.id])
-			// 	: undefined;
+				createFolder({ id: uploadFolderItem.parentNodeId }, uploadFolderItem.name)
+					.then((createFolderFunctionResult) => {
+						if (
+							createFolderFunctionResult.data?.createFolder &&
+							isFolder(createFolderFunctionResult.data.createFolder)
+						) {
+							return createFolderFunctionResult.data?.createFolder;
+						}
+						return null;
+					})
+					.then((parentFolderNode) => {
+						if (parentFolderNode) {
+							uploadVarReducer({
+								type: 'update',
+								value: {
+									...uploadFolderItem,
+									nodeId: parentFolderNode.id,
+									status: UploadStatus.COMPLETED,
+									progress: 100
+								}
+							});
+							forEach(uploadFolderItem.children, (child) => {
+								uploadVarReducer({
+									type: 'update',
+									value: {
+										id: child,
+										parentNodeId: parentFolderNode.id
+									}
+								});
+							});
 
-			// const updatedFolder: UploadItem = {
-			// 	...folder,
-			// 	status: UploadStatus.LOADING,
-			// 	progress: 0,
-			// 	children: childrenEnriched
-			// };
-			// uploadVarReducer({
-			// 	type: 'update',
-			// 	value: updatedFolder
-			// });
-
-			// createFolderWithChildren(updatedFolder, { id: folder.parentId });
-			// }
-
-			noop,
-		[]
+							if (includes(loadingQueue, uploadFolderItem.id)) {
+								remove(loadingQueue, (item) => item === uploadFolderItem.id);
+								tickQueues();
+							}
+						}
+					});
+			}
+			return null;
+		},
+		[createFolder]
 	);
 
 	const startUploadAndGetAbortFunction = useCallback(
 		(fileToUpload: UploadItem): UploadFunctions['abort'] => {
-			const canBeLoaded = size(loadingQueue) < UPLOAD_QUEUE_LIMIT;
-			if (canBeLoaded) {
-				if (isUploadFolderItem(fileToUpload)) {
-					return uploadFolder(fileToUpload);
-				}
-				if (fileToUpload.file !== null && fileToUpload.parentNodeId !== null) {
-					return upload(fileToUpload, apolloClient, nodeSortVar(), addNodeToFolder);
-				}
+			if (isUploadFolderItem(fileToUpload)) {
+				return uploadFolder(fileToUpload);
+			}
+			if (fileToUpload.file !== null && fileToUpload.parentNodeId !== null) {
+				return upload(fileToUpload, apolloClient, nodeSortVar(), addNodeToFolder);
 			}
 			return Promise.resolve(noop);
 		},
@@ -292,27 +313,30 @@ export const useUpload: UseUploadHook = () => {
 			fileEnriched: UploadItem,
 			fileSystemEntry: FileSystemDirectoryEntry
 		) => Promise<Array<{ item: UploadItem; functions: UploadFunctions }>>
-	>(async (fileEnriched, fileSystemEntry) => {
-		const treeRoot = await scan(fileSystemEntry);
-		const uploadItemFlatList: UploadItem[] = [];
-		if (isFileSystemDirectoryEntry(treeRoot)) {
-			const folderEnriched: UploadFolderItem = { ...fileEnriched, children: [] };
-			uploadItemFlatList.push(folderEnriched);
-			folderEnriched.children = await deepMapTreeNodes(
-				treeRoot.children,
-				folderEnriched.id,
-				uploadItemFlatList
-			);
-		}
-		return map(uploadItemFlatList, (uploadItem) => ({
-			item: uploadItem,
-			// TODO: implement functions
-			functions: {
-				abort: null,
-				retry: (): Promise<() => void> => Promise.resolve(() => undefined)
+	>(
+		async (fileEnriched, fileSystemEntry) => {
+			const treeRoot = await scan(fileSystemEntry);
+			const uploadItemFlatList: UploadItem[] = [];
+			if (isFileSystemDirectoryEntry(treeRoot)) {
+				const folderEnriched: UploadFolderItem = { ...fileEnriched, children: [] };
+				uploadItemFlatList.push(folderEnriched);
+				folderEnriched.children = await deepMapTreeNodes(
+					treeRoot.children,
+					folderEnriched.id,
+					uploadItemFlatList
+				);
 			}
-		}));
-	}, []);
+			return map(uploadItemFlatList, (uploadItem) => ({
+				item: uploadItem,
+				// TODO: implement functions
+				functions: {
+					abort: null,
+					retry: (newFile) => startUploadAndGetAbortFunction(newFile)
+				}
+			}));
+		},
+		[startUploadAndGetAbortFunction]
+	);
 
 	const prepareReactiveVar = useCallback<
 		(items: Array<UploadAddType>, destinationId: string) => Promise<UploadVarObject>
@@ -328,39 +352,19 @@ export const useUpload: UseUploadHook = () => {
 						itemEnriched.item,
 						item.fileSystemEntry
 					);
-					console.log('prepareReactiveVar.folderWithChildren', folderWithChildren);
 					for (let j = 0; j < folderWithChildren.length; j += 1) {
 						const folderWithChildrenItem = folderWithChildren[j];
-						console.log('prepareReactiveVar.folderWithChildren.forEach.before', { ...accumulator });
-						console.log(
-							'prepareReactiveVar.folderWithChildren.forEach.item',
-							folderWithChildrenItem
-						);
-
+						waitingQueue.push(folderWithChildrenItem.item.id);
 						accumulator.filesEnriched[folderWithChildrenItem.item.id] = folderWithChildrenItem.item;
 						accumulator.uploadFunctions[folderWithChildrenItem.item.id] =
 							folderWithChildrenItem.functions;
-						console.log('prepareReactiveVar.folderWithChildren.forEach.after', { ...accumulator });
 					}
-					// forEach(folderWithChildren, (folderWithChildrenItem) => {
-					//
-					// });
 				} else {
-					console.log('prepareReactiveVar.file.accumulator', accumulator);
+					waitingQueue.push(itemEnriched.item.id);
 					accumulator.filesEnriched[itemEnriched.item.id] = itemEnriched.item;
 					accumulator.uploadFunctions[itemEnriched.item.id] = itemEnriched.functions;
 				}
 			}
-			// const returnObject = reduce(
-			// 	items,
-			// 	async (accumulator, item) => {
-			// return accumulator;
-			// 	},
-			// 	{ filesEnriched: {}, uploadFunctions: {} }
-			// );
-
-			// return returnObject;
-			console.log('prepareReactiveVar.accumulator.returnValue', { ...accumulator });
 			return accumulator;
 		},
 		[prepareFolderItem, prepareItem]
@@ -368,20 +372,11 @@ export const useUpload: UseUploadHook = () => {
 
 	const add = useCallback<ReturnType<UseUploadHook>['add']>(
 		(itemsToAdd, destinationId) => {
-			// Upload only valid files
-			// const filesEnriched: { [id: string]: UploadItem } = {};
-			// const uploadFunctions: { [id: string]: UploadFunctions } = {};
 			prepareReactiveVar(itemsToAdd, destinationId).then((uploadVarObject) => {
-				console.log('add.then.uploadVarObject', uploadVarObject);
 				uploadVarReducer({ type: 'add', value: uploadVarObject.filesEnriched });
 				uploadFunctionsVar({ ...uploadFunctionsVar(), ...uploadVarObject.uploadFunctions });
+				tickQueues();
 			});
-			// TODO start upload of first items of queue
-			// if (canBeLoaded) {
-			// 	loadingQueue.push(fileEnriched.id);
-			// } else {
-			// 	waitingQueue.push(fileEnriched.id);
-			// }
 		},
 		[prepareReactiveVar]
 	);

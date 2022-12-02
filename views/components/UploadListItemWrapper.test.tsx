@@ -42,11 +42,11 @@ jest.mock('../../../hooks/useNavigation', () => ({
 }));
 
 describe('Upload List Item Wrapper', () => {
-	test('File name, destination folder, percentage and size are visible', async () => {
+	test('File name, destination folder, progress and size are visible', async () => {
 		const destinationFolder = populateFolder();
 		const file: UploadItem = {
 			file: new File(['uploading file'], 'file1.txt', { type: 'text/plain' }),
-			percentage: 20,
+			progress: 20,
 			parentId: destinationFolder.id,
 			id: 'fileToUploadId',
 			status: UploadStatus.LOADING
@@ -71,7 +71,7 @@ describe('Upload List Item Wrapper', () => {
 		);
 		expect(destinationFolderItem).toBeVisible();
 		expect(screen.getByText(humanFileSize(file.file.size))).toBeVisible();
-		expect(screen.getByText(new RegExp(`${file.percentage}\\s*%`, 'm'))).toBeVisible();
+		expect(screen.getByText(new RegExp(`${file.progress}\\s*%`, 'm'))).toBeVisible();
 		expect(screen.getByTestId('icon: AnimatedLoader')).toBeVisible();
 	});
 
@@ -79,7 +79,7 @@ describe('Upload List Item Wrapper', () => {
 		const destinationFolder = populateFolder();
 		const file: UploadItem = {
 			file: new File(['uploading file'], 'file1.txt', { type: 'text/plain' }),
-			percentage: 20,
+			progress: 20,
 			parentId: destinationFolder.id,
 			id: 'fileToUploadId',
 			status: UploadStatus.LOADING
@@ -129,7 +129,7 @@ describe('Upload List Item Wrapper', () => {
 		const destinationFolder = populateFolder();
 		const file: UploadItem = {
 			file: new File(['uploading file'], 'file1.txt', { type: 'text/plain' }),
-			percentage: 0,
+			progress: 0,
 			parentId: destinationFolder.id,
 			id: 'fileToUploadId',
 			status: UploadStatus.QUEUED

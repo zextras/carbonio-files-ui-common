@@ -10,15 +10,13 @@
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client';
 import find from 'lodash/find';
 import forEach from 'lodash/forEach';
-import head from 'lodash/head';
 import includes from 'lodash/includes';
-import pullAt from 'lodash/pullAt';
 import reduce from 'lodash/reduce';
 import remove from 'lodash/remove';
 import size from 'lodash/size';
 
 import { UploadFunctions, uploadFunctionsVar, UploadRecord, uploadVar } from '../apollo/uploadVar';
-import { REST_ENDPOINT, UPLOAD_PATH, UPLOAD_VERSION_PATH } from '../constants';
+import { REST_ENDPOINT, UPLOAD_PATH, UPLOAD_QUEUE_LIMIT, UPLOAD_VERSION_PATH } from '../constants';
 import GET_CHILD from '../graphql/queries/getChild.graphql';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import GET_VERSIONS from '../graphql/queries/getVersions.graphql';
@@ -41,6 +39,29 @@ export type UploadAddType = { file: File; fileSystemEntry?: FileSystemEntry | nu
 
 export const waitingQueue: Array<string> = [];
 export const loadingQueue: Array<string> = [];
+
+export function loadingQueueHaveAvailableSlot(): boolean {
+	return size(loadingQueue) < UPLOAD_QUEUE_LIMIT;
+}
+
+export function waitingQueueIsPopulated(): boolean {
+	return size(waitingQueue) > 0;
+}
+
+export function canBeProcessed(id: string): boolean {
+	return uploadVar()[id].parentNodeId !== null;
+}
+export function getWaitingQueueFirstReadyEntry(): string | null {
+	let result = null;
+	forEach(waitingQueue, (waitingQueueElementId) => {
+		if (canBeProcessed(waitingQueueElementId)) {
+			result = waitingQueueElementId;
+			return false;
+		}
+		return true;
+	});
+	return result;
+}
 
 type UploadAction =
 	| { type: 'add'; value: UploadRecord }
@@ -96,7 +117,7 @@ export function updateProgress(ev: ProgressEvent, fileEnriched: UploadItem): voi
 	if (ev.lengthComputable) {
 		const updatedValue = {
 			...fileEnriched,
-			percentage: Math.floor((ev.loaded / ev.total) * 100)
+			progress: Math.floor((ev.loaded / ev.total) * 100)
 		};
 
 		uploadVarReducer({ type: 'update', value: updatedValue });
@@ -124,6 +145,17 @@ export function singleRetry(id: string): void {
 		});
 	}
 }
+
+export const tickQueues = (): void => {
+	while (loadingQueueHaveAvailableSlot() && getWaitingQueueFirstReadyEntry() !== null) {
+		const firstReadyEntry = getWaitingQueueFirstReadyEntry();
+		if (firstReadyEntry) {
+			remove(waitingQueue, (waitingQueueElementId) => waitingQueueElementId === firstReadyEntry);
+			loadingQueue.push(firstReadyEntry);
+			singleRetry(firstReadyEntry);
+		}
+	}
+};
 
 export function uploadCompleted(
 	xhr: XMLHttpRequest,
@@ -198,11 +230,7 @@ export function uploadCompleted(
 
 	if (includes(loadingQueue, fileEnriched.id)) {
 		remove(loadingQueue, (item) => item === fileEnriched.id);
-		if (size(waitingQueue) > 0) {
-			const next = head(pullAt(waitingQueue, [0]));
-			loadingQueue.push(next as string);
-			singleRetry(next as string);
-		}
+		tickQueues();
 	}
 }
 
