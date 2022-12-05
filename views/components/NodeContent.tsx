@@ -58,8 +58,9 @@ export const NodeContent = ({
 			data-testid={`details-list-${id || ''}`}
 			background={'gray6'}
 			padding={{ all: 'large' }}
-			height={'fit'}
-			maxHeight="25rem"
+			height={'auto'}
+			flexGrow={1}
+			flexShrink={1}
 		>
 			<Padding bottom="large">
 				<Text>{t('displayer.details.content', 'Content')}</Text>

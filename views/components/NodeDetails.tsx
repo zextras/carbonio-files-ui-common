@@ -105,6 +105,7 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 			mainAlignment={'flex-start'}
 			background={'gray5'}
 			height={'auto'}
+			maxHeight={'100%'}
 			data-testid="node-details"
 			gap="0.75rem"
 		>

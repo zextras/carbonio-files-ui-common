@@ -114,10 +114,11 @@ export const UploadDisplayerNode = ({ uploadItem }: UploadDisplayerNodeProps): J
 					mainAlignment={'flex-start'}
 					background={'gray5'}
 					height={'auto'}
+					maxHeight={'100%'}
 					data-testid="node-details"
 					gap="0.75rem"
 				>
-					<DisplayerContentContainer
+					<Container
 						mainAlignment={'flex-start'}
 						crossAlignment={'flex-start'}
 						height={'fit'}
@@ -138,7 +139,7 @@ export const UploadDisplayerNode = ({ uploadItem }: UploadDisplayerNodeProps): J
 							type={parentNode.type}
 							rootId={parentNode.rootId}
 						/>
-					</DisplayerContentContainer>
+					</Container>
 					{contentItems !== undefined && (
 						<NodeContent id={uploadItem.id} loading={false} hasMore={false}>
 							{contentItems}
