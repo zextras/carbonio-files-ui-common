@@ -371,7 +371,7 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 	);
 
 	const [$isSupportedByPreview, previewType] = useMemo(
-		() => isSupportedByPreview(mimeType),
+		() => isSupportedByPreview(mimeType, 'thumbnail'),
 		[mimeType]
 	);
 
