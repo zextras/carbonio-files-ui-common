@@ -233,17 +233,12 @@ export function decrementAllParentsDenominatorByAmount(
 	amount: number
 ): void {
 	if (uploadItem.parentId) {
-		const parent = uploadVar()[uploadItem.parentId];
-		const status =
-			(!isTheLastElement(parent.id) && UploadStatus.LOADING) ||
-			(thereAreFailedElements(parent.id) && UploadStatus.FAILED) ||
-			UploadStatus.COMPLETED;
+		const parent = uploadVar()[uploadItem.parentId] as UploadFolderItem;
 		uploadVarReducer({
 			type: 'update',
 			value: {
-				status,
 				id: parent.id,
-				progress: parent.progress - amount
+				contentCount: parent.contentCount - amount
 			}
 		});
 		decrementAllParentsDenominatorByAmount(parent, amount);
