@@ -22,12 +22,21 @@ import { UploadFolderItem, UploadItem, UploadStatus } from '../types/common';
 import { File as FilesFile } from '../types/graphql/types';
 import { DeepPick } from '../types/utils';
 import {
+	decrementAllParentsCompletedByAmount,
+	decrementAllParentsDenominatorByAmount,
+	decrementAllParentsFailedCountByAmount,
 	deepMapTreeNodes,
+	flatUploadItemChildren,
 	incrementAllParents,
+	incrementAllParentsFailedCount,
+	isTheLastElement,
 	isUploadFolderItem,
 	loadingQueue,
+	removeFromParentChildren,
 	singleRetry,
+	thereAreFailedElements,
 	tickQueues,
+	updateAllParentsStatus,
 	upload,
 	UploadAddType,
 	uploadVarReducer,
@@ -91,35 +100,53 @@ export const useUpload: UseUploadHook = () => {
 						}
 						return null;
 					})
-					.then((parentFolderNode) => {
-						if (parentFolderNode) {
+					.then(
+						(parentFolderNode) => {
+							if (parentFolderNode) {
+								const status =
+									(!isTheLastElement(uploadFolderItem.id) && UploadStatus.LOADING) ||
+									(thereAreFailedElements(uploadFolderItem.id) && UploadStatus.FAILED) ||
+									UploadStatus.COMPLETED;
+								uploadVarReducer({
+									type: 'update',
+									value: {
+										...uploadFolderItem,
+										nodeId: parentFolderNode.id,
+										status,
+										progress: uploadVar()[uploadFolderItem.id].progress + 1
+									}
+								});
+								incrementAllParents(uploadFolderItem);
+
+								forEach(uploadFolderItem.children, (child) => {
+									uploadVarReducer({
+										type: 'update',
+										value: {
+											id: child,
+											parentNodeId: parentFolderNode.id
+										}
+									});
+								});
+
+								if (includes(loadingQueue, uploadFolderItem.id)) {
+									remove(loadingQueue, (item) => item === uploadFolderItem.id);
+									tickQueues();
+								}
+							}
+						},
+						() => {
 							uploadVarReducer({
 								type: 'update',
 								value: {
 									...uploadFolderItem,
-									nodeId: parentFolderNode.id,
-									status: UploadStatus.COMPLETED,
-									progress: uploadVar()[uploadFolderItem.id].progress + 1
+									status: UploadStatus.FAILED,
+									failedCount:
+										(uploadVar()[uploadFolderItem.id] as UploadFolderItem).failedCount + 1
 								}
 							});
-							incrementAllParents(uploadFolderItem);
-
-							forEach(uploadFolderItem.children, (child) => {
-								uploadVarReducer({
-									type: 'update',
-									value: {
-										id: child,
-										parentNodeId: parentFolderNode.id
-									}
-								});
-							});
-
-							if (includes(loadingQueue, uploadFolderItem.id)) {
-								remove(loadingQueue, (item) => item === uploadFolderItem.id);
-								tickQueues();
-							}
+							incrementAllParentsFailedCount(uploadFolderItem);
 						}
-					});
+					);
 			}
 			return null;
 		},
@@ -179,7 +206,12 @@ export const useUpload: UseUploadHook = () => {
 			const treeRoot = await scan(fileSystemEntry);
 			const uploadItemFlatList: UploadItem[] = [];
 			if (isFileSystemDirectoryEntry(treeRoot)) {
-				const folderEnriched: UploadFolderItem = { ...fileEnriched, children: [], contentCount: 0 };
+				const folderEnriched: UploadFolderItem = {
+					...fileEnriched,
+					children: [],
+					contentCount: 0,
+					failedCount: 0
+				};
 				uploadItemFlatList.push(folderEnriched);
 				const { flatChildrenList, directChildrenIds } = await deepMapTreeNodes(
 					treeRoot.children,
@@ -297,29 +329,61 @@ export const useUpload: UseUploadHook = () => {
 
 	const removeById = useCallback(
 		(ids: Array<string>) => {
+			const idsToRemove: Array<string> = [];
 			forEach(ids, (id) => {
 				const itemToRemove = uploadVar()[id];
-				if (itemToRemove.status === UploadStatus.LOADING) {
-					abort(id);
-				}
-				if (itemToRemove.parentId !== null) {
-					const parentItem = uploadVar()[itemToRemove.parentId];
-					if (isUploadFolderItem(parentItem)) {
-						// TODO: if itemToRemove is a folder, abort all the children recursively
-						const updatedParent: Partial<UploadFolderItem> & Pick<UploadFolderItem, 'id'> = {
-							id: parentItem.id,
-							children: filter(parentItem.children, (childId) => childId !== id),
-							// TODO: if itemToRemove is a folder, decrease by itemToRemove.contentCount
-							contentCount: parentItem.contentCount - 1
-						};
-						uploadVarReducer({
-							type: 'update',
-							value: updatedParent
-						});
+
+				if (isUploadFolderItem(itemToRemove)) {
+					const uploadItems = flatUploadItemChildren(itemToRemove, uploadVar());
+					const fileLoadingUploadItems = filter(
+						uploadItems,
+						(uploadItem) =>
+							!isUploadFolderItem(uploadItem) && uploadItem.status === UploadStatus.LOADING
+					);
+					// abort if loading
+					// TODO handle folder?
+					forEach(fileLoadingUploadItems, (fileLoadingUploadItem) =>
+						abort(fileLoadingUploadItem.id)
+					);
+					idsToRemove.push(...map(uploadItems, (uploadItem) => uploadItem.id));
+
+					// const idsToRemoveSize = size(itemToRemove);
+
+					// const failedItemsSize = size(
+					// 	filter(
+					// 		uploadItems,
+					// 		(uploadItem) =>
+					// 			(!isUploadFolderItem(uploadItem) && uploadItem.status === UploadStatus.FAILED) ||
+					// 			(isUploadFolderItem(uploadItem) &&
+					// 				uploadItem.status === UploadStatus.FAILED &&
+					// 				uploadItem.progress === 0)
+					// 	)
+					// );
+					//
+					// const completedItemsSize = size(
+					// 	filter(
+					// 		uploadItems,
+					// 		(uploadItem) =>
+					// 			(!isUploadFolderItem(uploadItem) && uploadItem.status === UploadStatus.COMPLETED) ||
+					// 			(isUploadFolderItem(uploadItem) && uploadItem.progress > 0)
+					// 	)
+					// );
+
+					decrementAllParentsDenominatorByAmount(itemToRemove, itemToRemove.contentCount);
+					decrementAllParentsCompletedByAmount(itemToRemove, itemToRemove.progress);
+					decrementAllParentsFailedCountByAmount(itemToRemove, itemToRemove.failedCount);
+				} else {
+					decrementAllParentsDenominatorByAmount(itemToRemove, 1);
+					if (itemToRemove.status === UploadStatus.COMPLETED) {
+						decrementAllParentsCompletedByAmount(itemToRemove, 1);
+					} else if (itemToRemove.status === UploadStatus.FAILED) {
+						decrementAllParentsFailedCountByAmount(itemToRemove, 1);
 					}
 				}
+				updateAllParentsStatus(itemToRemove);
+				removeFromParentChildren(itemToRemove);
 			});
-			uploadVarReducer({ type: 'remove', value: ids });
+			uploadVarReducer({ type: 'remove', value: idsToRemove });
 		},
 		[abort]
 	);

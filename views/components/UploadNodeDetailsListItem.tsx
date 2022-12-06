@@ -51,7 +51,7 @@ export const UploadNodeDetailsListItem = ({ id }: UploadNodeDetailsListItemProps
 		);
 	}, [uploadChildItem.fullPath]);
 
-	const hoverActions = useUploadActions([uploadChildItem]);
+	const hoverActions = useUploadActions([uploadChildItem], true);
 
 	return (
 		<ListItemContainer

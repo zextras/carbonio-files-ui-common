@@ -10,8 +10,8 @@ import { useActiveNode } from '../../../hooks/useActiveNode';
 import { useGetBaseNodeQuery } from '../../hooks/graphql/queries/useGetBaseNodeQuery';
 import { useUploadActions } from '../../hooks/useUploadActions';
 import { UploadItem } from '../../types/common';
-import { UploadListItem } from './UploadListItem';
 import { isUploadFolderItem } from '../../utils/uploadUtils';
+import { UploadListItem } from './UploadListItem';
 
 interface UploadListItemWrapperProps {
 	node: UploadItem;

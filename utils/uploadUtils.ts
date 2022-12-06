@@ -8,6 +8,7 @@
 // it might be a file without extension and with a size of 0 or exactly N x 4096B.
 // https://stackoverflow.com/a/25095250/17280436
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client';
+import filter from 'lodash/filter';
 import find from 'lodash/find';
 import forEach from 'lodash/forEach';
 import includes from 'lodash/includes';
@@ -51,14 +52,44 @@ export function waitingQueueIsPopulated(): boolean {
 export function canBeProcessed(id: string): boolean {
 	return uploadVar()[id].parentNodeId !== null;
 }
+
+export function isUploadFolderItem(item: Partial<UploadItem>): item is UploadFolderItem {
+	return typeof (item as UploadFolderItem).children !== 'undefined';
+}
+
+export function missingFolderElementsCount(id: string): number {
+	const uploadFolderItem = uploadVar()[id];
+	if (isUploadFolderItem(uploadFolderItem)) {
+		return uploadFolderItem.contentCount - uploadFolderItem.progress - uploadFolderItem.failedCount;
+	}
+	throw new Error('Unable to find contentCount on uploadItem');
+}
+
+export function isTheLastElement(id: string): boolean {
+	return missingFolderElementsCount(id) === 1;
+}
+
+export function thereAreFailedElements(id: string): boolean {
+	const uploadFolderItem = uploadVar()[id];
+	if (isUploadFolderItem(uploadFolderItem)) {
+		return uploadFolderItem.failedCount > 0;
+	}
+	throw new Error('Unable to find failedCount on uploadItem');
+}
+
 export function getWaitingQueueFirstReadyEntry(): string | undefined {
 	return find(waitingQueue, (waitingQueueElementId) => canBeProcessed(waitingQueueElementId));
 }
 
+type UploadActionUpdateValueType = { id: string } & (
+	| Partial<UploadItem>
+	| Partial<UploadFolderItem>
+);
+
 type UploadAction =
 	| { type: 'add'; value: UploadRecord }
 	| { type: 'remove'; value: string[] }
-	| { type: 'update'; value: { id: string; } & Partial<UploadItem> };
+	| { type: 'update'; value: UploadActionUpdateValueType | Array<UploadActionUpdateValueType> };
 
 export function uploadVarReducer(action: UploadAction): UploadRecord {
 	switch (action.type) {
@@ -66,6 +97,10 @@ export function uploadVarReducer(action: UploadAction): UploadRecord {
 			uploadVar({ ...uploadVar(), ...action.value });
 			return uploadVar();
 		case 'update':
+			if (action.value instanceof Array) {
+				// TODO
+				return uploadVar();
+			}
 			if (uploadVar()[action.value.id]) {
 				uploadVar({
 					...uploadVar(),
@@ -73,6 +108,7 @@ export function uploadVarReducer(action: UploadAction): UploadRecord {
 				});
 			}
 			return uploadVar();
+
 		case 'remove':
 			uploadVar(
 				reduce<UploadRecord, UploadRecord>(
@@ -92,17 +128,125 @@ export function uploadVarReducer(action: UploadAction): UploadRecord {
 	}
 }
 
-export function incrementAllParents(uploadItem: UploadItem): void {
+export function incrementAllParentsFailedCount(uploadItem: UploadItem): void {
 	if (uploadItem.parentId) {
-		const parent = uploadVar()[uploadItem.parentId];
+		const parent = uploadVar()[uploadItem.parentId] as UploadFolderItem;
+		const status = isTheLastElement(parent.id) ? UploadStatus.FAILED : UploadStatus.LOADING;
 		uploadVarReducer({
 			type: 'update',
 			value: {
+				status,
+				id: parent.id,
+				failedCount: parent.failedCount + 1
+			}
+		});
+		incrementAllParentsFailedCount(parent);
+	}
+}
+
+export function decrementAllParentsFailedCountByAmount(
+	uploadItem: UploadItem,
+	amount: number
+): void {
+	if (uploadItem.parentId) {
+		const parent = uploadVar()[uploadItem.parentId] as UploadFolderItem;
+		uploadVarReducer({
+			type: 'update',
+			value: {
+				id: parent.id,
+				failedCount: parent.failedCount - amount
+			}
+		});
+		decrementAllParentsFailedCountByAmount(parent, amount);
+	}
+}
+
+export function updateAllParentsStatus(uploadItem: UploadItem): void {
+	if (uploadItem.parentId) {
+		const parent = uploadVar()[uploadItem.parentId] as UploadFolderItem;
+		const status =
+			(parent.failedCount > 0 && UploadStatus.FAILED) ||
+			(parent.progress === parent.contentCount && UploadStatus.COMPLETED) ||
+			UploadStatus.LOADING;
+		uploadVarReducer({
+			type: 'update',
+			value: {
+				id: parent.id,
+				status
+			}
+		});
+		updateAllParentsStatus(parent);
+	}
+}
+
+export function removeFromParentChildren(uploadItem: UploadItem): void {
+	if (uploadItem.parentId) {
+		const parent = uploadVar()[uploadItem.parentId] as UploadFolderItem;
+		if (isUploadFolderItem(parent)) {
+			const updatedParent: Partial<UploadFolderItem> & Pick<UploadFolderItem, 'id'> = {
+				id: parent.id,
+				children: filter(parent.children, (childId) => childId !== uploadItem.id)
+			};
+			uploadVarReducer({
+				type: 'update',
+				value: updatedParent
+			});
+		}
+	}
+}
+
+export function decrementAllParentsCompletedByAmount(uploadItem: UploadItem, amount: number): void {
+	if (uploadItem.parentId) {
+		const parent = uploadVar()[uploadItem.parentId] as UploadFolderItem;
+		uploadVarReducer({
+			type: 'update',
+			value: {
+				id: parent.id,
+				progress: parent.progress - amount
+			}
+		});
+		decrementAllParentsCompletedByAmount(parent, amount);
+	}
+}
+
+export function incrementAllParents(uploadItem: UploadItem): void {
+	if (uploadItem.parentId) {
+		const parent = uploadVar()[uploadItem.parentId];
+		const status =
+			(!isTheLastElement(parent.id) && UploadStatus.LOADING) ||
+			(thereAreFailedElements(parent.id) && UploadStatus.FAILED) ||
+			UploadStatus.COMPLETED;
+		uploadVarReducer({
+			type: 'update',
+			value: {
+				status,
 				id: parent.id,
 				progress: parent.progress + 1
 			}
 		});
 		incrementAllParents(parent);
+	}
+}
+
+export function decrementAllParentsDenominatorByAmount(
+	uploadItem: UploadItem,
+	amount: number
+): void {
+	if (uploadItem.parentId) {
+		const parent = uploadVar()[uploadItem.parentId];
+		const status =
+			(!isTheLastElement(parent.id) && UploadStatus.LOADING) ||
+			(thereAreFailedElements(parent.id) && UploadStatus.FAILED) ||
+			UploadStatus.COMPLETED;
+		uploadVarReducer({
+			type: 'update',
+			value: {
+				status,
+				id: parent.id,
+				progress: parent.progress - amount
+			}
+		});
+		decrementAllParentsDenominatorByAmount(parent, amount);
 	}
 }
 
@@ -230,6 +374,8 @@ export function uploadCompleted(
 			type: 'update',
 			value: { id: fileEnriched.id, status: UploadStatus.FAILED }
 		});
+		incrementAllParentsFailedCount(fileEnriched);
+
 		const handledStatuses = [405, 413, 500, 0];
 		if (xhr.readyState !== XMLHttpRequest.UNSENT && !handledStatuses.includes(xhr.status)) {
 			console.error('upload error: unhandled status', xhr.status);
@@ -330,10 +476,6 @@ export function getUploadAddType(dataTransfer: DataTransfer): UploadAddType[] {
 	return fileEntries;
 }
 
-export function isUploadFolderItem(item: Partial<UploadItem>): item is UploadFolderItem {
-	return typeof (item as UploadFolderItem).children !== 'undefined';
-}
-
 export function getUploadNodeType(item: Partial<UploadItem>): NodeType {
 	return isUploadFolderItem(item) ? NodeType.Folder : NodeType.Other;
 }
@@ -402,7 +544,12 @@ export async function deepMapTreeNodes(
 		};
 		childrenIds.push(fileEnriched.id);
 		if (isFileSystemDirectoryEntry(treeNode)) {
-			const folderEnriched: UploadFolderItem = { ...fileEnriched, children: [], contentCount: 0 };
+			const folderEnriched: UploadFolderItem = {
+				...fileEnriched,
+				children: [],
+				contentCount: 0,
+				failedCount: 0
+			};
 			// eslint-disable-next-line no-await-in-loop
 			const { directChildrenIds, flatChildrenList } = await deepMapTreeNodes(
 				treeNode.children,

@@ -122,6 +122,7 @@ export interface UploadItem {
 export interface UploadFolderItem extends UploadItem {
 	children: Array<UploadItem['id']>;
 	contentCount: number;
+	failedCount: number;
 }
 
 export enum DocsType {

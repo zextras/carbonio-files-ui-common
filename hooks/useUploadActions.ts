@@ -10,13 +10,21 @@ import map from 'lodash/map';
 import { useTranslation } from 'react-i18next';
 
 import { useNavigation } from '../../hooks/useNavigation';
-import { Action, UploadItem } from '../types/common';
+import { Action, UploadItem, UploadStatus } from '../types/common';
 import { MakeRequired } from '../types/utils';
-import { buildActionItems, getPermittedUploadActions } from '../utils/ActionsFactory';
+import {
+	ActionsFactoryCheckerMap,
+	ActionsFactoryUploadItem,
+	buildActionItems,
+	getPermittedUploadActions
+} from '../utils/ActionsFactory';
 import { scrollToNodeItem } from '../utils/utils';
 import { useUpload } from './useUpload';
 
-export function useUploadActions(nodes: MakeRequired<Partial<UploadItem>, 'id'>[]): DSAction[] {
+export function useUploadActions(
+	nodes: MakeRequired<Partial<UploadItem>, 'id'>[],
+	isDetailsListItem = false
+): DSAction[] {
 	const [t] = useTranslation();
 	const { removeById, retryById } = useUpload();
 	const node = nodes.length > 0 ? nodes[0] : undefined;
@@ -34,18 +42,44 @@ export function useUploadActions(nodes: MakeRequired<Partial<UploadItem>, 'id'>[
 	const { navigateToFolder, navigateTo } = useNavigation();
 
 	const goToFolderSelection = useCallback(() => {
-		if (node?.parentId) {
+		if (node?.parentNodeId) {
 			if (nodes.length === 1) {
-				const destination = `/?folder=${node.parentId}&node=${node.id}`;
+				const destination = `/?folder=${node.parentNodeId}${
+					node.nodeId !== null ? `&node=${node.nodeId}` : ''
+				}`;
 				navigateTo(destination);
 				scrollToNodeItem(node.id);
 			} else {
-				navigateToFolder(node.parentId);
+				navigateToFolder(node.parentNodeId);
 			}
 		}
-	}, [navigateTo, navigateToFolder, node?.id, node?.parentId, nodes.length]);
+	}, [navigateTo, navigateToFolder, node, nodes.length]);
 
-	const permittedUploadActions = useMemo(() => getPermittedUploadActions(nodes), [nodes]);
+	const actionCheckers = useMemo<ActionsFactoryCheckerMap>(
+		() => ({
+			[Action.GoToFolder]: (actionsFactoryUploadItem): boolean => {
+				if (isDetailsListItem) {
+					return (actionsFactoryUploadItem[0] as ActionsFactoryUploadItem).nodeId !== null;
+				}
+				return true;
+			},
+			[Action.removeUpload]: (actionsFactoryUploadItem): boolean => {
+				if (isDetailsListItem) {
+					return (
+						(actionsFactoryUploadItem[0] as ActionsFactoryUploadItem).status !==
+						UploadStatus.COMPLETED
+					);
+				}
+				return true;
+			}
+		}),
+		[isDetailsListItem]
+	);
+
+	const permittedUploadActions = useMemo(
+		() => getPermittedUploadActions(nodes, actionCheckers),
+		[actionCheckers, nodes]
+	);
 
 	const items = useMemo<Partial<Record<Action, DSAction>>>(
 		() => ({

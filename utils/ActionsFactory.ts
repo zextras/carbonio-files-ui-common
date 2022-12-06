@@ -29,7 +29,10 @@ export type ActionsFactoryNodeType = Pick<
 	(Pick<FilesFile, '__typename'> | Pick<Folder, '__typename'>) &
 	MakeOptional<Pick<FilesFile, 'mime_type'>, 'mime_type'>;
 
-export type ActionsFactoryUploadItem = Pick<Partial<UploadItem>, 'status' | 'parentNodeId'>;
+export type ActionsFactoryUploadItem = Pick<
+	Partial<UploadItem>,
+	'status' | 'parentNodeId' | 'nodeId'
+>;
 
 export type ActionsFactoryGlobalType = ActionsFactoryNodeType | ActionsFactoryUploadItem;
 
@@ -561,8 +564,16 @@ export function getPermittedHoverBarActions(node: ActionsFactoryNodeType): Actio
 	return getPermittedActions([node as ActionsFactoryGlobalType], hoverBarActions);
 }
 
-export function getPermittedUploadActions(nodes: ActionsFactoryUploadItem[]): Action[] {
-	return getPermittedActions(nodes as ActionsFactoryGlobalType[], uploadActions);
+export function getPermittedUploadActions(
+	nodes: ActionsFactoryUploadItem[],
+	customCheckers?: ActionsFactoryCheckerMap
+): Action[] {
+	return getPermittedActions(
+		nodes as ActionsFactoryGlobalType[],
+		uploadActions,
+		undefined,
+		customCheckers
+	);
 }
 
 export function buildActionItems(

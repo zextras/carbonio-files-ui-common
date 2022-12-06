@@ -8,12 +8,14 @@ import React, { useMemo } from 'react';
 import { useReactiveVar } from '@apollo/client';
 import { CollapsingActions, Container } from '@zextras/carbonio-design-system';
 import drop from 'lodash/drop';
+import isEqual from 'lodash/isEqual';
 import map from 'lodash/map';
 import { useTranslation } from 'react-i18next';
 
 import { useActiveNode } from '../../../hooks/useActiveNode';
 import { uploadVar } from '../../apollo/uploadVar';
 import { useGetBaseNodeQuery } from '../../hooks/graphql/queries/useGetBaseNodeQuery';
+import { useMemoCompare } from '../../hooks/useMemoCompare';
 import { useUploadActions } from '../../hooks/useUploadActions';
 import { UploadItem } from '../../types/common';
 import { NodeType } from '../../types/graphql/types';
@@ -41,14 +43,19 @@ export const UploadDisplayerNode = ({ uploadItem }: UploadDisplayerNodeProps): J
 	const actions = useUploadActions([uploadItem]);
 	const uploadStatusMap = useReactiveVar<{ [id: string]: UploadItem }>(uploadVar);
 
+	const ids = useMemo(
+		() => drop(flatUploadItemChildrenIds(uploadItem.id, uploadStatusMap)),
+		[uploadItem.id, uploadStatusMap]
+	);
+
+	const memoIds = useMemoCompare(ids, (prev, next) => isEqual(prev, next));
+
 	const contentItems = useMemo(() => {
 		if (isUploadFolderItem(uploadItem)) {
-			return map(drop(flatUploadItemChildrenIds(uploadItem.id, uploadStatusMap)), (childItemId) => (
-				<UploadNodeDetailsListItem id={childItemId} />
-			));
+			return map(memoIds, (childItemId) => <UploadNodeDetailsListItem id={childItemId} />);
 		}
 		return undefined;
-	}, [uploadItem, uploadStatusMap]);
+	}, [memoIds, uploadItem]);
 
 	const { data: parentData, loading: loadingParent } = useGetBaseNodeQuery(
 		uploadItem.parentNodeId || ''
