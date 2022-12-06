@@ -373,6 +373,10 @@ export const useUpload: UseUploadHook = () => {
 					decrementAllParentsCompletedByAmount(itemToRemove, itemToRemove.progress);
 					decrementAllParentsFailedCountByAmount(itemToRemove, itemToRemove.failedCount);
 				} else {
+					if (itemToRemove.status === UploadStatus.LOADING) {
+						abort(itemToRemove.id);
+					}
+					idsToRemove.push(itemToRemove.id);
 					decrementAllParentsDenominatorByAmount(itemToRemove, 1);
 					if (itemToRemove.status === UploadStatus.COMPLETED) {
 						decrementAllParentsCompletedByAmount(itemToRemove, 1);
@@ -383,6 +387,11 @@ export const useUpload: UseUploadHook = () => {
 				updateAllParentsStatus(itemToRemove);
 				removeFromParentChildren(itemToRemove);
 			});
+
+			remove(waitingQueue, (item) => includes(idsToRemove, item));
+			remove(loadingQueue, (item) => includes(idsToRemove, item));
+			tickQueues();
+
 			uploadVarReducer({ type: 'remove', value: idsToRemove });
 		},
 		[abort]
