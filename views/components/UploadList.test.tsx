@@ -24,7 +24,7 @@ import { graphql, rest } from 'msw';
 
 import server from '../../../mocks/server';
 import { uploadVar } from '../../apollo/uploadVar';
-import { REST_ENDPOINT, ROOTS, UPLOAD_PATH, UPLOAD_QUEUE_LIMIT } from '../../constants';
+import { REST_ENDPOINT, ROOTS, UPLOAD_PATH } from '../../constants';
 import {
 	UploadRequestBody,
 	UploadRequestParams,
@@ -44,6 +44,7 @@ import {
 import { getChildrenVariables, mockGetBaseNode, mockGetChildren } from '../../utils/mockUtils';
 import { delayUntil, setup } from '../../utils/testUtils';
 import { UploadList } from './UploadList';
+import { UploadQueue } from "../../utils/UploadQueue";
 
 describe('Upload list', () => {
 	describe('Drag and drop', () => {
@@ -602,7 +603,7 @@ describe('Upload list', () => {
 
 		test('the queue use FIFO strategy', async () => {
 			const localRoot = populateLocalRoot();
-			const uploadedFiles = populateNodes(UPLOAD_QUEUE_LIMIT * 3, 'File') as FilesFile[];
+			const uploadedFiles = populateNodes(UploadQueue.LIMIT * 3, 'File') as FilesFile[];
 			const uploadedFilesMap = keyBy(uploadedFiles, 'id');
 			const files: File[] = [];
 			forEach(uploadedFiles, (file) => {
@@ -684,11 +685,11 @@ describe('Upload list', () => {
 			expect(screen.getAllByTestId('icon: AnimatedLoader')).toHaveLength(uploadedFiles.length);
 			// last files are queued
 			expect(screen.getAllByText(/queued/i)).toHaveLength(
-				uploadedFiles.length - UPLOAD_QUEUE_LIMIT
+				uploadedFiles.length - UploadQueue.LIMIT
 			);
 			const nodeItems = screen.getAllByTestId('node-item-', { exact: false });
 			forEach(nodeItems, (nodeItem, index) => {
-				if (index < UPLOAD_QUEUE_LIMIT) {
+				if (index < UploadQueue.LIMIT) {
 					expect(within(nodeItem).getByText(/\d+%/)).toBeVisible();
 					expect(within(nodeItem).queryByText(/queued/i)).not.toBeInTheDocument();
 				} else {
@@ -698,25 +699,25 @@ describe('Upload list', () => {
 			});
 			emitter.emit('done');
 			await waitFor(() =>
-				expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(UPLOAD_QUEUE_LIMIT)
+				expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(UploadQueue.LIMIT)
 			);
 			expect(
-				within(nodeItems[UPLOAD_QUEUE_LIMIT - 1]).queryByText(/queued/i)
+				within(nodeItems[UploadQueue.LIMIT - 1]).queryByText(/queued/i)
 			).not.toBeInTheDocument();
 			expect(
-				within(nodeItems[UPLOAD_QUEUE_LIMIT - 1]).getByTestId('icon: CheckmarkCircle2')
+				within(nodeItems[UploadQueue.LIMIT - 1]).getByTestId('icon: CheckmarkCircle2')
 			).toBeVisible();
-			expect(within(nodeItems[UPLOAD_QUEUE_LIMIT]).queryByText(/queued/i)).not.toBeInTheDocument();
-			expect(within(nodeItems[UPLOAD_QUEUE_LIMIT]).getByText(/\d+%/i)).toBeVisible();
-			expect(within(nodeItems[UPLOAD_QUEUE_LIMIT * 2]).getByText(/queued/i)).toBeVisible();
+			expect(within(nodeItems[UploadQueue.LIMIT]).queryByText(/queued/i)).not.toBeInTheDocument();
+			expect(within(nodeItems[UploadQueue.LIMIT]).getByText(/\d+%/i)).toBeVisible();
+			expect(within(nodeItems[UploadQueue.LIMIT * 2]).getByText(/queued/i)).toBeVisible();
 			expect(within(nodeItems[uploadedFiles.length - 1]).getByText(/queued/i)).toBeVisible();
 			emitter.emit('done');
 			await waitFor(() =>
-				expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(UPLOAD_QUEUE_LIMIT * 2)
+				expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(UploadQueue.LIMIT * 2)
 			);
-			expect(within(nodeItems[UPLOAD_QUEUE_LIMIT * 2]).getByText(/\d+%/i)).toBeVisible();
+			expect(within(nodeItems[UploadQueue.LIMIT * 2]).getByText(/\d+%/i)).toBeVisible();
 			expect(
-				within(nodeItems[UPLOAD_QUEUE_LIMIT * 2]).queryByText(/queued/i)
+				within(nodeItems[UploadQueue.LIMIT * 2]).queryByText(/queued/i)
 			).not.toBeInTheDocument();
 			expect(
 				within(nodeItems[uploadedFiles.length - 1]).queryByText(/queued/i)

@@ -11,14 +11,12 @@ import { ApolloClient, NormalizedCacheObject } from '@apollo/client';
 import filter from 'lodash/filter';
 import find from 'lodash/find';
 import forEach from 'lodash/forEach';
-import includes from 'lodash/includes';
 import reduce from 'lodash/reduce';
 import remove from 'lodash/remove';
-import size from 'lodash/size';
 import { v4 as uuidv4 } from 'uuid';
 
 import { UploadFunctions, uploadFunctionsVar, UploadRecord, uploadVar } from '../apollo/uploadVar';
-import { REST_ENDPOINT, UPLOAD_PATH, UPLOAD_QUEUE_LIMIT, UPLOAD_VERSION_PATH } from '../constants';
+import { REST_ENDPOINT, UPLOAD_PATH, UPLOAD_VERSION_PATH } from '../constants';
 import GET_CHILD from '../graphql/queries/getChild.graphql';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import GET_VERSIONS from '../graphql/queries/getVersions.graphql';
@@ -35,19 +33,9 @@ import {
 	NodeType
 } from '../types/graphql/types';
 import { encodeBase64, isFileSystemDirectoryEntry, isFolder, TreeNode } from './utils';
+import { UploadQueue } from './UploadQueue';
 
 export type UploadAddType = { file: File; fileSystemEntry?: FileSystemEntry | null };
-
-export const waitingQueue: Array<string> = [];
-export const loadingQueue: Array<string> = [];
-
-export function loadingQueueHaveAvailableSlot(): boolean {
-	return size(loadingQueue) < UPLOAD_QUEUE_LIMIT;
-}
-
-export function waitingQueueIsPopulated(): boolean {
-	return size(waitingQueue) > 0;
-}
 
 export function canBeProcessed(id: string): boolean {
 	return uploadVar()[id].parentNodeId !== null;
@@ -75,10 +63,6 @@ export function thereAreFailedElements(id: string): boolean {
 		return uploadFolderItem.failedCount > 0;
 	}
 	throw new Error('Unable to find failedCount on uploadItem');
-}
-
-export function getWaitingQueueFirstReadyEntry(): string | undefined {
-	return find(waitingQueue, (waitingQueueElementId) => canBeProcessed(waitingQueueElementId));
 }
 
 type UploadActionUpdateValueType = { id: string } & (
@@ -270,17 +254,17 @@ export function updateProgress(ev: ProgressEvent, fileEnriched: UploadItem): voi
 }
 
 export function singleRetry(id: string): void {
-	const retryFile = find(uploadVar(), (item) => item.id === id);
+	const retryFile = uploadVar()[id];
 	if (retryFile == null) {
 		throw new Error('unable to retry missing file');
 	}
 	if (retryFile.status !== UploadStatus.FAILED && retryFile.status !== UploadStatus.QUEUED) {
-		throw new Error('unable to retry, upload must be Failed');
+		throw new Error('unable to retry, upload must be Failed or Queued');
 	}
 
 	uploadVarReducer({ type: 'update', value: { id, status: UploadStatus.LOADING, progress: 0 } });
 
-	const newRetryFile = find(uploadVar(), (item) => item.id === id);
+	const newRetryFile = uploadVar()[id];
 	if (newRetryFile) {
 		const itemFunctions = uploadFunctionsVar()[newRetryFile.id];
 		const abortFunction = itemFunctions.retry(newRetryFile);
@@ -290,17 +274,6 @@ export function singleRetry(id: string): void {
 		});
 	}
 }
-
-export const tickQueues = (): void => {
-	while (loadingQueueHaveAvailableSlot() && getWaitingQueueFirstReadyEntry() !== undefined) {
-		const firstReadyEntry = getWaitingQueueFirstReadyEntry();
-		if (firstReadyEntry) {
-			remove(waitingQueue, (waitingQueueElementId) => waitingQueueElementId === firstReadyEntry);
-			loadingQueue.push(firstReadyEntry);
-			singleRetry(firstReadyEntry);
-		}
-	}
-};
 
 export function uploadCompleted(
 	xhr: XMLHttpRequest,
@@ -377,10 +350,7 @@ export function uploadCompleted(
 		}
 	}
 
-	if (includes(loadingQueue, fileEnriched.id)) {
-		remove(loadingQueue, (item) => item === fileEnriched.id);
-		tickQueues();
-	}
+	UploadQueue.removeAndStartNext(fileEnriched.id);
 }
 
 export function upload(
@@ -417,7 +387,9 @@ export function upload(
 	);
 	xhr.send(fileEnriched.file);
 
-	return Promise.resolve(xhr.abort);
+	return (): void => {
+		xhr.abort();
+	}
 }
 
 export function uploadVersion(
@@ -456,7 +428,9 @@ export function uploadVersion(
 	);
 	xhr.send(fileEnriched.file);
 
-	return Promise.resolve(xhr.abort);
+	return (): void => {
+		xhr.abort();
+	}
 }
 
 export function getUploadAddType(dataTransfer: DataTransfer): UploadAddType[] {

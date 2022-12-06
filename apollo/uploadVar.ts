@@ -13,7 +13,7 @@ export type UploadRecord = { [id: string]: UploadItem };
 export const uploadVar = makeVar<UploadRecord>({});
 
 export interface UploadFunctions {
-	abort: Promise<() => void> | null;
+	abort: () => void;
 	retry: (file: UploadItem) => UploadFunctions['abort'];
 }
 

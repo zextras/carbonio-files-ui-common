@@ -135,4 +135,3 @@ export const FILTER_TYPE: { [K in URLParams['filter']]: `/${K}` } = {
 
 export const FILES_ROUTE = 'files';
 export const FILES_APP_ID = 'carbonio-files-ui';
-export const UPLOAD_QUEUE_LIMIT = 3;

@@ -31,21 +31,19 @@ import {
 	incrementAllParentsFailedCount,
 	isTheLastElement,
 	isUploadFolderItem,
-	loadingQueue,
 	removeFromParentChildren,
 	singleRetry,
 	thereAreFailedElements,
-	tickQueues,
 	updateAllParentsStatus,
 	upload,
 	UploadAddType,
 	uploadVarReducer,
-	uploadVersion,
-	waitingQueue
-} from '../utils/uploadUtils';
+	uploadVersion
+} from "../utils/uploadUtils";
 import { isFileSystemDirectoryEntry, isFolder, scan } from '../utils/utils';
 import { useCreateFolderMutation } from './graphql/mutations/useCreateFolderMutation';
 import { useUpdateFolderContent } from './graphql/useUpdateFolderContent';
+import { UploadQueue } from "../utils/UploadQueue";
 
 type UploadVarObject = {
 	filesEnriched: { [id: string]: UploadItem };
@@ -100,55 +98,50 @@ export const useUpload: UseUploadHook = () => {
 						}
 						return null;
 					})
-					.then(
-						(parentFolderNode) => {
-							if (parentFolderNode) {
-								const status =
-									(!isTheLastElement(uploadFolderItem.id) && UploadStatus.LOADING) ||
-									(thereAreFailedElements(uploadFolderItem.id) && UploadStatus.FAILED) ||
-									UploadStatus.COMPLETED;
-								uploadVarReducer({
-									type: 'update',
-									value: {
-										...uploadFolderItem,
-										nodeId: parentFolderNode.id,
-										status,
-										progress: uploadVar()[uploadFolderItem.id].progress + 1
-									}
-								});
-								incrementAllParents(uploadFolderItem);
-
-								forEach(uploadFolderItem.children, (child) => {
-									uploadVarReducer({
-										type: 'update',
-										value: {
-											id: child,
-											parentNodeId: parentFolderNode.id
-										}
-									});
-								});
-
-								if (includes(loadingQueue, uploadFolderItem.id)) {
-									remove(loadingQueue, (item) => item === uploadFolderItem.id);
-									tickQueues();
-								}
-							}
-						},
-						() => {
+					.then((parentFolderNode) => {
+						if (parentFolderNode) {
+							const status =
+								(!isTheLastElement(uploadFolderItem.id) && UploadStatus.LOADING) ||
+								(thereAreFailedElements(uploadFolderItem.id) && UploadStatus.FAILED) ||
+								UploadStatus.COMPLETED;
 							uploadVarReducer({
 								type: 'update',
 								value: {
-									...uploadFolderItem,
-									status: UploadStatus.FAILED,
-									failedCount:
-										(uploadVar()[uploadFolderItem.id] as UploadFolderItem).failedCount + 1
+									id: uploadFolderItem.id,
+									nodeId: parentFolderNode.id,
+									status,
+									progress: uploadVar()[uploadFolderItem.id].progress + 1
 								}
 							});
-							incrementAllParentsFailedCount(uploadFolderItem);
+							incrementAllParents(uploadFolderItem);
+
+							forEach(uploadFolderItem.children, (child) => {
+								uploadVarReducer({
+									type: 'update',
+									value: {
+										id: child,
+										parentNodeId: parentFolderNode.id
+									}
+								});
+							});
 						}
-					);
+					})
+					.catch(() => {
+						uploadVarReducer({
+							type: 'update',
+							value: {
+								id: uploadFolderItem.id,
+								status: UploadStatus.FAILED,
+								failedCount: (uploadVar()[uploadFolderItem.id] as UploadFolderItem).failedCount + 1
+							}
+						});
+						incrementAllParentsFailedCount(uploadFolderItem);
+					})
+					.finally(() => {
+						UploadQueue.removeAndStartNext(uploadFolderItem.id)
+					});
 			}
-			return null;
+			return noop;
 		},
 		[createFolder]
 	);
@@ -161,7 +154,7 @@ export const useUpload: UseUploadHook = () => {
 			if (fileToUpload.file !== null && fileToUpload.parentNodeId !== null) {
 				return upload(fileToUpload, apolloClient, nodeSortVar(), addNodeToFolder);
 			}
-			return Promise.resolve(noop);
+			return noop;
 		},
 		[addNodeToFolder, apolloClient, uploadFolder]
 	);
@@ -190,7 +183,7 @@ export const useUpload: UseUploadHook = () => {
 
 			return {
 				item: fileEnriched,
-				functions: { abort: null, retry: retryFunction }
+				functions: { abort: noop, retry: retryFunction }
 			};
 		},
 		[startUploadAndGetAbortFunction]
@@ -225,7 +218,7 @@ export const useUpload: UseUploadHook = () => {
 			return map(uploadItemFlatList, (uploadItem) => ({
 				item: uploadItem,
 				functions: {
-					abort: null,
+					abort: noop,
 					retry: (newFile) => startUploadAndGetAbortFunction(newFile)
 				}
 			}));
@@ -249,13 +242,13 @@ export const useUpload: UseUploadHook = () => {
 					);
 					for (let j = 0; j < folderWithChildren.length; j += 1) {
 						const folderWithChildrenItem = folderWithChildren[j];
-						waitingQueue.push(folderWithChildrenItem.item.id);
+						UploadQueue.add(folderWithChildrenItem.item.id);
 						accumulator.filesEnriched[folderWithChildrenItem.item.id] = folderWithChildrenItem.item;
 						accumulator.uploadFunctions[folderWithChildrenItem.item.id] =
 							folderWithChildrenItem.functions;
 					}
 				} else {
-					waitingQueue.push(itemEnriched.item.id);
+					UploadQueue.add(itemEnriched.item.id);
 					accumulator.filesEnriched[itemEnriched.item.id] = itemEnriched.item;
 					accumulator.uploadFunctions[itemEnriched.item.id] = itemEnriched.functions;
 				}
@@ -270,7 +263,7 @@ export const useUpload: UseUploadHook = () => {
 			prepareReactiveVar(itemsToAdd, destinationId).then((uploadVarObject) => {
 				uploadVarReducer({ type: 'add', value: uploadVarObject.filesEnriched });
 				uploadFunctionsVar({ ...uploadFunctionsVar(), ...uploadVarObject.uploadFunctions });
-				tickQueues();
+				UploadQueue.startAll();
 			});
 		},
 		[prepareReactiveVar]
@@ -318,13 +311,9 @@ export const useUpload: UseUploadHook = () => {
 	const abort = useCallback((id: string) => {
 		const uploadFunctions = uploadFunctionsVar();
 		const abortFn = uploadFunctions[id].abort;
-		if (abortFn) {
-			abortFn.then((abortFunction) => {
-				abortFunction();
-				delete uploadFunctions[id];
-				uploadFunctionsVar(uploadFunctions);
-			});
-		}
+		abortFn();
+		delete uploadFunctions[id];
+		uploadFunctionsVar(uploadFunctions);
 	}, []);
 
 	const removeById = useCallback(
@@ -388,9 +377,7 @@ export const useUpload: UseUploadHook = () => {
 				removeFromParentChildren(itemToRemove);
 			});
 
-			remove(waitingQueue, (item) => includes(idsToRemove, item));
-			remove(loadingQueue, (item) => includes(idsToRemove, item));
-			tickQueues();
+			UploadQueue.removeAndStartNext(...idsToRemove)
 
 			uploadVarReducer({ type: 'remove', value: idsToRemove });
 		},
