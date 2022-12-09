@@ -389,7 +389,7 @@ export function upload(
 
 	return (): void => {
 		xhr.abort();
-	}
+	};
 }
 
 export function uploadVersion(
@@ -430,7 +430,7 @@ export function uploadVersion(
 
 	return (): void => {
 		xhr.abort();
-	}
+	};
 }
 
 export function getUploadAddType(dataTransfer: DataTransfer): UploadAddType[] {
@@ -466,16 +466,13 @@ export function flatUploadItemChildren(
 	return result;
 }
 
-export function flatUploadItemChildrenIds(
-	uploadItemId: string,
-	uploadStatusMap: { [id: string]: UploadItem }
-): Array<string> {
+export function flatUploadItemChildrenIds(uploadItemId: string): Array<string> {
 	const result: Array<string> = [];
-	const item = uploadStatusMap[uploadItemId];
+	const item = uploadVar()[uploadItemId];
 	if (isUploadFolderItem(item)) {
 		result.push(uploadItemId);
 		forEach(item.children, (childId) => {
-			const temp = flatUploadItemChildrenIds(childId, uploadStatusMap);
+			const temp = flatUploadItemChildrenIds(childId);
 			result.push(...temp);
 		});
 	} else {

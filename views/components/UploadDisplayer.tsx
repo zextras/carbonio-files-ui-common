@@ -6,7 +6,7 @@
 
 import React, { useMemo } from 'react';
 
-import { useReactiveVar } from '@apollo/client';
+import { useQuery, useReactiveVar } from '@apollo/client';
 import { Container } from '@zextras/carbonio-design-system';
 
 import { useActiveNode } from '../../../hooks/useActiveNode';
@@ -15,6 +15,8 @@ import { UploadItem } from '../../types/common';
 import { EmptyDisplayer } from './EmptyDisplayer';
 import { UploadDisplayerNode } from './UploadDisplayerNode';
 
+import GET_UPLOAD_ITEM from '../../graphql/queries/getUploadItem.graphql';
+
 export interface DisplayerProps {
 	translationKey: string;
 	icons?: string[];
@@ -22,11 +24,11 @@ export interface DisplayerProps {
 
 export const UploadDisplayer: React.VFC<DisplayerProps> = ({ translationKey, icons = [] }) => {
 	const { activeNodeId } = useActiveNode();
-	const uploadStatusMap = useReactiveVar<{ [id: string]: UploadItem }>(uploadVar);
-	const node = useMemo(
-		() => (activeNodeId && uploadStatusMap[activeNodeId]) || undefined,
-		[activeNodeId, uploadStatusMap]
-	);
+	const { data } = useQuery(GET_UPLOAD_ITEM, {
+		variables: { id: activeNodeId },
+		skip: !activeNodeId
+	});
+	const node = useMemo(() => data?.getUploadItem, [data]);
 
 	return (
 		<Container

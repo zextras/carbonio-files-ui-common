@@ -5,7 +5,7 @@
  */
 import React, { useMemo } from 'react';
 
-import { useReactiveVar } from '@apollo/client';
+import { useQuery, useReactiveVar } from '@apollo/client';
 import { CollapsingActions, Container } from '@zextras/carbonio-design-system';
 import drop from 'lodash/drop';
 import isEqual from 'lodash/isEqual';
@@ -31,9 +31,32 @@ import { PathRow, PathRowProps } from './PathRow';
 import { DisplayerContentContainer } from './StyledComponents';
 import { TextRowWithShim } from './TextRowWithShim';
 import { UploadNodeDetailsListItem } from './UploadNodeDetailsListItem';
+import GET_UPLOAD_ITEM from '../../graphql/queries/getUploadItem.graphql';
 
 interface UploadDisplayerNodeProps {
 	uploadItem: UploadItem;
+}
+
+function UploadDisplayerNodeContent({ id }: { id: string }) {
+	const { data, loading, error } = useQuery(GET_UPLOAD_ITEM, {
+		variables: {
+			id
+		}
+	});
+
+	const ids = useMemo(() => drop(flatUploadItemChildrenIds(id)), [id]);
+
+	const memoIds = useMemoCompare(ids, (prev, next) => isEqual(prev, next));
+
+	const contentItems = useMemo(() => {
+		return map(memoIds, (childItemId) => <UploadNodeDetailsListItem id={childItemId} />);
+	}, [memoIds]);
+
+	return (
+		<NodeContent id={id} loading={false} hasMore={false}>
+			{contentItems}
+		</NodeContent>
+	);
 }
 
 export const UploadDisplayerNode = ({ uploadItem }: UploadDisplayerNodeProps): JSX.Element => {
@@ -41,21 +64,6 @@ export const UploadDisplayerNode = ({ uploadItem }: UploadDisplayerNodeProps): J
 	const { removeActiveNode } = useActiveNode();
 
 	const actions = useUploadActions([uploadItem]);
-	const uploadStatusMap = useReactiveVar<{ [id: string]: UploadItem }>(uploadVar);
-
-	const ids = useMemo(
-		() => drop(flatUploadItemChildrenIds(uploadItem.id, uploadStatusMap)),
-		[uploadItem.id, uploadStatusMap]
-	);
-
-	const memoIds = useMemoCompare(ids, (prev, next) => isEqual(prev, next));
-
-	const contentItems = useMemo(() => {
-		if (isUploadFolderItem(uploadItem)) {
-			return map(memoIds, (childItemId) => <UploadNodeDetailsListItem id={childItemId} />);
-		}
-		return undefined;
-	}, [memoIds, uploadItem]);
 
 	const { data: parentData, loading: loadingParent } = useGetBaseNodeQuery(
 		uploadItem.parentNodeId || ''
@@ -147,11 +155,7 @@ export const UploadDisplayerNode = ({ uploadItem }: UploadDisplayerNodeProps): J
 							rootId={parentNode.rootId}
 						/>
 					</Container>
-					{contentItems !== undefined && (
-						<NodeContent id={uploadItem.id} loading={false} hasMore={false}>
-							{contentItems}
-						</NodeContent>
-					)}
+					{isUploadFolderItem(uploadItem) && <UploadDisplayerNodeContent id={uploadItem.id} />}
 				</Container>
 			</DisplayerContentContainer>
 		</>

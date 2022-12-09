@@ -6,38 +6,36 @@
 
 import React, { useMemo } from 'react';
 
-import { useReactiveVar } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import { Container, Text } from '@zextras/carbonio-design-system';
 import reduce from 'lodash/reduce';
 
-import { uploadVar } from '../../apollo/uploadVar';
 import { LIST_ITEM_AVATAR_HEIGHT_COMPACT } from '../../constants';
 import { Breadcrumbs } from '../../design_system_fork/Breadcrumbs';
 import { useUploadActions } from '../../hooks/useUploadActions';
-import { Crumb } from '../../types/common';
+import { Crumb, UploadItem } from '../../types/common';
 import { getUploadNodeType, isUploadFolderItem } from '../../utils/uploadUtils';
 import { getIconByFileType } from '../../utils/utils';
 import { NodeAvatarIcon } from './NodeAvatarIcon';
 import { NodeHoverBar } from './NodeHoverBar';
 import { HoverContainer, ListItemContainer } from './StyledComponents';
 import { UploadStatusIcon } from './UploadStatusIcon';
+import GET_UPLOAD_ITEM from '../../graphql/queries/getUploadItem.graphql';
 
 interface UploadNodeDetailsListItemProps {
 	id: string;
 }
 
 export const UploadNodeDetailsListItem = ({ id }: UploadNodeDetailsListItemProps): JSX.Element => {
-	// TODO: extract and memoized
-	const uploadStatus = useReactiveVar(uploadVar);
+	const { data, loading, error } = useQuery(GET_UPLOAD_ITEM, { variables: { id } });
 
-	const uploadChildItem = useMemo(() => uploadStatus[id], [id, uploadStatus]);
+	const item = useMemo<UploadItem | undefined>(() => data?.getUploadItem, [data]);
 
 	const crumbs = useMemo<Crumb[]>(() => {
-		const path: string[] = uploadChildItem.fullPath.split('/');
 		return reduce<string, Crumb[]>(
-			path,
-			(accumulator, pathEntry, index) => {
-				if (pathEntry && index < path.length - 1) {
+			item?.fullPath.split('/'),
+			(accumulator, pathEntry, index, initialArray) => {
+				if (pathEntry && index < initialArray.length - 1) {
 					accumulator.push({
 						id: `path-${index}`,
 						label: pathEntry,
@@ -49,59 +47,60 @@ export const UploadNodeDetailsListItem = ({ id }: UploadNodeDetailsListItemProps
 			},
 			[]
 		);
-	}, [uploadChildItem.fullPath]);
+	}, [item?.fullPath]);
 
-	const hoverActions = useUploadActions([uploadChildItem], true);
+	const hoverActions = useUploadActions(item ? [item] : [], true);
 
 	return (
-		<ListItemContainer
-			height={'fit'}
-			crossAlignment="flex-end"
-			data-testid={`details-node-item-${id}`}
-		>
-			<HoverContainer
-				wrap={'nowrap'}
-				mainAlignment={'flex-start'}
-				crossAlignment={'center'}
-				padding={{ all: 'small' }}
-				width={'fill'}
-				background={'gray6'}
-				orientation={'horizontal'}
-				gap={'0.5rem'}
+		(item && (
+			<ListItemContainer
+				height={'fit'}
+				crossAlignment="flex-end"
+				data-testid={`details-node-item-${item.id}`}
 			>
-				<NodeAvatarIcon
-					selectionModeActive={false}
-					selected={false}
-					icon={`${getIconByFileType(getUploadNodeType(uploadChildItem))}Outline`}
-					compact
-				/>
-				<Container
-					orientation="vertical"
-					width={'auto'}
-					flexGrow={1}
-					flexShrink={1}
-					mainAlignment="flex-start"
-					crossAlignment={'flex-start'}
-					minWidth={0}
+				<HoverContainer
+					wrap={'nowrap'}
+					mainAlignment={'flex-start'}
+					crossAlignment={'center'}
+					padding={{ all: 'small' }}
+					width={'fill'}
+					background={'gray6'}
+					orientation={'horizontal'}
+					gap={'0.5rem'}
 				>
-					<Text overflow="ellipsis" size="small">
-						{uploadChildItem.name}
+					<NodeAvatarIcon
+						selectionModeActive={false}
+						selected={false}
+						icon={`${getIconByFileType(getUploadNodeType(item))}Outline`}
+						compact
+					/>
+					<Container
+						orientation="vertical"
+						width={'auto'}
+						flexGrow={1}
+						flexShrink={1}
+						mainAlignment="flex-start"
+						crossAlignment={'flex-start'}
+						minWidth={0}
+					>
+						<Text overflow="ellipsis" size="small">
+							{item.name}
+						</Text>
+						<Breadcrumbs crumbs={crumbs} $size={'extrasmall'} color={'gray0.disabled'} />
+					</Container>
+					<Text size={'small'}>
+						{(isUploadFolderItem(item) && `${item.progress}/${item.contentCount}`) ||
+							`${item.progress}%`}
 					</Text>
-					<Breadcrumbs crumbs={crumbs} $size={'extrasmall'} color={'gray0.disabled'} />
-				</Container>
-				<Text size={'small'}>
-					{(isUploadFolderItem(uploadChildItem) &&
-						`${uploadChildItem.progress}/${uploadChildItem.contentCount}`) ||
-						`${uploadChildItem.progress}%`}
-				</Text>
-				<UploadStatusIcon status={uploadChildItem.status} />
-			</HoverContainer>
-			<NodeHoverBar
-				actions={hoverActions}
-				height={'100%'}
-				width={`calc(100% - ${LIST_ITEM_AVATAR_HEIGHT_COMPACT})`}
-				padding={{ right: '0.5rem' }}
-			/>
-		</ListItemContainer>
+					<UploadStatusIcon status={item.status} />
+				</HoverContainer>
+				<NodeHoverBar
+					actions={hoverActions}
+					height={'100%'}
+					width={`calc(100% - ${LIST_ITEM_AVATAR_HEIGHT_COMPACT})`}
+					padding={{ right: '0.5rem' }}
+				/>
+			</ListItemContainer>
+		)) || <></>
 	);
 };
