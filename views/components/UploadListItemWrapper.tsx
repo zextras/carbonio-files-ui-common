@@ -20,40 +20,37 @@ interface UploadListItemWrapperProps {
 	selectId: (id: string) => void;
 }
 
-export const UploadListItemWrapper: React.VFC<UploadListItemWrapperProps> = ({
-	node,
-	isSelected,
-	isSelectionModeActive,
-	selectId
-}) => {
-	const permittedUploadActionItems = useUploadActions([node]);
+export const UploadListItemWrapper = React.memo<UploadListItemWrapperProps>(
+	({ node, isSelected, isSelectionModeActive, selectId }) => {
+		const permittedUploadActionItems = useUploadActions([node]);
 
-	const { data: parentData } = useGetBaseNodeQuery(node.parentNodeId || '');
+		const { data: parentData } = useGetBaseNodeQuery(node.parentNodeId || '');
 
-	const { setActiveNode, activeNodeId } = useActiveNode();
+		const { setActiveNode, activeNodeId } = useActiveNode();
 
-	const setActive = useCallback(() => {
-		setActiveNode(node.id);
-	}, [node.id, setActiveNode]);
+		const setActive = useCallback(() => {
+			setActiveNode(node.id);
+		}, [node.id, setActiveNode]);
 
-	return (
-		<UploadListItem
-			id={node.id}
-			nodeId={node.nodeId || undefined}
-			name={node.name}
-			mimeType={node.file?.type || ''}
-			size={node.file?.size || 0}
-			status={node.status}
-			progress={node.progress}
-			contentCount={isUploadFolderItem(node) ? node.contentCount : undefined}
-			parent={parentData?.getNode}
-			isSelected={isSelected}
-			selectId={selectId}
-			isSelectionModeActive={isSelectionModeActive}
-			permittedHoverBarActionItems={permittedUploadActionItems}
-			permittedContextualMenuActionItems={permittedUploadActionItems}
-			isActive={activeNodeId === node.id}
-			setActive={setActive}
-		/>
-	);
-};
+		return (
+			<UploadListItem
+				id={node.id}
+				nodeId={node.nodeId || undefined}
+				name={node.name}
+				mimeType={node.file?.type || ''}
+				size={node.file?.size || 0}
+				status={node.status}
+				progress={node.progress}
+				contentCount={isUploadFolderItem(node) ? node.contentCount : undefined}
+				parent={parentData?.getNode}
+				isSelected={isSelected}
+				selectId={selectId}
+				isSelectionModeActive={isSelectionModeActive}
+				permittedHoverBarActionItems={permittedUploadActionItems}
+				permittedContextualMenuActionItems={permittedUploadActionItems}
+				isActive={activeNodeId === node.id}
+				setActive={setActive}
+			/>
+		);
+	}
+);

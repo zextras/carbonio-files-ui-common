@@ -6,7 +6,7 @@
 
 import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 
-import { useReactiveVar } from '@apollo/client';
+import { useQuery, useReactiveVar } from '@apollo/client';
 import {
 	Action as DSAction,
 	Button,
@@ -33,15 +33,17 @@ import { Dropzone } from './Dropzone';
 import { EmptyFolder } from './EmptyFolder';
 import { ScrollContainer } from './ScrollContainer';
 import { UploadListItemWrapper } from './UploadListItemWrapper';
+import GET_UPLOAD_ITEMS from '../../graphql/queries/getUploadItems.graphql';
 
 export const UploadList: React.VFC = () => {
 	const [t] = useTranslation();
 
 	const { add, removeById, removeAllCompleted, retryById } = useUpload();
-	const uploadStatusMap = useReactiveVar<{ [id: string]: UploadItem }>(uploadVar);
-	const uploadStatus = useMemo(() => map(uploadStatusMap, (value) => value), [uploadStatusMap]);
+	const { data } = useQuery(GET_UPLOAD_ITEMS, { variables: { parentId: null } });
 
-	const uploadStatusSizeIsZero = useMemo(() => uploadStatus.length === 0, [uploadStatus]);
+	const uploadItems = useMemo<UploadItem[]>(() => data?.getUploadItems || [], [data]);
+
+	const uploadStatusSizeIsZero = useMemo(() => uploadItems.length === 0, [data]);
 
 	const { setIsEmpty } = useContext(ListContext);
 
@@ -67,11 +69,11 @@ export const UploadList: React.VFC = () => {
 		unSelectAll,
 		selectAll,
 		exitSelectionMode
-	} = useSelection(uploadStatus);
+	} = useSelection(uploadItems);
 
 	const selectedItems = useMemo(
-		() => filter(uploadStatus, (item) => includes(selectedIDs, item.id)),
-		[uploadStatus, selectedIDs]
+		() => filter(uploadItems, (item) => includes(selectedIDs, item.id)),
+		[uploadItems, selectedIDs]
 	);
 
 	const permittedUploadActions = useMemo(
@@ -81,21 +83,16 @@ export const UploadList: React.VFC = () => {
 
 	const items = useMemo(
 		() =>
-			map(
-				filter(uploadStatus, (item) => item.parentId === null),
-				(item) =>
-					(item.parentId === null && (
-						<UploadListItemWrapper
-							key={item.id}
-							node={item}
-							isSelected={selectedMap && selectedMap[item.id]}
-							isSelectionModeActive={isSelectionModeActive}
-							selectId={selectId}
-						/>
-					)) ||
-					undefined
-			),
-		[isSelectionModeActive, uploadStatus, selectId, selectedMap]
+			map(uploadItems, (item) => (
+				<UploadListItemWrapper
+					key={item.id}
+					node={item}
+					isSelected={selectedMap && selectedMap[item.id]}
+					isSelectionModeActive={isSelectionModeActive}
+					selectId={selectId}
+				/>
+			)),
+		[isSelectionModeActive, uploadItems, selectId, selectedMap]
 	);
 
 	const removeUploadSelection = useCallback(() => {
