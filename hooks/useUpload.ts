@@ -39,11 +39,11 @@ import {
 	UploadAddType,
 	uploadVarReducer,
 	uploadVersion
-} from "../utils/uploadUtils";
+} from '../utils/uploadUtils';
 import { isFileSystemDirectoryEntry, isFolder, scan } from '../utils/utils';
 import { useCreateFolderMutation } from './graphql/mutations/useCreateFolderMutation';
 import { useUpdateFolderContent } from './graphql/useUpdateFolderContent';
-import { UploadQueue } from "../utils/UploadQueue";
+import { UploadQueue } from '../utils/UploadQueue';
 
 type UploadVarObject = {
 	filesEnriched: { [id: string]: UploadItem };
@@ -70,10 +70,43 @@ export const useUpload: UseUploadHook = () => {
 
 	const { addNodeToFolder } = useUpdateFolderContent(apolloClient);
 
-	const { createFolder } = useCreateFolderMutation({
+	const { createFolder: createFolderMutation } = useCreateFolderMutation({
 		showSnackbar: false,
 		client: apolloClient
 	});
+
+	const createFolder = useCallback((uploadFolderItem: UploadFolderItem) => {
+		if (uploadFolderItem.nodeId !== null) {
+			return Promise.resolve(uploadFolderItem.nodeId);
+		}
+		if (uploadFolderItem.parentNodeId) {
+			return createFolderMutation(
+				{ id: uploadFolderItem.parentNodeId },
+				uploadFolderItem.name
+			).then((createFolderResult) => {
+				const folderNode = createFolderResult.data?.createFolder;
+				if (folderNode && isFolder(folderNode)) {
+					const status =
+						(!isTheLastElement(uploadFolderItem.id) && UploadStatus.LOADING) ||
+						(thereAreFailedElements(uploadFolderItem.id) && UploadStatus.FAILED) ||
+						UploadStatus.COMPLETED;
+					uploadVarReducer({
+						type: 'update',
+						value: {
+							id: uploadFolderItem.id,
+							nodeId: folderNode.id,
+							status,
+							progress: uploadVar()[uploadFolderItem.id].progress + 1
+						}
+					});
+					incrementAllParents(uploadFolderItem);
+					return folderNode.id;
+				}
+				return null;
+			});
+		}
+		return Promise.reject(new Error('cannot create folder item without parentNodeId'));
+	}, []);
 
 	const uploadFolder = useCallback<(folder: UploadFolderItem) => UploadFunctions['abort']>(
 		(uploadFolderItem) => {
@@ -88,39 +121,15 @@ export const useUpload: UseUploadHook = () => {
 					value: updatedFolder
 				});
 
-				createFolder({ id: uploadFolderItem.parentNodeId }, uploadFolderItem.name)
-					.then((createFolderFunctionResult) => {
-						if (
-							createFolderFunctionResult.data?.createFolder &&
-							isFolder(createFolderFunctionResult.data.createFolder)
-						) {
-							return createFolderFunctionResult.data?.createFolder;
-						}
-						return null;
-					})
-					.then((parentFolderNode) => {
-						if (parentFolderNode) {
-							const status =
-								(!isTheLastElement(uploadFolderItem.id) && UploadStatus.LOADING) ||
-								(thereAreFailedElements(uploadFolderItem.id) && UploadStatus.FAILED) ||
-								UploadStatus.COMPLETED;
-							uploadVarReducer({
-								type: 'update',
-								value: {
-									id: uploadFolderItem.id,
-									nodeId: parentFolderNode.id,
-									status,
-									progress: uploadVar()[uploadFolderItem.id].progress + 1
-								}
-							});
-							incrementAllParents(uploadFolderItem);
-
+				createFolder(uploadFolderItem)
+					.then((parentFolderNodeId) => {
+						if (parentFolderNodeId) {
 							forEach(uploadFolderItem.children, (child) => {
 								uploadVarReducer({
 									type: 'update',
 									value: {
 										id: child,
-										parentNodeId: parentFolderNode.id
+										parentNodeId: parentFolderNodeId
 									}
 								});
 							});
@@ -138,7 +147,7 @@ export const useUpload: UseUploadHook = () => {
 						incrementAllParentsFailedCount(uploadFolderItem);
 					})
 					.finally(() => {
-						UploadQueue.removeAndStartNext(uploadFolderItem.id)
+						UploadQueue.removeAndStartNext(uploadFolderItem.id);
 					});
 			}
 			return noop;
@@ -377,7 +386,7 @@ export const useUpload: UseUploadHook = () => {
 				removeFromParentChildren(itemToRemove);
 			});
 
-			UploadQueue.removeAndStartNext(...idsToRemove)
+			UploadQueue.removeAndStartNext(...idsToRemove);
 
 			uploadVarReducer({ type: 'remove', value: idsToRemove });
 		},
