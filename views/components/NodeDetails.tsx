@@ -74,7 +74,7 @@ export const NodeDetails: React.VFC<NodeDetailsProps> = ({
 }) => {
 	const [t] = useTranslation();
 	const [$isSupportedByPreview, previewType] = useMemo(
-		() => isSupportedByPreview(mimeType),
+		() => isSupportedByPreview(mimeType, 'thumbnail'),
 		[mimeType]
 	);
 

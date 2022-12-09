@@ -21,6 +21,7 @@ import {
 	LIST_ITEM_AVATAR_ICON_HEIGHT,
 	LIST_ITEM_AVATAR_ICON_HEIGHT_COMPACT
 } from '../../constants';
+import { cssCalcBuilder } from '../../utils/utils';
 
 export const DisplayerContentContainer = styled(Container)`
 	padding-bottom: 2rem;
@@ -39,7 +40,6 @@ export const HoverBarContainer = styled(Row).attrs(({ height = '45%', width, the
 	position: absolute;
 	top: 0;
 	right: 0;
-
 	background: linear-gradient(
 		to right,
 		transparent,
@@ -162,7 +162,7 @@ export const ItalicText = styled(Text)`
 export const ShimmerText = styled(Shimmer.Text).attrs<{
 	$size: 'extrasmall' | 'small' | 'medium' | 'large' | 'extralarge';
 }>(({ $size, theme }) => ({
-	height: css`calc(${theme.sizes.font[$size]} * 1.2)`,
+	height: cssCalcBuilder(theme.sizes.font[$size], ['*', 1.2]),
 	'data-testid': 'shimmer-text'
 }))``;
 
