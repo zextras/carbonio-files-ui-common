@@ -1,0 +1,3 @@
+query getUploadItem($id: ID!) {
+    getUploadItem(id: $id) @client
+}

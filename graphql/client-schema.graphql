@@ -1,0 +1,23 @@
+enum UploadStatus {
+    LOADING
+    COMPLETED
+    FAILED
+    QUEUED
+}
+
+type UploadItem {
+    id: ID!
+    name: String!
+    fullPath: String
+    progress: Int!
+    nodeId: String
+    parentId: String
+    parentNodeId: String
+    status: UploadStatus
+    children: [ID!]
+}
+
+extend type Query {
+    getUploadItems: [UploadItem!]!
+    getUploadItem(id: ID!): UploadItem
+}

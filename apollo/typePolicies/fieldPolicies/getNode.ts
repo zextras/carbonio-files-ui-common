@@ -1,0 +1,28 @@
+import { FieldFunctionOptions, FieldPolicy, Reference } from "@apollo/client";
+import { GetNodeQueryVariables, QueryGetNodeArgs } from "../../../types/graphql/types";
+import find from "lodash/find";
+import introspection from "../../../types/graphql/possible-types";
+
+export const getNodeFieldPolicy: FieldPolicy<Reference, Reference, Reference, FieldFunctionOptions<Partial<QueryGetNodeArgs>, Partial<GetNodeQueryVariables>>> = {
+  read(_, fieldFunctionOptions): Reference | undefined {
+    const { args, toReference, canRead } = fieldFunctionOptions as FieldFunctionOptions<
+      QueryGetNodeArgs,
+      GetNodeQueryVariables
+    >;
+    if (args?.node_id) {
+      const typename = find(introspection.possibleTypes.Node, (nodePossibleType) => {
+        const nodeRef = toReference({
+          __typename: nodePossibleType,
+          id: args.node_id
+        });
+        return canRead(nodeRef);
+      });
+
+      return toReference({
+        __typename: typename,
+        id: args.node_id
+      });
+    }
+    return undefined;
+  }
+}
