@@ -38,18 +38,14 @@ interface UploadDisplayerNodeProps {
 }
 
 function UploadDisplayerNodeContent({ id }: { id: string }) {
-	const { data, loading, error } = useQuery(GET_UPLOAD_ITEM, {
-		variables: {
-			id
-		}
-	});
-
 	const ids = useMemo(() => drop(flatUploadItemChildrenIds(id)), [id]);
 
 	const memoIds = useMemoCompare(ids, (prev, next) => isEqual(prev, next));
 
 	const contentItems = useMemo(() => {
-		return map(memoIds, (childItemId) => <UploadNodeDetailsListItem id={childItemId} />);
+		return map(memoIds, (childItemId) => (
+			<UploadNodeDetailsListItem key={childItemId} id={childItemId} />
+		));
 	}, [memoIds]);
 
 	return (

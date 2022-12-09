@@ -21,7 +21,7 @@ import GET_CHILD from '../graphql/queries/getChild.graphql';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import GET_VERSIONS from '../graphql/queries/getVersions.graphql';
 import { UpdateFolderContentType } from '../hooks/graphql/useUpdateFolderContent';
-import { UploadFolderItem, UploadItem, UploadStatus } from '../types/common';
+import { Node, UploadFolderItem, UploadItem, UploadStatus } from '../types/common';
 import {
 	GetChildQuery,
 	GetChildQueryVariables,
@@ -275,6 +275,44 @@ export function singleRetry(id: string): void {
 	}
 }
 
+function loadItemAsChild(
+	nodeId: string,
+	parentId: string,
+	apolloClient: ApolloClient<NormalizedCacheObject>,
+	nodeSort: NodeSort,
+	addNodeToFolder: UpdateFolderContentType['addNodeToFolder']
+): Promise<void> {
+	const parentFolder = apolloClient.cache.readQuery<GetChildrenQuery, GetChildrenQueryVariables>({
+		query: GET_CHILDREN,
+		variables: {
+			node_id: parentId,
+			// load all cached children
+			children_limit: Number.MAX_SAFE_INTEGER,
+			sort: nodeSort
+		}
+	});
+	if (parentFolder?.getNode && isFolder(parentFolder.getNode)) {
+		const parentNode = parentFolder.getNode;
+		return apolloClient
+			.query<GetChildQuery, GetChildQueryVariables>({
+				query: GET_CHILD,
+				fetchPolicy: 'no-cache',
+				variables: {
+					node_id: nodeId as string
+				}
+			})
+			.then((result) => {
+				if (result?.data?.getNode) {
+					addNodeToFolder(parentNode, result.data.getNode);
+				}
+			})
+			.catch((err) => {
+				console.error(err);
+			});
+	}
+	return Promise.resolve();
+}
+
 export function uploadCompleted(
 	xhr: XMLHttpRequest,
 	fileEnriched: UploadItem,
@@ -297,38 +335,9 @@ export function uploadCompleted(
 
 		incrementAllParents(fileEnriched);
 
-		apolloClient
-			.query<GetChildQuery, GetChildQueryVariables>({
-				query: GET_CHILD,
-				fetchPolicy: 'no-cache',
-				variables: {
-					node_id: nodeId as string
-				}
-			})
-			.then((result) => {
-				if (result?.data?.getNode?.parent) {
-					const parentId = result.data.getNode.parent.id;
-					const parentFolder = apolloClient.cache.readQuery<
-						GetChildrenQuery,
-						GetChildrenQueryVariables
-					>({
-						query: GET_CHILDREN,
-						variables: {
-							node_id: parentId,
-							// load all cached children
-							children_limit: Number.MAX_SAFE_INTEGER,
-							sort: nodeSort
-						}
-					});
-					if (parentFolder?.getNode && isFolder(parentFolder.getNode)) {
-						const parentNode = parentFolder.getNode;
-						addNodeToFolder(parentNode, result.data.getNode);
-					}
-				}
-			})
-			.catch((err) => {
-				console.error(err);
-			});
+		if (fileEnriched.parentNodeId) {
+			loadItemAsChild(nodeId, fileEnriched.parentNodeId, apolloClient, nodeSort, addNodeToFolder);
+		}
 	} else {
 		/*
 		 * Handled Statuses
