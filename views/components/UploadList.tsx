@@ -6,7 +6,7 @@
 
 import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 
-import { useQuery, useReactiveVar } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import {
 	Action as DSAction,
 	Button,
@@ -21,9 +21,9 @@ import { useTranslation } from 'react-i18next';
 
 import ListHeader from '../../../components/ListHeader';
 import { useNavigation } from '../../../hooks/useNavigation';
-import { uploadVar } from '../../apollo/uploadVar';
 import { DRAG_TYPES, ROOTS } from '../../constants';
 import { ListContext, ListHeaderActionContext } from '../../contexts';
+import GET_UPLOAD_ITEMS from '../../graphql/queries/getUploadItems.graphql';
 import useSelection from '../../hooks/useSelection';
 import { useUpload } from '../../hooks/useUpload';
 import { Action, UploadItem } from '../../types/common';
@@ -33,7 +33,6 @@ import { Dropzone } from './Dropzone';
 import { EmptyFolder } from './EmptyFolder';
 import { ScrollContainer } from './ScrollContainer';
 import { UploadListItemWrapper } from './UploadListItemWrapper';
-import GET_UPLOAD_ITEMS from '../../graphql/queries/getUploadItems.graphql';
 
 export const UploadList: React.VFC = () => {
 	const [t] = useTranslation();
@@ -43,7 +42,7 @@ export const UploadList: React.VFC = () => {
 
 	const uploadItems = useMemo<UploadItem[]>(() => data?.getUploadItems || [], [data]);
 
-	const uploadStatusSizeIsZero = useMemo(() => uploadItems.length === 0, [data]);
+	const uploadStatusSizeIsZero = useMemo(() => uploadItems.length === 0, [uploadItems]);
 
 	const { setIsEmpty } = useContext(ListContext);
 

@@ -12,7 +12,7 @@ import includes from 'lodash/includes';
 import map from 'lodash/map';
 import noop from 'lodash/noop';
 import partition from 'lodash/partition';
-import remove from 'lodash/remove';
+import reduce from 'lodash/reduce';
 import { v4 as uuidv4 } from 'uuid';
 
 import buildClient from '../apollo';
@@ -21,12 +21,14 @@ import { UploadFunctions, uploadFunctionsVar, uploadVar } from '../apollo/upload
 import { UploadFolderItem, UploadItem, UploadStatus } from '../types/common';
 import { File as FilesFile } from '../types/graphql/types';
 import { DeepPick } from '../types/utils';
+import { UploadQueue } from '../utils/UploadQueue';
 import {
 	decrementAllParentsCompletedByAmount,
 	decrementAllParentsDenominatorByAmount,
 	decrementAllParentsFailedCountByAmount,
 	deepMapTreeNodes,
 	flatUploadItemChildren,
+	flatUploadItemChildrenIds,
 	incrementAllParents,
 	incrementAllParentsFailedCount,
 	isTheLastElement,
@@ -43,7 +45,6 @@ import {
 import { isFileSystemDirectoryEntry, isFolder, scan } from '../utils/utils';
 import { useCreateFolderMutation } from './graphql/mutations/useCreateFolderMutation';
 import { useUpdateFolderContent } from './graphql/useUpdateFolderContent';
-import { UploadQueue } from '../utils/UploadQueue';
 
 type UploadVarObject = {
 	filesEnriched: { [id: string]: UploadItem };
@@ -75,38 +76,41 @@ export const useUpload: UseUploadHook = () => {
 		client: apolloClient
 	});
 
-	const createFolder = useCallback((uploadFolderItem: UploadFolderItem) => {
-		if (uploadFolderItem.nodeId !== null) {
-			return Promise.resolve(uploadFolderItem.nodeId);
-		}
-		if (uploadFolderItem.parentNodeId) {
-			return createFolderMutation(
-				{ id: uploadFolderItem.parentNodeId },
-				uploadFolderItem.name
-			).then((createFolderResult) => {
-				const folderNode = createFolderResult.data?.createFolder;
-				if (folderNode && isFolder(folderNode)) {
-					const status =
-						(!isTheLastElement(uploadFolderItem.id) && UploadStatus.LOADING) ||
-						(thereAreFailedElements(uploadFolderItem.id) && UploadStatus.FAILED) ||
-						UploadStatus.COMPLETED;
-					uploadVarReducer({
-						type: 'update',
-						value: {
-							id: uploadFolderItem.id,
-							nodeId: folderNode.id,
-							status,
-							progress: uploadVar()[uploadFolderItem.id].progress + 1
-						}
-					});
-					incrementAllParents(uploadFolderItem);
-					return folderNode.id;
-				}
-				return null;
-			});
-		}
-		return Promise.reject(new Error('cannot create folder item without parentNodeId'));
-	}, []);
+	const createFolder = useCallback(
+		(uploadFolderItem: UploadFolderItem) => {
+			if (uploadFolderItem.nodeId !== null) {
+				return Promise.resolve(uploadFolderItem.nodeId);
+			}
+			if (uploadFolderItem.parentNodeId) {
+				return createFolderMutation(
+					{ id: uploadFolderItem.parentNodeId },
+					uploadFolderItem.name
+				).then((createFolderResult) => {
+					const folderNode = createFolderResult.data?.createFolder;
+					if (folderNode && isFolder(folderNode)) {
+						const status =
+							(!isTheLastElement(uploadFolderItem.id) && UploadStatus.LOADING) ||
+							(thereAreFailedElements(uploadFolderItem.id) && UploadStatus.FAILED) ||
+							UploadStatus.COMPLETED;
+						uploadVarReducer({
+							type: 'update',
+							value: {
+								id: uploadFolderItem.id,
+								nodeId: folderNode.id,
+								status,
+								progress: uploadVar()[uploadFolderItem.id].progress + 1
+							}
+						});
+						incrementAllParents(uploadFolderItem);
+						return folderNode.id;
+					}
+					return null;
+				});
+			}
+			return Promise.reject(new Error('cannot create folder item without parentNodeId'));
+		},
+		[createFolderMutation]
+	);
 
 	const uploadFolder = useCallback<(folder: UploadFolderItem) => UploadFunctions['abort']>(
 		(uploadFolderItem) => {
@@ -345,28 +349,6 @@ export const useUpload: UseUploadHook = () => {
 					);
 					idsToRemove.push(...map(uploadItems, (uploadItem) => uploadItem.id));
 
-					// const idsToRemoveSize = size(itemToRemove);
-
-					// const failedItemsSize = size(
-					// 	filter(
-					// 		uploadItems,
-					// 		(uploadItem) =>
-					// 			(!isUploadFolderItem(uploadItem) && uploadItem.status === UploadStatus.FAILED) ||
-					// 			(isUploadFolderItem(uploadItem) &&
-					// 				uploadItem.status === UploadStatus.FAILED &&
-					// 				uploadItem.progress === 0)
-					// 	)
-					// );
-					//
-					// const completedItemsSize = size(
-					// 	filter(
-					// 		uploadItems,
-					// 		(uploadItem) =>
-					// 			(!isUploadFolderItem(uploadItem) && uploadItem.status === UploadStatus.COMPLETED) ||
-					// 			(isUploadFolderItem(uploadItem) && uploadItem.progress > 0)
-					// 	)
-					// );
-
 					decrementAllParentsDenominatorByAmount(itemToRemove, itemToRemove.contentCount);
 					decrementAllParentsCompletedByAmount(itemToRemove, itemToRemove.progress);
 					decrementAllParentsFailedCountByAmount(itemToRemove, itemToRemove.failedCount);
@@ -405,11 +387,25 @@ export const useUpload: UseUploadHook = () => {
 
 	const removeAllCompleted = useCallback(() => {
 		const state = uploadVar();
-		const completedItems = map(
-			filter(state, (item) => item.status === UploadStatus.COMPLETED),
-			(item) => item.id
+		const completedMainItems = filter(
+			state,
+			(item) => item.status === UploadStatus.COMPLETED && item.parentId === null
 		);
-		uploadVarReducer({ type: 'remove', value: completedItems });
+		const completedIds = reduce<UploadItem, Array<string>>(
+			completedMainItems,
+			(accumulator: string[], item) => {
+				if (isUploadFolderItem(item)) {
+					accumulator.push(...flatUploadItemChildrenIds(item.id));
+				} else {
+					accumulator.push(item.id);
+				}
+				return accumulator;
+			},
+			[]
+		);
+		if (completedIds.length > 0) {
+			uploadVarReducer({ type: 'remove', value: completedIds });
+		}
 	}, []);
 
 	const retryById = useCallback((ids: Array<string>) => {

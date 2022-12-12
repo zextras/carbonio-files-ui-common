@@ -9,10 +9,8 @@
 // https://stackoverflow.com/a/25095250/17280436
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client';
 import filter from 'lodash/filter';
-import find from 'lodash/find';
 import forEach from 'lodash/forEach';
 import reduce from 'lodash/reduce';
-import remove from 'lodash/remove';
 import { v4 as uuidv4 } from 'uuid';
 
 import { UploadFunctions, uploadFunctionsVar, UploadRecord, uploadVar } from '../apollo/uploadVar';
@@ -21,7 +19,7 @@ import GET_CHILD from '../graphql/queries/getChild.graphql';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import GET_VERSIONS from '../graphql/queries/getVersions.graphql';
 import { UpdateFolderContentType } from '../hooks/graphql/useUpdateFolderContent';
-import { Node, UploadFolderItem, UploadItem, UploadStatus } from '../types/common';
+import { UploadFolderItem, UploadItem, UploadStatus } from '../types/common';
 import {
 	GetChildQuery,
 	GetChildQueryVariables,
@@ -32,14 +30,10 @@ import {
 	NodeSort,
 	NodeType
 } from '../types/graphql/types';
-import { encodeBase64, isFileSystemDirectoryEntry, isFolder, TreeNode } from './utils';
 import { UploadQueue } from './UploadQueue';
+import { encodeBase64, isFileSystemDirectoryEntry, isFolder, TreeNode } from './utils';
 
 export type UploadAddType = { file: File; fileSystemEntry?: FileSystemEntry | null };
-
-export function canBeProcessed(id: string): boolean {
-	return uploadVar()[id].parentNodeId !== null;
-}
 
 export function isUploadFolderItem(item: Partial<UploadItem>): item is UploadFolderItem {
 	return typeof (item as UploadFolderItem).children !== 'undefined';

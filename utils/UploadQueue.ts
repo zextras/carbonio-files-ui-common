@@ -6,12 +6,22 @@
 import find from 'lodash/find';
 import pull from 'lodash/pull';
 
-import { canBeProcessed, singleRetry } from './uploadUtils';
+import { uploadVar } from '../apollo/uploadVar';
+import { singleRetry } from './uploadUtils';
 
+export function canBeProcessed(id: string): boolean {
+	return uploadVar()[id].parentNodeId !== null;
+}
 /**
  * UploadQueue Singleton
  */
-export const UploadQueue = (() => {
+export const UploadQueue = ((): {
+	LIMIT: number;
+	start: (id: string) => void;
+	startAll: () => void;
+	add: (...ids: string[]) => void;
+	removeAndStartNext: (...ids: string[]) => string[];
+} => {
 	const LIMIT = 3;
 
 	const waitingList: string[] = [];
@@ -31,7 +41,6 @@ export const UploadQueue = (() => {
 		loadingList.push(id);
 		singleRetry(id);
 	}
-
 
 	function startAll(): void {
 		while (canLoadMore() && getFirstReadyWaitingItemId()) {
@@ -59,5 +68,5 @@ export const UploadQueue = (() => {
 		startAll,
 		add,
 		removeAndStartNext
-	}
+	};
 })();
