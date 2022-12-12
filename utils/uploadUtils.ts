@@ -439,7 +439,12 @@ export function uploadVersion(
 export function getUploadAddType(dataTransfer: DataTransfer): UploadAddType[] {
 	const fileEntries: UploadAddType[] = [];
 	forEach(dataTransfer.items, (droppedItem, index) => {
-		const item: FileSystemEntry | null = droppedItem.webkitGetAsEntry();
+		const item: FileSystemEntry | null =
+			(droppedItem.webkitGetAsEntry && droppedItem.webkitGetAsEntry()) ||
+			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+			// @ts-ignore
+			(droppedItem.getAsEntry && droppedItem.getAsEntry()) ||
+			null;
 		if (item?.name !== dataTransfer.files[index].name) {
 			console.error('dataTransfer items and files mismatch');
 		}

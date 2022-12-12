@@ -360,7 +360,10 @@ export const useUpload: UseUploadHook = () => {
 					decrementAllParentsDenominatorByAmount(itemToRemove, 1);
 					if (itemToRemove.status === UploadStatus.COMPLETED) {
 						decrementAllParentsCompletedByAmount(itemToRemove, 1);
-					} else if (itemToRemove.status === UploadStatus.FAILED) {
+					} else if (
+						itemToRemove.status === UploadStatus.FAILED ||
+						itemToRemove.status === UploadStatus.LOADING
+					) {
 						decrementAllParentsFailedCountByAmount(itemToRemove, 1);
 					}
 				}
