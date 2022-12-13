@@ -1,15 +1,13 @@
-import { FieldFunctionOptions, FieldPolicy, Reference, TypePolicies } from '@apollo/client';
+/*
+ * SPDX-FileCopyrightText: 2022 Zextras <https://www.zextras.com>
+ *
+ * SPDX-License-Identifier: AGPL-3.0-only
+ */
+import { FieldFunctionOptions, FieldPolicy } from '@apollo/client';
+
 import { FindNodesCachedObject, NodesPage } from '../../../types/apollo';
-import {
-	File,
-	FindNodesQueryVariables,
-	GetNodeQueryVariables,
-	QueryFindNodesArgs,
-	QueryGetNodeArgs
-} from '../../../types/graphql/types';
+import { FindNodesQueryVariables, QueryFindNodesArgs } from '../../../types/graphql/types';
 import { mergeNodesList, readNodesList } from '../utils';
-import find from 'lodash/find';
-import introspection from '../../../types/graphql/possible-types';
 
 export const findNodesFieldPolicy: FieldPolicy<
 	FindNodesCachedObject,

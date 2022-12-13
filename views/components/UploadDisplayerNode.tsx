@@ -5,7 +5,6 @@
  */
 import React, { useMemo } from 'react';
 
-import { useQuery, useReactiveVar } from '@apollo/client';
 import { CollapsingActions, Container } from '@zextras/carbonio-design-system';
 import drop from 'lodash/drop';
 import isEqual from 'lodash/isEqual';
@@ -13,7 +12,6 @@ import map from 'lodash/map';
 import { useTranslation } from 'react-i18next';
 
 import { useActiveNode } from '../../../hooks/useActiveNode';
-import { uploadVar } from '../../apollo/uploadVar';
 import { useGetBaseNodeQuery } from '../../hooks/graphql/queries/useGetBaseNodeQuery';
 import { useMemoCompare } from '../../hooks/useMemoCompare';
 import { useUploadActions } from '../../hooks/useUploadActions';
@@ -31,22 +29,23 @@ import { PathRow, PathRowProps } from './PathRow';
 import { DisplayerContentContainer } from './StyledComponents';
 import { TextRowWithShim } from './TextRowWithShim';
 import { UploadNodeDetailsListItem } from './UploadNodeDetailsListItem';
-import GET_UPLOAD_ITEM from '../../graphql/queries/getUploadItem.graphql';
 
 interface UploadDisplayerNodeProps {
 	uploadItem: UploadItem;
 }
 
-function UploadDisplayerNodeContent({ id }: { id: string }) {
+function UploadDisplayerNodeContent({ id }: { id: string }): JSX.Element {
 	const ids = useMemo(() => drop(flatUploadItemChildrenIds(id)), [id]);
 
 	const memoIds = useMemoCompare(ids, (prev, next) => isEqual(prev, next));
 
-	const contentItems = useMemo(() => {
-		return map(memoIds, (childItemId) => (
-			<UploadNodeDetailsListItem key={childItemId} id={childItemId} />
-		));
-	}, [memoIds]);
+	const contentItems = useMemo(
+		() =>
+			map(memoIds, (childItemId) => (
+				<UploadNodeDetailsListItem key={childItemId} id={childItemId} />
+			)),
+		[memoIds]
+	);
 
 	return (
 		<NodeContent id={id} loading={false} hasMore={false}>

@@ -9,7 +9,9 @@
 // https://stackoverflow.com/a/25095250/17280436
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client';
 import filter from 'lodash/filter';
+import find from 'lodash/find';
 import forEach from 'lodash/forEach';
+import pull from 'lodash/pull';
 import reduce from 'lodash/reduce';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -30,7 +32,6 @@ import {
 	NodeSort,
 	NodeType
 } from '../types/graphql/types';
-import { UploadQueue } from './UploadQueue';
 import { encodeBase64, isFileSystemDirectoryEntry, isFolder, TreeNode } from './utils';
 
 export type UploadAddType = { file: File; fileSystemEntry?: FileSystemEntry | null };
@@ -306,6 +307,69 @@ function loadItemAsChild(
 	}
 	return Promise.resolve();
 }
+
+export function canBeProcessed(id: string): boolean {
+	return uploadVar()[id].parentNodeId !== null;
+}
+
+/**
+ * UploadQueue Singleton
+ */
+export const UploadQueue = ((): {
+	LIMIT: number;
+	start: (id: string) => void;
+	startAll: () => void;
+	add: (...ids: string[]) => void;
+	removeAndStartNext: (...ids: string[]) => string[];
+} => {
+	const LIMIT = 3;
+
+	const waitingList: string[] = [];
+
+	const loadingList: string[] = [];
+
+	function getFirstReadyWaitingItemId(): string | undefined {
+		return find(waitingList, (id) => canBeProcessed(id));
+	}
+
+	function canLoadMore(): boolean {
+		return loadingList.length < LIMIT && waitingList.length > 0;
+	}
+
+	function start(id: string): void {
+		pull(waitingList, id);
+		loadingList.push(id);
+		singleRetry(id);
+	}
+
+	function startAll(): void {
+		while (canLoadMore() && getFirstReadyWaitingItemId()) {
+			const itemId = getFirstReadyWaitingItemId();
+			if (itemId) {
+				start(itemId);
+			}
+		}
+	}
+
+	function add(...ids: string[]): void {
+		waitingList.push(...ids);
+	}
+
+	function removeAndStartNext(...ids: string[]): string[] {
+		const loadingIds = pull(loadingList, ...ids);
+		const waitingIds = pull(waitingList, ...ids);
+		startAll();
+		return [...loadingIds, ...waitingIds];
+	}
+
+	return {
+		LIMIT,
+		start,
+		startAll,
+		add,
+		removeAndStartNext
+	};
+})();
 
 export function uploadCompleted(
 	xhr: XMLHttpRequest,

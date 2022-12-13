@@ -6,16 +6,13 @@
 
 import React, { useMemo } from 'react';
 
-import { useQuery, useReactiveVar } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import { Container } from '@zextras/carbonio-design-system';
 
 import { useActiveNode } from '../../../hooks/useActiveNode';
-import { uploadVar } from '../../apollo/uploadVar';
-import { UploadItem } from '../../types/common';
+import GET_UPLOAD_ITEM from '../../graphql/queries/getUploadItem.graphql';
 import { EmptyDisplayer } from './EmptyDisplayer';
 import { UploadDisplayerNode } from './UploadDisplayerNode';
-
-import GET_UPLOAD_ITEM from '../../graphql/queries/getUploadItem.graphql';
 
 export interface DisplayerProps {
 	translationKey: string;

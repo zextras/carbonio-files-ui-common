@@ -54,3 +54,5 @@ export const UploadListItemWrapper = React.memo<UploadListItemWrapperProps>(
 		);
 	}
 );
+
+UploadListItemWrapper.displayName = 'UploadListItemWrapper';

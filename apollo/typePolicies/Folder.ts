@@ -1,4 +1,10 @@
-import { FieldFunctionOptions, TypePolicies, TypePolicy } from '@apollo/client';
+/*
+ * SPDX-FileCopyrightText: 2022 Zextras <https://www.zextras.com>
+ *
+ * SPDX-License-Identifier: AGPL-3.0-only
+ */
+import { FieldFunctionOptions, TypePolicy } from '@apollo/client';
+
 import { FindNodesCachedObject, NodesPage, NodesPageCachedObject } from '../../types/apollo';
 import { FolderChildrenArgs, GetChildrenQueryVariables } from '../../types/graphql/types';
 import { mergeNodesList, readNodesList } from './utils';

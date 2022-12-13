@@ -21,7 +21,6 @@ import { UploadFunctions, uploadFunctionsVar, uploadVar } from '../apollo/upload
 import { UploadFolderItem, UploadItem, UploadStatus } from '../types/common';
 import { File as FilesFile } from '../types/graphql/types';
 import { DeepPick } from '../types/utils';
-import { UploadQueue } from '../utils/UploadQueue';
 import {
 	decrementAllParentsCompletedByAmount,
 	decrementAllParentsDenominatorByAmount,
@@ -39,6 +38,7 @@ import {
 	updateAllParentsStatus,
 	upload,
 	UploadAddType,
+	UploadQueue,
 	uploadVarReducer,
 	uploadVersion
 } from '../utils/uploadUtils';

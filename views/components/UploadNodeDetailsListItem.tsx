@@ -12,6 +12,7 @@ import reduce from 'lodash/reduce';
 
 import { LIST_ITEM_AVATAR_HEIGHT_COMPACT } from '../../constants';
 import { Breadcrumbs } from '../../design_system_fork/Breadcrumbs';
+import GET_UPLOAD_ITEM from '../../graphql/queries/getUploadItem.graphql';
 import { useUploadActions } from '../../hooks/useUploadActions';
 import { Crumb, UploadItem } from '../../types/common';
 import { getUploadNodeType, isUploadFolderItem } from '../../utils/uploadUtils';
@@ -20,34 +21,35 @@ import { NodeAvatarIcon } from './NodeAvatarIcon';
 import { NodeHoverBar } from './NodeHoverBar';
 import { HoverContainer, ListItemContainer } from './StyledComponents';
 import { UploadStatusIcon } from './UploadStatusIcon';
-import GET_UPLOAD_ITEM from '../../graphql/queries/getUploadItem.graphql';
 
 interface UploadNodeDetailsListItemProps {
 	id: string;
 }
 
 export const UploadNodeDetailsListItem = ({ id }: UploadNodeDetailsListItemProps): JSX.Element => {
-	const { data, loading, error } = useQuery(GET_UPLOAD_ITEM, { variables: { id } });
+	const { data } = useQuery(GET_UPLOAD_ITEM, { variables: { id } });
 
 	const item = useMemo<UploadItem | undefined>(() => data?.getUploadItem, [data]);
 
-	const crumbs = useMemo<Crumb[]>(() => {
-		return reduce<string, Crumb[]>(
-			item?.fullPath.split('/'),
-			(accumulator, pathEntry, index, initialArray) => {
-				if (pathEntry && index < initialArray.length - 1) {
-					accumulator.push({
-						id: `path-${index}`,
-						label: pathEntry,
-						disabled: true,
-						onClick: undefined
-					});
-				}
-				return accumulator;
-			},
-			[]
-		);
-	}, [item?.fullPath]);
+	const crumbs = useMemo<Crumb[]>(
+		() =>
+			reduce<string, Crumb[]>(
+				item?.fullPath.split('/'),
+				(accumulator, pathEntry, index, initialArray) => {
+					if (pathEntry && index < initialArray.length - 1) {
+						accumulator.push({
+							id: `path-${index}`,
+							label: pathEntry,
+							disabled: true,
+							onClick: undefined
+						});
+					}
+					return accumulator;
+				},
+				[]
+			),
+		[item?.fullPath]
+	);
 
 	const hoverActions = useUploadActions(item ? [item] : [], true);
 

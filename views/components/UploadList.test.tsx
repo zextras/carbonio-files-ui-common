@@ -43,8 +43,8 @@ import {
 } from '../../types/graphql/types';
 import { getChildrenVariables, mockGetBaseNode, mockGetChildren } from '../../utils/mockUtils';
 import { delayUntil, setup } from '../../utils/testUtils';
+import { UploadQueue } from '../../utils/uploadUtils';
 import { UploadList } from './UploadList';
-import { UploadQueue } from "../../utils/UploadQueue";
 
 describe('Upload list', () => {
 	describe('Drag and drop', () => {
@@ -684,9 +684,7 @@ describe('Upload list', () => {
 			);
 			expect(screen.getAllByTestId('icon: AnimatedLoader')).toHaveLength(uploadedFiles.length);
 			// last files are queued
-			expect(screen.getAllByText(/queued/i)).toHaveLength(
-				uploadedFiles.length - UploadQueue.LIMIT
-			);
+			expect(screen.getAllByText(/queued/i)).toHaveLength(uploadedFiles.length - UploadQueue.LIMIT);
 			const nodeItems = screen.getAllByTestId('node-item-', { exact: false });
 			forEach(nodeItems, (nodeItem, index) => {
 				if (index < UploadQueue.LIMIT) {

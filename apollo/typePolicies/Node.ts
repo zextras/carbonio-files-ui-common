@@ -1,4 +1,10 @@
-import { FieldFunctionOptions, TypePolicies, TypePolicy } from '@apollo/client';
+/*
+ * SPDX-FileCopyrightText: 2022 Zextras <https://www.zextras.com>
+ *
+ * SPDX-License-Identifier: AGPL-3.0-only
+ */
+import { FieldFunctionOptions, TypePolicy } from '@apollo/client';
+
 import { ShareCachedObject, SharesCachedObject } from '../../types/apollo';
 import { NodeSharesArgs } from '../../types/graphql/types';
 

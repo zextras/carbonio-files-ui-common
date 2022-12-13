@@ -45,3 +45,5 @@ export const DisplayerHeader = React.memo<DisplayerHeaderParams>(
 		</>
 	)
 );
+
+DisplayerHeader.displayName = 'DisplayerHeader';
