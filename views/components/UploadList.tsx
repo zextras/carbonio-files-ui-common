@@ -20,15 +20,17 @@ import size from 'lodash/size';
 import { useTranslation } from 'react-i18next';
 
 import ListHeader from '../../../components/ListHeader';
+import { useActiveNode } from '../../../hooks/useActiveNode';
 import { useNavigation } from '../../../hooks/useNavigation';
 import { DRAG_TYPES, ROOTS } from '../../constants';
 import { ListContext, ListHeaderActionContext } from '../../contexts';
 import GET_UPLOAD_ITEMS from '../../graphql/queries/getUploadItems.graphql';
+import { usePrevious } from '../../hooks/usePrevious';
 import useSelection from '../../hooks/useSelection';
 import { useUpload } from '../../hooks/useUpload';
 import { Action, UploadItem } from '../../types/common';
 import { buildActionItems, getPermittedUploadActions } from '../../utils/ActionsFactory';
-import { getUploadAddType } from '../../utils/uploadUtils';
+import { getUploadAddType, isUploadFolderItem } from '../../utils/uploadUtils';
 import { Dropzone } from './Dropzone';
 import { EmptyFolder } from './EmptyFolder';
 import { ScrollContainer } from './ScrollContainer';
@@ -43,6 +45,20 @@ export const UploadList: React.VFC = () => {
 	const uploadItems = useMemo<UploadItem[]>(() => data?.getUploadItems || [], [data]);
 
 	const uploadStatusSizeIsZero = useMemo(() => uploadItems.length === 0, [uploadItems]);
+
+	const { setActiveNode } = useActiveNode();
+
+	const previousUploadItems = usePrevious<UploadItem[]>(uploadItems);
+
+	useEffect(() => {
+		if (
+			(previousUploadItems === undefined || size(previousUploadItems) === 0) &&
+			size(uploadItems) > 0 &&
+			isUploadFolderItem(uploadItems[0])
+		) {
+			setActiveNode(uploadItems[0].id);
+		}
+	}, [uploadItems, previousUploadItems, setActiveNode]);
 
 	const { setIsEmpty } = useContext(ListContext);
 
