@@ -27,6 +27,7 @@ import {
 	getAllPermittedActions,
 	getPermittedHoverBarActions
 } from '../../utils/ActionsFactory';
+import { getUploadAddType } from '../../utils/uploadUtils';
 import { isFile, isFolder, isTrashView } from '../../utils/utils';
 import { Dropzone } from './Dropzone';
 import { NodeListItem } from './NodeListItem';
@@ -214,9 +215,9 @@ export const NodeListItemWrapper: React.VFC<NodeListItemWrapperProps> = ({
 		[exitSelectionMode, moveNodesMutation, node]
 	);
 
-	const uploadAction = useCallback(
+	const uploadAction = useCallback<React.DragEventHandler>(
 		(event) => {
-			add(event.dataTransfer.files, node.id);
+			add(getUploadAddType(event.dataTransfer), node.id);
 			createSnackbar({
 				key: new Date().toLocaleString(),
 				type: 'info',

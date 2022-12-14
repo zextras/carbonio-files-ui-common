@@ -160,7 +160,7 @@ export const UploadList: React.VFC = () => {
 
 	const createSnackbar = useSnackbar();
 
-	const uploadWithDragAndDrop = useCallback(
+	const uploadWithDragAndDrop = useCallback<React.DragEventHandler>(
 		(event) => {
 			add(getUploadAddType(event.dataTransfer), ROOTS.LOCAL_ROOT);
 			createSnackbar({

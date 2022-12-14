@@ -47,7 +47,7 @@ import {
 	mockGetPermissions,
 	mockMoveNodes
 } from '../utils/mockUtils';
-import { buildBreadCrumbRegExp, setup, selectNodes } from '../utils/testUtils';
+import { buildBreadCrumbRegExp, setup, selectNodes, createDataTransfer } from '../utils/testUtils';
 import { DisplayerProps } from './components/Displayer';
 import FolderView from './FolderView';
 
@@ -71,10 +71,8 @@ describe('Drag and drop', () => {
 		const currentFolder = populateFolder();
 		currentFolder.permissions.can_write_file = true;
 		const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
-		const files: File[] = [];
 		forEach(uploadedFiles, (file) => {
 			file.parent = currentFolder;
-			files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 		});
 		let reqIndex = 0;
 		const mockedGetChildHandler = jest.fn();
@@ -97,10 +95,7 @@ describe('Drag and drop', () => {
 			mockGetChild({ node_id: currentFolder.id }, currentFolder)
 		];
 
-		const dataTransferObj = {
-			types: ['Files'],
-			files
-		};
+		const dataTransferObj = createDataTransfer(uploadedFiles);
 
 		setup(<FolderView />, {
 			initialRouterEntries: [`/?folder=${currentFolder.id}`],
@@ -139,10 +134,8 @@ describe('Drag and drop', () => {
 		const currentFolder = populateFolder();
 		currentFolder.permissions.can_write_file = false;
 		const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
-		const files: File[] = [];
 		forEach(uploadedFiles, (file) => {
 			file.parent = currentFolder;
-			files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 		});
 		let reqIndex = 0;
 
@@ -166,10 +159,7 @@ describe('Drag and drop', () => {
 			mockGetChild({ node_id: currentFolder.id }, currentFolder)
 		];
 
-		const dataTransferObj = {
-			types: ['Files'],
-			files
-		};
+		const dataTransferObj = createDataTransfer(uploadedFiles);
 
 		setup(<FolderView />, {
 			initialRouterEntries: [`/?folder=${currentFolder.id}`],
@@ -206,10 +196,8 @@ describe('Drag and drop', () => {
 		destinationFolder.parent = { ...currentFolder, children: { nodes: [] } } as Folder;
 		currentFolder.children.nodes.push(destinationFolder);
 		const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
-		const files: File[] = [];
 		forEach(uploadedFiles, (file) => {
 			file.parent = destinationFolder;
-			files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 		});
 		let reqIndex = 0;
 
@@ -230,10 +218,7 @@ describe('Drag and drop', () => {
 			mockGetChild({ node_id: currentFolder.id }, currentFolder)
 		];
 
-		const dataTransferObj = {
-			types: ['Files'],
-			files
-		};
+		const dataTransferObj = createDataTransfer(uploadedFiles);
 
 		setup(<FolderView />, {
 			initialRouterEntries: [`/?folder=${currentFolder.id}`],
@@ -270,10 +255,8 @@ describe('Drag and drop', () => {
 		destinationFolder.parent = { ...currentFolder, children: { nodes: [] } } as Folder;
 		currentFolder.children.nodes.push(destinationFolder);
 		const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
-		const files: File[] = [];
 		forEach(uploadedFiles, (file) => {
 			file.parent = destinationFolder;
-			files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 		});
 		let reqIndex = 0;
 
@@ -294,10 +277,7 @@ describe('Drag and drop', () => {
 			mockGetChild({ node_id: currentFolder.id }, currentFolder)
 		];
 
-		const dataTransferObj = {
-			types: ['Files'],
-			files
-		};
+		const dataTransferObj = createDataTransfer(uploadedFiles);
 
 		setup(<FolderView />, {
 			initialRouterEntries: [`/?folder=${currentFolder.id}`],
@@ -335,10 +315,8 @@ describe('Drag and drop', () => {
 		destinationFile.parent = { ...currentFolder, children: { nodes: [] } } as Folder;
 		currentFolder.children.nodes.push(destinationFile);
 		const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
-		const files: File[] = [];
 		forEach(uploadedFiles, (file) => {
 			file.parent = currentFolder;
-			files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 		});
 		let reqIndex = 0;
 
@@ -362,10 +340,7 @@ describe('Drag and drop', () => {
 			mockGetChild({ node_id: currentFolder.id }, currentFolder)
 		];
 
-		const dataTransferObj = {
-			types: ['Files'],
-			files
-		};
+		const dataTransferObj = createDataTransfer(uploadedFiles);
 
 		setup(<FolderView />, {
 			initialRouterEntries: [`/?folder=${currentFolder.id}`],

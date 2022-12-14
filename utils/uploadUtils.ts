@@ -33,6 +33,7 @@ import {
 	NodeType
 } from '../types/graphql/types';
 import { encodeBase64, isFileSystemDirectoryEntry, isFolder, TreeNode } from './utils';
+import map from "lodash/map";
 
 export type UploadAddType = { file: File; fileSystemEntry?: FileSystemEntry | null };
 
@@ -515,6 +516,10 @@ export function getUploadAddType(dataTransfer: DataTransfer): UploadAddType[] {
 		fileEntries.push({ fileSystemEntry: item, file: dataTransfer.files[index] });
 	});
 	return fileEntries;
+}
+
+export function getUploadAddTypeFromInput(fileList: FileList): UploadAddType[] {
+	return map(fileList, (file) => ({ file }));
 }
 
 export function getUploadNodeType(item: Partial<UploadItem>): NodeType {

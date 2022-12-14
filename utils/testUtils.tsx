@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import React, { ReactElement, useContext, useEffect, useMemo } from 'react';
+import React, {ReactElement, useContext, useEffect, useMemo} from 'react';
 
-import { ApolloProvider } from '@apollo/client';
-import { MockedProvider } from '@apollo/client/testing';
+import {ApolloProvider} from '@apollo/client';
+import {MockedProvider} from '@apollo/client/testing';
 import {
 	act,
 	FindAllBy,
@@ -24,23 +24,23 @@ import {
 	waitFor,
 	within
 } from '@testing-library/react';
-import { renderHook, RenderHookOptions, RenderHookResult } from '@testing-library/react-hooks';
+import {renderHook, RenderHookOptions, RenderHookResult} from '@testing-library/react-hooks';
 import userEvent from '@testing-library/user-event';
-import { ModalManager, SnackbarManager } from '@zextras/carbonio-design-system';
-import { PreviewManager, PreviewsManagerContext } from '@zextras/carbonio-ui-preview';
-import { PreviewManagerContextType } from '@zextras/carbonio-ui-preview/lib/preview/PreviewManager';
-import { EventEmitter } from 'events';
-import { GraphQLError } from 'graphql';
+import {ModalManager, SnackbarManager} from '@zextras/carbonio-design-system';
+import {PreviewManager, PreviewsManagerContext} from '@zextras/carbonio-ui-preview';
+import {PreviewManagerContextType} from '@zextras/carbonio-ui-preview/lib/preview/PreviewManager';
+import {EventEmitter} from 'events';
+import {GraphQLError} from 'graphql';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
-import { I18nextProvider } from 'react-i18next';
-import { MemoryRouter } from 'react-router-dom';
+import {I18nextProvider} from 'react-i18next';
+import {MemoryRouter} from 'react-router-dom';
 
 import I18nFactory from '../../i18n/i18n-test-factory';
 import StyledWrapper from '../../StyledWrapper';
-import { AdvancedFilters } from '../types/common';
-import { Folder } from '../types/graphql/types';
-import { Mock } from './mockUtils';
+import {AdvancedFilters} from '../types/common';
+import {File as FilesFile, Folder} from '../types/graphql/types';
+import {Mock} from './mockUtils';
 
 export type UserEvent = ReturnType<typeof userEvent['setup']>;
 
@@ -371,3 +371,31 @@ export const PreviewInitComponent: React.FC<{
 	}, [emptyPreview, initPreview, initPreviewArgs]);
 	return <>{children}</>;
 };
+type DataTransferUploadStub = {
+	items: Array<{ webkitGetAsEntry: () => Partial<FileSystemEntry> }>;
+	files: Array<File>;
+	types: Array<string>;
+};
+
+export function createDataTransfer(files: Array<FilesFile>): DataTransferUploadStub {
+	const fileBlobs: File[] = [];
+	const items: Array<{ webkitGetAsEntry: () => Partial<FileSystemEntry> }> = [];
+	forEach(files, (file) => {
+		fileBlobs.push(new File(['(⌐□_□)😂😂😂😂'], file.name, {type: file.mime_type}));
+		const fileEntry: Partial<FileSystemEntry> = {
+			name: file.name,
+			fullPath: `/${file.name}`,
+			isFile: true,
+			isDirectory: false
+		};
+		items.push({
+			webkitGetAsEntry: () => fileEntry
+		});
+	});
+
+	return {
+		files: fileBlobs,
+		items,
+		types: ['Files']
+	};
+}

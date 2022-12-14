@@ -31,7 +31,7 @@ import {
 	mockGetChildren,
 	mockMoveNodes
 } from '../utils/mockUtils';
-import { setup, selectNodes } from '../utils/testUtils';
+import { setup, selectNodes, createDataTransfer } from '../utils/testUtils';
 import FilterView from './FilterView';
 
 jest.mock('../../hooks/useCreateOptions', () => ({
@@ -47,10 +47,8 @@ describe('Filter View', () => {
 			const currentFilter = populateNodes(5, 'File');
 			const localRoot = populateFolder(0, ROOTS.LOCAL_ROOT);
 			const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
-			const files: File[] = [];
 			forEach(uploadedFiles, (file) => {
 				file.parent = localRoot;
-				files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 			});
 			let reqIndex = 0;
 
@@ -87,10 +85,7 @@ describe('Filter View', () => {
 				)
 			];
 
-			const dataTransferObj = {
-				types: ['Files'],
-				files
-			};
+			const dataTransferObj = createDataTransfer(uploadedFiles);
 
 			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
 				mocks,
@@ -134,10 +129,8 @@ describe('Filter View', () => {
 			const currentFilter = populateNodes(5);
 			const localRoot = populateFolder(0, ROOTS.LOCAL_ROOT);
 			const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
-			const files: File[] = [];
 			forEach(uploadedFiles, (file) => {
 				file.parent = localRoot;
-				files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 			});
 			let reqIndex = 0;
 
@@ -168,10 +161,7 @@ describe('Filter View', () => {
 				)
 			];
 
-			const dataTransferObj = {
-				types: ['Files'],
-				files
-			};
+			const dataTransferObj = createDataTransfer(uploadedFiles);
 
 			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
 				mocks,
@@ -213,10 +203,8 @@ describe('Filter View', () => {
 			destinationFolder.permissions.can_write_file = true;
 			currentFilter.push(destinationFolder);
 			const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
-			const files: File[] = [];
 			forEach(uploadedFiles, (file) => {
 				file.parent = destinationFolder;
-				files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 			});
 			let reqIndex = 0;
 
@@ -243,10 +231,7 @@ describe('Filter View', () => {
 				)
 			];
 
-			const dataTransferObj = {
-				types: ['Files'],
-				files
-			};
+			const dataTransferObj = createDataTransfer(uploadedFiles);
 
 			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
 				mocks,
@@ -278,10 +263,8 @@ describe('Filter View', () => {
 			destinationFolder.permissions.can_write_file = false;
 			currentFilter.push(destinationFolder);
 			const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
-			const files: File[] = [];
 			forEach(uploadedFiles, (file) => {
 				file.parent = destinationFolder;
-				files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 			});
 			let reqIndex = 0;
 
@@ -303,10 +286,7 @@ describe('Filter View', () => {
 				)
 			];
 
-			const dataTransferObj = {
-				types: ['Files'],
-				files
-			};
+			const dataTransferObj = createDataTransfer(uploadedFiles);
 
 			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
 				mocks,
@@ -339,10 +319,8 @@ describe('Filter View', () => {
 			destinationFolder.permissions.can_write_file = true;
 			currentFilter.push(destinationFolder);
 			const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
-			const files: File[] = [];
 			forEach(uploadedFiles, (file) => {
 				file.parent = destinationFolder;
-				files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 			});
 			let reqIndex = 0;
 
@@ -364,10 +342,7 @@ describe('Filter View', () => {
 				)
 			];
 
-			const dataTransferObj = {
-				types: ['Files'],
-				files
-			};
+			const dataTransferObj = createDataTransfer(uploadedFiles);
 
 			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
 				mocks,

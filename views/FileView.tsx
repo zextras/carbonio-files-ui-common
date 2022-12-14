@@ -7,7 +7,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { Container, Responsive, Snackbar } from '@zextras/carbonio-design-system';
-import map from 'lodash/map';
 import noop from 'lodash/noop';
 import { useTranslation } from 'react-i18next';
 
@@ -19,7 +18,7 @@ import { ListContext } from '../contexts';
 import useQueryParam from '../hooks/useQueryParam';
 import { useUpload } from '../hooks/useUpload';
 import { DocsType } from '../types/common';
-import { UploadAddType } from '../utils/uploadUtils';
+import { getUploadAddTypeFromInput } from '../utils/uploadUtils';
 import { getNewDocumentActionLabel, inputElement } from '../utils/utils';
 import { Displayer } from './components/Displayer';
 import FileList from './components/FileList';
@@ -44,17 +43,13 @@ const FileView: React.VFC = () => {
 
 	const inputElementOnchange = useCallback(
 		(ev: Event) => {
-			if (ev.currentTarget instanceof HTMLInputElement && ev.currentTarget.files) {
-				const fileEntries: UploadAddType[] = map(ev.currentTarget.files, (file) => ({
-					file,
-					fileSystemEntry: null
-				}));
-				add(fileEntries, ROOTS.LOCAL_ROOT);
-				// required to select 2 times the same file/files
-				if (ev.target instanceof HTMLInputElement) {
-					ev.target.value = '';
+			if (ev.currentTarget instanceof HTMLInputElement) {
+				if (ev.currentTarget.files) {
+					add(getUploadAddTypeFromInput(ev.currentTarget.files), ROOTS.LOCAL_ROOT);
+					setShowUploadSnackbar(true);
 				}
-				setShowUploadSnackbar(true);
+				// required to select 2 times the same file/files
+				ev.currentTarget.value = '';
 			}
 		},
 		[add]

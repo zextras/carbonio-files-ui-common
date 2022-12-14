@@ -32,7 +32,7 @@ import { useUpload } from '../hooks/useUpload';
 import { Crumb, DocsType, NodeListItemType, URLParams } from '../types/common';
 import { NodeSort } from '../types/graphql/types';
 import { NonNullableListItem, Unwrap } from '../types/utils';
-import { UploadAddType } from '../utils/uploadUtils';
+import {getUploadAddTypeFromInput, UploadAddType} from '../utils/uploadUtils';
 import { getNewDocumentActionLabel, inputElement } from '../utils/utils';
 import { Displayer } from './components/Displayer';
 import { List } from './components/List';
@@ -67,17 +67,13 @@ const FilterView: React.VFC = () => {
 
 	const inputElementOnchange = useCallback(
 		(ev: Event) => {
-			if (ev.currentTarget instanceof HTMLInputElement && ev.currentTarget.files) {
-				const fileEntries: UploadAddType[] = map(ev.currentTarget.files, (file) => ({
-					file,
-					fileSystemEntry: null
-				}));
-				add(fileEntries, ROOTS.LOCAL_ROOT);
-				// required to select 2 times the same file/files
-				if (ev.target instanceof HTMLInputElement) {
-					ev.target.value = '';
+			if (ev.currentTarget instanceof HTMLInputElement) {
+				if (ev.currentTarget.files) {
+					add(getUploadAddTypeFromInput(ev.currentTarget.files), ROOTS.LOCAL_ROOT);
+					setShowUploadSnackbar(true);
 				}
-				setShowUploadSnackbar(true);
+				// required to select 2 times the same file/files
+				ev.currentTarget.value = '';
 			}
 		},
 		[add]
