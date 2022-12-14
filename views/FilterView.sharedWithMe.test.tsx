@@ -49,7 +49,7 @@ jest.mock('../../hooks/useCreateOptions', () => ({
 describe('Filter view', () => {
 	describe('Shared With Me filter', () => {
 		test('Shared with me filter has sharedWithMe=true and excludes trashed nodes', async () => {
-			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.sharedWithMe}`]
 			});
 			await screen.findByText(/view files and folders/i);
@@ -100,7 +100,7 @@ describe('Filter view', () => {
 			];
 
 			const { user } = setup(
-				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
+				<Route path={`/:view/:filter?`}>
 					<FilterView />
 				</Route>,
 				{ initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.sharedWithMe}`], mocks }

@@ -44,11 +44,12 @@ export function useUploadActions(
 	const goToFolderSelection = useCallback(() => {
 		if (node?.parentNodeId) {
 			if (nodes.length === 1) {
-				const destination = `/?folder=${node.parentNodeId}${
-					node.nodeId !== null ? `&node=${node.nodeId}` : ''
-				}`;
-				navigateTo(destination);
-				scrollToNodeItem(node.id);
+				if (node.nodeId) {
+					const destination = `/?folder=${node.parentNodeId}&node=${node.nodeId}`;
+					navigateTo(destination);
+					scrollToNodeItem(node.nodeId);
+				}
+				navigateToFolder(node.parentNodeId);
 			} else {
 				navigateToFolder(node.parentNodeId);
 			}

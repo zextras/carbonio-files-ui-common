@@ -87,7 +87,7 @@ describe('Filter View', () => {
 
 			const dataTransferObj = createDataTransfer(uploadedFiles);
 
-			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 				mocks,
 				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.sharedWithMe}`]
 			});
@@ -163,7 +163,7 @@ describe('Filter View', () => {
 
 			const dataTransferObj = createDataTransfer(uploadedFiles);
 
-			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 				mocks,
 				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`]
 			});
@@ -233,7 +233,7 @@ describe('Filter View', () => {
 
 			const dataTransferObj = createDataTransfer(uploadedFiles);
 
-			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 				mocks,
 				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.sharedWithMe}`]
 			});
@@ -288,7 +288,7 @@ describe('Filter View', () => {
 
 			const dataTransferObj = createDataTransfer(uploadedFiles);
 
-			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 				mocks,
 				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
 			});
@@ -344,7 +344,7 @@ describe('Filter View', () => {
 
 			const dataTransferObj = createDataTransfer(uploadedFiles);
 
-			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 				mocks,
 				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`]
 			});
@@ -407,7 +407,7 @@ describe('Filter View', () => {
 				})
 			});
 
-			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 				mocks,
 				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`]
 			});
@@ -480,7 +480,7 @@ describe('Filter View', () => {
 				})
 			});
 
-			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 				mocks,
 				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
 			});
@@ -574,7 +574,7 @@ describe('Filter View', () => {
 				})
 			});
 
-			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 				mocks,
 				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
 			});
@@ -660,10 +660,10 @@ describe('Filter View', () => {
 				})
 			});
 
-			const { user } = setup(
-				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
-				{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
-			);
+			const { user } = setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
+				mocks,
+				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
+			});
 
 			const itemToDrag = await screen.findByText(nodesToDrag[0].name);
 			await selectNodes(
@@ -727,7 +727,7 @@ describe('Filter View', () => {
 				})
 			});
 
-			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 				mocks,
 				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
 			});

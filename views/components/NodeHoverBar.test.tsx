@@ -37,7 +37,7 @@ describe('Node Hover Bar', () => {
 			}
 		];
 
-		const { user } = setup(<NodeHoverBar actions={actions} />);
+		const { user } = setup(<NodeHoverBar style={{ display: 'flex' }} actions={actions} />);
 		expect(screen.getByTestId('icon: action1Icon')).toBeInTheDocument();
 		expect(screen.getByTestId('icon: action1Icon')).toBeVisible();
 		expect(screen.getByTestId('icon: action2Icon')).toBeInTheDocument();

@@ -68,10 +68,10 @@ describe('Filter View', () => {
 					)
 				];
 
-				const { user } = setup(
-					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
-					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
-				);
+				const { user } = setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
+					mocks,
+					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
+				});
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -108,10 +108,10 @@ describe('Filter View', () => {
 					)
 				];
 
-				const { user } = setup(
-					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
-					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
-				);
+				const { user } = setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
+					mocks,
+					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
+				});
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -126,9 +126,7 @@ describe('Filter View', () => {
 				const moreIconButton = screen.queryByTestId('icon: MoreVertical');
 				if (moreIconButton) {
 					await user.click(moreIconButton);
-					// wait for trash action to check that popper is open
-					const trashAction = await screen.findByText(actionRegexp.copy);
-					expect(trashAction).not.toHaveAttribute('disabled');
+					await screen.findByTestId('dropdown-popper-list');
 					expect(screen.queryByText(actionRegexp.rename)).not.toBeInTheDocument();
 				}
 			});
@@ -160,10 +158,10 @@ describe('Filter View', () => {
 					)
 				];
 
-				const { user } = setup(
-					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
-					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
-				);
+				const { user } = setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
+					mocks,
+					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
+				});
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -223,10 +221,10 @@ describe('Filter View', () => {
 					)
 				];
 
-				const { user } = setup(
-					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
-					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
-				);
+				const { user } = setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
+					mocks,
+					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
+				});
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -237,6 +235,7 @@ describe('Filter View', () => {
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 				await user.click(screen.getByTestId('icon: MoreVertical'));
+				screen.getByTestId(`node-item-${element.id}`);
 				await renameNode(newName, user);
 				// check the node. It should have the new name and be at same position
 				const nodeItem = screen.getByTestId(`node-item-${element.id}`);
@@ -267,10 +266,10 @@ describe('Filter View', () => {
 					)
 				];
 
-				const { user } = setup(
-					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
-					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
-				);
+				const { user } = setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
+					mocks,
+					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
+				});
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -314,7 +313,7 @@ describe('Filter View', () => {
 					)
 				];
 
-				setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+				setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 					mocks,
 					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
 				});
@@ -361,10 +360,10 @@ describe('Filter View', () => {
 					)
 				];
 
-				const { user } = setup(
-					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
-					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
-				);
+				const { user } = setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
+					mocks,
+					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
+				});
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -437,10 +436,10 @@ describe('Filter View', () => {
 					)
 				];
 
-				const { user } = setup(
-					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
-					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
-				);
+				const { user } = setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
+					mocks,
+					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
+				});
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -539,10 +538,10 @@ describe('Filter View', () => {
 					)
 				];
 
-				const { user } = setup(
-					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
-					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
-				);
+				const { user } = setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
+					mocks,
+					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
+				});
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));

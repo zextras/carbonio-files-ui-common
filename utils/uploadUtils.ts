@@ -11,6 +11,7 @@ import { ApolloClient, NormalizedCacheObject } from '@apollo/client';
 import filter from 'lodash/filter';
 import find from 'lodash/find';
 import forEach from 'lodash/forEach';
+import map from 'lodash/map';
 import pull from 'lodash/pull';
 import reduce from 'lodash/reduce';
 import { v4 as uuidv4 } from 'uuid';
@@ -33,7 +34,6 @@ import {
 	NodeType
 } from '../types/graphql/types';
 import { encodeBase64, isFileSystemDirectoryEntry, isFolder, TreeNode } from './utils';
-import map from "lodash/map";
 
 export type UploadAddType = { file: File; fileSystemEntry?: FileSystemEntry | null };
 

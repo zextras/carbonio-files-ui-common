@@ -74,10 +74,10 @@ describe('Filter View', () => {
 					)
 				];
 
-				const { user } = setup(
-					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
-					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
-				);
+				const { user } = setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
+					mocks,
+					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
+				});
 
 				await screen.findByText(file.name);
 				// activate selection mode by selecting items
@@ -121,10 +121,10 @@ describe('Filter View', () => {
 					)
 				];
 
-				const { user } = setup(
-					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
-					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
-				);
+				const { user } = setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
+					mocks,
+					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
+				});
 
 				await screen.findByText(file.name);
 				await selectNodes([file.id, folder.id], user);
@@ -158,10 +158,10 @@ describe('Filter View', () => {
 					)
 				];
 
-				const { user } = setup(
-					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
-					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
-				);
+				const { user } = setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
+					mocks,
+					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
+				});
 
 				await screen.findByText(file.name);
 				// activate selection mode by selecting items
@@ -239,7 +239,7 @@ describe('Filter View', () => {
 				];
 
 				const { getByTextWithMarkup, findByTextWithMarkup, user } = setup(
-					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+					<Route path={`/:view/:filter?`} component={FilterView} />,
 					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
 				);
 
@@ -328,7 +328,7 @@ describe('Filter View', () => {
 					)
 				];
 
-				setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+				setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 					mocks,
 					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
 				});
@@ -397,7 +397,7 @@ describe('Filter View', () => {
 				];
 
 				const { getByTextWithMarkup, findByTextWithMarkup, user } = setup(
-					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+					<Route path={`/:view/:filter?`} component={FilterView} />,
 					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
 				);
 

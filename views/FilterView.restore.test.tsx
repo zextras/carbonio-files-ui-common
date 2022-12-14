@@ -58,10 +58,10 @@ describe('Filter View', () => {
 					)
 				];
 
-				const { user } = setup(
-					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
-					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`] }
-				);
+				const { user } = setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
+					mocks,
+					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`]
+				});
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -112,10 +112,10 @@ describe('Filter View', () => {
 					)
 				];
 
-				const { user } = setup(
-					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
-					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
-				);
+				const { user } = setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
+					mocks,
+					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
+				});
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
@@ -157,7 +157,7 @@ describe('Filter View', () => {
 					)
 				];
 
-				setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+				setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 					mocks,
 					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
 				});
@@ -204,10 +204,10 @@ describe('Filter View', () => {
 				)
 			];
 
-			const { user } = setup(
-				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
-				{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`] }
-			);
+			const { user } = setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
+				mocks,
+				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`]
+			});
 
 			await screen.findByText(firstPage[0].name);
 			expect(screen.getByText(firstPage[0].name)).toBeVisible();

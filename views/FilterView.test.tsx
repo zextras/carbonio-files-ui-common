@@ -55,7 +55,7 @@ jest.mock('../../hooks/useCreateOptions', () => ({
 
 describe('Filter view', () => {
 	test('No url param render a "Missing filter" message', async () => {
-		setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+		setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 			initialRouterEntries: [`${INTERNAL_PATH.FILTER}/`]
 		});
 		await screen.findByTestId('missing-filter');
@@ -64,7 +64,7 @@ describe('Filter view', () => {
 	});
 
 	test('Create folder option is always disabled', async () => {
-		setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+		setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 			initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
 		});
 		await screen.findByText(/view files and folders/i);
@@ -82,7 +82,7 @@ describe('Filter view', () => {
 			)
 		];
 
-		setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+		setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 			initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`],
 			mocks
 		});
@@ -112,7 +112,7 @@ describe('Filter view', () => {
 			)
 		];
 
-		setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+		setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 			initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`],
 			mocks
 		});
@@ -177,7 +177,7 @@ describe('Filter view', () => {
 			<div>
 				<Link
 					to={{
-						pathname: '/folder',
+						pathname: '/',
 						search: `?folder=${currentFolder.id}`
 					}}
 				>
@@ -185,8 +185,8 @@ describe('Filter view', () => {
 				</Link>
 				<Link to={`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`}>Go to filter</Link>
 				<Switch>
-					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />
-					<Route path="/folder" component={FolderView} />
+					<Route path={`/:view/:filter?`} component={FilterView} />
+					<Route path="/" component={FolderView} />
 				</Switch>
 			</div>,
 			{ initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`], mocks }
@@ -222,10 +222,10 @@ describe('Filter view', () => {
 					nodes
 				)
 			];
-			const { user } = setup(
-				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
-				{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
-			);
+			const { user } = setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
+				mocks,
+				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
+			});
 			await screen.findByText(nodes[0].name);
 			expect(screen.getByText(nodes[0].name)).toBeVisible();
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();

@@ -49,7 +49,7 @@ describe('Filter view', () => {
 	describe('Trash filter', () => {
 		test('Restore close the displayer from trash views', async () => {
 			const { user } = setup(
-				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
+				<Route path={`/:view/:filter?`}>
 					<FilterView />
 				</Route>,
 				{
@@ -110,7 +110,7 @@ describe('Filter view', () => {
 
 		test('Delete permanently close the displayer from trash views', async () => {
 			const { user } = setup(
-				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
+				<Route path={`/:view/:filter?`}>
 					<FilterView />
 				</Route>,
 				{
@@ -179,7 +179,7 @@ describe('Filter view', () => {
 
 		test('in trash filter only restore and delete permanently actions are visible', async () => {
 			const { user } = setup(
-				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
+				<Route path={`/:view/:filter?`}>
 					<FilterView />
 				</Route>,
 				{ initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`] }
@@ -279,10 +279,10 @@ describe('Filter view', () => {
 				)
 			];
 
-			const { user } = setup(
-				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
-				{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`] }
-			);
+			const { user } = setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
+				mocks,
+				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`]
+			});
 			await screen.findByText(nodes[0].name);
 			expect(screen.getByText(nodes[0].name)).toBeVisible();
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
@@ -317,7 +317,7 @@ describe('Filter view', () => {
 
 	describe('My Trash filter', () => {
 		test('My Trash filter sharedWithMe=false and includes only trashed nodes', async () => {
-			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`]
 			});
 			await screen.findByText(/view files and folders/i);
@@ -342,7 +342,7 @@ describe('Filter view', () => {
 
 	describe('Shared Trash filter', () => {
 		test('Shared trash filter has sharedWithMe=true and includes only trashed nodes', async () => {
-			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.sharedTrash}`]
 			});
 			await screen.findByText(/view files and folders/i);

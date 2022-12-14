@@ -7,7 +7,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { Container, Responsive, Snackbar } from '@zextras/carbonio-design-system';
-import map from 'lodash/map';
 import noop from 'lodash/noop';
 import { useTranslation } from 'react-i18next';
 
@@ -18,7 +17,7 @@ import { DISPLAYER_WIDTH, FILES_APP_ID, LIST_WIDTH, ROOTS } from '../constants';
 import { ListContext } from '../contexts';
 import { useUpload } from '../hooks/useUpload';
 import { DocsType } from '../types/common';
-import {getUploadAddTypeFromInput, UploadAddType} from '../utils/uploadUtils';
+import { getUploadAddTypeFromInput } from '../utils/uploadUtils';
 import { getNewDocumentActionLabel, inputElement } from '../utils/utils';
 import { Displayer } from './components/Displayer';
 import { SearchList } from './components/SearchList';

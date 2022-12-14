@@ -6,21 +6,32 @@
 
 import React from 'react';
 
-import {faker} from '@faker-js/faker';
-import {act, fireEvent, screen, waitFor, waitForElementToBeRemoved, within} from '@testing-library/react';
-import {EventEmitter} from 'events';
+import { faker } from '@faker-js/faker';
+import {
+	act,
+	fireEvent,
+	screen,
+	waitFor,
+	waitForElementToBeRemoved,
+	within
+} from '@testing-library/react';
+import { EventEmitter } from 'events';
 import filter from 'lodash/filter';
 import find from 'lodash/find';
 import forEach from 'lodash/forEach';
 import keyBy from 'lodash/keyBy';
-import {graphql, rest} from 'msw';
+import { graphql, rest } from 'msw';
 
 import server from '../../../mocks/server';
-import {uploadVar} from '../../apollo/uploadVar';
-import {REST_ENDPOINT, ROOTS, UPLOAD_PATH} from '../../constants';
-import {UploadRequestBody, UploadRequestParams, UploadResponse} from '../../mocks/handleUploadFileRequest';
-import {populateFolder, populateLocalRoot, populateNodes} from '../../mocks/mockUtils';
-import {UploadItem, UploadStatus} from '../../types/common';
+import { uploadVar } from '../../apollo/uploadVar';
+import { REST_ENDPOINT, ROOTS, UPLOAD_PATH } from '../../constants';
+import {
+	UploadRequestBody,
+	UploadRequestParams,
+	UploadResponse
+} from '../../mocks/handleUploadFileRequest';
+import { populateFolder, populateLocalRoot, populateNodes } from '../../mocks/mockUtils';
+import { UploadItem, UploadStatus } from '../../types/common';
 import {
 	File as FilesFile,
 	Folder,
@@ -30,10 +41,10 @@ import {
 	GetChildrenQueryVariables,
 	Maybe
 } from '../../types/graphql/types';
-import {getChildrenVariables, mockGetBaseNode, mockGetChildren} from '../../utils/mockUtils';
-import {createDataTransfer, delayUntil, setup} from '../../utils/testUtils';
-import {UploadQueue} from '../../utils/uploadUtils';
-import {UploadList} from './UploadList';
+import { getChildrenVariables, mockGetBaseNode, mockGetChildren } from '../../utils/mockUtils';
+import { createDataTransfer, delayUntil, setup } from '../../utils/testUtils';
+import { UploadQueue } from '../../utils/uploadUtils';
+import { UploadList } from './UploadList';
 
 describe('Upload list', () => {
 	describe('Drag and drop', () => {
