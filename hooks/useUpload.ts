@@ -28,14 +28,12 @@ import {
 	deepMapTreeNodes,
 	flatUploadItemChildren,
 	flatUploadItemChildrenIds,
+	getFolderStatus,
 	incrementAllParents,
 	incrementAllParentsFailedCount,
-	isTheLastElement,
 	isUploadFolderItem,
 	removeFromParentChildren,
 	singleRetry,
-	thereAreFailedElements,
-	updateAllParentsStatus,
 	upload,
 	UploadAddType,
 	UploadQueue,
@@ -88,17 +86,18 @@ export const useUpload: UseUploadHook = () => {
 				).then((createFolderResult) => {
 					const folderNode = createFolderResult.data?.createFolder;
 					if (folderNode && isFolder(folderNode)) {
-						const status =
-							(!isTheLastElement(uploadFolderItem.id) && UploadStatus.LOADING) ||
-							(thereAreFailedElements(uploadFolderItem.id) && UploadStatus.FAILED) ||
-							UploadStatus.COMPLETED;
+						const status = getFolderStatus(
+							uploadFolderItem.failedCount,
+							uploadFolderItem.progress,
+							uploadFolderItem.contentCount + 1
+						);
 						uploadVarReducer({
 							type: 'update',
 							value: {
 								id: uploadFolderItem.id,
 								nodeId: folderNode.id,
 								status,
-								progress: uploadVar()[uploadFolderItem.id].progress + 1
+								progress: uploadFolderItem.progress + 1
 							}
 						});
 						incrementAllParents(uploadFolderItem);
@@ -367,7 +366,6 @@ export const useUpload: UseUploadHook = () => {
 						decrementAllParentsFailedCountByAmount(itemToRemove, 1);
 					}
 				}
-				updateAllParentsStatus(itemToRemove);
 				removeFromParentChildren(itemToRemove);
 			});
 

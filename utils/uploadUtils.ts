@@ -108,10 +108,22 @@ export function uploadVarReducer(action: UploadAction): UploadRecord {
 	}
 }
 
+export function getFolderStatus(
+	failedCount: number,
+	progress: number,
+	contentCount: number
+): UploadStatus {
+	return (
+		(failedCount + progress < contentCount && UploadStatus.LOADING) ||
+		(failedCount > 0 && UploadStatus.FAILED) ||
+		UploadStatus.COMPLETED
+	);
+}
+
 export function incrementAllParentsFailedCount(uploadItem: UploadItem): void {
 	if (uploadItem.parentId) {
 		const parent = uploadVar()[uploadItem.parentId] as UploadFolderItem;
-		const status = isTheLastElement(parent.id) ? UploadStatus.FAILED : UploadStatus.LOADING;
+		const status = getFolderStatus(parent.failedCount + 1, parent.progress, parent.contentCount);
 		uploadVarReducer({
 			type: 'update',
 			value: {
@@ -130,9 +142,15 @@ export function decrementAllParentsFailedCountByAmount(
 ): void {
 	if (uploadItem.parentId) {
 		const parent = uploadVar()[uploadItem.parentId] as UploadFolderItem;
+		const status = getFolderStatus(
+			parent.failedCount - amount,
+			parent.progress,
+			parent.contentCount
+		);
 		uploadVarReducer({
 			type: 'update',
 			value: {
+				status,
 				id: parent.id,
 				failedCount: parent.failedCount - amount
 			}
@@ -141,46 +159,18 @@ export function decrementAllParentsFailedCountByAmount(
 	}
 }
 
-export function updateAllParentsStatus(uploadItem: UploadItem): void {
-	if (uploadItem.parentId) {
-		const parent = uploadVar()[uploadItem.parentId] as UploadFolderItem;
-		const status =
-			(parent.failedCount > 0 && UploadStatus.FAILED) ||
-			(parent.progress === parent.contentCount && UploadStatus.COMPLETED) ||
-			UploadStatus.LOADING;
-		uploadVarReducer({
-			type: 'update',
-			value: {
-				id: parent.id,
-				status
-			}
-		});
-		updateAllParentsStatus(parent);
-	}
-}
-
-export function removeFromParentChildren(uploadItem: UploadItem): void {
-	if (uploadItem.parentId) {
-		const parent = uploadVar()[uploadItem.parentId] as UploadFolderItem;
-		if (isUploadFolderItem(parent)) {
-			const updatedParent: Partial<UploadFolderItem> & Pick<UploadFolderItem, 'id'> = {
-				id: parent.id,
-				children: filter(parent.children, (childId) => childId !== uploadItem.id)
-			};
-			uploadVarReducer({
-				type: 'update',
-				value: updatedParent
-			});
-		}
-	}
-}
-
 export function decrementAllParentsCompletedByAmount(uploadItem: UploadItem, amount: number): void {
 	if (uploadItem.parentId) {
 		const parent = uploadVar()[uploadItem.parentId] as UploadFolderItem;
+		const status = getFolderStatus(
+			parent.failedCount,
+			parent.progress - amount,
+			parent.contentCount
+		);
 		uploadVarReducer({
 			type: 'update',
 			value: {
+				status,
 				id: parent.id,
 				progress: parent.progress - amount
 			}
@@ -191,11 +181,8 @@ export function decrementAllParentsCompletedByAmount(uploadItem: UploadItem, amo
 
 export function incrementAllParents(uploadItem: UploadItem): void {
 	if (uploadItem.parentId) {
-		const parent = uploadVar()[uploadItem.parentId];
-		const status =
-			(!isTheLastElement(parent.id) && UploadStatus.LOADING) ||
-			(thereAreFailedElements(parent.id) && UploadStatus.FAILED) ||
-			UploadStatus.COMPLETED;
+		const parent = uploadVar()[uploadItem.parentId] as UploadFolderItem;
+		const status = getFolderStatus(parent.failedCount, parent.progress + 1, parent.contentCount);
 		uploadVarReducer({
 			type: 'update',
 			value: {
@@ -214,14 +201,36 @@ export function decrementAllParentsDenominatorByAmount(
 ): void {
 	if (uploadItem.parentId) {
 		const parent = uploadVar()[uploadItem.parentId] as UploadFolderItem;
+		const status = getFolderStatus(
+			parent.failedCount,
+			parent.progress,
+			parent.contentCount - amount
+		);
 		uploadVarReducer({
 			type: 'update',
 			value: {
 				id: parent.id,
-				contentCount: parent.contentCount - amount
+				contentCount: parent.contentCount - amount,
+				status
 			}
 		});
 		decrementAllParentsDenominatorByAmount(parent, amount);
+	}
+}
+
+export function removeFromParentChildren(uploadItem: UploadItem): void {
+	if (uploadItem.parentId) {
+		const parent = uploadVar()[uploadItem.parentId] as UploadFolderItem;
+		if (isUploadFolderItem(parent)) {
+			const updatedParent: Partial<UploadFolderItem> & Pick<UploadFolderItem, 'id'> = {
+				id: parent.id,
+				children: filter(parent.children, (childId) => childId !== uploadItem.id)
+			};
+			uploadVarReducer({
+				type: 'update',
+				value: updatedParent
+			});
+		}
 	}
 }
 
@@ -259,7 +268,8 @@ export function singleRetry(id: string): void {
 	}
 
 	uploadVarReducer({ type: 'update', value: { id, status: UploadStatus.LOADING, progress: 0 } });
-
+	// TODO this must be improved to handle folders retry
+	decrementAllParentsFailedCountByAmount(retryFile, 1);
 	const newRetryFile = uploadVar()[id];
 	if (newRetryFile) {
 		const itemFunctions = uploadFunctionsVar()[newRetryFile.id];
