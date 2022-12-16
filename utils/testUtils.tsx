@@ -33,14 +33,16 @@ import { EventEmitter } from 'events';
 import { GraphQLError } from 'graphql';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
+import reduce from 'lodash/reduce';
 import { I18nextProvider } from 'react-i18next';
 import { MemoryRouter } from 'react-router-dom';
 
 import I18nFactory from '../../i18n/i18n-test-factory';
 import StyledWrapper from '../../StyledWrapper';
-import { AdvancedFilters } from '../types/common';
+import { AdvancedFilters, Node } from '../types/common';
 import { File as FilesFile, Folder } from '../types/graphql/types';
 import { Mock } from './mockUtils';
+import { isFile, isFolder } from './utils';
 
 export type UserEvent = ReturnType<typeof userEvent['setup']>;
 
@@ -377,20 +379,93 @@ type DataTransferUploadStub = {
 	types: Array<string>;
 };
 
-export function createDataTransfer(files: Array<FilesFile>): DataTransferUploadStub {
-	const fileBlobs: File[] = [];
-	const items: Array<{ webkitGetAsEntry: () => Partial<FileSystemEntry> }> = [];
-	forEach(files, (file) => {
-		fileBlobs.push(new File(['(⌐□_□)😂😂😂😂'], file.name, { type: file.mime_type }));
-		const fileEntry: Partial<FileSystemEntry> = {
-			name: file.name,
-			fullPath: `/${file.name}`,
-			isFile: true,
-			isDirectory: false
+function createFileSystemDirectoryEntryReader(
+	node: Pick<Folder, '__typename' | 'name' | 'children'>
+): ReturnType<FileSystemDirectoryEntry['createReader']> {
+	// clone array to mutate with the splice in order to simulate the readEntries called until it returns an empty array (or undefined)
+	const children = [...node.children.nodes];
+	const readEntries = (
+		successCallback: FileSystemEntriesCallback,
+		_errorCallback?: ErrorCallback
+	): ReturnType<FileSystemDirectoryReader['readEntries']> => {
+		const childrenEntries = reduce<typeof node.children.nodes[number], FileSystemEntry[]>(
+			children.splice(0, Math.min(children.length, 10)),
+			(accumulator, childNode) => {
+				if (childNode) {
+					accumulator.push(
+						// eslint-disable-next-line @typescript-eslint/no-use-before-define
+						createFileSystemEntry(
+							childNode,
+							(isFile(childNode) &&
+								new File(['(⌐□_□)😂😂😂😂'], childNode.name, {
+									type: (isFile(childNode) && childNode.mime_type) || undefined
+								})) ||
+								undefined
+						)
+					);
+				}
+				return accumulator;
+			},
+			[]
+		);
+		successCallback(childrenEntries);
+	};
+
+	return {
+		readEntries
+	};
+}
+
+function createFileSystemEntry(
+	node: Pick<Node, '__typename' | 'name'> &
+		(Pick<FilesFile, 'mime_type'> | Pick<Folder, '__typename'>),
+	file?: File
+): FileSystemEntry {
+	const baseEntry: FileSystemEntry = {
+		name: node.name,
+		fullPath: `/${node.name}`,
+		isFile: isFile(node),
+		isDirectory: isFolder(node),
+		filesystem: {
+			name: node.name,
+			root: new FileSystemDirectoryEntry()
+		},
+		getParent: jest.fn()
+	};
+	if (isFolder(node)) {
+		const reader = createFileSystemDirectoryEntryReader(node);
+		const directoryEntry: FileSystemDirectoryEntry = {
+			...baseEntry,
+			createReader: () => reader,
+			getFile: jest.fn(),
+			getDirectory: jest.fn()
 		};
-		items.push({
-			webkitGetAsEntry: () => fileEntry
+		return directoryEntry;
+	}
+	const fileEntry: FileSystemFileEntry = {
+		...baseEntry,
+		file(successCallback: FileCallback, errorCallback?: ErrorCallback) {
+			if (file) {
+				successCallback(file);
+			} else if (errorCallback) {
+				errorCallback(new DOMException('no file provided', 'createFileSystemEntry'));
+			}
+		}
+	};
+	return fileEntry;
+}
+
+export function createDataTransfer(nodes: Array<Node>): DataTransferUploadStub {
+	const fileBlobs: File[] = [];
+	const items = map<Node, { webkitGetAsEntry: () => Partial<FileSystemEntry> }>(nodes, (node) => {
+		const fileBlob = new File(['(⌐□_□)😂😂😂😂'], node.name, {
+			type: (isFile(node) && node.mime_type) || undefined
 		});
+		fileBlobs.push(fileBlob);
+		const fileEntry = createFileSystemEntry(node, fileBlob);
+		return {
+			webkitGetAsEntry: () => fileEntry
+		};
 	});
 
 	return {

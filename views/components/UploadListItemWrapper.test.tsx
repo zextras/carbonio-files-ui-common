@@ -176,4 +176,34 @@ describe('Upload List Item Wrapper', () => {
 		expect(screen.getByText('Queued')).toBeVisible();
 		expect(screen.getByTestId('icon: AnimatedLoader')).toBeVisible();
 	});
+
+	test.todo('Progress for files is shown with the percentage');
+
+	test.todo(
+		'Progress for folders is shown as the fraction of loaded items on the total content count. The folder itself is included in the fraction values'
+	);
+
+	test.todo(
+		'When an item of a folder completes, the counter of the loaded items is incremented by 1, independently from its depth inside the tree of content'
+	);
+
+	test.todo(
+		'A folder has status complete only when all the items of the content are in status completed'
+	);
+
+	test.todo(
+		'If all items of the content of a folder finished, some with a failure, the progress of the folder shows only the completed'
+	);
+
+	test.todo(
+		'If all items of the content of a folder finished, some with a failure, the status of the folder is failed'
+	);
+
+	test.todo(
+		'If all items of the content of a folder finished, all with success, the progress of the folder shows the total count of items on both values of the fraction'
+	);
+
+	test.todo(
+		'If there is at least one item of the content of a folder still loading, the status of the folder is also loading'
+	);
 });

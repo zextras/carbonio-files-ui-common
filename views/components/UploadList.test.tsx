@@ -16,7 +16,6 @@ import {
 	within
 } from '@testing-library/react';
 import { EventEmitter } from 'events';
-import filter from 'lodash/filter';
 import find from 'lodash/find';
 import forEach from 'lodash/forEach';
 import keyBy from 'lodash/keyBy';
@@ -25,13 +24,18 @@ import { graphql, rest } from 'msw';
 import server from '../../../mocks/server';
 import { uploadVar } from '../../apollo/uploadVar';
 import { REST_ENDPOINT, ROOTS, UPLOAD_PATH } from '../../constants';
-import {
+import handleUploadFileRequest, {
 	UploadRequestBody,
 	UploadRequestParams,
 	UploadResponse
 } from '../../mocks/handleUploadFileRequest';
-import { populateFolder, populateLocalRoot, populateNodes } from '../../mocks/mockUtils';
-import { UploadItem, UploadStatus } from '../../types/common';
+import {
+	populateFile,
+	populateFolder,
+	populateLocalRoot,
+	populateNodes
+} from '../../mocks/mockUtils';
+import { Node, UploadItem, UploadStatus } from '../../types/common';
 import {
 	File as FilesFile,
 	Folder,
@@ -41,7 +45,12 @@ import {
 	GetChildrenQueryVariables,
 	Maybe
 } from '../../types/graphql/types';
-import { getChildrenVariables, mockGetBaseNode, mockGetChildren } from '../../utils/mockUtils';
+import {
+	getChildrenVariables,
+	mockCreateFolder,
+	mockGetBaseNode,
+	mockGetChildren
+} from '../../utils/mockUtils';
 import { createDataTransfer, delayUntil, setup } from '../../utils/testUtils';
 import { UploadQueue } from '../../utils/uploadUtils';
 import { UploadList } from './UploadList';
@@ -179,18 +188,15 @@ describe('Upload list', () => {
 			expect(screen.queryByTestId('dropzone-overlay')).not.toBeInTheDocument();
 		});
 
-		test.skip('Drop of mixed files and folder in the upload list shows folder item as failed and a snackbar to inform upload of folder is not allowed', async () => {
+		test('Drop of mixed files and folder in the upload list create folder and upload file', async () => {
 			const localRoot = populateFolder(0, ROOTS.LOCAL_ROOT);
-			const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
-			const files: File[] = [];
-			// invalid folder (file without size nor type)
+			const uploadedFiles = [populateFolder(), populateFile()];
+			// folder
 			uploadedFiles[0].parent = localRoot;
-			files.push(new File([], uploadedFiles[0].name, { type: '' }));
-			// valid file
+			// file
 			uploadedFiles[1].parent = localRoot;
-			files.push(new File(['(⌐□_□)'], uploadedFiles[1].name, { type: uploadedFiles[1].mime_type }));
 
-			// uploaded file 0 should never be uploaded since it's a folder
+			// folder does not query getChild
 			let reqIndex = 1;
 
 			// write local root data in cache as if it was already loaded
@@ -214,14 +220,17 @@ describe('Upload list', () => {
 				})
 			);
 
-			const dataTransferObj = {
-				types: ['Files'],
-				files
-			};
+			const dataTransferObj = createDataTransfer(uploadedFiles);
 
-			const mocks = [mockGetBaseNode({ node_id: localRoot.id }, localRoot)];
+			const mocks = [
+				mockGetBaseNode({ node_id: localRoot.id }, localRoot),
+				mockCreateFolder(
+					{ name: uploadedFiles[0].name, destination_id: uploadedFiles[0].parent.id },
+					uploadedFiles[0]
+				)
+			];
 
-			const { user } = setup(<UploadList />, { mocks });
+			setup(<UploadList />, { mocks });
 
 			await screen.findByText(/nothing here/i);
 
@@ -238,33 +247,9 @@ describe('Upload list', () => {
 				dataTransfer: dataTransferObj
 			});
 
-			// snackbar with action to open additional info modal is shown
 			await screen.findByText(uploadedFiles[0].name);
-			await screen.findByText(/some items have not been uploaded/i);
-			expect(screen.getByRole('button', { name: /more info/i })).toBeInTheDocument();
-			await user.click(screen.getByRole('button', { name: /more info/i }));
-			await screen.findByText(/additional info/i);
-
-			expect(screen.getByText(/additional info/i)).toBeInTheDocument();
-			expect(
-				screen.getByText(/Folders cannot be uploaded. Instead, if you are trying to upload a file/i)
-			).toBeInTheDocument();
-			expect(screen.getByTestId('icon: Close')).toBeInTheDocument();
-			await user.click(screen.getByTestId('icon: Close'));
-			expect(screen.queryByText(/additional info/i)).not.toBeInTheDocument();
-			// advance timers to close snackbar, make upload of valid item occur and show upload success
-			jest.advanceTimersToNextTimer();
 			await screen.findByText(/upload occurred in files' home/i);
 			expect(screen.queryByText(/some items have not been uploaded/i)).not.toBeInTheDocument();
-			// advance timers again to close also success snackbar
-			// FIXME: investigate on why there are 2 snackbars to close
-			act(() => {
-				jest.advanceTimersToNextTimer(2);
-			});
-			await waitFor(() =>
-				expect(screen.queryByText(/upload occurred in files' home/i)).not.toBeInTheDocument()
-			);
-
 			expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
 				uploadedFiles.length
 			);
@@ -277,21 +262,14 @@ describe('Upload list', () => {
 				>(getChildrenMockedQuery.request);
 				return expect(
 					(localRootCachedData?.getNode as Maybe<Folder> | undefined)?.children.nodes || []
-				).toHaveLength(1);
+				).toHaveLength(uploadedFiles.length);
 			});
 
 			expect(screen.getByText(uploadedFiles[0].name)).toBeVisible();
-			expect(screen.getByTestId('icon: AlertCircle')).toBeVisible();
-			const folderItem = screen.getByTestId(/node-item-0-\d*/);
-			expect(within(folderItem).getByTestId('icon: PlayCircleOutline')).not.toHaveAttribute(
-				'disabled',
-				''
-			);
-			await user.click(within(folderItem).getByTestId('icon: PlayCircleOutline'));
-			await screen.findByText(/folders cannot be uploaded/i);
-			expect(screen.getByRole('button', { name: /more info/i })).toBeInTheDocument();
+			expect(screen.getAllByTestId('icon: AnimatedLoader')).toHaveLength(2);
 			expect(screen.getByText(uploadedFiles[1].name)).toBeVisible();
-			expect(screen.getByTestId('icon: CheckmarkCircle2')).toBeVisible();
+			await waitFor(() => expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(2));
+			expect(screen.getByText(/1\/1/)).toBeVisible();
 		});
 
 		test('upload more then 3 files in the upload list queues excess elements', async () => {
@@ -361,19 +339,21 @@ describe('Upload list', () => {
 			const loadingIcons = await screen.findAllByTestId('icon: AnimatedLoader');
 			expect(loadingIcons).toHaveLength(4);
 
-			const uploadStatus = uploadVar();
-			expect(
-				filter(uploadStatus, (uploadItem) => uploadItem.status === UploadStatus.QUEUED)
-			).toHaveLength(1);
-			expect(
-				filter(uploadStatus, (uploadItem) => uploadItem.status === UploadStatus.LOADING)
-			).toHaveLength(3);
+			await screen.findAllByText(/\d+%/);
 
-			const queuedElement = find(uploadStatus, ['status', UploadStatus.QUEUED]);
-			expect(queuedElement).toBeDefined();
-			expect(queuedElement).not.toBeNull();
-			const queuedItem = await screen.findByTestId(`node-item-${(queuedElement as UploadItem).id}`);
-			expect(within(queuedItem).getByText(/queued/i)).toBeInTheDocument();
+			expect(screen.getByText(/queued/i)).toBeInTheDocument();
+			expect(screen.getAllByText(/\d+%/i)).toHaveLength(3);
+
+			const queuedItem = find(
+				screen.getAllByTestId('node-item', { exact: false }),
+				(item) => within(item).queryByText(/queued/i) !== null
+			);
+			expect(queuedItem).toBeDefined();
+			if (!queuedItem) {
+				// this should never run, but it is useful to avoid the cast in the next lines
+				fail(new Error('queued item not found'));
+			}
+			expect(within(queuedItem).getByText(/queued/i)).toBeVisible();
 			const queuedIconLoader = within(queuedItem).getByTestId('icon: AnimatedLoader');
 			expect(queuedIconLoader).toBeInTheDocument();
 
@@ -695,6 +675,81 @@ describe('Upload list', () => {
 				expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(uploadedFiles.length)
 			);
 			expect(screen.queryByText(/queued/i)).not.toBeInTheDocument();
+		});
+
+		test('Drop of a folder creates the folders and upload all the files of the tree hierarchy', async () => {
+			const localRoot = populateFolder(0, ROOTS.LOCAL_ROOT);
+			const folderToUpload = populateFolder();
+			folderToUpload.parent = localRoot;
+			const subFolder1 = populateFolder();
+			const subFolder2 = populateFolder();
+			folderToUpload.children.nodes.push(populateFile(), subFolder1);
+			forEach(folderToUpload.children.nodes, (child) => {
+				(child as Node).parent = folderToUpload;
+			});
+			subFolder1.children.nodes.push(...populateNodes(2, 'File'), subFolder2);
+			forEach(subFolder1.children.nodes, (child) => {
+				(child as Node).parent = subFolder1;
+			});
+			subFolder2.children.nodes.push(...populateNodes(3, 'File'));
+			forEach(subFolder2.children.nodes, (child) => {
+				(child as Node).parent = subFolder2;
+			});
+			const numberOfFiles = 6; // number of files to upload considering all the tree
+			const numberOfFolders = 3;
+			const numberOfNodes = numberOfFiles + numberOfFolders;
+
+			const dataTransferObj = createDataTransfer([folderToUpload]);
+
+			const uploadFileHandler = jest.fn(handleUploadFileRequest);
+			server.use(rest.post(`${REST_ENDPOINT}${UPLOAD_PATH}`, uploadFileHandler));
+			const mocks = [
+				mockGetBaseNode({ node_id: localRoot.id }, localRoot),
+				mockCreateFolder(
+					{ name: folderToUpload.name, destination_id: folderToUpload.parent.id },
+					folderToUpload
+				),
+				mockCreateFolder(
+					{ name: subFolder1.name, destination_id: folderToUpload.parent.id },
+					subFolder1
+				),
+				mockCreateFolder(
+					{ name: subFolder2.name, destination_id: (subFolder2.parent as Folder).id },
+					subFolder2
+				)
+			];
+
+			setup(<UploadList />, { mocks });
+
+			await screen.findByText(/nothing here/i);
+
+			fireEvent.dragEnter(screen.getByText(/nothing here/i), {
+				dataTransfer: dataTransferObj
+			});
+
+			await screen.findByTestId('dropzone-overlay');
+			expect(
+				screen.getByText(/Drop here your attachments to quick-add them to your Home/m)
+			).toBeVisible();
+
+			fireEvent.drop(screen.getByText(/nothing here/i), {
+				dataTransfer: dataTransferObj
+			});
+
+			await screen.findByText(folderToUpload.name);
+			await screen.findByText(/upload occurred in Files' home/i);
+
+			expect(screen.getByTestId('icon: AnimatedLoader')).toBeVisible();
+			expect(screen.getByText(RegExp(`\\d/${numberOfNodes}`))).toBeVisible();
+			expect(screen.getByTestId('node-item', { exact: false })).toBeInTheDocument();
+			expect(screen.queryByText(/Drop here your attachments/m)).not.toBeInTheDocument();
+
+			await waitFor(() => expect(uploadFileHandler).toHaveBeenCalledTimes(numberOfFiles));
+
+			await screen.findByTestId('icon: CheckmarkCircle2');
+
+			expect(screen.getByTestId('icon: CheckmarkCircle2')).toBeVisible();
+			expect(screen.getByText(RegExp(`${numberOfNodes}/${numberOfNodes}`))).toBeVisible();
 		});
 	});
 });
