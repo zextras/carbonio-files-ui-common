@@ -70,7 +70,7 @@ export const NodeContent = ({
 					{children}
 				</ScrollContainer>
 			)}
-			{!loading && children && children.length === 0 && (
+			{!loading && (!children || children.length === 0) && (
 				<EmptyFolder
 					message={t('empty.folder.displayerContent', 'This folder has no content')}
 					size="extrasmall"

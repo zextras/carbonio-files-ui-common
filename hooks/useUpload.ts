@@ -333,7 +333,7 @@ export const useUpload: UseUploadHook = () => {
 	);
 
 	const abort = useCallback((id: string) => {
-		const uploadFunctions = uploadFunctionsVar();
+		const uploadFunctions = { ...uploadFunctionsVar() };
 		const abortFn = uploadFunctions[id].abort;
 		abortFn();
 		delete uploadFunctions[id];
@@ -346,33 +346,33 @@ export const useUpload: UseUploadHook = () => {
 			forEach(ids, (id) => {
 				const itemToRemove = uploadVar()[id];
 
-				if (isUploadFolderItem(itemToRemove)) {
-					const uploadItems = flatUploadItemChildren(itemToRemove, uploadVar());
-					const fileLoadingUploadItems = filter(
-						uploadItems,
-						(uploadItem) =>
-							!isUploadFolderItem(uploadItem) && uploadItem.status === UploadStatus.LOADING
-					);
-					// abort if loading
-					// TODO handle folder?
-					forEach(fileLoadingUploadItems, (fileLoadingUploadItem) =>
-						abort(fileLoadingUploadItem.id)
-					);
-					idsToRemove.push(...map(uploadItems, (uploadItem) => uploadItem.id));
+				if (itemToRemove) {
+					if (isUploadFolderItem(itemToRemove)) {
+						const uploadItems = flatUploadItemChildren(itemToRemove, uploadVar());
+						const fileLoadingUploadItems = filter(
+							uploadItems,
+							(uploadItem) =>
+								!isUploadFolderItem(uploadItem) && uploadItem.status !== UploadStatus.COMPLETED
+						);
+						// abort if loading
+						// TODO handle folder?
+						forEach(fileLoadingUploadItems, (fileLoadingUploadItem) =>
+							abort(fileLoadingUploadItem.id)
+						);
+						idsToRemove.push(...map(uploadItems, (uploadItem) => uploadItem.id));
 
-					decrementAllParentsDenominatorByAmount(itemToRemove, itemToRemove.contentCount);
-					decrementAllParentsCompletedByAmount(itemToRemove, itemToRemove.progress);
-					decrementAllParentsFailedCountByAmount(itemToRemove, itemToRemove.failedCount);
-				} else {
-					if (itemToRemove.status === UploadStatus.LOADING) {
+						decrementAllParentsDenominatorByAmount(itemToRemove, itemToRemove.contentCount);
+						decrementAllParentsCompletedByAmount(itemToRemove, itemToRemove.progress);
+						decrementAllParentsFailedCountByAmount(itemToRemove, itemToRemove.failedCount);
+					} else {
 						abort(itemToRemove.id);
-					}
-					idsToRemove.push(itemToRemove.id);
-					decrementAllParentsDenominatorByAmount(itemToRemove, 1);
-					if (itemToRemove.status === UploadStatus.COMPLETED) {
-						decrementAllParentsCompletedByAmount(itemToRemove, 1);
-					} else if (itemToRemove.status === UploadStatus.FAILED) {
-						decrementAllParentsFailedCountByAmount(itemToRemove, 1);
+						idsToRemove.push(itemToRemove.id);
+						decrementAllParentsDenominatorByAmount(itemToRemove, 1);
+						if (itemToRemove.status === UploadStatus.COMPLETED) {
+							decrementAllParentsCompletedByAmount(itemToRemove, 1);
+						} else if (itemToRemove.status === UploadStatus.FAILED) {
+							decrementAllParentsFailedCountByAmount(itemToRemove, 1);
+						}
 					}
 				}
 				removeFromParentChildren(itemToRemove);
@@ -404,10 +404,12 @@ export const useUpload: UseUploadHook = () => {
 		const completedIds = reduce<UploadItem, Array<string>>(
 			completedMainItems,
 			(accumulator: string[], item) => {
-				if (isUploadFolderItem(item)) {
-					accumulator.push(...flatUploadItemChildrenIds(item.id));
-				} else {
-					accumulator.push(item.id);
+				if (item) {
+					if (isUploadFolderItem(item)) {
+						accumulator.push(...flatUploadItemChildrenIds(item.id));
+					} else {
+						accumulator.push(item.id);
+					}
 				}
 				return accumulator;
 			},
