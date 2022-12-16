@@ -32,6 +32,8 @@ interface UploadListItemProps {
 	status: UploadStatus;
 	progress: number;
 	contentCount?: number;
+	// TODO remove
+	failedCount?: number;
 	permittedContextualMenuActionItems: DSAction[];
 	permittedHoverBarActionItems: DSAction[];
 	isSelected: boolean;
@@ -66,7 +68,8 @@ export const UploadListItem = React.memo<UploadListItemProps>(
 		permittedContextualMenuActionItems,
 		isActive,
 		setActive,
-		contentCount
+		contentCount,
+		failedCount
 	}) => {
 		const [t] = useTranslation();
 		const [isContextualMenuActive, setIsContextualMenuActive] = useState(false);
@@ -146,6 +149,7 @@ export const UploadListItem = React.memo<UploadListItemProps>(
 										(contentCount !== undefined && `${progress}/${contentCount}`) ||
 										`${progress}%`}
 								</Text>
+								<Text size="small">{failedCount !== undefined && `failed: ${failedCount}`}</Text>
 								<Padding left="extrasmall">
 									<UploadStatusIcon status={status} />
 								</Padding>

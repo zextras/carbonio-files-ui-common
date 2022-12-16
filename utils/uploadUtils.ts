@@ -138,22 +138,27 @@ export function incrementAllParentsFailedCount(uploadItem: UploadItem): void {
 
 export function decrementAllParentsFailedCountByAmount(
 	uploadItem: UploadItem,
-	amount: number
+	amount: number,
+	mustUpdateParentsStatus = true
 ): void {
 	if (uploadItem.parentId) {
 		const parent = uploadVar()[uploadItem.parentId] as UploadFolderItem;
-		const status = getFolderStatus(
-			parent.failedCount - amount,
-			parent.progress,
-			parent.contentCount
-		);
+
+		const newStatus: { status?: UploadStatus; id: string; failedCount: number } = {
+			id: parent.id,
+			failedCount: parent.failedCount - amount
+		};
+		if (mustUpdateParentsStatus) {
+			newStatus.status = getFolderStatus(
+				parent.failedCount - amount,
+				parent.progress,
+				parent.contentCount
+			);
+		}
+
 		uploadVarReducer({
 			type: 'update',
-			value: {
-				status,
-				id: parent.id,
-				failedCount: parent.failedCount - amount
-			}
+			value: newStatus
 		});
 		decrementAllParentsFailedCountByAmount(parent, amount);
 	}
@@ -258,6 +263,7 @@ export function updateProgress(ev: ProgressEvent, fileEnriched: UploadItem): voi
 	}
 }
 
+// do not update counter here because a retry could not be a retry but the first tentative
 export function singleRetry(id: string): void {
 	const retryFile = uploadVar()[id];
 	if (retryFile == null) {
@@ -267,9 +273,6 @@ export function singleRetry(id: string): void {
 		throw new Error('unable to retry, upload must be Failed or Queued');
 	}
 
-	uploadVarReducer({ type: 'update', value: { id, status: UploadStatus.LOADING, progress: 0 } });
-	// TODO this must be improved to handle folders retry
-	decrementAllParentsFailedCountByAmount(retryFile, 1);
 	const newRetryFile = uploadVar()[id];
 	if (newRetryFile) {
 		const itemFunctions = uploadFunctionsVar()[newRetryFile.id];

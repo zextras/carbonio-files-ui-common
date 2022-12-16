@@ -450,7 +450,12 @@ export function canRetryUpload(nodes: OneOrMany<ActionsFactoryGlobalType>): bool
 	}
 	const $nodes = nodes as ActionsFactoryUploadItem[];
 	// can retry only if all selected nodes are failed
-	return find($nodes, (node) => node.status !== UploadStatus.FAILED) === undefined;
+	return (
+		find(
+			$nodes,
+			(node) => node.status !== UploadStatus.FAILED || node.parentNodeId === undefined
+		) === undefined
+	);
 }
 
 export function canGoToFolder(nodes: OneOrMany<ActionsFactoryGlobalType>): boolean {

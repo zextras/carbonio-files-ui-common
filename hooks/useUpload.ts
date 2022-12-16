@@ -33,7 +33,6 @@ import {
 	incrementAllParentsFailedCount,
 	isUploadFolderItem,
 	removeFromParentChildren,
-	singleRetry,
 	upload,
 	UploadAddType,
 	UploadQueue,
@@ -88,8 +87,8 @@ export const useUpload: UseUploadHook = () => {
 					if (folderNode && isFolder(folderNode)) {
 						const status = getFolderStatus(
 							uploadFolderItem.failedCount,
-							uploadFolderItem.progress,
-							uploadFolderItem.contentCount + 1
+							uploadFolderItem.progress + 1,
+							uploadFolderItem.contentCount
 						);
 						uploadVarReducer({
 							type: 'update',
@@ -139,15 +138,28 @@ export const useUpload: UseUploadHook = () => {
 						}
 					})
 					.catch(() => {
-						uploadVarReducer({
-							type: 'update',
-							value: {
-								id: uploadFolderItem.id,
-								status: UploadStatus.FAILED,
-								failedCount: (uploadVar()[uploadFolderItem.id] as UploadFolderItem).failedCount + 1
+						const itemsToSetAsFailed = flatUploadItemChildren(uploadFolderItem, uploadVar());
+						forEach(itemsToSetAsFailed, (item) => {
+							if (isUploadFolderItem(item)) {
+								uploadVarReducer({
+									type: 'update',
+									value: {
+										id: item.id,
+										status: UploadStatus.FAILED,
+										failedCount: item.failedCount + 1
+									}
+								});
+							} else {
+								uploadVarReducer({
+									type: 'update',
+									value: {
+										id: item.id,
+										status: UploadStatus.FAILED
+									}
+								});
 							}
+							incrementAllParentsFailedCount(item);
 						});
-						incrementAllParentsFailedCount(uploadFolderItem);
 					})
 					.finally(() => {
 						UploadQueue.removeAndStartNext(uploadFolderItem.id);
@@ -410,9 +422,48 @@ export const useUpload: UseUploadHook = () => {
 	}, []);
 
 	const retryById = useCallback((ids: Array<string>) => {
+		// TODO check if is really a retry and move in proper upload to handle file and folder differently
+		// TODO this must be improved to handle folders retry
+
 		forEach(ids, (id) => {
-			singleRetry(id);
+			const uploadItem = uploadVar()[id];
+			if (isUploadFolderItem(uploadItem)) {
+				const itemsToSetAsQueued = flatUploadItemChildren(uploadItem, uploadVar());
+				forEach(itemsToSetAsQueued, (item) => {
+					if (isUploadFolderItem(item)) {
+						uploadVarReducer({
+							type: 'update',
+							value: {
+								id: item.id,
+								status: UploadStatus.QUEUED,
+								failedCount: item.failedCount - 1
+							}
+						});
+					} else {
+						uploadVarReducer({
+							type: 'update',
+							value: {
+								id: item.id,
+								status: UploadStatus.QUEUED
+							}
+						});
+					}
+					decrementAllParentsFailedCountByAmount(item, 1, uploadItem.id === item.id);
+				});
+			} else {
+				uploadVarReducer({
+					type: 'update',
+					value: { id, status: UploadStatus.QUEUED, progress: 0 }
+				});
+				decrementAllParentsFailedCountByAmount(uploadItem, 1);
+			}
 		});
+
+		UploadQueue.add(...ids);
+		UploadQueue.startAll();
+		// forEach(ids, (id) => {
+		// 	singleRetry(id);
+		// });
 	}, []);
 
 	return { add, update, removeById, removeAllCompleted, retryById, removeByNodeId };
