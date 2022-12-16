@@ -255,7 +255,7 @@ export function addVersionToCache(
 export function updateProgress(ev: ProgressEvent, fileEnriched: UploadItem): void {
 	if (ev.lengthComputable) {
 		const updatedValue = {
-			...fileEnriched,
+			id: fileEnriched.id,
 			progress: Math.floor((ev.loaded / ev.total) * 100)
 		};
 
@@ -419,11 +419,15 @@ export function uploadCompleted(
 		 * 500: name already exists
 		 * 0: aborted
 		 */
-		uploadVarReducer({
-			type: 'update',
-			value: { id: fileEnriched.id, status: UploadStatus.FAILED }
-		});
-		incrementAllParentsFailedCount(fileEnriched);
+
+		// avoid to sign aborted as FAILED
+		if (xhr.status !== 0) {
+			uploadVarReducer({
+				type: 'update',
+				value: { id: fileEnriched.id, status: UploadStatus.FAILED }
+			});
+			incrementAllParentsFailedCount(fileEnriched);
+		}
 
 		const handledStatuses = [405, 413, 500, 0];
 		if (xhr.readyState !== XMLHttpRequest.UNSENT && !handledStatuses.includes(xhr.status)) {
@@ -443,6 +447,17 @@ export function upload(
 	if (fileEnriched.file === null || fileEnriched.parentNodeId === null) {
 		throw new Error('cannot upload without a file or a parentNodeId');
 	}
+
+	const updatedFolder: UploadItem = {
+		...fileEnriched,
+		status: UploadStatus.LOADING,
+		progress: 0
+	};
+	uploadVarReducer({
+		type: 'update',
+		value: updatedFolder
+	});
+
 	const xhr = new XMLHttpRequest();
 	const url = `${REST_ENDPOINT}${UPLOAD_PATH}`;
 	xhr.open('POST', url, true);

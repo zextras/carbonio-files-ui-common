@@ -453,7 +453,10 @@ export function canRetryUpload(nodes: OneOrMany<ActionsFactoryGlobalType>): bool
 	return (
 		find(
 			$nodes,
-			(node) => node.status !== UploadStatus.FAILED || node.parentNodeId === undefined
+			(node) =>
+				node.status !== UploadStatus.FAILED ||
+				node.parentNodeId === undefined ||
+				node.parentNodeId === null
 		) === undefined
 	);
 }

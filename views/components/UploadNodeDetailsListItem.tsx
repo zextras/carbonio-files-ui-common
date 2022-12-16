@@ -95,6 +95,7 @@ export const UploadNodeDetailsListItem = ({ id }: UploadNodeDetailsListItemProps
 							`${item.progress}%`}
 					</Text>
 					<Text size={'small'}>{isUploadFolderItem(item) && `failed: ${item.failedCount}`}</Text>
+					<Text size={'small'}>{`status: ${item.status}`}</Text>
 					<UploadStatusIcon status={item.status} />
 				</HoverContainer>
 				<NodeHoverBar
