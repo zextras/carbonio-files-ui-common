@@ -9,9 +9,10 @@ import React from 'react';
 import { fireEvent, screen } from '@testing-library/react';
 
 import { PREVIEW_MAX_SIZE } from '../../constants';
+import { ACTION_REGEXP } from '../../constants/test';
 import { populateFile } from '../../mocks/mockUtils';
 import { NodeType } from '../../types/graphql/types';
-import { actionRegexp, setup } from '../../utils/testUtils';
+import { setup } from '../../utils/testUtils';
 import { List } from './List';
 
 describe('Preview action', () => {
@@ -25,8 +26,8 @@ describe('Preview action', () => {
 
 		await screen.findByText(file.name);
 		fireEvent.contextMenu(screen.getByText(file.name));
-		await screen.findByText(actionRegexp.preview);
-		await user.click(screen.getByText(actionRegexp.preview));
+		await screen.findByText(ACTION_REGEXP.preview);
+		await user.click(screen.getByText(ACTION_REGEXP.preview));
 		// fallback is shown
 		await screen.findByText(/This item cannot be displayed/i);
 		expect(screen.getByText(/This item cannot be displayed/i)).toBeVisible();
@@ -44,8 +45,8 @@ describe('Preview action', () => {
 
 		await screen.findByText(file.name);
 		fireEvent.contextMenu(screen.getByText(file.name));
-		await screen.findByText(actionRegexp.preview);
-		await user.click(screen.getByText(actionRegexp.preview));
+		await screen.findByText(ACTION_REGEXP.preview);
+		await user.click(screen.getByText(ACTION_REGEXP.preview));
 		// fallback is not shown
 		await screen.findByText(/failed to load document preview/i);
 		expect(screen.queryByText(/This item cannot be displayed/i)).not.toBeInTheDocument();
@@ -62,8 +63,8 @@ describe('Preview action', () => {
 
 		await screen.findByText(file.name);
 		fireEvent.contextMenu(screen.getByText(file.name));
-		await screen.findByText(actionRegexp.preview);
-		await user.click(screen.getByText(actionRegexp.preview));
+		await screen.findByText(ACTION_REGEXP.preview);
+		await user.click(screen.getByText(ACTION_REGEXP.preview));
 		// fallback is not shown
 		await screen.findByText(/failed to load document preview/i);
 		expect(screen.queryByText(/This item cannot be displayed/i)).not.toBeInTheDocument();

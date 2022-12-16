@@ -21,6 +21,7 @@ import { graphql } from 'msw';
 import server from '../../../mocks/server';
 import { searchParamsVar } from '../../apollo/searchVar';
 import { INTERNAL_PATH, NODES_LOAD_LIMIT, ROOTS } from '../../constants';
+import { ACTION_REGEXP, ICON_REGEXP } from '../../constants/test';
 import { populateFolder, populateNodes } from '../../mocks/mockUtils';
 import { AdvancedFilters } from '../../types/common';
 import {
@@ -40,13 +41,7 @@ import {
 	mockRestoreNodes,
 	mockTrashNodes
 } from '../../utils/mockUtils';
-import {
-	actionRegexp,
-	buildChipsFromKeywords,
-	iconRegexp,
-	setup,
-	selectNodes
-} from '../../utils/testUtils';
+import { buildChipsFromKeywords, setup, selectNodes } from '../../utils/testUtils';
 import { SearchList } from './SearchList';
 
 describe('Search list', () => {
@@ -452,9 +447,9 @@ describe('Search list', () => {
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 
-				await user.click(screen.getByTestId(iconRegexp.moreVertical));
+				await user.click(screen.getByTestId(ICON_REGEXP.moreVertical));
 
-				const trashAction = await screen.findByText(actionRegexp.moveToTrash);
+				const trashAction = await screen.findByText(ACTION_REGEXP.moveToTrash);
 				expect(trashAction.parentNode).not.toHaveAttribute('disabled');
 
 				await user.click(trashAction);
@@ -494,11 +489,11 @@ describe('Search list', () => {
 				// check that all wanted items are selected
 				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
 
-				expect(screen.queryByTestId(iconRegexp.moveToTrash)).not.toBeInTheDocument();
-				const moreIconButton = screen.queryByTestId(iconRegexp.moreVertical);
+				expect(screen.queryByTestId(ICON_REGEXP.moveToTrash)).not.toBeInTheDocument();
+				const moreIconButton = screen.queryByTestId(ICON_REGEXP.moreVertical);
 				if (moreIconButton) {
 					await user.click(moreIconButton);
-					expect(screen.queryByText(actionRegexp.moveToTrash)).not.toBeInTheDocument();
+					expect(screen.queryByText(ACTION_REGEXP.moveToTrash)).not.toBeInTheDocument();
 				}
 
 				expect.assertions(2);
@@ -561,7 +556,7 @@ describe('Search list', () => {
 
 				const selectionModeActiveListHeader = screen.getByTestId('list-header-selectionModeActive');
 
-				const restoreIcon = within(selectionModeActiveListHeader).getByTestId(iconRegexp.restore);
+				const restoreIcon = within(selectionModeActiveListHeader).getByTestId(ICON_REGEXP.restore);
 				expect(restoreIcon).toBeInTheDocument();
 				expect(restoreIcon).toBeVisible();
 				expect(restoreIcon).not.toHaveAttribute('disabled', '');
@@ -611,7 +606,7 @@ describe('Search list', () => {
 
 				const selectionModeActiveListHeader = screen.getByTestId('list-header-selectionModeActive');
 
-				const restoreIcon = within(selectionModeActiveListHeader).getByTestId(iconRegexp.restore);
+				const restoreIcon = within(selectionModeActiveListHeader).getByTestId(ICON_REGEXP.restore);
 				expect(restoreIcon).toBeInTheDocument();
 				expect(restoreIcon).toBeVisible();
 				expect(restoreIcon).not.toHaveAttribute('disabled', '');
@@ -662,13 +657,13 @@ describe('Search list', () => {
 				// check that all wanted items are selected
 				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
 
-				expect(screen.queryByTestId(iconRegexp.restore)).not.toBeInTheDocument();
-				expect(screen.queryByTestId(iconRegexp.moveToTrash)).not.toBeInTheDocument();
-				const moreIconButton = screen.queryByTestId(iconRegexp.moreVertical);
+				expect(screen.queryByTestId(ICON_REGEXP.restore)).not.toBeInTheDocument();
+				expect(screen.queryByTestId(ICON_REGEXP.moveToTrash)).not.toBeInTheDocument();
+				const moreIconButton = screen.queryByTestId(ICON_REGEXP.moreVertical);
 				if (moreIconButton) {
 					await user.click(moreIconButton);
-					expect(screen.queryByText(actionRegexp.restore)).not.toBeInTheDocument();
-					expect(screen.queryByText(actionRegexp.moveToTrash)).not.toBeInTheDocument();
+					expect(screen.queryByText(ACTION_REGEXP.restore)).not.toBeInTheDocument();
+					expect(screen.queryByText(ACTION_REGEXP.moveToTrash)).not.toBeInTheDocument();
 				}
 
 				expect.assertions(3);
@@ -779,21 +774,23 @@ describe('Search list', () => {
 
 				const selectionModeActiveListHeader = screen.getByTestId('list-header-selectionModeActive');
 
-				const restoreIcon = within(selectionModeActiveListHeader).queryByTestId(iconRegexp.restore);
+				const restoreIcon = within(selectionModeActiveListHeader).queryByTestId(
+					ICON_REGEXP.restore
+				);
 				expect(restoreIcon).not.toBeInTheDocument();
 
 				const trashIcon = within(selectionModeActiveListHeader).queryByTestId(
-					iconRegexp.moveToTrash
+					ICON_REGEXP.moveToTrash
 				);
 				expect(trashIcon).not.toBeInTheDocument();
 
 				const deletePermanentlyIcon = within(selectionModeActiveListHeader).queryByTestId(
-					iconRegexp.deletePermanently
+					ICON_REGEXP.deletePermanently
 				);
 				expect(deletePermanentlyIcon).not.toBeInTheDocument();
 
 				const moreIcon = within(selectionModeActiveListHeader).queryByTestId(
-					iconRegexp.moreVertical
+					ICON_REGEXP.moreVertical
 				);
 				expect(moreIcon).not.toBeInTheDocument();
 
@@ -824,21 +821,21 @@ describe('Search list', () => {
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 			expect(screen.getAllByTestId('unCheckedAvatar')).toHaveLength(nodes.length);
 			expect(screen.getByText(/select all/i)).toBeVisible();
-			expect(screen.queryByTestId(iconRegexp.moreVertical)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.moreVertical)).not.toBeInTheDocument();
 
-			expect(screen.queryByTestId(iconRegexp.moveToTrash)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.restore)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.deletePermanently)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.moveToTrash)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.restore)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.deletePermanently)).not.toBeInTheDocument();
 
-			expect(screen.queryByTestId(iconRegexp.rename)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.copy)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.move)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.rename)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.copy)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.move)).not.toBeInTheDocument();
 
-			expect(screen.queryByTestId(iconRegexp.flag)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.unflag)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.flag)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.unflag)).not.toBeInTheDocument();
 
-			expect(screen.queryByTestId(iconRegexp.download)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.openDocument)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.download)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.openDocument)).not.toBeInTheDocument();
 
 			const exitSelectionModeItem = screen.getByTestId('icon: ArrowBackOutline');
 			expect(exitSelectionModeItem).toBeVisible();
@@ -894,10 +891,10 @@ describe('Search list', () => {
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length);
 
-			const moreIconButton = screen.getByTestId(iconRegexp.moreVertical);
+			const moreIconButton = screen.getByTestId(ICON_REGEXP.moreVertical);
 			await user.click(moreIconButton);
 
-			const trashAction = await screen.findByText(actionRegexp.moveToTrash);
+			const trashAction = await screen.findByText(ACTION_REGEXP.moveToTrash);
 			expect(trashAction).toBeVisible();
 			await user.click(trashAction);
 			await waitForElementToBeRemoved(screen.queryByText(firstPage[0].name));
@@ -951,7 +948,7 @@ describe('Search list', () => {
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length);
 
-			expect(screen.queryByTestId(iconRegexp.moreVertical)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.moreVertical)).not.toBeInTheDocument();
 
 			const restoreAction = screen.getByTestId('icon: RestoreOutline');
 			expect(restoreAction).toBeVisible();
@@ -1009,13 +1006,13 @@ describe('Search list', () => {
 			await selectNodes(nodesToDelete, user);
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length);
-			expect(screen.queryByTestId(iconRegexp.moreVertical)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.moreVertical)).not.toBeInTheDocument();
 			const deletePermanentlyAction = screen.getByTestId('icon: DeletePermanentlyOutline');
 			expect(deletePermanentlyAction).toBeVisible();
 			expect(deletePermanentlyAction).not.toHaveAttribute('disabled', '');
 			await user.click(deletePermanentlyAction);
 			const modalConfirmButton = await screen.findByRole('button', {
-				name: actionRegexp.deletePermanently
+				name: ACTION_REGEXP.deletePermanently
 			});
 			await user.click(modalConfirmButton);
 			await waitForElementToBeRemoved(modalConfirmButton);
@@ -1059,8 +1056,8 @@ describe('Search list', () => {
 			await selectNodes(nodesToUnflag, user);
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToUnflag.length);
-			expect(screen.queryByTestId(iconRegexp.moreVertical)).not.toBeInTheDocument();
-			const unflagIcon = await screen.findByTestId(iconRegexp.unflag);
+			expect(screen.queryByTestId(ICON_REGEXP.moreVertical)).not.toBeInTheDocument();
+			const unflagIcon = await screen.findByTestId(ICON_REGEXP.unflag);
 			expect(unflagIcon).toBeVisible();
 			expect(unflagIcon).not.toHaveAttribute('disabled', '');
 			await user.click(unflagIcon);

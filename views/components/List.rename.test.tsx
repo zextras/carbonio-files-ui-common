@@ -10,18 +10,12 @@ import { fireEvent, screen, within } from '@testing-library/react';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 
+import { ACTION_REGEXP, ICON_REGEXP } from '../../constants/test';
 import { populateFolder, populateNode, sortNodes } from '../../mocks/mockUtils';
 import { Node } from '../../types/common';
 import { NodeSort } from '../../types/graphql/types';
 import { mockUpdateNodeError } from '../../utils/mockUtils';
-import {
-	actionRegexp,
-	generateError,
-	iconRegexp,
-	renameNode,
-	setup,
-	selectNodes
-} from '../../utils/testUtils';
+import { generateError, renameNode, setup, selectNodes } from '../../utils/testUtils';
 import { List } from './List';
 
 describe('Rename', () => {
@@ -47,10 +41,10 @@ describe('Rename', () => {
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(children.length);
 
 			// check that the rename action becomes visible but disabled
-			expect(screen.queryByTestId(iconRegexp.rename)).not.toBeInTheDocument();
-			const moreIconButton = screen.queryByTestId(iconRegexp.moreVertical);
+			expect(screen.queryByTestId(ICON_REGEXP.rename)).not.toBeInTheDocument();
+			const moreIconButton = screen.queryByTestId(ICON_REGEXP.moreVertical);
 			if (moreIconButton) {
-				expect(screen.queryByText(actionRegexp.rename)).not.toBeInTheDocument();
+				expect(screen.queryByText(ACTION_REGEXP.rename)).not.toBeInTheDocument();
 			}
 		});
 
@@ -70,10 +64,10 @@ describe('Rename', () => {
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(children.length);
 
 			// check that the rename action becomes visible but disabled
-			expect(screen.queryByTestId(iconRegexp.rename)).not.toBeInTheDocument();
-			const moreIconButton = screen.queryByTestId(iconRegexp.moreVertical);
+			expect(screen.queryByTestId(ICON_REGEXP.rename)).not.toBeInTheDocument();
+			const moreIconButton = screen.queryByTestId(ICON_REGEXP.moreVertical);
 			if (moreIconButton) {
-				expect(screen.queryByText(actionRegexp.rename)).not.toBeInTheDocument();
+				expect(screen.queryByText(ACTION_REGEXP.rename)).not.toBeInTheDocument();
 			}
 		});
 
@@ -148,8 +142,8 @@ describe('Rename', () => {
 			// right click to open contextual menu
 			const nodeItem = screen.getByTestId(`node-item-${node.id}`);
 			fireEvent.contextMenu(nodeItem);
-			await screen.findByText(actionRegexp.manageShares);
-			expect(screen.queryByText(actionRegexp.rename)).not.toBeInTheDocument();
+			await screen.findByText(ACTION_REGEXP.manageShares);
+			expect(screen.queryByText(ACTION_REGEXP.rename)).not.toBeInTheDocument();
 		});
 
 		test('Rename is hidden if select more than 1 node in selection mode', async () => {
@@ -176,12 +170,12 @@ describe('Rename', () => {
 			// right click to open contextual menu
 			const nodeItem = screen.getByTestId(`node-item-${element0.id}`);
 			fireEvent.contextMenu(nodeItem);
-			await screen.findByText(actionRegexp.copy);
-			let renameAction = screen.queryByText(actionRegexp.rename);
+			await screen.findByText(ACTION_REGEXP.copy);
+			let renameAction = screen.queryByText(ACTION_REGEXP.rename);
 			expect(renameAction).not.toBeInTheDocument();
 			await selectNodes([element1.id], user);
 			fireEvent.contextMenu(nodeItem);
-			renameAction = await screen.findByText(actionRegexp.rename);
+			renameAction = await screen.findByText(ACTION_REGEXP.rename);
 			expect(renameAction).toBeVisible();
 			expect(renameAction).not.toHaveAttribute('disabled', '');
 		});

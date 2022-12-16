@@ -12,6 +12,7 @@ import { Route } from 'react-router-dom';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { FILTER_TYPE, INTERNAL_PATH, ROOTS } from '../constants';
+import { ACTION_REGEXP, ICON_REGEXP } from '../constants/test';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import {
 	populateFile,
@@ -30,13 +31,7 @@ import {
 	mockGetPath,
 	mockMoveNodes
 } from '../utils/mockUtils';
-import {
-	actionRegexp,
-	buildBreadCrumbRegExp,
-	iconRegexp,
-	setup,
-	selectNodes
-} from '../utils/testUtils';
+import { buildBreadCrumbRegExp, setup, selectNodes } from '../utils/testUtils';
 import FilterView from './FilterView';
 
 jest.mock('../../hooks/useCreateOptions', () => ({
@@ -86,21 +81,21 @@ describe('Filter View', () => {
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 				await user.click(screen.getByTestId('icon: MoreVertical'));
-				await screen.findByText(actionRegexp.copy);
-				expect(screen.queryByText(actionRegexp.move)).not.toBeInTheDocument();
+				await screen.findByText(ACTION_REGEXP.copy);
+				expect(screen.queryByText(ACTION_REGEXP.move)).not.toBeInTheDocument();
 				// activate selection mode by selecting items
 				await selectNodes([file.id, folder.id], user);
 				// check that all wanted items are selected
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 				expect(screen.queryByTestId('icon: MoreVertical')).not.toBeInTheDocument();
-				expect(screen.queryByTestId(iconRegexp.move)).not.toBeInTheDocument();
+				expect(screen.queryByTestId(ICON_REGEXP.move)).not.toBeInTheDocument();
 				// activate selection mode by selecting items
 				await selectNodes([folder.id, node.id], user);
 				// check that all wanted items are selected
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 				await user.click(screen.getByTestId('icon: MoreVertical'));
-				expect(await screen.findByText(actionRegexp.move)).toBeInTheDocument();
+				expect(await screen.findByText(ACTION_REGEXP.move)).toBeInTheDocument();
 			});
 
 			test('Move is hidden when multiple files are selected', async () => {
@@ -131,7 +126,7 @@ describe('Filter View', () => {
 
 				// check that all wanted items are selected
 				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
-				expect(screen.queryByText(iconRegexp.move)).not.toBeInTheDocument();
+				expect(screen.queryByText(ICON_REGEXP.move)).not.toBeInTheDocument();
 				// TODO improve when popper selector will be available
 			});
 
@@ -171,10 +166,10 @@ describe('Filter View', () => {
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 				await user.click(screen.getByTestId('icon: MoreVertical'));
 
-				await screen.findByText(actionRegexp.copy);
+				await screen.findByText(ACTION_REGEXP.copy);
 
-				expect(screen.queryByText(actionRegexp.move)).not.toBeInTheDocument();
-				expect(screen.queryByTestId(iconRegexp.move)).not.toBeInTheDocument();
+				expect(screen.queryByText(ACTION_REGEXP.move)).not.toBeInTheDocument();
+				expect(screen.queryByTestId(ICON_REGEXP.move)).not.toBeInTheDocument();
 				// activate selection mode by selecting items
 				await selectNodes([file.id, folder.id], user);
 				// check that all wanted items are selected
@@ -182,9 +177,9 @@ describe('Filter View', () => {
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 				await user.click(screen.getByTestId('icon: MoreVertical'));
 
-				await screen.findByText(actionRegexp.moveToTrash);
-				expect(screen.queryByText(actionRegexp.move)).not.toBeInTheDocument();
-				expect(screen.queryByTestId(iconRegexp.move)).not.toBeInTheDocument();
+				await screen.findByText(ACTION_REGEXP.moveToTrash);
+				expect(screen.queryByText(ACTION_REGEXP.move)).not.toBeInTheDocument();
+				expect(screen.queryByTestId(ICON_REGEXP.move)).not.toBeInTheDocument();
 
 				// activate selection mode by selecting items
 				await selectNodes([folder.id, node.id], user);
@@ -192,9 +187,9 @@ describe('Filter View', () => {
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 				await user.click(screen.getByTestId('icon: MoreVertical'));
-				await screen.findByText(actionRegexp.moveToTrash);
-				expect(screen.queryByText(actionRegexp.move)).not.toBeInTheDocument();
-				expect(screen.queryByTestId(iconRegexp.move)).not.toBeInTheDocument();
+				await screen.findByText(ACTION_REGEXP.moveToTrash);
+				expect(screen.queryByText(ACTION_REGEXP.move)).not.toBeInTheDocument();
+				expect(screen.queryByTestId(ICON_REGEXP.move)).not.toBeInTheDocument();
 			});
 
 			test('Move open modal showing parent folder content. Confirm action close the modal, leave moved items in filter list and clear cached data for destination folder', async () => {
@@ -262,7 +257,7 @@ describe('Filter View', () => {
 				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 				await user.click(screen.getByTestId('icon: MoreVertical'));
-				const moveAction = await screen.findByText(actionRegexp.move);
+				const moveAction = await screen.findByText(ACTION_REGEXP.move);
 				expect(moveAction).toBeVisible();
 				await user.click(moveAction);
 
@@ -275,14 +270,14 @@ describe('Filter View', () => {
 				expect(getByTextWithMarkup(breadcrumbRegexp)).toBeVisible();
 
 				await user.click(destinationFolderItem);
-				expect(screen.getByRole('button', { name: actionRegexp.move })).not.toHaveAttribute(
+				expect(screen.getByRole('button', { name: ACTION_REGEXP.move })).not.toHaveAttribute(
 					'disabled',
 					''
 				);
-				await user.click(screen.getByRole('button', { name: actionRegexp.move }));
-				expect(screen.queryByRole('button', { name: actionRegexp.move })).not.toBeInTheDocument();
+				await user.click(screen.getByRole('button', { name: ACTION_REGEXP.move }));
+				expect(screen.queryByRole('button', { name: ACTION_REGEXP.move })).not.toBeInTheDocument();
 				await screen.findByText(/item moved/i);
-				expect(screen.queryByRole('button', { name: actionRegexp.move })).not.toBeInTheDocument();
+				expect(screen.queryByRole('button', { name: ACTION_REGEXP.move })).not.toBeInTheDocument();
 				// exit selection mode
 				expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 
@@ -336,22 +331,22 @@ describe('Filter View', () => {
 				// right click to open contextual menu on file without permission
 				const fileItem = await screen.findByText(file.name);
 				fireEvent.contextMenu(fileItem);
-				await screen.findByText(actionRegexp.manageShares);
+				await screen.findByText(ACTION_REGEXP.manageShares);
 
-				expect(screen.queryByText(actionRegexp.move)).not.toBeInTheDocument();
+				expect(screen.queryByText(ACTION_REGEXP.move)).not.toBeInTheDocument();
 
 				// right click to open contextual menu on folder without permission
 				const folderItem = await screen.findByText(folder.name);
 				fireEvent.contextMenu(folderItem);
 
-				await screen.findByText(actionRegexp.manageShares);
+				await screen.findByText(ACTION_REGEXP.manageShares);
 
-				expect(screen.queryByText(actionRegexp.move)).not.toBeInTheDocument();
+				expect(screen.queryByText(ACTION_REGEXP.move)).not.toBeInTheDocument();
 
 				// right click to open contextual menu on node with permission
 				const nodeItem = await screen.findByText(node.name);
 				fireEvent.contextMenu(nodeItem);
-				const moveAction = await screen.findByText(actionRegexp.move);
+				const moveAction = await screen.findByText(ACTION_REGEXP.move);
 				expect(moveAction).toBeVisible();
 				expect(moveAction).not.toHaveAttribute('disabled', '');
 			});
@@ -417,7 +412,7 @@ describe('Filter View', () => {
 				// right click to open contextual menu on folder
 				const nodeToMoveItem = await screen.findByText(nodeToMove.name);
 				fireEvent.contextMenu(nodeToMoveItem);
-				const moveAction = await screen.findByText(actionRegexp.move);
+				const moveAction = await screen.findByText(ACTION_REGEXP.move);
 				expect(moveAction).toBeVisible();
 				await user.click(moveAction);
 
@@ -430,16 +425,16 @@ describe('Filter View', () => {
 				expect(getByTextWithMarkup(breadcrumbRegexp)).toBeVisible();
 
 				await user.click(destinationFolderItem);
-				expect(screen.getByRole('button', { name: actionRegexp.move })).not.toHaveAttribute(
+				expect(screen.getByRole('button', { name: ACTION_REGEXP.move })).not.toHaveAttribute(
 					'disabled',
 					''
 				);
-				await user.click(screen.getByRole('button', { name: actionRegexp.move }));
-				expect(screen.queryByRole('button', { name: actionRegexp.move })).not.toBeInTheDocument();
+				await user.click(screen.getByRole('button', { name: ACTION_REGEXP.move }));
+				expect(screen.queryByRole('button', { name: ACTION_REGEXP.move })).not.toBeInTheDocument();
 				await screen.findByText(/item moved/i);
-				expect(screen.queryByRole('button', { name: actionRegexp.move })).not.toBeInTheDocument();
+				expect(screen.queryByRole('button', { name: ACTION_REGEXP.move })).not.toBeInTheDocument();
 				// context menu is closed
-				expect(screen.queryByText(actionRegexp.move)).not.toBeInTheDocument();
+				expect(screen.queryByText(ACTION_REGEXP.move)).not.toBeInTheDocument();
 
 				expect(screen.queryAllByTestId('node-item', { exact: false })).toHaveLength(
 					currentFilter.length

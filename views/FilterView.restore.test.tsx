@@ -13,10 +13,11 @@ import { Route } from 'react-router-dom';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { FILTER_TYPE, INTERNAL_PATH, NODES_LOAD_LIMIT, ROOTS } from '../constants';
+import { ACTION_REGEXP, ICON_REGEXP } from '../constants/test';
 import { populateFile, populateLocalRoot, populateNode, populateNodes } from '../mocks/mockUtils';
 import { Node } from '../types/common';
 import { getFindNodesVariables, mockFindNodes, mockRestoreNodes } from '../utils/mockUtils';
-import { actionRegexp, iconRegexp, setup, selectNodes } from '../utils/testUtils';
+import { setup, selectNodes } from '../utils/testUtils';
 import FilterView from './FilterView';
 
 jest.mock('../../hooks/useCreateOptions', () => ({
@@ -123,7 +124,7 @@ describe('Filter View', () => {
 				await selectNodes(nodesIdsToRestore, user);
 				// check that all wanted items are selected
 				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
-				expect(screen.queryByTestId(iconRegexp.moreVertical)).not.toBeInTheDocument();
+				expect(screen.queryByTestId(ICON_REGEXP.moreVertical)).not.toBeInTheDocument();
 
 				const selectionModeActiveListHeader = screen.getByTestId('list-header-selectionModeActive');
 
@@ -168,11 +169,11 @@ describe('Filter View', () => {
 				// right click to open contextual menu
 				const nodeItem = screen.getByTestId(`node-item-${node.id}`);
 				fireEvent.contextMenu(nodeItem);
-				const renameAction = await screen.findByText(actionRegexp.rename);
+				const renameAction = await screen.findByText(ACTION_REGEXP.rename);
 				expect(renameAction).toBeVisible();
-				const moveToTrashAction = await screen.findByText(actionRegexp.moveToTrash);
+				const moveToTrashAction = await screen.findByText(ACTION_REGEXP.moveToTrash);
 				expect(moveToTrashAction).toBeVisible();
-				const restoreAction = screen.queryByText(actionRegexp.restore);
+				const restoreAction = screen.queryByText(ACTION_REGEXP.restore);
 				expect(restoreAction).not.toBeInTheDocument();
 			});
 		});
@@ -219,7 +220,7 @@ describe('Filter View', () => {
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length);
 
-			const restoreAction = await screen.findByTestId(iconRegexp.restore);
+			const restoreAction = await screen.findByTestId(ICON_REGEXP.restore);
 			expect(restoreAction).toBeVisible();
 			expect(restoreAction.parentNode).not.toHaveAttribute('disabled', '');
 			await user.click(restoreAction);

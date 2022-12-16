@@ -18,6 +18,7 @@ import map from 'lodash/map';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { NODES_LOAD_LIMIT } from '../constants';
+import { ACTION_REGEXP, ICON_REGEXP } from '../constants/test';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import { populateFolder, populateNodePage } from '../mocks/mockUtils';
 import { Node } from '../types/common';
@@ -32,9 +33,7 @@ import {
 	mockMoveNodes
 } from '../utils/mockUtils';
 import {
-	actionRegexp,
 	buildBreadCrumbRegExp,
-	iconRegexp,
 	moveNode,
 	setup,
 	selectNodes,
@@ -201,7 +200,7 @@ describe('Move', () => {
 			);
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToMove.length);
-			let moveAction = screen.queryByTestId(iconRegexp.move);
+			let moveAction = screen.queryByTestId(ICON_REGEXP.move);
 			if (!moveAction) {
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 				await user.click(screen.getByTestId('icon: MoreVertical'));
@@ -300,14 +299,14 @@ describe('Move', () => {
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length);
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 			await user.click(screen.getByTestId('icon: MoreVertical'));
-			const moveAction = await screen.findByText(actionRegexp.move);
+			const moveAction = await screen.findByText(ACTION_REGEXP.move);
 			expect(moveAction).toBeVisible();
 			expect(moveAction).not.toHaveAttribute('disabled', '');
 			await user.click(moveAction);
 			await findByTextWithMarkup(buildBreadCrumbRegExp(commonParent.name, currentFolder.name));
 			const modalList = screen.getByTestId('modal-list-', { exact: false });
 			await within(modalList).findByText((currentFolder.children.nodes[0] as Node).name);
-			const moveModalButton = await screen.findByRole('button', { name: actionRegexp.move });
+			const moveModalButton = await screen.findByRole('button', { name: ACTION_REGEXP.move });
 			expect(moveModalButton).toHaveAttribute('disabled', '');
 			await user.click(screen.getByText(commonParent.name));
 			await findByTextWithMarkup(buildBreadCrumbRegExp(commonParent.name));

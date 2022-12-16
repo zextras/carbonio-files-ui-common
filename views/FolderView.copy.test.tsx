@@ -11,6 +11,7 @@ import { act, fireEvent, screen, within } from '@testing-library/react';
 import map from 'lodash/map';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
+import { ACTION_REGEXP, ICON_REGEXP } from '../constants/test';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import { populateFile, populateFolder } from '../mocks/mockUtils';
 import { Node } from '../types/common';
@@ -23,7 +24,7 @@ import {
 	mockGetPath,
 	mockGetPermissions
 } from '../utils/mockUtils';
-import { actionRegexp, iconRegexp, setup, selectNodes } from '../utils/testUtils';
+import { setup, selectNodes } from '../utils/testUtils';
 import { DisplayerProps } from './components/Displayer';
 import FolderView from './FolderView';
 
@@ -70,7 +71,7 @@ describe('Copy', () => {
 
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
-			const copyAction = await screen.findByTestId(iconRegexp.copy);
+			const copyAction = await screen.findByTestId(ICON_REGEXP.copy);
 			expect(copyAction).toBeVisible();
 			expect(copyAction).not.toHaveAttribute('disabled', '');
 		});
@@ -127,11 +128,11 @@ describe('Copy', () => {
 			await selectNodes([nodeToCopy.id], user);
 			// check that all wanted items are selected
 			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
-			let copyAction = screen.queryByTestId(iconRegexp.copy);
+			let copyAction = screen.queryByTestId(ICON_REGEXP.copy);
 			if (!copyAction) {
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 				await user.click(screen.getByTestId('icon: MoreVertical'));
-				copyAction = await screen.findByText(actionRegexp.copy);
+				copyAction = await screen.findByText(ACTION_REGEXP.copy);
 				expect(copyAction).toBeVisible();
 			}
 			await user.click(copyAction);
@@ -143,13 +144,13 @@ describe('Copy', () => {
 				// run timers of modal
 				jest.advanceTimersToNextTimer();
 			});
-			expect(screen.getByRole('button', { name: actionRegexp.copy })).not.toHaveAttribute(
+			expect(screen.getByRole('button', { name: ACTION_REGEXP.copy })).not.toHaveAttribute(
 				'disabled',
 				''
 			);
-			await user.click(screen.getByRole('button', { name: actionRegexp.copy }));
+			await user.click(screen.getByRole('button', { name: ACTION_REGEXP.copy }));
 			await screen.findByText(/Item copied/i);
-			expect(screen.queryByRole('button', { name: actionRegexp.copy })).not.toBeInTheDocument();
+			expect(screen.queryByRole('button', { name: ACTION_REGEXP.copy })).not.toBeInTheDocument();
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 
 			destinationFolderCachedData = global.apolloClient.readQuery<
@@ -209,11 +210,11 @@ describe('Copy', () => {
 			// check that all wanted items are selected
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToCopy.length);
 
-			let copyAction = screen.queryByTestId(iconRegexp.copy);
+			let copyAction = screen.queryByTestId(ICON_REGEXP.copy);
 			if (!copyAction) {
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 				await user.click(screen.getByTestId('icon: MoreVertical'));
-				copyAction = await screen.findByText(actionRegexp.copy);
+				copyAction = await screen.findByText(ACTION_REGEXP.copy);
 				expect(copyAction).toBeVisible();
 			}
 			await user.click(copyAction);
@@ -226,13 +227,13 @@ describe('Copy', () => {
 			expect(within(modalList).getAllByTestId('node-item', { exact: false })).toHaveLength(
 				currentFolder.children.nodes.length
 			);
-			expect(screen.getByRole('button', { name: actionRegexp.copy })).not.toHaveAttribute(
+			expect(screen.getByRole('button', { name: ACTION_REGEXP.copy })).not.toHaveAttribute(
 				'disabled',
 				''
 			);
-			await user.click(screen.getByRole('button', { name: actionRegexp.copy }));
+			await user.click(screen.getByRole('button', { name: ACTION_REGEXP.copy }));
 			await screen.findByText(/Item copied/i);
-			expect(screen.queryByRole('button', { name: actionRegexp.copy })).not.toBeInTheDocument();
+			expect(screen.queryByRole('button', { name: ACTION_REGEXP.copy })).not.toBeInTheDocument();
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 
 			const nodeItems = screen.getAllByTestId('node-item', { exact: false });
@@ -298,7 +299,7 @@ describe('Copy', () => {
 			// right click to open contextual menu on folder
 			const nodeToCopyItem = await screen.findByText(nodeToCopy.name);
 			fireEvent.contextMenu(nodeToCopyItem);
-			const copyAction = await screen.findByText(actionRegexp.copy);
+			const copyAction = await screen.findByText(ACTION_REGEXP.copy);
 			expect(copyAction).toBeVisible();
 			await user.click(copyAction);
 
@@ -309,15 +310,15 @@ describe('Copy', () => {
 				// run timers of modal
 				jest.advanceTimersToNextTimer();
 			});
-			expect(screen.getByRole('button', { name: actionRegexp.copy })).not.toHaveAttribute(
+			expect(screen.getByRole('button', { name: ACTION_REGEXP.copy })).not.toHaveAttribute(
 				'disabled',
 				''
 			);
-			await user.click(screen.getByRole('button', { name: actionRegexp.copy }));
+			await user.click(screen.getByRole('button', { name: ACTION_REGEXP.copy }));
 			await screen.findByText(/Item copied/i);
-			expect(screen.queryByRole('button', { name: actionRegexp.copy })).not.toBeInTheDocument();
+			expect(screen.queryByRole('button', { name: ACTION_REGEXP.copy })).not.toBeInTheDocument();
 			// context menu is closed
-			expect(screen.queryByText(actionRegexp.copy)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.copy)).not.toBeInTheDocument();
 
 			destinationFolderCachedData = global.apolloClient.readQuery<
 				GetChildrenQuery,

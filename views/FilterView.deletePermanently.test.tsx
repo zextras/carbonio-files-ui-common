@@ -13,10 +13,11 @@ import { Route } from 'react-router-dom';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { FILTER_TYPE, INTERNAL_PATH, NODES_LOAD_LIMIT, ROOTS } from '../constants';
+import { ACTION_REGEXP } from '../constants/test';
 import { populateFile, populateNodes } from '../mocks/mockUtils';
 import { Node } from '../types/common';
 import { getFindNodesVariables, mockDeletePermanently, mockFindNodes } from '../utils/mockUtils';
-import { actionRegexp, setup, selectNodes } from '../utils/testUtils';
+import { setup, selectNodes } from '../utils/testUtils';
 import FilterView from './FilterView';
 
 jest.mock('../../hooks/useCreateOptions', () => ({
@@ -182,11 +183,11 @@ describe('Filter View', () => {
 				// right click to open contextual menu
 				const nodeItem = screen.getByTestId(`node-item-${node.id}`);
 				fireEvent.contextMenu(nodeItem);
-				const renameAction = await screen.findByText(actionRegexp.rename);
+				const renameAction = await screen.findByText(ACTION_REGEXP.rename);
 				expect(renameAction).toBeVisible();
-				const moveToTrashAction = await screen.findByText(actionRegexp.moveToTrash);
+				const moveToTrashAction = await screen.findByText(ACTION_REGEXP.moveToTrash);
 				expect(moveToTrashAction).toBeVisible();
-				const deletePermanentlyAction = screen.queryByText(actionRegexp.deletePermanently);
+				const deletePermanentlyAction = screen.queryByText(ACTION_REGEXP.deletePermanently);
 				expect(deletePermanentlyAction).not.toBeInTheDocument();
 			});
 		});
@@ -236,7 +237,7 @@ describe('Filter View', () => {
 			expect(deletePermanentlyAction.parentNode).not.toHaveAttribute('disabled', '');
 			await user.click(deletePermanentlyAction);
 			const confirmDeleteButton = await screen.findByRole('button', {
-				name: actionRegexp.deletePermanently
+				name: ACTION_REGEXP.deletePermanently
 			});
 			await user.click(confirmDeleteButton);
 			await waitForElementToBeRemoved(screen.queryByText(firstPage[0].name));

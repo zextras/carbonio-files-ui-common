@@ -15,6 +15,7 @@ import { Link, Route, Switch } from 'react-router-dom';
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import server from '../../mocks/server';
 import { FILTER_TYPE, INTERNAL_PATH, NODES_LOAD_LIMIT, ROOTS } from '../constants';
+import { ICON_REGEXP } from '../constants/test';
 import handleFindNodesRequest from '../mocks/handleFindNodesRequest';
 import { populateFolder, populateNode, populateNodes } from '../mocks/mockUtils';
 import { FindNodesQuery, FindNodesQueryVariables } from '../types/graphql/types';
@@ -27,7 +28,7 @@ import {
 	mockGetChildren,
 	mockGetPermissions
 } from '../utils/mockUtils';
-import { iconRegexp, selectNodes, setup, triggerLoadMore } from '../utils/testUtils';
+import { selectNodes, setup, triggerLoadMore } from '../utils/testUtils';
 import FilterView from './FilterView';
 import FolderView from './FolderView';
 
@@ -239,17 +240,17 @@ describe('Filter view', () => {
 			expect(screen.getAllByTestId('unCheckedAvatar')).toHaveLength(nodes.length);
 			expect(screen.getByText(/select all/i)).toBeVisible();
 
-			expect(screen.queryByTestId(iconRegexp.moveToTrash)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.moreVertical)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.rename)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.copy)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.move)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.flag)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.unflag)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.download)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.openDocument)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.restore)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.deletePermanently)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.moveToTrash)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.moreVertical)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.rename)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.copy)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.move)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.flag)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.unflag)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.download)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.openDocument)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.restore)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.deletePermanently)).not.toBeInTheDocument();
 
 			const arrowBack = screen.getByTestId('icon: ArrowBackOutline');
 			expect(arrowBack).toBeVisible();

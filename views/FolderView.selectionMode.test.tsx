@@ -11,6 +11,7 @@ import forEach from 'lodash/forEach';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { NODES_LOAD_LIMIT } from '../constants';
+import { ICON_REGEXP } from '../constants/test';
 import { populateFolder, populateNodePage, populateNodes } from '../mocks/mockUtils';
 import { Node } from '../types/common';
 import { Folder } from '../types/graphql/types';
@@ -21,7 +22,7 @@ import {
 	mockGetParent,
 	mockGetPermissions
 } from '../utils/mockUtils';
-import { iconRegexp, setup, selectNodes, triggerLoadMore } from '../utils/testUtils';
+import { setup, selectNodes, triggerLoadMore } from '../utils/testUtils';
 import { DisplayerProps } from './components/Displayer';
 import FolderView from './FolderView';
 
@@ -69,17 +70,17 @@ describe('Folder View Selection mode', () => {
 		);
 		expect(screen.getByText(/select all/i)).toBeVisible();
 
-		expect(screen.queryByTestId(iconRegexp.moveToTrash)).not.toBeInTheDocument();
-		expect(screen.queryByTestId(iconRegexp.moreVertical)).not.toBeInTheDocument();
-		expect(screen.queryByTestId(iconRegexp.rename)).not.toBeInTheDocument();
-		expect(screen.queryByTestId(iconRegexp.copy)).not.toBeInTheDocument();
-		expect(screen.queryByTestId(iconRegexp.move)).not.toBeInTheDocument();
-		expect(screen.queryByTestId(iconRegexp.flag)).not.toBeInTheDocument();
-		expect(screen.queryByTestId(iconRegexp.unflag)).not.toBeInTheDocument();
-		expect(screen.queryByTestId(iconRegexp.download)).not.toBeInTheDocument();
-		expect(screen.queryByTestId(iconRegexp.openDocument)).not.toBeInTheDocument();
-		expect(screen.queryByTestId(iconRegexp.restore)).not.toBeInTheDocument();
-		expect(screen.queryByTestId(iconRegexp.deletePermanently)).not.toBeInTheDocument();
+		expect(screen.queryByTestId(ICON_REGEXP.moveToTrash)).not.toBeInTheDocument();
+		expect(screen.queryByTestId(ICON_REGEXP.moreVertical)).not.toBeInTheDocument();
+		expect(screen.queryByTestId(ICON_REGEXP.rename)).not.toBeInTheDocument();
+		expect(screen.queryByTestId(ICON_REGEXP.copy)).not.toBeInTheDocument();
+		expect(screen.queryByTestId(ICON_REGEXP.move)).not.toBeInTheDocument();
+		expect(screen.queryByTestId(ICON_REGEXP.flag)).not.toBeInTheDocument();
+		expect(screen.queryByTestId(ICON_REGEXP.unflag)).not.toBeInTheDocument();
+		expect(screen.queryByTestId(ICON_REGEXP.download)).not.toBeInTheDocument();
+		expect(screen.queryByTestId(ICON_REGEXP.openDocument)).not.toBeInTheDocument();
+		expect(screen.queryByTestId(ICON_REGEXP.restore)).not.toBeInTheDocument();
+		expect(screen.queryByTestId(ICON_REGEXP.deletePermanently)).not.toBeInTheDocument();
 
 		const arrowBack = screen.getByTestId('icon: ArrowBackOutline');
 		expect(arrowBack).toBeVisible();

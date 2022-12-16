@@ -14,6 +14,7 @@ import map from 'lodash/map';
 
 import { destinationVar } from '../../apollo/destinationVar';
 import { NODES_LOAD_LIMIT } from '../../constants';
+import { ACTION_REGEXP } from '../../constants/test';
 import {
 	populateFile,
 	populateFolder,
@@ -34,13 +35,7 @@ import {
 	mockGetPath,
 	mockMoveNodes
 } from '../../utils/mockUtils';
-import {
-	actionRegexp,
-	buildBreadCrumbRegExp,
-	setup,
-	selectNodes,
-	triggerLoadMore
-} from '../../utils/testUtils';
+import { buildBreadCrumbRegExp, setup, selectNodes, triggerLoadMore } from '../../utils/testUtils';
 import { MoveNodesModalContent } from './MoveNodesModalContent';
 
 const resetToDefault = jest.fn(() => {
@@ -194,7 +189,7 @@ describe('Move Nodes Modal', () => {
 					setTimeout(resolve, 0);
 				})
 		);
-		expect(screen.queryByText(actionRegexp.flag)).not.toBeInTheDocument();
+		expect(screen.queryByText(ACTION_REGEXP.flag)).not.toBeInTheDocument();
 		// hover bar
 		expect(screen.queryByTestId('icon: FlagOutline')).not.toBeInTheDocument();
 		// selection mode
@@ -247,9 +242,9 @@ describe('Move Nodes Modal', () => {
 		);
 
 		const folderItem = await screen.findByText(folder.name);
-		const confirmButton = screen.getByRole('button', { name: actionRegexp.move });
+		const confirmButton = screen.getByRole('button', { name: ACTION_REGEXP.move });
 		expect(confirmButton).toHaveAttribute('disabled', '');
-		const confirmButtonLabel = within(confirmButton).getByText(actionRegexp.move);
+		const confirmButtonLabel = within(confirmButton).getByText(ACTION_REGEXP.move);
 		await user.hover(confirmButtonLabel);
 		await screen.findByText(/you can't perform this action here/i);
 		expect(screen.getByText(/you can't perform this action here/i)).toBeVisible();
@@ -310,7 +305,7 @@ describe('Move Nodes Modal', () => {
 		);
 
 		const folderItem = await screen.findByText(folder.name);
-		const confirmButton = screen.getByRole('button', { name: actionRegexp.move });
+		const confirmButton = screen.getByRole('button', { name: ACTION_REGEXP.move });
 		expect(confirmButton).toHaveAttribute('disabled', '');
 		await user.click(folderItem);
 		expect(confirmButton).not.toHaveAttribute('disabled', '');
@@ -364,7 +359,7 @@ describe('Move Nodes Modal', () => {
 
 		const folderItem = await screen.findByText(folder.name);
 		const fileItem = screen.getByText(file.name);
-		const confirmButton = screen.getByRole('button', { name: actionRegexp.move });
+		const confirmButton = screen.getByRole('button', { name: ACTION_REGEXP.move });
 		expect(confirmButton).toHaveAttribute('disabled', '');
 		// click on valid destination folder
 		await user.click(folderItem);

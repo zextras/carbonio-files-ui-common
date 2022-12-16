@@ -12,7 +12,7 @@ import some from 'lodash/some';
 
 import { LOGGED_USER } from '../../mocks/constants';
 import { CONFIGS, NODES_LOAD_LIMIT, NODES_SORT_DEFAULT, ROOTS } from '../constants';
-import { SortableNode } from '../types/common';
+import { SortableNode, UploadFolderItem, UploadItem, UploadStatus } from '../types/common';
 import {
 	Config,
 	DistributionList,
@@ -459,4 +459,41 @@ export function populateConfigs(configMap?: Record<string, string>): Config[] {
 	};
 	const configs = { ...defaultConfigs, ...configMap };
 	return map(configs, (configValue, configName) => ({ name: configName, value: configValue }));
+}
+
+export function populateUploadItem(item?: Partial<UploadItem>): UploadItem {
+	const name = faker.system.fileName();
+	const mimeType = faker.system.mimeType();
+	const file = new File(['(⌐□_□)'], name, { type: mimeType });
+	return {
+		id: faker.datatype.uuid(),
+		name,
+		file,
+		parentNodeId: null,
+		nodeId: null,
+		status: UploadStatus.QUEUED,
+		progress: 0,
+		fullPath: file.webkitRelativePath,
+		parentId: null,
+		...item
+	};
+}
+
+export function populateUploadFolderItem(item?: Partial<UploadFolderItem>): UploadFolderItem {
+	return {
+		...populateUploadItem(),
+		contentCount: 1,
+		children: [],
+		failedCount: 0,
+		...item
+	};
+}
+
+export function populateUploadItems(limit?: number, type?: NodeTypename): UploadItem[] {
+	const items: UploadItem[] = [];
+	for (let i = 0; i < (limit || 10); i += 1) {
+		const item = type === 'Folder' ? populateUploadFolderItem() : populateUploadItem();
+		items.push(item);
+	}
+	return items;
 }

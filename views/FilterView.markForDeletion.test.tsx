@@ -13,10 +13,11 @@ import { Route } from 'react-router-dom';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { FILTER_TYPE, INTERNAL_PATH, NODES_LOAD_LIMIT, ROOTS } from '../constants';
+import { ACTION_REGEXP } from '../constants/test';
 import { populateFile, populateNodes } from '../mocks/mockUtils';
 import { Node } from '../types/common';
 import { getFindNodesVariables, mockFindNodes, mockTrashNodes } from '../utils/mockUtils';
-import { actionRegexp, setup, selectNodes } from '../utils/testUtils';
+import { setup, selectNodes } from '../utils/testUtils';
 import FilterView from './FilterView';
 
 jest.mock('../../hooks/useCreateOptions', () => ({
@@ -67,7 +68,7 @@ describe('Filter View', () => {
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 				await user.click(screen.getByTestId('icon: MoreVertical'));
 
-				const trashIcon = await screen.findByText(actionRegexp.moveToTrash);
+				const trashIcon = await screen.findByText(ACTION_REGEXP.moveToTrash);
 				expect(trashIcon).toBeInTheDocument();
 				expect(trashIcon).toBeVisible();
 				expect(trashIcon).not.toHaveAttribute('disabled', '');
@@ -151,9 +152,9 @@ describe('Filter View', () => {
 				// right click to open contextual menu
 				const nodeItem = screen.getByTestId(`node-item-${node.id}`);
 				fireEvent.contextMenu(nodeItem);
-				const restoreAction = await screen.findByText(actionRegexp.restore);
+				const restoreAction = await screen.findByText(ACTION_REGEXP.restore);
 				expect(restoreAction).toBeVisible();
-				const moveToTrashAction = screen.queryByText(actionRegexp.moveToTrash);
+				const moveToTrashAction = screen.queryByText(ACTION_REGEXP.moveToTrash);
 				expect(moveToTrashAction).not.toBeInTheDocument();
 			});
 		});
@@ -199,7 +200,7 @@ describe('Filter View', () => {
 			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length);
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 			await user.click(screen.getByTestId('icon: MoreVertical'));
-			const trashAction = await screen.findByText(actionRegexp.moveToTrash);
+			const trashAction = await screen.findByText(ACTION_REGEXP.moveToTrash);
 			expect(trashAction).toBeVisible();
 			expect(trashAction.parentNode).not.toHaveAttribute('disabled', '');
 			await user.click(trashAction);

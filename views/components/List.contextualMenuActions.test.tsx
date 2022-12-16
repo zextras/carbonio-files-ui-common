@@ -8,10 +8,11 @@ import React from 'react';
 import { act, fireEvent, screen } from '@testing-library/react';
 import forEach from 'lodash/forEach';
 
+import { ACTION_REGEXP } from '../../constants/test';
 import { populateFolder, populateNode } from '../../mocks/mockUtils';
 import { Node } from '../../types/common';
 import { mockGetChild } from '../../utils/mockUtils';
-import { actionRegexp, setup, selectNodes } from '../../utils/testUtils';
+import { setup, selectNodes } from '../../utils/testUtils';
 import { EmptySpaceFiller } from './EmptySpaceFiller';
 import { List } from './List';
 
@@ -452,18 +453,18 @@ describe('Contextual menu actions', () => {
 			const nodeItem = screen.getByTestId(`node-item-${element0.id}`);
 			fireEvent.contextMenu(nodeItem);
 
-			const moveToTrashAction = await screen.findByText(actionRegexp.moveToTrash);
+			const moveToTrashAction = await screen.findByText(ACTION_REGEXP.moveToTrash);
 			expect(moveToTrashAction).toBeVisible();
 
-			expect(screen.queryByText(actionRegexp.openDocument)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.rename)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.download)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.unflag)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.openDocument)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.rename)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.download)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.unflag)).not.toBeInTheDocument();
 
-			const copyAction = await screen.findByText(actionRegexp.copy);
+			const copyAction = await screen.findByText(ACTION_REGEXP.copy);
 			expect(copyAction).toBeVisible();
 
-			const flagAction = await screen.findByText(actionRegexp.flag);
+			const flagAction = await screen.findByText(ACTION_REGEXP.flag);
 			expect(flagAction).toBeVisible();
 		});
 
@@ -502,16 +503,16 @@ describe('Contextual menu actions', () => {
 			const nodeItem = screen.getByTestId(`node-item-${element0.id}`);
 			fireEvent.contextMenu(nodeItem);
 
-			const moveToTrashAction = await screen.findByText(actionRegexp.moveToTrash);
+			const moveToTrashAction = await screen.findByText(ACTION_REGEXP.moveToTrash);
 			expect(moveToTrashAction).toBeVisible();
 
-			const moveAction = await screen.findByText(actionRegexp.move);
+			const moveAction = await screen.findByText(ACTION_REGEXP.move);
 			expect(moveAction).toBeVisible();
 
-			const copyAction = await screen.findByText(actionRegexp.copy);
+			const copyAction = await screen.findByText(ACTION_REGEXP.copy);
 			expect(copyAction).toBeVisible();
 
-			const flagAction = await screen.findByText(actionRegexp.flag);
+			const flagAction = await screen.findByText(ACTION_REGEXP.flag);
 			expect(flagAction).toBeVisible();
 
 			act(() => {
@@ -519,10 +520,10 @@ describe('Contextual menu actions', () => {
 				jest.runOnlyPendingTimers();
 			});
 
-			expect(screen.queryByText(actionRegexp.openDocument)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.rename)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.download)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.unflag)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.openDocument)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.rename)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.download)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.unflag)).not.toBeInTheDocument();
 
 			// right click on unSelected node close open contextual menu
 			const nodeItem2 = screen.getByTestId(`node-item-${element2.id}`);
@@ -563,12 +564,12 @@ describe('Contextual menu actions', () => {
 		const node2Item = screen.getByTestId(`node-item-${node2.id}`);
 		fireEvent.contextMenu(node1Item);
 		// check that the flag action becomes visible (contextual menu of first node)
-		const flagAction = await screen.findByText(actionRegexp.flag);
+		const flagAction = await screen.findByText(ACTION_REGEXP.flag);
 		expect(flagAction).toBeVisible();
 		// right click on second node
 		fireEvent.contextMenu(node2Item);
 		// check that the unflag action becomes visible (contextual menu of second node)
-		const unflagAction = await screen.findByText(actionRegexp.unflag);
+		const unflagAction = await screen.findByText(ACTION_REGEXP.unflag);
 		expect(unflagAction).toBeVisible();
 		// check that the flag action becomes invisible (contextual menu of first node is closed)
 		expect(flagAction).not.toBeInTheDocument();

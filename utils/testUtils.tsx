@@ -312,37 +312,6 @@ export function buildChipsFromKeywords(keywords: string[]): AdvancedFilters['key
 	return map(keywords, (k) => ({ label: k, hasAvatar: false, value: k, background: 'gray2' }));
 }
 
-export const actionRegexp = {
-	rename: /^rename$/i,
-	copy: /^copy$/i,
-	flag: /^flag$/i,
-	unflag: /^unflag$/i,
-	move: /^move$/i,
-	moveToTrash: /^move to trash$/i,
-	download: /^download$/i,
-	openDocument: /^open document$/i,
-	deletePermanently: /^delete permanently$/i,
-	restore: /^restore$/i,
-	manageShares: /^manage shares$/i,
-	preview: /^preview$/i
-} as const;
-
-export const iconRegexp = {
-	moreVertical: /^icon: MoreVertical$/i,
-	moveToTrash: /^icon: Trash2Outline$/i,
-	restore: /^icon: RestoreOutline$/i,
-	deletePermanently: /^icon: DeletePermanentlyOutline$/i,
-	rename: /^icon: Edit2Outline$/i,
-	copy: /^icon: Copy$/i,
-	move: /^icon: MoveOutline$/i,
-	flag: /^icon: FlagOutline$/i,
-	unflag: /^icon: UnflagOutline$/i,
-	download: /^icon: Download$/i,
-	openDocument: /^icon: BookOpenOutline$/i,
-	close: /^icon: Close$/i,
-	trash: /^icon: Trash2Outline$/i
-} as const;
-
 export function getFirstOfNextMonth(from: Date | number = Date.now()): Date {
 	const startingDate = new Date(from);
 	let chosenDate: Date;

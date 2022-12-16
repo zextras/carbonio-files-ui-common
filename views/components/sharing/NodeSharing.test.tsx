@@ -9,6 +9,7 @@ import React from 'react';
 import { act, screen, waitFor, within } from '@testing-library/react';
 import forEach from 'lodash/forEach';
 
+import { SELECTORS } from '../../../constants/test';
 import {
 	populateGalContact,
 	populateDistributionList,
@@ -361,7 +362,7 @@ describe('Node Sharing', () => {
 			// All characters typed after the first one are just used to filter out the result obtained before
 			await user.type(chipInput, userAccount.full_name[0]);
 			// wanted contact is shown in the dropdown
-			await screen.findByTestId('dropdown-popper-list');
+			await screen.findByTestId(SELECTORS.dropdownList);
 			await screen.findByText(userAccount.full_name);
 			expect(screen.getByText(userAccount.full_name)).toBeVisible();
 			expect(screen.getByText(userAccount.email)).toBeVisible();
@@ -518,7 +519,7 @@ describe('Node Sharing', () => {
 			// All characters typed after the first one are just used to filter out the result obtained before
 			await user.type(chipInput, userAccount1.full_name[0]);
 			// wanted contact is shown in the dropdown
-			await screen.findByTestId('dropdown-popper-list');
+			await screen.findByTestId(SELECTORS.dropdownList);
 			await screen.findByText(userAccount1.full_name);
 			expect(screen.getByText(userAccount1.full_name)).toBeVisible();
 			expect(screen.getByText(userAccount1.email)).toBeVisible();
@@ -548,7 +549,7 @@ describe('Node Sharing', () => {
 			// All characters typed after the first one are just used to filter out the result obtained before
 			await user.type(chipInput, userAccount2.full_name[0]);
 			// wanted contact is shown in the dropdown
-			await screen.findByTestId('dropdown-popper-list');
+			await screen.findByTestId(SELECTORS.dropdownList);
 			await screen.findByText(userAccount2.full_name);
 			// popover is closed
 			expect(screen.getByText(userAccount2.full_name)).toBeVisible();
