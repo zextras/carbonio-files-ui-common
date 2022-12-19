@@ -10,12 +10,11 @@ import { ApolloProvider } from '@apollo/client';
 import { MockedProvider } from '@apollo/client/testing';
 import {
 	act,
-	FindAllBy,
-	FindBy,
+	ByRoleMatcher,
+	ByRoleOptions,
+	fireEvent,
 	GetAllBy,
-	GetBy,
 	queries,
-	QueryBy,
 	queryHelpers,
 	render,
 	RenderOptions,
@@ -31,6 +30,7 @@ import { PreviewManager, PreviewsManagerContext } from '@zextras/carbonio-ui-pre
 import { PreviewManagerContextType } from '@zextras/carbonio-ui-preview/lib/preview/PreviewManager';
 import { EventEmitter } from 'events';
 import { GraphQLError } from 'graphql';
+import filter from 'lodash/filter';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 import reduce from 'lodash/reduce';
@@ -50,16 +50,14 @@ export type UserEvent = ReturnType<typeof userEvent['setup']>;
  * Matcher function to search a string in more html elements and not just in a single element.
  */
 const queryAllByTextWithMarkup: GetAllBy<[string | RegExp]> = (container, text) =>
-	screen.queryAllByText((_content: string, node: Element | null) => {
-		if (node) {
+	screen.queryAllByText((_content, element) => {
+		if (element && element instanceof HTMLElement) {
 			const hasText = (singleNode: Element): boolean => {
 				const regExp = RegExp(text);
 				return singleNode.textContent != null && regExp.test(singleNode.textContent);
 			};
-			const childrenDontHaveText = Array.from(node.children).every(
-				(child) => !hasText(child as HTMLElement)
-			);
-			return hasText(node) && childrenDontHaveText;
+			const childrenDontHaveText = Array.from(element.children).every((child) => !hasText(child));
+			return hasText(element) && childrenDontHaveText;
 		}
 		return false;
 	});
@@ -73,6 +71,32 @@ const getByTextWithMarkupMissingError = (
 	text: string | RegExp
 ): string => `Unable to find an element with text: ${text}`;
 
+type ByRoleWithIconOptions = ByRoleOptions & {
+	icon: string | RegExp;
+};
+/**
+ * Matcher function to search an icon button through the icon data-testid
+ */
+const queryAllByRoleWithIcon: GetAllBy<[ByRoleMatcher, ByRoleWithIconOptions]> = (
+	container,
+	role,
+	{ icon, ...options }
+) =>
+	filter(
+		screen.queryAllByRole('button', options),
+		(element) => within(element).queryByTestId(icon) !== null
+	);
+const getByRoleWithIconMultipleError = (
+	container: Element | null,
+	role: ByRoleMatcher,
+	options: ByRoleWithIconOptions
+): string => `Found multiple elements with role ${role} and icon ${options.icon}`;
+const getByRoleWithIconMissingError = (
+	container: Element | null,
+	role: ByRoleMatcher,
+	options: ByRoleWithIconOptions
+): string => `Unable to find an element with role ${role} and icon ${options.icon}`;
+
 const [
 	queryByTextWithMarkup,
 	getAllByTextWithMarkup,
@@ -85,20 +109,31 @@ const [
 	getByTextWithMarkupMissingError
 );
 
-export type CustomByTextWithMarkupQueries = {
-	queryByTextWithMarkup: QueryBy<[string | RegExp]>;
-	getAllByTextWithMarkup: GetAllBy<[string | RegExp]>;
-	getByTextWithMarkup: GetBy<[string | RegExp]>;
-	findAllByTextWithMarkup: FindAllBy<[string | RegExp]>;
-	findByTextWithMarkup: FindBy<[string | RegExp]>;
-};
+const [
+	queryByRoleWithIcon,
+	getAllByRoleWithIcon,
+	getByRoleWithIcon,
+	findAllByRoleWithIcon,
+	findByRoleWithIcon
+] = queryHelpers.buildQueries<[ByRoleMatcher, ByRoleWithIconOptions]>(
+	queryAllByRoleWithIcon,
+	getByRoleWithIconMultipleError,
+	getByRoleWithIconMissingError
+);
 
-export const customQueryByTextWithMarkup: CustomByTextWithMarkupQueries = {
+const customQueries = {
+	// byTextWithMarkup
 	queryByTextWithMarkup,
 	getAllByTextWithMarkup,
 	getByTextWithMarkup,
 	findAllByTextWithMarkup,
-	findByTextWithMarkup
+	findByTextWithMarkup,
+	// byRoleWithIcon
+	queryByRoleWithIcon,
+	getAllByRoleWithIcon,
+	getByRoleWithIcon,
+	findAllByRoleWithIcon,
+	findByRoleWithIcon
 };
 
 function escapeRegExp(string: string): string {
@@ -109,7 +144,7 @@ function escapeRegExp(string: string): string {
  * Create a regExp for searching breadcrumb as a string with the textWithMarkup helper function.
  * <br />
  * The regExp is built to match a breadcrumb formed as "/ level0 / level1 / level2" ,
- * with a / at the begin and no / at the end
+ * with a / at the beginning and no / at the end
  * @param nodesNames
  *
  * @example
@@ -187,14 +222,14 @@ function customRender(
 	}: WrapperProps & {
 		options?: Omit<RenderOptions, 'queries' | 'wrapper'>;
 	} = {}
-): RenderResult<typeof queries & CustomByTextWithMarkupQueries> {
+): RenderResult<typeof queries & typeof customQueries> {
 	return render(ui, {
 		wrapper: ({ children }: Pick<WrapperProps, 'children'>) => (
 			<Wrapper initialRouterEntries={initialRouterEntries} mocks={mocks}>
 				{children}
 			</Wrapper>
 		),
-		queries: { ...queries, ...customQueryByTextWithMarkup },
+		queries: { ...queries, ...customQueries },
 		...options
 	});
 }
@@ -442,4 +477,28 @@ export function createDataTransfer(nodes: Array<Node>): DataTransferUploadStub {
 		items,
 		types: ['Files']
 	};
+}
+
+export async function uploadWithDnD(
+	dropzoneElement: HTMLElement,
+	dataTransferObj: DataTransferUploadStub
+): Promise<void> {
+	fireEvent.dragEnter(dropzoneElement, {
+		dataTransfer: dataTransferObj
+	});
+
+	await screen.findByTestId('dropzone-overlay');
+	expect(
+		screen.getByText(/Drop here your attachments to quick-add them to your Home/m)
+	).toBeVisible();
+
+	fireEvent.drop(dropzoneElement, {
+		dataTransfer: dataTransferObj
+	});
+
+	if (dataTransferObj.files.length > 0) {
+		await screen.findByText(dataTransferObj.files[0].name);
+	}
+	expect(screen.queryByText(/some items have not been uploaded/i)).not.toBeInTheDocument();
+	expect(screen.queryByText(/Drop here your attachments/m)).not.toBeInTheDocument();
 }

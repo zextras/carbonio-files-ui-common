@@ -35,7 +35,10 @@ export const ICON_REGEXP = {
 	trash: /^icon: Trash2Outline$/i,
 	retryUpload: /^icon: PlayCircleOutline$/i,
 	removeUpload: /^icon: CloseCircleOutline$/i,
-	goToFolder: /^icon: FolderOutline$/i
+	goToFolder: /^icon: FolderOutline$/i,
+	uploadFailed: /^icon: AlertCircle$/i,
+	uploadCompleted: /^icon: CheckmarkCircle2$/i,
+	uploadLoading: /^icon: AnimatedLoader$/i,
 } as const;
 
 export const SELECTORS = {

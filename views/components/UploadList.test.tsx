@@ -6,6 +6,7 @@
 
 import React from 'react';
 
+import { ApolloError } from '@apollo/client';
 import { faker } from '@faker-js/faker';
 import {
 	act,
@@ -51,7 +52,7 @@ import {
 	mockGetBaseNode,
 	mockGetChildren
 } from '../../utils/mockUtils';
-import { createDataTransfer, delayUntil, setup } from '../../utils/testUtils';
+import { createDataTransfer, delayUntil, generateError, setup } from '../../utils/testUtils';
 import { UploadQueue } from '../../utils/uploadUtils';
 import { UploadList } from './UploadList';
 
@@ -702,7 +703,16 @@ describe('Upload list', () => {
 			const dataTransferObj = createDataTransfer([folderToUpload]);
 
 			const uploadFileHandler = jest.fn(handleUploadFileRequest);
-			server.use(rest.post(`${REST_ENDPOINT}${UPLOAD_PATH}`, uploadFileHandler));
+			server.use(
+				rest.post(`${REST_ENDPOINT}${UPLOAD_PATH}`, uploadFileHandler),
+				graphql.mutation('createFolder', (req, res, ctx) =>
+					res(
+						ctx.errors([
+							new ApolloError({ graphQLErrors: [generateError('non deve chiamare questo')] })
+						])
+					)
+				)
+			);
 			const mocks = [
 				mockGetBaseNode({ node_id: localRoot.id }, localRoot),
 				mockCreateFolder(

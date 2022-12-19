@@ -53,12 +53,12 @@ export const ListHeader: React.VFC<ListHeaderProps> = ({
 					<Row
 						minHeight={BREADCRUMB_ROW_HEIGHT}
 						height="auto"
-						background="gray5"
-						mainAlignment="space-between"
+						background={'gray5'}
+						mainAlignment={'space-between'}
 						padding={{ left: 'medium' }}
-						wrap="nowrap"
-						width="fill"
-						maxWidth="100%"
+						wrap={'nowrap'}
+						width={'fill'}
+						maxWidth={'100%'}
 						data-testid="list-header"
 						flexShrink={0}
 						flexGrow={1}
@@ -79,10 +79,10 @@ export const ListHeader: React.VFC<ListHeaderProps> = ({
 			<Row
 				height={BREADCRUMB_ROW_HEIGHT}
 				background={'gray5'}
-				mainAlignment="space-between"
+				mainAlignment={'space-between'}
 				padding={{ vertical: 'medium' }}
-				wrap="nowrap"
-				width="fill"
+				wrap={'nowrap'}
+				width={'fill'}
 				maxWidth={'100%'}
 				data-testid="list-header-selectionModeActive"
 			>

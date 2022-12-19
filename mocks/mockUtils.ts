@@ -206,9 +206,9 @@ export function populateNode(type?: NodeTypename, id?: string, name?: string): F
 	}
 }
 
-export function populateNodes(limit?: number, type?: NodeTypename): Node[] {
+export function populateNodes(limit?: number, type?: NodeTypename): Array<FilesFile | Folder> {
 	const nodesLength = limit || 100;
-	const nodes: Node[] = [];
+	const nodes: Array<FilesFile | Folder> = [];
 	for (let i = 0; i < nodesLength; i += 1) {
 		const node = populateNode(type);
 		node.name = `n${i} - ${node.name}`;
