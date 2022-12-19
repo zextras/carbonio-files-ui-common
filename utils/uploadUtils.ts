@@ -456,14 +456,13 @@ export function upload(
 		throw new Error('cannot upload without a file or a parentNodeId');
 	}
 
-	const updatedFolder: UploadItem = {
-		...fileEnriched,
-		status: UploadStatus.LOADING,
-		progress: 0
-	};
 	uploadVarReducer({
 		type: 'update',
-		value: updatedFolder
+		value: {
+			id: fileEnriched.id,
+			status: UploadStatus.LOADING,
+			progress: 0
+		}
 	});
 
 	const xhr = new XMLHttpRequest();
