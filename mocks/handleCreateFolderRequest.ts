@@ -4,9 +4,11 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
+import { ApolloError } from '@apollo/client';
 import { GraphQLContext, GraphQLRequest, ResponseResolver } from 'msw';
 
 import { CreateFolderMutation, CreateFolderMutationVariables } from '../types/graphql/types';
+import { generateError } from '../utils/testUtils';
 import { populateFolder } from './mockUtils';
 
 const handleCreateFolderRequest: ResponseResolver<

@@ -6,7 +6,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Action as DSAction, Container, Padding, Row, Text } from '@zextras/carbonio-design-system';
+import { Action as DSAction, Container, Row, Text } from '@zextras/carbonio-design-system';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 
@@ -19,14 +19,14 @@ import { ContextualMenu } from './ContextualMenu';
 import { NodeAvatarIcon } from './NodeAvatarIcon';
 import { NodeHoverBar } from './NodeHoverBar';
 import { HoverContainer, ListItemContainer } from './StyledComponents';
-import { UploadStatusIcon } from './UploadStatusIcon';
+import { UploadStatusComponent } from './UploadStatusComponent';
 
 interface UploadListItemProps {
 	id: string;
 	nodeId?: string;
 	name: string;
 	parent?: Maybe<Pick<Node, 'id' | 'name' | 'type'>>;
-	size: number;
+	size?: number;
 	extension?: string;
 	mimeType: string;
 	status: UploadStatus;
@@ -144,24 +144,23 @@ export const UploadListItem = React.memo<UploadListItemProps>(
 								padding={{ vertical: 'extrasmall' }}
 								mainAlignment="flex-end"
 							>
-								<Text size="small">
-									{(status === UploadStatus.QUEUED && t('uploadItem.queued', 'Queued')) ||
-										(contentCount !== undefined && `${progress}/${contentCount}`) ||
-										`${progress}%`}
-								</Text>
-								<Text size="small">{failedCount !== undefined && `failed: ${failedCount}`}</Text>
-								<Padding left="extrasmall">
-									<UploadStatusIcon status={status} />
-								</Padding>
+								<UploadStatusComponent
+									status={status}
+									gap={'0.25rem'}
+									progress={progress}
+									contentCount={contentCount}
+								/>
 							</Container>
 							<Container
 								orientation="horizontal"
 								padding={{ vertical: 'extrasmall' }}
 								mainAlignment="flex-end"
 							>
-								<CustomText size="extrasmall" overflow="ellipsis" color="gray1">
-									{humanFileSize(size)}
-								</CustomText>
+								{size !== undefined && (
+									<CustomText size="extrasmall" overflow="ellipsis" color="gray1">
+										{humanFileSize(size)}
+									</CustomText>
+								)}
 							</Container>
 						</Container>
 					</HoverContainer>

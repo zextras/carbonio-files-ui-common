@@ -17,7 +17,18 @@ import { EventEmitter } from 'events';
 import filter from 'lodash/filter';
 import map from 'lodash/map';
 import size from 'lodash/size';
-import { graphql, ResponseResolver, rest, RestContext, RestRequest } from 'msw';
+import {
+	AsyncResponseResolverReturnType,
+	graphql,
+	MockedRequest,
+	MockedResponse,
+	ResponseComposition,
+	ResponseResolver,
+	ResponseResolverReturnType,
+	rest,
+	RestContext,
+	RestRequest
+} from 'msw';
 
 import server from '../../../mocks/server';
 import { UploadRecord, uploadVar } from '../../apollo/uploadVar';

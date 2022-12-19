@@ -20,7 +20,7 @@ import { getIconByFileType } from '../../utils/utils';
 import { NodeAvatarIcon } from './NodeAvatarIcon';
 import { NodeHoverBar } from './NodeHoverBar';
 import { HoverContainer, ListItemContainer } from './StyledComponents';
-import { UploadStatusIcon } from './UploadStatusIcon';
+import { UploadStatusComponent } from './UploadStatusComponent';
 
 interface UploadNodeDetailsListItemProps {
 	id: string;
@@ -90,13 +90,12 @@ export const UploadNodeDetailsListItem = ({ id }: UploadNodeDetailsListItemProps
 						</Text>
 						<Breadcrumbs crumbs={crumbs} $size={'extrasmall'} color={'gray0.disabled'} />
 					</Container>
-					<Text size={'small'}>
-						{(isUploadFolderItem(item) && `${item.progress}/${item.contentCount}`) ||
-							`${item.progress}%`}
-					</Text>
-					<Text size={'small'}>{isUploadFolderItem(item) && `failed: ${item.failedCount}`}</Text>
-					<Text size={'small'}>{`status: ${item.status}`}</Text>
-					<UploadStatusIcon status={item.status} />
+					<UploadStatusComponent
+						status={item.status}
+						gap={'0.5rem'}
+						progress={item.progress}
+						contentCount={(isUploadFolderItem(item) && item.contentCount) || undefined}
+					/>
 				</HoverContainer>
 				<NodeHoverBar
 					actions={hoverActions}

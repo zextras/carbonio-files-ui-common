@@ -6,7 +6,6 @@
 
 import React from 'react';
 
-import { ApolloError } from '@apollo/client';
 import { faker } from '@faker-js/faker';
 import {
 	act,
@@ -25,6 +24,7 @@ import { graphql, rest } from 'msw';
 import server from '../../../mocks/server';
 import { uploadVar } from '../../apollo/uploadVar';
 import { REST_ENDPOINT, ROOTS, UPLOAD_PATH } from '../../constants';
+import { ICON_REGEXP } from '../../constants/test';
 import handleUploadFileRequest, {
 	UploadRequestBody,
 	UploadRequestParams,
@@ -52,7 +52,7 @@ import {
 	mockGetBaseNode,
 	mockGetChildren
 } from '../../utils/mockUtils';
-import { createDataTransfer, delayUntil, generateError, setup } from '../../utils/testUtils';
+import { createDataTransfer, delayUntil, setup, uploadWithDnD } from '../../utils/testUtils';
 import { UploadQueue } from '../../utils/uploadUtils';
 import { UploadList } from './UploadList';
 
@@ -703,16 +703,6 @@ describe('Upload list', () => {
 			const dataTransferObj = createDataTransfer([folderToUpload]);
 
 			const uploadFileHandler = jest.fn(handleUploadFileRequest);
-			server.use(
-				rest.post(`${REST_ENDPOINT}${UPLOAD_PATH}`, uploadFileHandler),
-				graphql.mutation('createFolder', (req, res, ctx) =>
-					res(
-						ctx.errors([
-							new ApolloError({ graphQLErrors: [generateError('non deve chiamare questo')] })
-						])
-					)
-				)
-			);
 			const mocks = [
 				mockGetBaseNode({ node_id: localRoot.id }, localRoot),
 				mockCreateFolder(
@@ -731,25 +721,13 @@ describe('Upload list', () => {
 
 			setup(<UploadList />, { mocks });
 
-			await screen.findByText(/nothing here/i);
+			const dropzone = await screen.findByText(/nothing here/i);
 
-			fireEvent.dragEnter(screen.getByText(/nothing here/i), {
-				dataTransfer: dataTransferObj
-			});
-
-			await screen.findByTestId('dropzone-overlay');
-			expect(
-				screen.getByText(/Drop here your attachments to quick-add them to your Home/m)
-			).toBeVisible();
-
-			fireEvent.drop(screen.getByText(/nothing here/i), {
-				dataTransfer: dataTransferObj
-			});
+			await uploadWithDnD(dropzone, dataTransferObj);
 
 			await screen.findByText(folderToUpload.name);
-			await screen.findByText(/upload occurred in Files' home/i);
 
-			expect(screen.getByTestId('icon: AnimatedLoader')).toBeVisible();
+			expect(screen.getByTestId(ICON_REGEXP.uploadLoading)).toBeVisible();
 			expect(screen.getByText(RegExp(`\\d/${numberOfNodes}`))).toBeVisible();
 			expect(screen.getByTestId('node-item', { exact: false })).toBeInTheDocument();
 			expect(screen.queryByText(/Drop here your attachments/m)).not.toBeInTheDocument();
