@@ -267,7 +267,7 @@ describe('Upload list', () => {
 			});
 
 			expect(screen.getByText(uploadedFiles[0].name)).toBeVisible();
-			expect(screen.getAllByTestId('icon: AnimatedLoader')).toHaveLength(2);
+			expect(screen.getAllByTestId(ICON_REGEXP.uploadLoading)).toHaveLength(2);
 			expect(screen.getByText(uploadedFiles[1].name)).toBeVisible();
 			await waitFor(() => expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(2));
 			expect(screen.getByText(/1\/1/)).toBeVisible();
@@ -337,7 +337,7 @@ describe('Upload list', () => {
 				dataTransfer: dataTransferObj
 			});
 
-			const loadingIcons = await screen.findAllByTestId('icon: AnimatedLoader');
+			const loadingIcons = await screen.findAllByTestId(ICON_REGEXP.uploadLoading);
 			expect(loadingIcons).toHaveLength(4);
 
 			await screen.findAllByText(/\d+%/);
@@ -355,7 +355,7 @@ describe('Upload list', () => {
 				fail(new Error('queued item not found'));
 			}
 			expect(within(queuedItem).getByText(/queued/i)).toBeVisible();
-			const queuedIconLoader = within(queuedItem).getByTestId('icon: AnimatedLoader');
+			const queuedIconLoader = within(queuedItem).getByTestId(ICON_REGEXP.uploadLoading);
 			expect(queuedIconLoader).toBeInTheDocument();
 
 			const loadingItems = await screen.findAllByText('0%');
@@ -370,11 +370,11 @@ describe('Upload list', () => {
 			await screen.findAllByText('100%');
 			expect(screen.queryByText(/queued/i)).not.toBeInTheDocument();
 			expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(3);
-			expect(screen.getByTestId('icon: AnimatedLoader')).toBeVisible();
+			expect(screen.getByTestId(ICON_REGEXP.uploadLoading)).toBeVisible();
 			emitter.emit('resolve');
-			await waitForElementToBeRemoved(screen.queryByTestId('icon: AnimatedLoader'));
+			await waitForElementToBeRemoved(screen.queryByTestId(ICON_REGEXP.uploadLoading));
 			expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(4);
-			expect(screen.queryByTestId('icon: AnimatedLoader')).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.uploadLoading)).not.toBeInTheDocument();
 
 			const localRootCachedData = global.apolloClient.readQuery<
 				GetChildrenQuery,
@@ -449,20 +449,20 @@ describe('Upload list', () => {
 			expect(screen.getAllByTestId('node-item-', { exact: false })).toHaveLength(
 				uploadedFiles.length
 			);
-			expect(screen.getAllByTestId('icon: AnimatedLoader')).toHaveLength(uploadedFiles.length);
+			expect(screen.getAllByTestId(ICON_REGEXP.uploadLoading)).toHaveLength(uploadedFiles.length);
 			expect(screen.getByText(/queued/i)).toBeVisible();
 			emitter.emit('done-fail');
 			// wait for the first request to fail
-			await screen.findByTestId('icon: AlertCircle');
+			await screen.findByTestId(ICON_REGEXP.uploadFailed);
 			// last item is removed from the queue and starts the upload
 			expect(screen.queryByText(/queued/i)).not.toBeInTheDocument();
 			emitter.emit('done-success');
 			// then wait for all other files to be uploaded
 			await waitFor(() => expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(3));
-			expect(screen.getByTestId('icon: AlertCircle')).toBeVisible();
+			expect(screen.getByTestId(ICON_REGEXP.uploadFailed)).toBeVisible();
 			expect(screen.queryByText(/queued/i)).not.toBeInTheDocument();
 			expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(3);
-			expect(screen.queryByTestId('icon: AnimatedLoader')).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.uploadLoading)).not.toBeInTheDocument();
 		});
 
 		test('when an uploading item is aborted, the next in the queue is uploaded', async () => {
@@ -536,11 +536,11 @@ describe('Upload list', () => {
 			expect(screen.getAllByTestId('node-item-', { exact: false })).toHaveLength(
 				uploadedFiles.length
 			);
-			expect(screen.getAllByTestId('icon: AnimatedLoader')).toHaveLength(uploadedFiles.length);
+			expect(screen.getAllByTestId(ICON_REGEXP.uploadLoading)).toHaveLength(uploadedFiles.length);
 			expect(screen.getByText(/queued/i)).toBeVisible();
 			const firstFileItem = screen.getAllByTestId('node-item-', { exact: false })[0];
 			expect(screen.getByText(uploadedFiles[0].name)).toBeVisible();
-			const cancelAction = within(firstFileItem).getByTestId('icon: CloseCircleOutline');
+			const cancelAction = within(firstFileItem).getByTestId(ICON_REGEXP.removeUpload);
 			await user.click(cancelAction);
 			// first upload is aborted, element is removed from the list
 			expect(firstFileItem).not.toBeInTheDocument();
@@ -548,7 +548,7 @@ describe('Upload list', () => {
 			expect(screen.queryByText(/queued/i)).not.toBeInTheDocument();
 			// then wait for all other files to be uploaded
 			emitter.emit('done');
-			await waitForElementToBeRemoved(screen.queryAllByTestId('icon: AnimatedLoader'));
+			await waitForElementToBeRemoved(screen.queryAllByTestId(ICON_REGEXP.uploadLoading));
 			expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(3);
 			expect(screen.getAllByTestId('node-item-', { exact: false })).toHaveLength(
 				uploadedFiles.length - 1
@@ -556,7 +556,7 @@ describe('Upload list', () => {
 			expect(screen.queryByText(uploadedFiles[0].name)).not.toBeInTheDocument();
 			expect(screen.queryByText(/queued/i)).not.toBeInTheDocument();
 			expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(3);
-			expect(screen.queryByTestId('icon: AnimatedLoader')).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.uploadLoading)).not.toBeInTheDocument();
 		});
 
 		test('the queue use FIFO strategy', async () => {
@@ -632,7 +632,7 @@ describe('Upload list', () => {
 			expect(screen.getAllByTestId('node-item-', { exact: false })).toHaveLength(
 				uploadedFiles.length
 			);
-			expect(screen.getAllByTestId('icon: AnimatedLoader')).toHaveLength(uploadedFiles.length);
+			expect(screen.getAllByTestId(ICON_REGEXP.uploadLoading)).toHaveLength(uploadedFiles.length);
 			// last files are queued
 			expect(screen.getAllByText(/queued/i)).toHaveLength(uploadedFiles.length - UploadQueue.LIMIT);
 			const nodeItems = screen.getAllByTestId('node-item-', { exact: false });
@@ -703,20 +703,28 @@ describe('Upload list', () => {
 			const dataTransferObj = createDataTransfer([folderToUpload]);
 
 			const uploadFileHandler = jest.fn(handleUploadFileRequest);
-			const mocks = [
-				mockGetBaseNode({ node_id: localRoot.id }, localRoot),
-				mockCreateFolder(
-					{ name: folderToUpload.name, destination_id: folderToUpload.parent.id },
-					folderToUpload
-				),
-				mockCreateFolder(
-					{ name: subFolder1.name, destination_id: folderToUpload.parent.id },
-					subFolder1
-				),
-				mockCreateFolder(
-					{ name: subFolder2.name, destination_id: (subFolder2.parent as Folder).id },
-					subFolder2
+
+			server.use(
+				rest.post<UploadRequestBody, UploadRequestParams, UploadResponse>(
+					`${REST_ENDPOINT}${UPLOAD_PATH}`,
+					uploadFileHandler
 				)
+			);
+
+			const mocks = [
+				mockGetBaseNode({ node_id: localRoot.id }, localRoot)
+				// mockCreateFolder(
+				// 	{ name: folderToUpload.name, destination_id: folderToUpload.parent.id },
+				// 	folderToUpload
+				// ),
+				// mockCreateFolder(
+				// 	{ name: subFolder1.name, destination_id: folderToUpload.parent.id },
+				// 	subFolder1
+				// ),
+				// mockCreateFolder(
+				// 	{ name: subFolder2.name, destination_id: (subFolder2.parent as Folder).id },
+				// 	subFolder2
+				// )
 			];
 
 			setup(<UploadList />, { mocks });

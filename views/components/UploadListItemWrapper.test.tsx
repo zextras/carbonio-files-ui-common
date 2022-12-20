@@ -6,10 +6,10 @@
 
 import React from 'react';
 
-import { fireEvent, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 
 import { UseNavigationHook } from '../../../hooks/useNavigation';
-import { ACTION_REGEXP, ICON_REGEXP, SELECTORS } from '../../constants/test';
+import { ICON_REGEXP } from '../../constants/test';
 import { UseUploadHook } from '../../hooks/useUpload';
 import {
 	populateFolder,
@@ -77,219 +77,7 @@ describe('Upload List Item Wrapper', () => {
 			expect(screen.getByText(humanFileSize(file.file.size))).toBeVisible();
 		}
 		expect(screen.getByText(new RegExp(`${file.progress}\\s*%`, 'm'))).toBeVisible();
-		expect(screen.getByTestId('icon: AnimatedLoader')).toBeVisible();
-	});
-
-	describe('Retry action', () => {
-		describe('Contextual menu', () => {
-			test('Action is hidden if status is loading', async () => {
-				const destinationFolder = populateFolder();
-				const file = populateUploadItem({
-					status: UploadStatus.LOADING,
-					parentNodeId: destinationFolder.id
-				});
-				const mockSelectId = jest.fn();
-
-				const mocks = [mockGetBaseNode({ node_id: destinationFolder.id }, destinationFolder)];
-				setup(
-					<UploadListItemWrapper
-						node={file}
-						isSelected={false}
-						isSelectionModeActive={false}
-						selectId={mockSelectId}
-					/>,
-					{ mocks }
-				);
-
-				const item = screen.getByText(file.name);
-				expect(item).toBeVisible();
-				fireEvent.contextMenu(item);
-				await screen.findByTestId(SELECTORS.dropdownList);
-				expect(screen.queryByText(ACTION_REGEXP.retryUpload)).not.toBeInTheDocument();
-			});
-
-			test('Action is hidden if status is completed', async () => {
-				const destinationFolder = populateFolder();
-				const file = populateUploadItem({
-					status: UploadStatus.COMPLETED,
-					parentNodeId: destinationFolder.id
-				});
-				const mockSelectId = jest.fn();
-
-				const mocks = [mockGetBaseNode({ node_id: destinationFolder.id }, destinationFolder)];
-				setup(
-					<UploadListItemWrapper
-						node={file}
-						isSelected={false}
-						isSelectionModeActive={false}
-						selectId={mockSelectId}
-					/>,
-					{ mocks }
-				);
-
-				const item = screen.getByText(file.name);
-				expect(item).toBeVisible();
-				fireEvent.contextMenu(item);
-				await screen.findByTestId(SELECTORS.dropdownList);
-				expect(screen.queryByText(ACTION_REGEXP.retryUpload)).not.toBeInTheDocument();
-			});
-
-			test('Action is hidden if status is queued', async () => {
-				const destinationFolder = populateFolder();
-				const file = populateUploadItem({
-					status: UploadStatus.QUEUED,
-					parentNodeId: destinationFolder.id
-				});
-				const mockSelectId = jest.fn();
-
-				const mocks = [mockGetBaseNode({ node_id: destinationFolder.id }, destinationFolder)];
-
-				setup(
-					<UploadListItemWrapper
-						node={file}
-						isSelected={false}
-						isSelectionModeActive={false}
-						selectId={mockSelectId}
-					/>,
-					{ mocks }
-				);
-
-				const item = screen.getByText(file.name);
-				expect(item).toBeVisible();
-				fireEvent.contextMenu(item);
-				await screen.findByTestId(SELECTORS.dropdownList);
-				expect(screen.queryByText(ACTION_REGEXP.retryUpload)).not.toBeInTheDocument();
-			});
-
-			test('Action is visible if status is failed', async () => {
-				const destinationFolder = populateFolder();
-				const file = populateUploadItem({
-					status: UploadStatus.FAILED,
-					parentNodeId: destinationFolder.id
-				});
-				const mockSelectId = jest.fn();
-
-				const mocks = [mockGetBaseNode({ node_id: destinationFolder.id }, destinationFolder)];
-				setup(
-					<UploadListItemWrapper
-						node={file}
-						isSelected={false}
-						isSelectionModeActive={false}
-						selectId={mockSelectId}
-					/>,
-					{ mocks }
-				);
-
-				const item = screen.getByText(file.name);
-				expect(item).toBeVisible();
-				fireEvent.contextMenu(item);
-				await screen.findByTestId(SELECTORS.dropdownList);
-				expect(screen.getByText(ACTION_REGEXP.retryUpload)).toBeVisible();
-			});
-		});
-
-		describe('Hover bar', () => {
-			test('Action is hidden if status is loading', async () => {
-				const destinationFolder = populateFolder();
-				const file = populateUploadItem({
-					status: UploadStatus.LOADING,
-					parentNodeId: destinationFolder.id
-				});
-				const mockSelectId = jest.fn();
-
-				const mocks = [mockGetBaseNode({ node_id: destinationFolder.id }, destinationFolder)];
-				const { user } = setup(
-					<UploadListItemWrapper
-						node={file}
-						isSelected={false}
-						isSelectionModeActive={false}
-						selectId={mockSelectId}
-					/>,
-					{ mocks }
-				);
-
-				const item = screen.getByText(file.name);
-				expect(item).toBeVisible();
-				await user.hover(item);
-				expect(screen.queryByTestId(ICON_REGEXP.retryUpload)).not.toBeInTheDocument();
-			});
-
-			test('Action is hidden if status is completed', async () => {
-				const destinationFolder = populateFolder();
-				const file = populateUploadItem({
-					status: UploadStatus.COMPLETED,
-					parentNodeId: destinationFolder.id
-				});
-				const mockSelectId = jest.fn();
-
-				const mocks = [mockGetBaseNode({ node_id: destinationFolder.id }, destinationFolder)];
-				const { user } = setup(
-					<UploadListItemWrapper
-						node={file}
-						isSelected={false}
-						isSelectionModeActive={false}
-						selectId={mockSelectId}
-					/>,
-					{ mocks }
-				);
-
-				const item = screen.getByText(file.name);
-				expect(item).toBeVisible();
-				await user.hover(item);
-				expect(screen.queryByTestId(ICON_REGEXP.retryUpload)).not.toBeInTheDocument();
-			});
-
-			test('Action is hidden if status is queued', async () => {
-				const destinationFolder = populateFolder();
-				const file = populateUploadItem({
-					status: UploadStatus.QUEUED,
-					parentNodeId: destinationFolder.id
-				});
-				const mockSelectId = jest.fn();
-
-				const mocks = [mockGetBaseNode({ node_id: destinationFolder.id }, destinationFolder)];
-
-				const { user } = setup(
-					<UploadListItemWrapper
-						node={file}
-						isSelected={false}
-						isSelectionModeActive={false}
-						selectId={mockSelectId}
-					/>,
-					{ mocks }
-				);
-
-				const item = screen.getByText(file.name);
-				expect(item).toBeVisible();
-				await user.hover(item);
-				expect(screen.queryByTestId(ICON_REGEXP.retryUpload)).not.toBeInTheDocument();
-			});
-
-			test('Action is visible if status is failed', async () => {
-				const destinationFolder = populateFolder();
-				const file = populateUploadItem({
-					status: UploadStatus.FAILED,
-					parentNodeId: destinationFolder.id
-				});
-				const mockSelectId = jest.fn();
-
-				const mocks = [mockGetBaseNode({ node_id: destinationFolder.id }, destinationFolder)];
-				const { user } = setup(
-					<UploadListItemWrapper
-						node={file}
-						isSelected={false}
-						isSelectionModeActive={false}
-						selectId={mockSelectId}
-					/>,
-					{ mocks }
-				);
-
-				const item = screen.getByText(file.name);
-				expect(item).toBeVisible();
-				await user.hover(item);
-				expect(screen.getByTestId(ICON_REGEXP.retryUpload)).toBeInTheDocument();
-			});
-		});
+		expect(screen.getByTestId(ICON_REGEXP.uploadLoading)).toBeVisible();
 	});
 
 	test('If item is queued, queued label is shown instead of the progress', async () => {
@@ -307,7 +95,7 @@ describe('Upload List Item Wrapper', () => {
 		);
 
 		expect(screen.getByText(/queued/i)).toBeVisible();
-		expect(screen.getByTestId('icon: AnimatedLoader')).toBeVisible();
+		expect(screen.getByTestId(ICON_REGEXP.uploadLoading)).toBeVisible();
 		expect(screen.queryByText(/\d+\s*%/)).not.toBeInTheDocument();
 	});
 

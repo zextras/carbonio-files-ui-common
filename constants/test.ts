@@ -16,7 +16,8 @@ export const ACTION_REGEXP = {
 	restore: /^restore$/i,
 	manageShares: /^manage shares$/i,
 	preview: /^preview$/i,
-	retryUpload: /^retry upload$/i
+	retryUpload: /^retry upload$/i,
+	removeUpload: /^remove upload$/i
 } as const;
 
 export const ICON_REGEXP = {
