@@ -408,6 +408,15 @@ describe('Upload List', () => {
 				const folder = populateFolder();
 				folder.parent = localRoot;
 				const children = populateNodes(5, 'File');
+				const subFolder = populateFolder();
+				const subFolderChildren = populateNodes(3, 'File');
+				subFolder.children = populateNodePage(subFolderChildren);
+				forEach(subFolder.children.nodes, (child) => {
+					if (child) {
+						child.parent = subFolder;
+					}
+				});
+				children.push(subFolder);
 				folder.children.nodes = children;
 				forEach(children, (child) => {
 					child.parent = folder;
@@ -416,6 +425,7 @@ describe('Upload List', () => {
 				const dataTransferObj = createDataTransfer([folder]);
 
 				const uploadHandler = jest.fn();
+				let uploadFailedCalled = false;
 
 				server.use(
 					rest.post<UploadRequestBody, UploadRequestParams, UploadResponse>(
@@ -424,7 +434,8 @@ describe('Upload List', () => {
 							uploadHandler();
 							const fileName =
 								req.headers.get('filename') && window.atob(req.headers.get('filename') as string);
-							if (fileName === children[1].name || fileName === children[3].name) {
+							if (!uploadFailedCalled && fileName === subFolderChildren[1].name) {
+								uploadFailedCalled = true;
 								return res(ctx.status(500));
 							}
 							return res(ctx.json({ nodeId: faker.datatype.uuid() }));
@@ -449,16 +460,16 @@ describe('Upload List', () => {
 				await screen.findByText(folder.name);
 				expect(screen.getByText(folder.name)).toBeVisible();
 				await screen.findByTestId(ICON_REGEXP.uploadFailed);
+				expect(screen.getByText(/9\/10/));
 				await user.hover(screen.getByText(folder.name));
 				expect(screen.getByTestId(ICON_REGEXP.retryUpload)).toBeInTheDocument();
-				expect(uploadHandler).toHaveBeenCalledTimes(children.length);
-				expect(screen.getByText(/3\/5/)).toBeVisible();
+				expect(uploadHandler).toHaveBeenCalledTimes(children.length + subFolderChildren.length - 1);
 				uploadHandler.mockReset();
 				await user.click(screen.getByTestId(ICON_REGEXP.retryUpload));
 				await screen.findByTestId(ICON_REGEXP.uploadLoading);
-				await screen.findByTestId(ICON_REGEXP.uploadFailed);
-				expect(uploadHandler).toHaveBeenCalledTimes(2);
-				expect(screen.getByText(/3\/5/)).toBeVisible();
+				await screen.findByTestId(ICON_REGEXP.uploadCompleted);
+				expect(uploadHandler).toHaveBeenCalledTimes(1);
+				expect(screen.getByText(/10\/10/)).toBeVisible();
 			});
 		});
 	});
