@@ -5,8 +5,9 @@
  */
 import React from 'react';
 
+import { ApolloError } from '@apollo/client';
 import { faker } from '@faker-js/faker';
-import { act, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { EventEmitter } from 'events';
 import forEach from 'lodash/forEach';
 import keyBy from 'lodash/keyBy';
@@ -15,7 +16,7 @@ import { graphql, ResponseResolver, rest, RestContext, RestRequest } from 'msw';
 import server from '../../../mocks/server';
 import { uploadVar } from '../../apollo/uploadVar';
 import { REST_ENDPOINT, ROOTS, UPLOAD_PATH } from '../../constants';
-import { ICON_REGEXP } from '../../constants/test';
+import { ACTION_REGEXP, ICON_REGEXP } from '../../constants/test';
 import {
 	UploadRequestBody,
 	UploadRequestParams,
@@ -24,11 +25,14 @@ import {
 import {
 	populateFolder,
 	populateLocalRoot,
+	populateNodePage,
 	populateNodes,
 	populateUploadItems
 } from '../../mocks/mockUtils';
 import { UploadStatus } from '../../types/common';
 import {
+	CreateFolderMutation,
+	CreateFolderMutationVariables,
 	Folder,
 	GetChildQuery,
 	GetChildQueryVariables,
@@ -39,6 +43,7 @@ import { getChildrenVariables, mockGetBaseNode, mockGetChildren } from '../../ut
 import {
 	createDataTransfer,
 	delayUntil,
+	generateError,
 	selectNodes,
 	setup,
 	uploadWithDnD
@@ -122,7 +127,7 @@ describe('Upload List', () => {
 						return res(ctx.json({ nodeId: filesToUpload[1].id }));
 					}
 					await delayUntil(emitter, EMITTER_CODES.never);
-					return res(ctx.json({ nodeId: faker.datatype.uuid() }));
+					return res(ctx.status(XMLHttpRequest.UNSENT));
 				};
 
 				const uploadFileHandler = jest.fn(handleUploadFileRequest);
@@ -187,6 +192,284 @@ describe('Upload List', () => {
 
 				act(() => {
 					emitter.emit(EMITTER_CODES.never);
+				});
+			});
+
+			describe('On a folder', () => {
+				test('If the folder is queued, remove the folder and all its content and does not upload anything', async () => {
+					const localRoot = populateLocalRoot();
+					const folder = populateFolder();
+					folder.parent = localRoot;
+					const children = populateNodes(2, 'File');
+					folder.children = populateNodePage(children);
+					children.forEach((child) => {
+						child.parent = folder;
+					});
+					const otherItems = populateNodes(3, 'File');
+
+					const itemsToUpload = [...otherItems, folder];
+
+					const dataTransferObj = createDataTransfer(itemsToUpload);
+
+					// write local root data in cache as if it was already loaded
+					const getChildrenMockedQuery = mockGetChildren(
+						getChildrenVariables(localRoot.id),
+						localRoot
+					);
+					global.apolloClient.cache.writeQuery<GetChildrenQuery, GetChildrenQueryVariables>({
+						...getChildrenMockedQuery.request,
+						data: {
+							getNode: localRoot
+						}
+					});
+
+					const mocks = [mockGetBaseNode({ node_id: localRoot.id }, localRoot)];
+
+					const emitter = new EventEmitter();
+					const EMITTER_CODES = {
+						never: 'never'
+					};
+
+					server.use(
+						rest.post<UploadRequestBody, UploadRequestParams, UploadResponse>(
+							`${REST_ENDPOINT}${UPLOAD_PATH}`,
+							async (req, res, ctx) => {
+								await delayUntil(emitter, EMITTER_CODES.never);
+								return res(ctx.status(XMLHttpRequest.UNSENT));
+							}
+						)
+					);
+
+					const { user } = setup(<UploadList />, { mocks });
+
+					const dropzone = await screen.findByText(/nothing here/i);
+					await uploadWithDnD(dropzone, dataTransferObj);
+					await screen.findByText(folder.name);
+
+					expect(screen.getByText(/queued/i)).toBeVisible();
+					fireEvent.contextMenu(screen.getByText(folder.name));
+					const removeAction = await screen.findByText(ACTION_REGEXP.removeUpload);
+					await user.click(removeAction);
+					expect(screen.queryByText(/queued/i)).not.toBeInTheDocument();
+					expect(screen.queryByText(folder.name)).not.toBeInTheDocument();
+
+					const localRootCachedData = global.apolloClient.readQuery<
+						GetChildrenQuery,
+						GetChildrenQueryVariables
+					>(getChildrenMockedQuery.request);
+
+					expect((localRootCachedData?.getNode as Folder).children?.nodes).toHaveLength(0);
+
+					act(() => {
+						emitter.emit(EMITTER_CODES.never);
+					});
+				});
+
+				test('If the folder is loading, and it is already created, blocks the upload of items loading, remove all items from the upload, but does not delete the already uploaded items', async () => {
+					const localRoot = populateLocalRoot();
+					const folder = populateFolder();
+					folder.parent = localRoot;
+					const children = populateNodes(3, 'File');
+					folder.children = populateNodePage(children);
+					children.forEach((child) => {
+						child.parent = folder;
+					});
+
+					const dataTransferObj = createDataTransfer([folder]);
+
+					// write local root data in cache as if it was already loaded
+					const getChildrenMockedQuery = mockGetChildren(
+						getChildrenVariables(localRoot.id),
+						localRoot
+					);
+					global.apolloClient.cache.writeQuery<GetChildrenQuery, GetChildrenQueryVariables>({
+						...getChildrenMockedQuery.request,
+						data: {
+							getNode: localRoot
+						}
+					});
+
+					const mocks = [mockGetBaseNode({ node_id: localRoot.id }, localRoot)];
+
+					const emitter = new EventEmitter();
+					const EMITTER_CODES = {
+						never: 'never'
+					};
+
+					const uploadHandlerResolve = jest.fn();
+
+					server.use(
+						rest.post<UploadRequestBody, UploadRequestParams, UploadResponse>(
+							`${REST_ENDPOINT}${UPLOAD_PATH}`,
+							async (req, res, ctx) => {
+								await delayUntil(emitter, EMITTER_CODES.never);
+								uploadHandlerResolve();
+								return res(ctx.status(XMLHttpRequest.UNSENT));
+							}
+						)
+					);
+
+					const { user } = setup(<UploadList />, { mocks });
+
+					const dropzone = await screen.findByText(/nothing here/i);
+					await uploadWithDnD(dropzone, dataTransferObj);
+					await screen.findByText(folder.name);
+
+					// wait creation of the folder
+					await screen.findByText(/1\/4/);
+
+					fireEvent.contextMenu(screen.getByText(folder.name));
+					const removeAction = await screen.findByText(ACTION_REGEXP.removeUpload);
+					await user.click(removeAction);
+					expect(screen.queryByText(folder.name)).not.toBeInTheDocument();
+					expect(uploadHandlerResolve).not.toHaveBeenCalled();
+
+					const localRootCachedData = global.apolloClient.readQuery<
+						GetChildrenQuery,
+						GetChildrenQueryVariables
+					>(getChildrenMockedQuery.request);
+
+					expect((localRootCachedData?.getNode as Folder).children?.nodes).toHaveLength(1);
+					expect((localRootCachedData?.getNode as Folder).children?.nodes[0]?.name).toBe(
+						folder.name
+					);
+
+					act(() => {
+						emitter.emit(EMITTER_CODES.never);
+					});
+				});
+
+				test('If the folder is failed, and all its content is failed, remove the folder and all its content and does not upload anything', async () => {
+					const localRoot = populateLocalRoot();
+					const folder = populateFolder();
+					folder.parent = localRoot;
+					const children = populateNodes(2, 'File');
+					folder.children = populateNodePage(children);
+					children.forEach((child) => {
+						child.parent = folder;
+					});
+
+					const dataTransferObj = createDataTransfer([folder]);
+
+					// write local root data in cache as if it was already loaded
+					const getChildrenMockedQuery = mockGetChildren(
+						getChildrenVariables(localRoot.id),
+						localRoot
+					);
+					global.apolloClient.cache.writeQuery<GetChildrenQuery, GetChildrenQueryVariables>({
+						...getChildrenMockedQuery.request,
+						data: {
+							getNode: localRoot
+						}
+					});
+
+					const mocks = [mockGetBaseNode({ node_id: localRoot.id }, localRoot)];
+
+					const uploadHandler = jest.fn();
+
+					server.use(
+						graphql.mutation<CreateFolderMutation, CreateFolderMutationVariables>(
+							'createFolder',
+							(req, res, ctx) =>
+								res(
+									ctx.errors([
+										new ApolloError({ graphQLErrors: [generateError('create folder msw error')] })
+									])
+								)
+						),
+						rest.post<UploadRequestBody, UploadRequestParams, UploadResponse>(
+							`${REST_ENDPOINT}${UPLOAD_PATH}`,
+							async (req, res, ctx) => {
+								uploadHandler();
+								return res(ctx.json({ nodeId: faker.datatype.uuid() }));
+							}
+						)
+					);
+
+					const { user } = setup(<UploadList />, { mocks });
+
+					const dropzone = await screen.findByText(/nothing here/i);
+					await uploadWithDnD(dropzone, dataTransferObj);
+					await screen.findByText(folder.name);
+
+					await screen.findByTestId(ICON_REGEXP.uploadFailed);
+					expect(screen.getByText(/0\/3/)).toBeVisible();
+					fireEvent.contextMenu(screen.getByText(folder.name));
+					const removeAction = await screen.findByText(ACTION_REGEXP.removeUpload);
+					await user.click(removeAction);
+					expect(screen.queryByText(folder.name)).not.toBeInTheDocument();
+					expect(uploadHandler).not.toHaveBeenCalled();
+
+					const localRootCachedData = global.apolloClient.readQuery<
+						GetChildrenQuery,
+						GetChildrenQueryVariables
+					>(getChildrenMockedQuery.request);
+
+					expect((localRootCachedData?.getNode as Folder).children?.nodes).toHaveLength(0);
+				});
+
+				test('If the folder is completed, remove the folder and its content from the upload, but does not delete the uploaded items', async () => {
+					const localRoot = populateLocalRoot();
+					const folder = populateFolder();
+					folder.parent = localRoot;
+					const children = populateNodes(3, 'File');
+					folder.children = populateNodePage(children);
+					children.forEach((child) => {
+						child.parent = folder;
+					});
+
+					const dataTransferObj = createDataTransfer([folder]);
+
+					// write local root data in cache as if it was already loaded
+					const getChildrenMockedQuery = mockGetChildren(
+						getChildrenVariables(localRoot.id),
+						localRoot
+					);
+					global.apolloClient.cache.writeQuery<GetChildrenQuery, GetChildrenQueryVariables>({
+						...getChildrenMockedQuery.request,
+						data: {
+							getNode: localRoot
+						}
+					});
+
+					const mocks = [mockGetBaseNode({ node_id: localRoot.id }, localRoot)];
+
+					const uploadHandler = jest.fn();
+
+					server.use(
+						rest.post<UploadRequestBody, UploadRequestParams, UploadResponse>(
+							`${REST_ENDPOINT}${UPLOAD_PATH}`,
+							async (req, res, ctx) => {
+								uploadHandler();
+								return res(ctx.json({ nodeId: faker.datatype.uuid() }));
+							}
+						)
+					);
+
+					const { user } = setup(<UploadList />, { mocks });
+
+					const dropzone = await screen.findByText(/nothing here/i);
+					await uploadWithDnD(dropzone, dataTransferObj);
+					await screen.findByText(folder.name);
+
+					await screen.findByTestId(ICON_REGEXP.uploadCompleted);
+					expect(screen.getByText(/4\/4/)).toBeVisible();
+
+					fireEvent.contextMenu(screen.getByText(folder.name));
+					const removeAction = await screen.findByText(ACTION_REGEXP.removeUpload);
+					await user.click(removeAction);
+					expect(screen.queryByText(folder.name)).not.toBeInTheDocument();
+					expect(uploadHandler).toHaveBeenCalledTimes(3);
+
+					const localRootCachedData = global.apolloClient.readQuery<
+						GetChildrenQuery,
+						GetChildrenQueryVariables
+					>(getChildrenMockedQuery.request);
+
+					expect((localRootCachedData?.getNode as Folder).children?.nodes).toHaveLength(1);
+					expect((localRootCachedData?.getNode as Folder).children?.nodes[0]?.name).toBe(
+						folder.name
+					);
 				});
 			});
 		});

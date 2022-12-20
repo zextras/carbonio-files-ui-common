@@ -116,7 +116,7 @@ describe('Upload List', () => {
 				const uploadFailedHandler = jest.fn();
 				const uploadSuccessHandler = jest.fn();
 				const emitter = new EventEmitter();
-				const EMITTER_CODE = {
+				const EMITTER_CODES = {
 					fail: 'done-fail',
 					success: 'done-success'
 				};
@@ -137,11 +137,11 @@ describe('Upload List', () => {
 						`${REST_ENDPOINT}${UPLOAD_PATH}`,
 						async (req, res, ctx) => {
 							const response = await Promise.any([
-								delayUntil(emitter, EMITTER_CODE.fail).then(() => {
+								delayUntil(emitter, EMITTER_CODES.fail).then(() => {
 									uploadFailedHandler();
 									return res(ctx.status(500));
 								}),
-								delayUntil(emitter, EMITTER_CODE.success).then(() => {
+								delayUntil(emitter, EMITTER_CODES.success).then(() => {
 									uploadSuccessHandler();
 									return res(
 										ctx.json({
@@ -172,7 +172,7 @@ describe('Upload List', () => {
 				);
 				expect(screen.queryByText(/Drop here your attachments/m)).not.toBeInTheDocument();
 
-				emitter.emit(EMITTER_CODE.fail);
+				emitter.emit(EMITTER_CODES.fail);
 
 				await screen.findAllByTestId(ICON_REGEXP.uploadFailed);
 				expect(screen.getAllByTestId(ICON_REGEXP.uploadFailed)).toHaveLength(uploadedFiles.length);
@@ -183,7 +183,7 @@ describe('Upload List', () => {
 				await user.click(retryAllAction);
 				await screen.findAllByTestId(ICON_REGEXP.uploadLoading);
 				expect(screen.getAllByTestId(ICON_REGEXP.uploadLoading)).toHaveLength(uploadedFiles.length);
-				emitter.emit(EMITTER_CODE.success);
+				emitter.emit(EMITTER_CODES.success);
 				await waitFor(() =>
 					expect(screen.getAllByTestId(ICON_REGEXP.uploadCompleted)).toHaveLength(
 						uploadedFiles.length
