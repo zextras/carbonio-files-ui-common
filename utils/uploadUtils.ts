@@ -162,7 +162,7 @@ export function decrementAllParentsFailedCountByAmount(
 				type: 'update',
 				value: newStatus
 			});
-			decrementAllParentsFailedCountByAmount(parent, amount);
+			decrementAllParentsFailedCountByAmount(parent, amount, mustUpdateParentsStatus);
 		}
 	}
 }

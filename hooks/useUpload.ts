@@ -115,8 +115,7 @@ export const useUpload: UseUploadHook = () => {
 			if (uploadFolderItem.parentNodeId) {
 				const updatedFolder: UploadFolderItem = {
 					...uploadFolderItem,
-					status: UploadStatus.LOADING,
-					progress: 0
+					status: UploadStatus.LOADING
 				};
 				uploadVarReducer({
 					type: 'update',
@@ -127,38 +126,45 @@ export const useUpload: UseUploadHook = () => {
 					.then((parentFolderNodeId) => {
 						if (parentFolderNodeId) {
 							forEach(uploadFolderItem.children, (child) => {
-								uploadVarReducer({
-									type: 'update',
-									value: {
-										id: child,
-										parentNodeId: parentFolderNodeId
-									}
-								});
+								const childUploadItem = uploadVar()[child];
+								if (childUploadItem.nodeId === null) {
+									uploadVarReducer({
+										type: 'update',
+										value: {
+											id: child,
+											parentNodeId: parentFolderNodeId,
+											status: UploadStatus.QUEUED,
+											progress: 0
+										}
+									});
+								}
 							});
 						}
 					})
 					.catch(() => {
 						const itemsToSetAsFailed = flatUploadItemChildren(uploadFolderItem, uploadVar());
 						forEach(itemsToSetAsFailed, (item) => {
-							if (isUploadFolderItem(item)) {
-								uploadVarReducer({
-									type: 'update',
-									value: {
-										id: item.id,
-										status: UploadStatus.FAILED,
-										failedCount: item.failedCount + 1
-									}
-								});
-							} else {
-								uploadVarReducer({
-									type: 'update',
-									value: {
-										id: item.id,
-										status: UploadStatus.FAILED
-									}
-								});
+							if (item.status !== UploadStatus.COMPLETED) {
+								if (isUploadFolderItem(item)) {
+									uploadVarReducer({
+										type: 'update',
+										value: {
+											id: item.id,
+											status: UploadStatus.FAILED,
+											failedCount: item.failedCount + 1
+										}
+									});
+								} else {
+									uploadVarReducer({
+										type: 'update',
+										value: {
+											id: item.id,
+											status: UploadStatus.FAILED
+										}
+									});
+								}
+								incrementAllParentsFailedCount(item);
 							}
-							incrementAllParentsFailedCount(item);
 						});
 					})
 					.finally(() => {
@@ -421,48 +427,52 @@ export const useUpload: UseUploadHook = () => {
 	}, []);
 
 	const retryById = useCallback((ids: Array<string>) => {
-		// TODO check if is really a retry and move in proper upload to handle file and folder differently
-		// TODO this must be improved to handle folders retry
-
+		const idsToRetry: string[] = [];
 		forEach(ids, (id) => {
 			const uploadItem = uploadVar()[id];
-			if (isUploadFolderItem(uploadItem)) {
-				const itemsToSetAsQueued = flatUploadItemChildren(uploadItem, uploadVar());
-				forEach(itemsToSetAsQueued, (item) => {
-					if (isUploadFolderItem(item)) {
-						uploadVarReducer({
-							type: 'update',
-							value: {
-								id: item.id,
-								status: UploadStatus.QUEUED,
-								failedCount: item.failedCount - 1
+			if (uploadItem.status === UploadStatus.FAILED) {
+				if (isUploadFolderItem(uploadItem)) {
+					const itemsToSetAsQueued = flatUploadItemChildren(uploadItem, uploadVar());
+					forEach(itemsToSetAsQueued, (item) => {
+						if (item.status === UploadStatus.FAILED) {
+							if (isUploadFolderItem(item)) {
+								// decrement failed count only if the folder creation failed (nodeId === null)
+								const failedCount = item.nodeId === null ? item.failedCount - 1 : item.failedCount;
+								uploadVarReducer({
+									type: 'update',
+									value: {
+										id: item.id,
+										status: UploadStatus.QUEUED,
+										failedCount
+									}
+								});
+							} else {
+								uploadVarReducer({
+									type: 'update',
+									value: {
+										id: item.id,
+										status: UploadStatus.QUEUED
+									}
+								});
 							}
-						});
-					} else {
-						uploadVarReducer({
-							type: 'update',
-							value: {
-								id: item.id,
-								status: UploadStatus.QUEUED
+							UploadQueue.add(item.id);
+							if (item.nodeId === null) {
+								decrementAllParentsFailedCountByAmount(item, 1, uploadItem.id === item.id);
 							}
-						});
-					}
-					decrementAllParentsFailedCountByAmount(item, 1, uploadItem.id === item.id);
-				});
-			} else {
-				uploadVarReducer({
-					type: 'update',
-					value: { id, status: UploadStatus.QUEUED, progress: 0 }
-				});
-				decrementAllParentsFailedCountByAmount(uploadItem, 1);
+						}
+					});
+				} else {
+					uploadVarReducer({
+						type: 'update',
+						value: { id, status: UploadStatus.QUEUED, progress: 0 }
+					});
+					UploadQueue.add(id);
+					decrementAllParentsFailedCountByAmount(uploadItem, 1);
+				}
 			}
 		});
 
-		UploadQueue.add(...ids);
 		UploadQueue.startAll();
-		// forEach(ids, (id) => {
-		// 	singleRetry(id);
-		// });
 	}, []);
 
 	return { add, update, removeById, removeAllCompleted, retryById, removeByNodeId };
