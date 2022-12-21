@@ -12,7 +12,7 @@ import { Route } from 'react-router-dom';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { FILTER_TYPE, INTERNAL_PATH, ROOTS } from '../constants';
-import { ACTION_REGEXP, ICON_REGEXP } from '../constants/test';
+import { ACTION_REGEXP, ICON_REGEXP, SELECTORS } from '../constants/test';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import {
 	populateFile,
@@ -116,18 +116,22 @@ describe('Filter View', () => {
 					)
 				];
 
-				const { user } = setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
-					mocks,
-					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
-				});
+				const { user, getByRoleWithIcon } = setup(
+					<Route path={`/:view/:filter?`} component={FilterView} />,
+					{
+						mocks,
+						initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
+					}
+				);
 
 				await screen.findByText(file.name);
 				await selectNodes([file.id, folder.id], user);
 
 				// check that all wanted items are selected
 				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
+				await user.click(getByRoleWithIcon('button', { icon: ICON_REGEXP.moreVertical }));
+				await screen.findByTestId(SELECTORS.dropdownList);
 				expect(screen.queryByText(ICON_REGEXP.move)).not.toBeInTheDocument();
-				// TODO improve when popper selector will be available
 			});
 
 			test('Move is hidden if node has no parent or parent has not right permissions', async () => {

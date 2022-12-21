@@ -535,7 +535,7 @@ describe('Contextual menu actions', () => {
 		});
 	});
 
-	test.skip('right click on node open the contextual menu for the node, closing a previously opened one. Left click close it', async () => {
+	test('right click on node open the contextual menu for the node, closing a previously opened one. Left click close it', async () => {
 		const currentFolder = populateFolder();
 		const node1 = populateNode();
 		// set the node not flagged so that we can search by flag action in the contextual menu of first node
@@ -575,7 +575,6 @@ describe('Contextual menu actions', () => {
 		expect(flagAction).not.toBeInTheDocument();
 		// left click close all the contextual menu
 		await user.click(node2Item);
-		// FIXME: waiting for CDS-72
 		expect(unflagAction).not.toBeInTheDocument();
 		expect(flagAction).not.toBeInTheDocument();
 	});
