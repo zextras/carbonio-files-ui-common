@@ -6,13 +6,16 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { Dropdown, DropdownProps, useCombinedRefs } from '@zextras/carbonio-design-system';
+import {
+	Dropdown,
+	DropdownItem,
+	DropdownProps,
+	useCombinedRefs
+} from '@zextras/carbonio-design-system';
 import styled from 'styled-components';
 
-import { ActionItem } from '../../utils/ActionsFactory';
-
-interface ContextualMenuProps extends Omit<DropdownProps, 'items' | 'contextMenu'> {
-	actions: ActionItem[];
+export interface ContextualMenuProps extends Omit<DropdownProps, 'items' | 'contextMenu'> {
+	actions: DropdownItem[];
 }
 
 type ContextualMenuElement = HTMLDivElement & {

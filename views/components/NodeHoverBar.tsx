@@ -4,57 +4,31 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-/* eslint-disable arrow-body-style */
+import React, { useMemo } from 'react';
 
-import React, { useCallback } from 'react';
-
-import { IconButton, Tooltip } from '@zextras/carbonio-design-system';
+import { Action as DSAction, CollapsingActions, Padding } from '@zextras/carbonio-design-system';
 import map from 'lodash/map';
-import styled from 'styled-components';
-
-const ActionIconButton = styled(IconButton)`
-	margin-top: ${({ theme }): string => theme.sizes.padding.small};
-	margin-right: ${({ theme }): string => theme.sizes.padding.small};
-	& svg {
-		margin: 0;
-	}
-`;
-
-import { ActionItem } from '../../utils/ActionsFactory';
 
 interface NodeHoverBarProps {
-	actions?: ActionItem[];
+	actions?: DSAction[];
 }
 
-export const NodeHoverBar: React.VFC<NodeHoverBarProps> = ({ actions }) => {
-	const clickHandler = useCallback<
-		(clickCallback: ActionItem['click']) => (event: React.MouseEvent | KeyboardEvent) => void
-	>(
-		(clickCallback) =>
-			(event): void => {
-				event.stopPropagation();
-				clickCallback && clickCallback(event);
-			},
-		[]
+export const NodeHoverBar = ({ actions }: NodeHoverBarProps): JSX.Element => {
+	const actionsMapped = useMemo(
+		() =>
+			map(actions, (action) => ({
+				...action,
+				onClick: (event: Parameters<DSAction['onClick']>[0]): ReturnType<DSAction['onClick']> => {
+					event.stopPropagation();
+					action.onClick(event);
+				}
+			})),
+		[actions]
 	);
 
-	return actions && actions.length > 0 ? (
-		<>
-			{map(actions, (action) => {
-				return (
-					<Tooltip key={action.id} label={action.label}>
-						<ActionIconButton
-							icon={action.icon}
-							onClick={clickHandler(action.click)}
-							key={action.id}
-							disabled={action.disabled}
-							size="small"
-						/>
-					</Tooltip>
-				);
-			})}
-		</>
-	) : (
-		<></>
+	return (
+		<Padding top={'0.5rem'} right={'0.5rem'}>
+			<CollapsingActions actions={actionsMapped} color={'text'} size={'small'} gap={'0.5rem'} />
+		</Padding>
 	);
 };

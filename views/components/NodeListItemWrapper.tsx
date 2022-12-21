@@ -7,7 +7,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useReactiveVar } from '@apollo/client';
-import { useSnackbar } from '@zextras/carbonio-design-system';
+import { Action as DSAction, useSnackbar } from '@zextras/carbonio-design-system';
 import isEmpty from 'lodash/isEmpty';
 import some from 'lodash/some';
 import { useTranslation } from 'react-i18next';
@@ -22,7 +22,6 @@ import { useDeletePermanentlyModal } from '../../hooks/modals/useDeletePermanent
 import { useUpload } from '../../hooks/useUpload';
 import { Action, NodeListItemType, URLParams } from '../../types/common';
 import {
-	ActionItem,
 	canBeMoveDestination,
 	canUploadFile,
 	getAllPermittedActions,
@@ -52,7 +51,7 @@ interface NodeListItemWrapperProps {
 	setActive?: (node: NodeListItemType, event: React.SyntheticEvent) => void;
 	compact?: boolean;
 	navigateTo?: (id: string, event?: React.SyntheticEvent | Event) => void;
-	selectionContextualMenuActionsItems?: ActionItem[];
+	selectionContextualMenuActionsItems?: DSAction[];
 }
 
 export const NodeListItemWrapper: React.VFC<NodeListItemWrapperProps> = ({

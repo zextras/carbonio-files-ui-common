@@ -6,7 +6,14 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Container, Icon, Padding, Row, Text } from '@zextras/carbonio-design-system';
+import {
+	Action as DSAction,
+	Container,
+	Icon,
+	Padding,
+	Row,
+	Text
+} from '@zextras/carbonio-design-system';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 
@@ -79,13 +86,13 @@ export const UploadListItem: React.VFC<UploadListItemProps> = React.memo(
 
 		const { removeById, retryById } = useUpload();
 
-		const items = useMemo(
+		const items = useMemo<Partial<Record<Action, DSAction>>>(
 			() => ({
 				[Action.GoToFolder]: {
 					id: 'GoToFolder ',
 					icon: 'FolderOutline',
 					label: t('actions.goToFolder', 'Go to destination folder'),
-					click: (): void => {
+					onClick: (): void => {
 						if (parent && nodeId) {
 							const destination = `/?folder=${parent.id}&node=${nodeId}`;
 							navigateTo(destination);
@@ -99,7 +106,7 @@ export const UploadListItem: React.VFC<UploadListItemProps> = React.memo(
 					id: 'RetryUpload',
 					icon: 'PlayCircleOutline',
 					label: t('actions.retryUpload', 'Retry upload'),
-					click: (): void => {
+					onClick: (): void => {
 						retryById([id]);
 					}
 				},
@@ -108,7 +115,7 @@ export const UploadListItem: React.VFC<UploadListItemProps> = React.memo(
 					id: 'removeUpload',
 					icon: 'CloseCircleOutline',
 					label: t('actions.removeUpload', 'Remove upload'),
-					click: (): void => {
+					onClick: (): void => {
 						removeById([id]);
 					}
 				}

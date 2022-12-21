@@ -6,6 +6,7 @@
 
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
+import type { Action as DSAction } from '@zextras/carbonio-design-system';
 import filter from 'lodash/filter';
 import forEach from 'lodash/forEach';
 import includes from 'lodash/includes';
@@ -19,12 +20,7 @@ import { DeleteNodesType } from '../../hooks/graphql/mutations/useDeleteNodesMut
 import { Action, GetNodeParentType, NodeListItemType, PickIdNodeType } from '../../types/common';
 import { Node } from '../../types/graphql/types';
 import { DeepPick, OneOrMany } from '../../types/utils';
-import {
-	ActionItem,
-	ActionsFactoryCheckerMap,
-	getPermittedActions,
-	isFile
-} from '../../utils/ActionsFactory';
+import { ActionsFactoryCheckerMap, getPermittedActions, isFile } from '../../utils/ActionsFactory';
 import { Draggable } from './Draggable';
 import { NodeListItem } from './NodeListItem';
 import { NodeListItemWrapper } from './NodeListItemWrapper';
@@ -65,7 +61,7 @@ interface ListContentProps {
 	loadMore?: () => void;
 	draggable?: boolean;
 	customCheckers?: ActionsFactoryCheckerMap;
-	selectionContextualMenuActionsItems?: ActionItem[];
+	selectionContextualMenuActionsItems?: DSAction[];
 	fillerWithActions?: JSX.Element;
 }
 

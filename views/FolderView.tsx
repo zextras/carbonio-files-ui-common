@@ -11,7 +11,6 @@ import { Action } from '@zextras/carbonio-shell-ui';
 import filter from 'lodash/filter';
 import last from 'lodash/last';
 import map from 'lodash/map';
-import noop from 'lodash/noop';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
@@ -29,14 +28,9 @@ import useQueryParam from '../hooks/useQueryParam';
 import { useUpload } from '../hooks/useUpload';
 import { DocsType, NodeListItemType, URLParams } from '../types/common';
 import { NonNullableListItem, Unwrap } from '../types/utils';
-import {
-	ActionItem,
-	canCreateFile,
-	canCreateFolder,
-	canUploadFile,
-	isFolder
-} from '../utils/ActionsFactory';
+import { canCreateFile, canCreateFolder, canUploadFile, isFolder } from '../utils/ActionsFactory';
 import { getNewDocumentActionLabel, inputElement } from '../utils/utils';
+import { ContextualMenuProps } from './components/ContextualMenu';
 import { Displayer } from './components/Displayer';
 import { EmptySpaceFiller } from './components/EmptySpaceFiller';
 import { List } from './components/List';
@@ -177,13 +171,13 @@ const FolderView: React.VFC = () => {
 		[]
 	);
 
-	const actions = useMemo<ActionItem[]>(
+	const actions = useMemo<ContextualMenuProps['actions']>(
 		() => [
 			{
 				id: ACTION_IDS.CREATE_FOLDER,
 				label: t('create.options.new.folder', 'New Folder'),
 				icon: 'FolderOutline',
-				click: createFolderAction,
+				onClick: createFolderAction,
 				disabled: !isCanCreateFolder
 			},
 			{
@@ -195,13 +189,13 @@ const FolderView: React.VFC = () => {
 					{
 						id: `${ACTION_IDS.CREATE_DOCS_DOCUMENT}-libre`,
 						label: getNewDocumentActionLabel(t, DocsType.LIBRE_DOCUMENT),
-						click: createDocsAction(DocsType.LIBRE_DOCUMENT),
+						onClick: createDocsAction(DocsType.LIBRE_DOCUMENT),
 						disabled: !isCanCreateFile
 					},
 					{
 						id: `${ACTION_IDS.CREATE_DOCS_DOCUMENT}-ms`,
 						label: getNewDocumentActionLabel(t, DocsType.MS_DOCUMENT),
-						click: createDocsAction(DocsType.MS_DOCUMENT),
+						onClick: createDocsAction(DocsType.MS_DOCUMENT),
 						disabled: !isCanCreateFile
 					}
 				]
@@ -215,13 +209,13 @@ const FolderView: React.VFC = () => {
 					{
 						id: `${ACTION_IDS.CREATE_DOCS_SPREADSHEET}-libre`,
 						label: getNewDocumentActionLabel(t, DocsType.LIBRE_SPREADSHEET),
-						click: createDocsAction(DocsType.LIBRE_SPREADSHEET),
+						onClick: createDocsAction(DocsType.LIBRE_SPREADSHEET),
 						disabled: !isCanCreateFile
 					},
 					{
 						id: `${ACTION_IDS.CREATE_DOCS_SPREADSHEET}-ms`,
 						label: getNewDocumentActionLabel(t, DocsType.MS_SPREADSHEET),
-						click: createDocsAction(DocsType.MS_SPREADSHEET),
+						onClick: createDocsAction(DocsType.MS_SPREADSHEET),
 						disabled: !isCanCreateFile
 					}
 				]
@@ -235,13 +229,13 @@ const FolderView: React.VFC = () => {
 					{
 						id: `${ACTION_IDS.CREATE_DOCS_PRESENTATION}-libre`,
 						label: getNewDocumentActionLabel(t, DocsType.LIBRE_PRESENTATION),
-						click: createDocsAction(DocsType.LIBRE_PRESENTATION),
+						onClick: createDocsAction(DocsType.LIBRE_PRESENTATION),
 						disabled: !isCanCreateFile
 					},
 					{
 						id: `${ACTION_IDS.CREATE_DOCS_PRESENTATION}-ms`,
 						label: getNewDocumentActionLabel(t, DocsType.MS_PRESENTATION),
-						click: createDocsAction(DocsType.MS_PRESENTATION),
+						onClick: createDocsAction(DocsType.MS_PRESENTATION),
 						disabled: !isCanCreateFile
 					}
 				]
@@ -252,7 +246,7 @@ const FolderView: React.VFC = () => {
 
 	useEffect(() => {
 		const createActions = map<
-			ActionItem,
+			ContextualMenuProps['actions'][number],
 			NonNullable<CreateOptionsContent['createOptions']>[number]
 		>(actions, (action) => ({
 			type: ACTION_TYPES.NEW,
@@ -264,7 +258,6 @@ const FolderView: React.VFC = () => {
 					// @ts-ignore
 					type: ACTION_TYPES.NEW,
 					group: FILES_APP_ID,
-					click: noop,
 					...action
 				} as Action)
 		}));
@@ -283,7 +276,7 @@ const FolderView: React.VFC = () => {
 					group: FILES_APP_ID,
 					label: t('create.options.new.upload', 'Upload'),
 					icon: 'CloudUploadOutline',
-					click: (event): void => {
+					onClick: (event: React.SyntheticEvent | KeyboardEvent): void => {
 						event && event.stopPropagation();
 						inputElement.click();
 						inputElement.onchange = inputElementOnchange;

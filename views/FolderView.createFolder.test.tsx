@@ -8,6 +8,7 @@ import React from 'react';
 
 import { ApolloError } from '@apollo/client';
 import { act, screen, waitForElementToBeRemoved, within } from '@testing-library/react';
+import { DropdownItem } from '@zextras/carbonio-design-system';
 import find from 'lodash/find';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
@@ -55,7 +56,8 @@ jest.mock('./components/Displayer', () => ({
 						(element) => element.id === 'create-folder'
 					);
 					if (createFolder) {
-						createFolder.action('target').click(ev);
+						const clickFn = (createFolder.action('target') as DropdownItem).onClick;
+						clickFn && clickFn(ev);
 					}
 				}
 			}}
