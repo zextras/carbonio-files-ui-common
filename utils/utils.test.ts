@@ -4,9 +4,11 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
+import { faker } from '@faker-js/faker';
+
 import { populateFile, populateFolder, populateLocalRoot, populateNodes } from '../mocks/mockUtils';
 import { NodeSort } from '../types/graphql/types';
-import { addNodeInSortedList, buildCrumbs } from './utils';
+import { addNodeInSortedList, buildCrumbs, cssCalcBuilder } from './utils';
 
 describe('Crumbs builder', () => {
 	it('should return a flat array with 3 objects ordered from root to leaf', () => {
@@ -52,6 +54,7 @@ describe('Sort algorithm', () => {
 		position = addNodeInSortedList(files, folder, NodeSort.UpdatedAtDesc);
 		expect(position).toBe(0);
 	});
+
 	it('should put folder after files if sorting for size desc, before them if sorting for size asc', () => {
 		const files = populateNodes(3, 'File');
 		const folder = populateFolder(0, undefined, `${files[0].name}-last folder`);
@@ -73,6 +76,7 @@ describe('Sort algorithm', () => {
 		position = addNodeInSortedList(folders, file, NodeSort.UpdatedAtDesc);
 		expect(position).toBe(-1);
 	});
+
 	it('should put files before folders if sorting for size desc, after them if sorting for size asc', () => {
 		const folders = populateNodes(3, 'Folder');
 		const file = populateFile(undefined, `${folders[2].name}-last file`);
@@ -81,6 +85,7 @@ describe('Sort algorithm', () => {
 		position = addNodeInSortedList(folders, file, NodeSort.SizeAsc);
 		expect(position).toBe(-1);
 	});
+
 	it('should put node in its ordered position between same type of nodes (asc order)', () => {
 		const nodes = [
 			populateFolder(0, undefined, 'folder1'),
@@ -100,6 +105,7 @@ describe('Sort algorithm', () => {
 		const filePos = addNodeInSortedList(nodes, fileToAdd, NodeSort.NameAsc);
 		expect(filePos).toBe(6);
 	});
+
 	it('should put node in its ordered position between same type of nodes (desc order)', () => {
 		const nodes = [
 			populateFolder(0, undefined, 'folder5'),
@@ -119,6 +125,7 @@ describe('Sort algorithm', () => {
 		const filePos = addNodeInSortedList(nodes, fileToAdd, NodeSort.NameDesc);
 		expect(filePos).toBe(6);
 	});
+
 	it('should compare names with case insensitive', () => {
 		const nodes = [
 			populateFolder(0, undefined, 'folder5'),
@@ -137,5 +144,81 @@ describe('Sort algorithm', () => {
 		expect(folderPos).toBe(3);
 		const filePos = addNodeInSortedList(nodes, fileToAdd, NodeSort.NameDesc);
 		expect(filePos).toBe(6);
+	});
+});
+
+describe('CssCalc builder', () => {
+	type OperationTuple = Parameters<typeof cssCalcBuilder>[1];
+	type OperationOperator = OperationTuple[0];
+
+	it('should return the first value as string if only first value is provided', () => {
+		const args: Parameters<typeof cssCalcBuilder> = [10];
+		const expected = `${args[0]}`;
+		const result = cssCalcBuilder(...args);
+		expect(result).toBe(expected);
+	});
+
+	it('should return a calc with only the first value if operations are empty', () => {
+		const operation = [] as unknown as OperationTuple;
+		const args: Parameters<typeof cssCalcBuilder> = [10, operation, operation];
+		const expected = `calc(${args[0]})`;
+		const result = cssCalcBuilder(...args);
+		expect(result).toBe(expected);
+	});
+
+	it('should return a calc with only the first value if operations are incomplete', () => {
+		const operation1 = ['/', ''] as unknown as OperationTuple;
+		const operation2 = [undefined, '20px'] as unknown as OperationTuple;
+		const args: Parameters<typeof cssCalcBuilder> = [10, operation1, operation2];
+		const expected = `calc(${args[0]})`;
+		const result = cssCalcBuilder(...args);
+		expect(result).toBe(expected);
+	});
+
+	test('should return a calc between the first value and the value of the operation, with the given operator, if only one operation is provided', () => {
+		const operation: OperationTuple = ['+', 5];
+		const args: Parameters<typeof cssCalcBuilder> = [10, operation];
+		const expected = `calc(${args[0]} ${operation[0]} ${operation[1]})`;
+		const result = cssCalcBuilder(...args);
+		expect(result).toBe(expected);
+	});
+
+	test('should return a calc between the first value and the value of the operation, with the given operator, if the operation value is 0', () => {
+		const operation: OperationTuple = ['+', 0];
+		const args: Parameters<typeof cssCalcBuilder> = [-10, operation];
+		const expected = `calc(${args[0]} ${operation[0]} ${operation[1]})`;
+		const result = cssCalcBuilder(...args);
+		expect(result).toBe(expected);
+	});
+
+	test('should return a calc between the first value and the concatenation of the operations if two operations are provided', () => {
+		const operation1: OperationTuple = ['+', -5];
+		const operation2: OperationTuple = ['/', 20];
+		const args: Parameters<typeof cssCalcBuilder> = [10, operation1, operation2];
+		const expected = `calc(${args[0]} ${operation1[0]} ${operation1[1]} ${operation2[0]} ${operation2[1]})`;
+		const result = cssCalcBuilder(...args);
+		expect(result).toBe(expected);
+	});
+
+	test('should return a calc between the first value and the concatenation of the operations if more then two operations are provided', () => {
+		const operations: OperationTuple[] = [];
+		for (let i = 0; i < 10; i += 1) {
+			const operator = faker.helpers.arrayElement<OperationOperator>(['+', '-', '*', '/']);
+			operations.push([operator, i]);
+		}
+		const expectedOperations = operations.flat(2).join(' ');
+
+		const args: Parameters<typeof cssCalcBuilder> = [10, ...operations];
+		const expected = `calc(${args[0]} ${expectedOperations})`;
+		const result = cssCalcBuilder(...args);
+		expect(result).toBe(expected);
+	});
+
+	it('should handle well strings for values', () => {
+		const operation: OperationTuple = ['*', '5%'];
+		const args: Parameters<typeof cssCalcBuilder> = ['10rem', operation];
+		const expected = `calc(${args[0]} ${operation[0]} ${operation[1]})`;
+		const result = cssCalcBuilder(...args);
+		expect(result).toBe(expected);
 	});
 });

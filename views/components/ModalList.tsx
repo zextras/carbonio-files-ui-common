@@ -18,7 +18,7 @@ import { Crumb, NodeListItemType } from '../../types/common';
 import { GetPathQuery, GetPathQueryVariables, Node } from '../../types/graphql/types';
 import { OneOrMany } from '../../types/utils';
 import { canBeWriteNodeDestination } from '../../utils/ActionsFactory';
-import { buildCrumbs } from '../../utils/utils';
+import { buildCrumbs, cssCalcBuilder } from '../../utils/utils';
 import { InteractiveBreadcrumbs } from '../InteractiveBreadcrumbs';
 import { EmptyFolder } from './EmptyFolder';
 import { ListContent } from './ListContent';
@@ -127,7 +127,7 @@ export const ModalList: React.VFC<ModalListProps> = ({
 			crossAlignment="flex-start"
 			data-testid={`modal-list-${folderId}`}
 			maxHeight="100%"
-			minHeight={`calc(${BREADCRUMB_ROW_HEIGHT} + ${LIST_ITEM_HEIGHT_COMPACT})`}
+			minHeight={cssCalcBuilder(BREADCRUMB_ROW_HEIGHT, ['+', LIST_ITEM_HEIGHT_COMPACT])}
 		>
 			<OverFlowHiddenRow
 				width="fill"
