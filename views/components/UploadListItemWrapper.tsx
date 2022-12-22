@@ -42,7 +42,6 @@ export const UploadListItemWrapper = React.memo<UploadListItemWrapperProps>(
 				status={node.status}
 				progress={node.progress}
 				contentCount={isUploadFolderItem(node) ? node.contentCount : undefined}
-				failedCount={isUploadFolderItem(node) ? node.failedCount : undefined}
 				parent={parentData?.getNode}
 				isSelected={isSelected}
 				selectId={selectId}
