@@ -9,9 +9,9 @@ import { Button, useSnackbar } from '@zextras/carbonio-design-system';
 import { useTranslation } from 'react-i18next';
 
 import { useInternalLink } from '../../../hooks/useInternalLink';
-import { HoverSwitchComponent } from '../../HoverSwitchComponent';
 import { Node } from '../../types/common';
 import { copyToClipboard } from '../../utils/utils';
+import { HoverSwitchComponent } from './HoverSwitchComponent';
 
 interface InternalLinkShortcutProps {
 	id: Node['id'];
