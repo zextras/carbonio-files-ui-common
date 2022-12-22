@@ -503,12 +503,12 @@ export const AddSharing: React.VFC<AddSharingProps> = ({ node }) => {
 		[addShareContact]
 	);
 
-	const customMessageChangeHandler = useCallback(
-		(ev: React.ChangeEvent<HTMLInputElement>): void => {
-			setMailTextValue(ev.target.value);
-		},
-		[]
-	);
+	// const customMessageChangeHandler = useCallback(
+	// 	(ev: React.ChangeEvent<HTMLInputElement>): void => {
+	// 		setMailTextValue(ev.target.value);
+	// 	},
+	// 	[]
+	// );
 
 	return (
 		<Container padding={{ top: 'large' }}>

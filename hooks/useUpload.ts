@@ -427,7 +427,6 @@ export const useUpload: UseUploadHook = () => {
 	}, []);
 
 	const retryById = useCallback((ids: Array<string>) => {
-		const idsToRetry: string[] = [];
 		forEach(ids, (id) => {
 			const uploadItem = uploadVar()[id];
 			if (uploadItem.status === UploadStatus.FAILED) {

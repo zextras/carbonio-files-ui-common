@@ -116,7 +116,7 @@ describe('Filter View', () => {
 					)
 				];
 
-				const { user, getByRoleWithIcon } = setup(
+				const { user, queryByRoleWithIcon } = setup(
 					<Route path={`/:view/:filter?`} component={FilterView} />,
 					{
 						mocks,
@@ -129,8 +129,11 @@ describe('Filter View', () => {
 
 				// check that all wanted items are selected
 				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
-				await user.click(getByRoleWithIcon('button', { icon: ICON_REGEXP.moreVertical }));
-				await screen.findByTestId(SELECTORS.dropdownList);
+				const moreVertical = queryByRoleWithIcon('button', { icon: ICON_REGEXP.moreVertical });
+				if (moreVertical !== null) {
+					await user.click(moreVertical);
+					await screen.findByTestId(SELECTORS.dropdownList);
+				}
 				expect(screen.queryByText(ICON_REGEXP.move)).not.toBeInTheDocument();
 			});
 

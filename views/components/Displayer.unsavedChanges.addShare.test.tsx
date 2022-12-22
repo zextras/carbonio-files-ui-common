@@ -42,7 +42,7 @@ jest.mock('../../../network/network', () => ({
 		})
 }));
 
-describe.skip('Displayer', () => {
+describe('Displayer', () => {
 	describe('With unsaved changes', () => {
 		describe('On add share', () => {
 			test('on chip input field, click on other tab show dialog to warn user about unsaved changes', async () => {
@@ -92,7 +92,8 @@ describe.skip('Displayer', () => {
 				expect(screen.getByRole('button', { name: /save and leave/i })).toBeVisible();
 			});
 
-			test('on custom message field, click on other tab show dialog to warn user about unsaved changes not savable', async () => {
+			// TODO: re-enable when custom message field will be available again
+			test.skip('on custom message field, click on other tab show dialog to warn user about unsaved changes not savable', async () => {
 				const node = populateNode();
 				node.permissions.can_share = true;
 				node.permissions.can_write_folder = true;
@@ -128,7 +129,8 @@ describe.skip('Displayer', () => {
 				expect(screen.queryByRole('button', { name: /save and leave/i })).not.toBeInTheDocument();
 			});
 
-			test('with both fields valued, click on other tab show dialog to warn user about unsaved changes', async () => {
+			// TODO: re-enable when custom message field will be available again
+			test.skip('with both fields valued, click on other tab show dialog to warn user about unsaved changes', async () => {
 				const node = populateNode();
 				node.permissions.can_share = true;
 				node.permissions.can_write_folder = true;
@@ -180,7 +182,7 @@ describe.skip('Displayer', () => {
 				expect(screen.getByRole('button', { name: /save and leave/i })).toBeVisible();
 			});
 
-			test('cancel action leaves fields valued and navigation is kept on sharing tab', async () => {
+			test.skip('cancel action leaves fields valued and navigation is kept on sharing tab', async () => {
 				const node = populateNode();
 				node.permissions.can_share = true;
 				node.permissions.can_write_folder = true;
@@ -238,7 +240,7 @@ describe.skip('Displayer', () => {
 				expect(screen.getByRole('button', { name: /share/i })).not.toHaveAttribute('disabled', '');
 			});
 
-			test('leave anyway action reset fields and continue navigation', async () => {
+			test.skip('leave anyway action reset fields and continue navigation', async () => {
 				const node = populateNode();
 				node.permissions.can_share = true;
 				node.permissions.can_write_folder = true;
@@ -304,7 +306,7 @@ describe.skip('Displayer', () => {
 				expect(screen.getByRole('button', { name: /share/i })).toHaveAttribute('disabled', '');
 			});
 
-			test('save and leave action create shares and continue navigation', async () => {
+			test.skip('save and leave action create shares and continue navigation', async () => {
 				const node = populateNode();
 				node.permissions.can_share = true;
 				node.permissions.can_write_folder = true;
@@ -387,7 +389,7 @@ describe.skip('Displayer', () => {
 				expect(screen.getByRole('button', { name: /share/i })).toHaveAttribute('disabled', '');
 			});
 
-			test('save and leave action with errors leaves fields valued with only shares that went in error and navigation is kept on sharing tab', async () => {
+			test.skip('save and leave action with errors leaves fields valued with only shares that went in error and navigation is kept on sharing tab', async () => {
 				const node = populateNode();
 				node.permissions.can_share = true;
 				node.permissions.can_write_folder = true;
