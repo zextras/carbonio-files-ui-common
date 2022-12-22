@@ -16,7 +16,7 @@ import { graphql, ResponseResolver, rest, RestContext, RestRequest } from 'msw';
 import server from '../../../mocks/server';
 import { uploadVar } from '../../apollo/uploadVar';
 import { REST_ENDPOINT, ROOTS, UPLOAD_PATH } from '../../constants';
-import { ACTION_REGEXP, ICON_REGEXP } from '../../constants/test';
+import { ACTION_REGEXP, EMITTER_CODES, ICON_REGEXP } from '../../constants/test';
 import {
 	UploadRequestBody,
 	UploadRequestParams,
@@ -104,12 +104,6 @@ describe('Upload List', () => {
 				const dataTransferObj = createDataTransfer(filesToUpload);
 
 				const emitter = new EventEmitter();
-
-				const EMITTER_CODES = {
-					success: 'done-success',
-					fail: 'done-fail',
-					never: 'never'
-				};
 
 				const handleUploadFileRequest: ResponseResolver<
 					RestRequest<UploadRequestBody, UploadRequestParams>,
@@ -226,9 +220,6 @@ describe('Upload List', () => {
 					const mocks = [mockGetBaseNode({ node_id: localRoot.id }, localRoot)];
 
 					const emitter = new EventEmitter();
-					const EMITTER_CODES = {
-						never: 'never'
-					};
 
 					server.use(
 						rest.post<UploadRequestBody, UploadRequestParams, UploadResponse>(
@@ -292,9 +283,6 @@ describe('Upload List', () => {
 					const mocks = [mockGetBaseNode({ node_id: localRoot.id }, localRoot)];
 
 					const emitter = new EventEmitter();
-					const EMITTER_CODES = {
-						never: 'never'
-					};
 
 					const uploadHandlerResolve = jest.fn();
 

@@ -17,7 +17,7 @@ import { graphql, rest } from 'msw';
 import server from '../../../mocks/server';
 import { uploadVar } from '../../apollo/uploadVar';
 import { REST_ENDPOINT, ROOTS, UPLOAD_PATH } from '../../constants';
-import { ICON_REGEXP } from '../../constants/test';
+import { EMITTER_CODES, ICON_REGEXP } from '../../constants/test';
 import handleUploadFileRequest, {
 	UploadRequestBody,
 	UploadRequestParams,
@@ -116,10 +116,6 @@ describe('Upload List', () => {
 				const uploadFailedHandler = jest.fn();
 				const uploadSuccessHandler = jest.fn();
 				const emitter = new EventEmitter();
-				const EMITTER_CODES = {
-					fail: 'done-fail',
-					success: 'done-success'
-				};
 
 				let reqIndex = 0;
 

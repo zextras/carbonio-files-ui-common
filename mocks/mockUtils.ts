@@ -462,7 +462,7 @@ export function populateConfigs(configMap?: Record<string, string>): Config[] {
 }
 
 export function populateUploadItem(item?: Partial<UploadItem>): UploadItem {
-	const name = faker.system.fileName();
+	const name = item?.name || faker.system.fileName();
 	const mimeType = faker.system.mimeType();
 	const file = new File(['(⌐□_□)'], name, { type: mimeType });
 	return {
@@ -473,17 +473,19 @@ export function populateUploadItem(item?: Partial<UploadItem>): UploadItem {
 		nodeId: null,
 		status: UploadStatus.QUEUED,
 		progress: 0,
-		fullPath: file.webkitRelativePath,
+		fullPath: file.webkitRelativePath || `/${name}`,
 		parentId: null,
 		...item
 	};
 }
 
 export function populateUploadFolderItem(item?: Partial<UploadFolderItem>): UploadFolderItem {
+	const uploadItem = populateUploadItem({ name: faker.system.fileName({ extensionCount: 0 }) });
 	return {
-		...populateUploadItem(),
-		contentCount: 1,
-		children: [],
+		...uploadItem,
+		file: new File(['(⌐□_□)'], uploadItem.name, { type: undefined }),
+		contentCount: 1 + (item?.children?.length || 0),
+		children: item?.children || [],
 		failedCount: 0,
 		...item
 	};
@@ -492,7 +494,8 @@ export function populateUploadFolderItem(item?: Partial<UploadFolderItem>): Uplo
 export function populateUploadItems(limit?: number, type?: NodeTypename): UploadItem[] {
 	const items: UploadItem[] = [];
 	for (let i = 0; i < (limit || 10); i += 1) {
-		const item = type === 'Folder' ? populateUploadFolderItem() : populateUploadItem();
+		const itemType = type || faker.helpers.arrayElement<NodeTypename>(['Folder', 'File']);
+		const item = itemType === 'Folder' ? populateUploadFolderItem() : populateUploadItem();
 		items.push(item);
 	}
 	return items;

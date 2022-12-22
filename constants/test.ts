@@ -45,3 +45,9 @@ export const ICON_REGEXP = {
 export const SELECTORS = {
 	dropdownList: 'dropdown-popper-list'
 };
+
+export const EMITTER_CODES = {
+	success: 'done-success',
+	fail: 'done-fail',
+	never: 'never'
+};

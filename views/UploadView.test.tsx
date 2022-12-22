@@ -81,7 +81,7 @@ describe('Upload view', () => {
 
 			const { queryByRoleWithIcon } = setup(<UploadView />, { mocks });
 
-			const dropzone = await screen.findByText(uploadItemsInList[0].name);
+			const dropzone = await screen.findByText(uploadItemsInList[1].name);
 			await uploadWithDnD(dropzone, dataTransferObj);
 			await screen.findByText(otherUploads[0].name);
 			// wait for every upload to complete
