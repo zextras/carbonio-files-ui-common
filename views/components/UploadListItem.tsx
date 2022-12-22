@@ -6,7 +6,8 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Action as DSAction, Container, Row, Text } from '@zextras/carbonio-design-system';
+import {
+	Action as DSAction, Container, Row, Text } from '@zextras/carbonio-design-system';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 
@@ -32,8 +33,6 @@ interface UploadListItemProps {
 	status: UploadStatus;
 	progress: number;
 	contentCount?: number;
-	// TODO remove
-	failedCount?: number;
 	permittedContextualMenuActionItems: DSAction[];
 	permittedHoverBarActionItems: DSAction[];
 	isSelected: boolean;
@@ -68,8 +67,7 @@ export const UploadListItem = React.memo<UploadListItemProps>(
 		permittedContextualMenuActionItems,
 		isActive,
 		setActive,
-		contentCount,
-		failedCount
+		contentCount
 	}) => {
 		const [t] = useTranslation();
 		const [isContextualMenuActive, setIsContextualMenuActive] = useState(false);

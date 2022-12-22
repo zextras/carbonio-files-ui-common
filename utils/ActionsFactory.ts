@@ -20,7 +20,6 @@ import { Action, GetNodeParentType, Node, UploadStatus, UploadItem } from '../ty
 import { File as FilesFile, Folder, MakeOptional, Root } from '../types/graphql/types';
 import { OneOrMany } from '../types/utils';
 import { docsHandledMimeTypes, isFile, isFolder, isSupportedByPreview } from './utils';
-
 export type ActionsFactoryNodeType = Pick<
 	Node,
 	'permissions' | 'flagged' | 'type' | 'owner' | 'id' | 'rootId'
