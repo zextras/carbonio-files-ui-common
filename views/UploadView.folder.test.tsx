@@ -52,6 +52,56 @@ jest.mock('../../hooks/useCreateOptions', () => ({
 
 describe('Upload View', () => {
 	describe('Folder', () => {
+		test('Progress for folders is shown as the number of completed items on the total number of items contained in the folder plus 1 (the folder itself)', async () => {
+			const localRoot = populateLocalRoot();
+			const folder = populateFolder();
+			folder.parent = localRoot;
+			const subFolder = populateFolder();
+			const children = [subFolder, populateFile()];
+			children.forEach((child) => {
+				child.parent = folder;
+			});
+			folder.children = populateNodePage(children);
+
+			const dataTransferObj = createDataTransfer([folder]);
+
+			const emitter = new EventEmitter();
+
+			server.use(
+				rest.post<UploadRequestBody, UploadRequestParams, UploadResponse>(
+					`${REST_ENDPOINT}${UPLOAD_PATH}`,
+					async (req, res, ctx) => {
+						await delayUntil(emitter, EMITTER_CODES.never);
+						return res(ctx.json({ nodeId: faker.datatype.uuid() }));
+					}
+				)
+			);
+
+			const mocks = [mockGetBaseNode({ node_id: localRoot.id }, localRoot)];
+
+			setup(<UploadView />, { mocks });
+
+			const dropzone = await screen.findByText(/nothing here/i);
+
+			await uploadWithDnD(dropzone, dataTransferObj);
+			await screen.findByText(subFolder.name);
+			await screen.findByTestId(ICON_REGEXP.uploadCompleted);
+			const mainFolderItem = screen
+				.getAllByTestId('node-item', { exact: false })
+				.find((item) => within(item).queryByText(folder.name) !== null) as HTMLElement;
+			const subFolderItem = screen
+				.getAllByTestId('node-item', { exact: false })
+				.find((item) => within(item).queryByText(subFolder.name) !== null) as HTMLElement;
+			expect(mainFolderItem).toBeDefined();
+			expect(subFolderItem).toBeDefined();
+			expect(within(mainFolderItem).getByText('2/3')).toBeVisible();
+			expect(within(subFolderItem).getByText('1/1')).toBeVisible();
+
+			act(() => {
+				emitter.emit(EMITTER_CODES.never);
+			});
+		});
+
 		test('A folder has status loading if at least one of the item of the content is loading', async () => {
 			const localRoot = populateLocalRoot();
 			const folder = populateFolder();
@@ -180,7 +230,7 @@ describe('Upload View', () => {
 			});
 		});
 
-		test('When an item of a folder completes, the counter of the completed items is incremented by 1 in all the ancestors, independently from its depth inside the tree of content', async () => {
+		test('When a sub-item or the folder itself completes, the counter of the completed items is incremented by 1 in all the ancestors, independently from its depth inside the tree of content', async () => {
 			const localRoot = populateLocalRoot();
 			const folder = populateFolder();
 			folder.parent = localRoot;
