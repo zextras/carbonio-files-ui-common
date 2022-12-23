@@ -39,6 +39,7 @@ import { MemoryRouter } from 'react-router-dom';
 
 import I18nFactory from '../../i18n/i18n-test-factory';
 import StyledWrapper from '../../StyledWrapper';
+import { SELECTORS } from '../constants/test';
 import { AdvancedFilters, Node } from '../types/common';
 import { File as FilesFile, Folder } from '../types/graphql/types';
 import { Mock } from './mockUtils';
@@ -291,10 +292,10 @@ export async function selectNodes(nodesToSelect: string[], user: UserEvent): Pro
 		const node = within(screen.getByTestId(`node-item-${id}`));
 		let clickableItem = node.queryByTestId('file-icon-preview');
 		if (clickableItem == null) {
-			clickableItem = node.queryByTestId('unCheckedAvatar');
+			clickableItem = node.queryByTestId(SELECTORS.uncheckedAvatar);
 		}
 		if (clickableItem == null) {
-			clickableItem = node.queryByTestId('checkedAvatar');
+			clickableItem = node.queryByTestId(SELECTORS.checkedAvatar);
 		}
 		if (clickableItem) {
 			// eslint-disable-next-line no-await-in-loop

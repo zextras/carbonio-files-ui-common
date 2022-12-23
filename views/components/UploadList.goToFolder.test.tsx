@@ -7,9 +7,10 @@ import React from 'react';
 
 import { screen } from '@testing-library/react';
 import keyBy from 'lodash/keyBy';
+import { useLocation } from 'react-router-dom';
 
 import { uploadVar } from '../../apollo/uploadVar';
-import { ICON_REGEXP } from '../../constants/test';
+import { ICON_REGEXP, SELECTORS } from '../../constants/test';
 import { populateFolder, populateLocalRoot, populateUploadItems } from '../../mocks/mockUtils';
 import { UploadStatus } from '../../types/graphql/client-types';
 import { mockGetBaseNode } from '../../utils/mockUtils';
@@ -75,6 +76,53 @@ describe('Upload List', () => {
 				expect(
 					queryByRoleWithIcon('button', { icon: ICON_REGEXP.goToFolder })
 				).not.toBeInTheDocument();
+			});
+
+			test('Action call navigation and exit from selection mode', async () => {
+				const localRoot = populateLocalRoot();
+				const uploadItems = populateUploadItems(2);
+				uploadItems.forEach((item) => {
+					item.parentNodeId = localRoot.id;
+				});
+
+				const uploadMap = keyBy(uploadItems, (item) => item.id);
+
+				uploadVar(uploadMap);
+
+				const mocks = [mockGetBaseNode({ node_id: localRoot.id }, localRoot)];
+
+				const TestComponent = (): JSX.Element => {
+					const location = useLocation();
+					return (
+						<>
+							<div>
+								Current location: {location.pathname}
+								{location.search}
+							</div>
+							<UploadList />
+						</>
+					);
+				};
+				const { user, getByRoleWithIcon, queryByRoleWithIcon } = setup(<TestComponent />, {
+					mocks
+				});
+
+				await screen.findByText(uploadItems[0].name);
+				expect(
+					screen.queryByText(`current location: /?folder=${localRoot.id}`, { exact: false })
+				).not.toBeInTheDocument();
+
+				await selectNodes(Object.keys(uploadMap), user);
+
+				await screen.findByText(/deselect all/i);
+				await user.click(getByRoleWithIcon('button', { icon: ICON_REGEXP.goToFolder }));
+				await screen.findByText(`current location: /?folder=${localRoot.id}`, { exact: false });
+				expect(screen.queryByText(/select all/i)).not.toBeInTheDocument();
+				expect(
+					queryByRoleWithIcon('button', { icon: ICON_REGEXP.goToFolder })
+				).not.toBeInTheDocument();
+				expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
+				expect(screen.queryByTestId(SELECTORS.uncheckedAvatar)).not.toBeInTheDocument();
 			});
 		});
 	});

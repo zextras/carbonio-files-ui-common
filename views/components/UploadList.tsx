@@ -7,12 +7,7 @@
 import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 
 import { useQuery } from '@apollo/client';
-import {
-	Action as DSAction,
-	Button,
-	Container,
-	useSnackbar
-} from '@zextras/carbonio-design-system';
+import { Button, Container, useSnackbar } from '@zextras/carbonio-design-system';
 import filter from 'lodash/filter';
 import includes from 'lodash/includes';
 import map from 'lodash/map';
@@ -27,10 +22,10 @@ import { ListContext, ListHeaderActionContext } from '../../contexts';
 import { usePrevious } from '../../hooks/usePrevious';
 import useSelection from '../../hooks/useSelection';
 import { useUpload } from '../../hooks/useUpload';
+import { useUploadActions } from '../../hooks/useUploadActions';
 import { Action } from '../../types/common';
 import { UploadItem } from '../../types/graphql/client-types';
 import { GetUploadItemsDocument } from '../../types/graphql/types';
-import { buildActionItems, getPermittedUploadActions } from '../../utils/ActionsFactory';
 import { getUploadAddType, isUploadFolderItem } from '../../utils/uploadUtils';
 import { Dropzone } from './Dropzone';
 import { EmptyFolder } from './EmptyFolder';
@@ -40,7 +35,7 @@ import { UploadListItemWrapper } from './UploadListItemWrapper';
 export const UploadList: React.VFC = () => {
 	const [t] = useTranslation();
 
-	const { add, removeById, removeAllCompleted, retryById } = useUpload();
+	const { add, removeAllCompleted } = useUpload();
 	const { data } = useQuery(GetUploadItemsDocument, {
 		variables: { parentId: null }
 	});
@@ -94,11 +89,6 @@ export const UploadList: React.VFC = () => {
 		[uploadItems, selectedIDs]
 	);
 
-	const permittedUploadActions = useMemo(
-		() => getPermittedUploadActions(selectedItems),
-		[selectedItems]
-	);
-
 	const items = useMemo(
 		() =>
 			map(uploadItems, (item) => (
@@ -113,53 +103,18 @@ export const UploadList: React.VFC = () => {
 		[isSelectionModeActive, uploadItems, selectId, selectedMap]
 	);
 
-	const removeUploadSelection = useCallback(() => {
-		removeById(selectedIDs);
-		unSelectAll();
-	}, [removeById, selectedIDs, unSelectAll]);
-
-	const retryUploadSelection = useCallback(() => {
-		retryById(selectedIDs);
-		unSelectAll();
-	}, [retryById, selectedIDs, unSelectAll]);
-
 	const { navigateToFolder } = useNavigation();
 
-	const goToFolderSelection = useCallback(() => {
-		unSelectAll();
-		if (selectedItems[0].parentNodeId) {
-			navigateToFolder(selectedItems[0].parentNodeId);
-		}
-	}, [navigateToFolder, selectedItems, unSelectAll]);
-
-	const itemsMap = useMemo<Partial<Record<Action, DSAction>>>(
+	const actionCallbacks = useMemo<Parameters<typeof useUploadActions>[2]>(
 		() => ({
-			[Action.removeUpload]: {
-				id: 'removeUpload',
-				icon: 'CloseCircleOutline',
-				label: t('actions.removeUpload', 'Remove upload'),
-				onClick: removeUploadSelection
-			},
-			[Action.RetryUpload]: {
-				id: 'RetryUpload',
-				icon: 'PlayCircleOutline',
-				label: t('actions.retryUpload', 'Retry upload'),
-				onClick: retryUploadSelection
-			},
-			[Action.GoToFolder]: {
-				id: 'GoToFolder ',
-				icon: 'FolderOutline',
-				label: t('actions.goToFolder', 'Go to destination folder'),
-				onClick: goToFolderSelection
-			}
+			[Action.RemoveUpload]: exitSelectionMode,
+			[Action.RetryUpload]: exitSelectionMode,
+			[Action.GoToFolder]: exitSelectionMode
 		}),
-		[removeUploadSelection, goToFolderSelection, retryUploadSelection, t]
+		[exitSelectionMode]
 	);
 
-	const permittedSelectionModePrimaryActionsItems = useMemo(
-		() => buildActionItems(itemsMap, permittedUploadActions),
-		[itemsMap, permittedUploadActions]
-	);
+	const uploadActions = useUploadActions(selectedItems, undefined, actionCallbacks);
 
 	const createSnackbar = useSnackbar();
 
@@ -221,7 +176,7 @@ export const UploadList: React.VFC = () => {
 					isSelectionModeActive={isSelectionModeActive}
 					unSelectAll={unSelectAll}
 					selectAll={selectAll}
-					permittedSelectionModeActionsItems={permittedSelectionModePrimaryActionsItems}
+					permittedSelectionModeActionsItems={uploadActions}
 					exitSelectionMode={exitSelectionMode}
 					isAllSelected={size(selectedIDs) === size(items)}
 				/>

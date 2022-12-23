@@ -106,7 +106,7 @@ describe('Upload List', () => {
 				).not.toBeInTheDocument();
 			});
 
-			test('Action on multiple selection reset all selected item status from failed to loading and restart upload', async () => {
+			test('Action on multiple selection reset all selected item status from failed to loading, restart upload and exit selection mode', async () => {
 				const uploadedFiles = populateNodes(3, 'File');
 				const localRoot = populateLocalRoot();
 				forEach(uploadedFiles, (item) => {
@@ -131,8 +131,8 @@ describe('Upload List', () => {
 					}),
 					rest.post<UploadRequestBody, UploadRequestParams, UploadResponse>(
 						`${REST_ENDPOINT}${UPLOAD_PATH}`,
-						async (req, res, ctx) => {
-							const response = await Promise.any([
+						(req, res, ctx) =>
+							Promise.any([
 								delayUntil(emitter, EMITTER_CODES.fail).then(() => {
 									uploadFailedHandler();
 									return res(ctx.status(500));
@@ -145,9 +145,7 @@ describe('Upload List', () => {
 										})
 									);
 								})
-							]);
-							return response;
-						}
+							])
 					)
 				);
 
@@ -155,7 +153,7 @@ describe('Upload List', () => {
 
 				const dataTransferObj = createDataTransfer(uploadedFiles);
 
-				const { user, getByRoleWithIcon } = setup(<UploadList />, {
+				const { user, getByRoleWithIcon, queryByRoleWithIcon } = setup(<UploadList />, {
 					mocks
 				});
 
@@ -179,6 +177,10 @@ describe('Upload List', () => {
 				await user.click(retryAllAction);
 				await screen.findAllByTestId(ICON_REGEXP.uploadLoading);
 				expect(screen.getAllByTestId(ICON_REGEXP.uploadLoading)).toHaveLength(uploadedFiles.length);
+				expect(screen.queryByText(/select all/i)).not.toBeInTheDocument();
+				expect(
+					queryByRoleWithIcon('button', { icon: ICON_REGEXP.retryUpload })
+				).not.toBeInTheDocument();
 				emitter.emit(EMITTER_CODES.success);
 				await waitFor(() =>
 					expect(screen.getAllByTestId(ICON_REGEXP.uploadCompleted)).toHaveLength(

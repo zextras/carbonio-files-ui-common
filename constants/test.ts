@@ -44,7 +44,9 @@ export const ICON_REGEXP = {
 } as const;
 
 export const SELECTORS = {
-	dropdownList: 'dropdown-popper-list'
+	dropdownList: 'dropdown-popper-list',
+	checkedAvatar: 'checkedAvatar',
+	uncheckedAvatar: 'unCheckedAvatar'
 };
 
 export const EMITTER_CODES = {

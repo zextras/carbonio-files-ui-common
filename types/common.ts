@@ -265,7 +265,7 @@ export enum Action {
 	Restore = 'RESTORE',
 	DeletePermanently = 'DELETE_PERMANENTLY',
 	UpsertDescription = 'UPSERT_DESCRIPTION',
-	removeUpload = 'REMOVE_UPLOAD',
+	RemoveUpload = 'REMOVE_UPLOAD',
 	RetryUpload = 'RETRY_UPLOAD',
 	GoToFolder = 'GO_TO_FOLDER'
 	// CreateFolder = 'CREATE_FOLDER',

@@ -80,7 +80,7 @@ describe('Upload List', () => {
 				expect(getByRoleWithIcon('button', { icon: ICON_REGEXP.removeUpload })).toBeVisible();
 			});
 
-			test('Action remove all items from the list and stop the upload of the items which are not completed', async () => {
+			test('Action remove all items from the list, stop the upload of the items which are not completed and exit from selection mode', async () => {
 				const localRoot = populateFolder(0, ROOTS.LOCAL_ROOT);
 
 				// write local root data in cache as if it was already loaded
@@ -133,7 +133,7 @@ describe('Upload List', () => {
 				);
 				const mocks = [mockGetBaseNode({ node_id: localRoot.id }, localRoot)];
 
-				const { user, getByRoleWithIcon } = setup(<UploadList />, { mocks });
+				const { user, getByRoleWithIcon, queryByRoleWithIcon } = setup(<UploadList />, { mocks });
 
 				const dropzone = await screen.findByText(/nothing here/i);
 
@@ -157,7 +157,7 @@ describe('Upload List', () => {
 
 				expect(screen.getAllByTestId(ICON_REGEXP.uploadLoading)).toHaveLength(4);
 				expect(screen.getByTestId(ICON_REGEXP.uploadFailed)).toBeInTheDocument();
-				expect(screen.getByTestId('icon: CheckmarkCircle2')).toBeInTheDocument();
+				expect(screen.getByTestId(ICON_REGEXP.uploadCompleted)).toBeInTheDocument();
 
 				await selectNodes(Object.keys(uploadVar()), user);
 				expect(screen.getByText(/deselect all/i)).toBeVisible();
@@ -173,6 +173,10 @@ describe('Upload List', () => {
 				expect(screen.queryByText(filesToUpload[5].name)).not.toBeInTheDocument();
 
 				expect(screen.getByText(/nothing here/i)).toBeVisible();
+				expect(screen.queryByText(/select all/i)).not.toBeInTheDocument();
+				expect(
+					queryByRoleWithIcon('button', { icon: ICON_REGEXP.removeUpload })
+				).not.toBeInTheDocument();
 
 				const localRootCachedData = global.apolloClient.readQuery<
 					GetChildrenQuery,

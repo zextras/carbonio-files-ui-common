@@ -68,7 +68,7 @@ const completeListActions: Action[] = [
 	Action.DeletePermanently
 ];
 
-const uploadActions: Action[] = [Action.removeUpload, Action.RetryUpload, Action.GoToFolder];
+const uploadActions: Action[] = [Action.RemoveUpload, Action.RetryUpload, Action.GoToFolder];
 
 export function isRoot(node: { __typename?: string }): node is Root {
 	return node.__typename === 'Root';
@@ -525,7 +525,7 @@ const actionsCheckMap: {
 	[Action.UpsertDescription]: canUpsertDescription,
 	[Action.GoToFolder]: canGoToFolder,
 	[Action.RetryUpload]: canRetryUpload,
-	[Action.removeUpload]: canRemoveUpload
+	[Action.RemoveUpload]: canRemoveUpload
 	// [Actions.CreateFolder]: canCreateFolder,
 };
 

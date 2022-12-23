@@ -11,20 +11,22 @@ import { useTranslation } from 'react-i18next';
 
 import { useNavigation } from '../../hooks/useNavigation';
 import { Action } from '../types/common';
-import { UploadItem, UploadStatus } from '../types/graphql/client-types';
+import { UploadItem } from '../types/graphql/client-types';
 import { MakeRequired } from '../types/utils';
 import {
 	ActionsFactoryCheckerMap,
-	ActionsFactoryUploadItem,
 	buildActionItems,
 	getPermittedUploadActions
 } from '../utils/ActionsFactory';
 import { scrollToNodeItem } from '../utils/utils';
 import { useUpload } from './useUpload';
 
+type ActionNodes = MakeRequired<Partial<UploadItem>, 'id'>[];
+
 export function useUploadActions(
-	nodes: MakeRequired<Partial<UploadItem>, 'id'>[],
-	isDetailsListItem = false
+	nodes: ActionNodes,
+	actionCheckers: ActionsFactoryCheckerMap | undefined = {},
+	actionCallbacks: Partial<Record<Action, (nodesInvolved: ActionNodes) => void>> | undefined = {}
 ): DSAction[] {
 	const [t] = useTranslation();
 	const { removeById, retryById } = useUpload();
@@ -32,13 +34,25 @@ export function useUploadActions(
 
 	const nodeIds = useMemo(() => map(nodes, (item) => item.id), [nodes]);
 
+	const callActionCallback = useCallback(
+		(action: Action, nodesInvolved: ActionNodes) => {
+			const actionCallback = actionCallbacks[action];
+			if (actionCallback) {
+				actionCallback(nodesInvolved);
+			}
+		},
+		[actionCallbacks]
+	);
+
 	const removeUpload = useCallback(() => {
 		removeById(nodeIds);
-	}, [removeById, nodeIds]);
+		callActionCallback(Action.RemoveUpload, nodes);
+	}, [removeById, nodeIds, callActionCallback, nodes]);
 
 	const retryUpload = useCallback(() => {
 		retryById(nodeIds);
-	}, [nodeIds, retryById]);
+		callActionCallback(Action.RetryUpload, nodes);
+	}, [callActionCallback, nodeIds, nodes, retryById]);
 
 	const { navigateToFolder, navigateTo } = useNavigation();
 
@@ -49,34 +63,15 @@ export function useUploadActions(
 					const destination = `/?folder=${node.parentNodeId}&node=${node.nodeId}`;
 					navigateTo(destination);
 					scrollToNodeItem(node.nodeId);
+				} else {
+					navigateToFolder(node.parentNodeId);
 				}
-				navigateToFolder(node.parentNodeId);
 			} else {
 				navigateToFolder(node.parentNodeId);
 			}
+			callActionCallback(Action.GoToFolder, [node]);
 		}
-	}, [navigateTo, navigateToFolder, node, nodes.length]);
-
-	const actionCheckers = useMemo<ActionsFactoryCheckerMap>(
-		() => ({
-			[Action.GoToFolder]: (actionsFactoryUploadItem): boolean => {
-				if (isDetailsListItem) {
-					return (actionsFactoryUploadItem[0] as ActionsFactoryUploadItem).nodeId !== null;
-				}
-				return true;
-			},
-			[Action.removeUpload]: (actionsFactoryUploadItem): boolean => {
-				if (isDetailsListItem) {
-					return (
-						(actionsFactoryUploadItem[0] as ActionsFactoryUploadItem).status !==
-						UploadStatus.COMPLETED
-					);
-				}
-				return true;
-			}
-		}),
-		[isDetailsListItem]
-	);
+	}, [callActionCallback, navigateTo, navigateToFolder, node, nodes.length]);
 
 	const permittedUploadActions = useMemo(
 		() => getPermittedUploadActions(nodes, actionCheckers),
@@ -85,7 +80,7 @@ export function useUploadActions(
 
 	const items = useMemo<Partial<Record<Action, DSAction>>>(
 		() => ({
-			[Action.removeUpload]: {
+			[Action.RemoveUpload]: {
 				id: 'removeUpload',
 				icon: 'CloseCircleOutline',
 				label: t('actions.removeUpload', 'Remove upload'),
