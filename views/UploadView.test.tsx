@@ -70,7 +70,7 @@ describe('Upload view', () => {
 				node.parent = localRoot;
 			});
 
-			const uploadItemsInList = populateUploadItems(2);
+			const uploadItemsInList = populateUploadItems(2, 'File');
 			uploadItemsInList.forEach((item) => {
 				item.status = UploadStatus.COMPLETED;
 			});
