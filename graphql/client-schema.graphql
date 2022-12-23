@@ -1,32 +1,8 @@
-enum UploadStatus {
-    LOADING
-    COMPLETED
-    FAILED
-    QUEUED
-}
+# SPDX-FileCopyrightText: 2022 Zextras <https://www.zextras.com>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
 
-interface UploadItem {
-    id: ID!
-    name: String!
-    fullPath: String
-    progress: Int!
-    nodeId: String
-    parentId: String
-    parentNodeId: String
-    status: UploadStatus
-}
-
-type UploadFolderItem implements UploadItem {
-    id: ID!
-    name: String!
-    fullPath: String
-    progress: Int!
-    nodeId: String
-    parentId: String
-    parentNodeId: String
-    status: UploadStatus
-    children: [ID!]
-}
+scalar UploadItem
 
 extend type Query {
     getUploadItems(parentId: ID): [UploadItem!]!

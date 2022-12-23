@@ -10,7 +10,8 @@ import map from 'lodash/map';
 import { useTranslation } from 'react-i18next';
 
 import { useNavigation } from '../../hooks/useNavigation';
-import { Action, UploadItem, UploadStatus } from '../types/common';
+import { Action } from '../types/common';
+import { UploadItem, UploadStatus } from '../types/graphql/client-types';
 import { MakeRequired } from '../types/utils';
 import {
 	ActionsFactoryCheckerMap,

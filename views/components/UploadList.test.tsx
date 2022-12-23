@@ -36,7 +36,8 @@ import {
 	populateLocalRoot,
 	populateNodes
 } from '../../mocks/mockUtils';
-import { Node, UploadItem, UploadStatus } from '../../types/common';
+import { Node } from '../../types/common';
+import { UploadItem, UploadStatus } from '../../types/graphql/client-types';
 import {
 	File as FilesFile,
 	Folder,

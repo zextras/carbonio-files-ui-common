@@ -10,7 +10,7 @@ import { useQuery } from '@apollo/client';
 import { Container } from '@zextras/carbonio-design-system';
 
 import { useActiveNode } from '../../../hooks/useActiveNode';
-import GET_UPLOAD_ITEM from '../../graphql/queries/getUploadItem.graphql';
+import { GetUploadItemDocument } from '../../types/graphql/types';
 import { EmptyDisplayer } from './EmptyDisplayer';
 import { UploadDisplayerNode } from './UploadDisplayerNode';
 
@@ -21,8 +21,8 @@ export interface DisplayerProps {
 
 export const UploadDisplayer: React.VFC<DisplayerProps> = ({ translationKey, icons = [] }) => {
 	const { activeNodeId } = useActiveNode();
-	const { data } = useQuery(GET_UPLOAD_ITEM, {
-		variables: { id: activeNodeId },
+	const { data } = useQuery(GetUploadItemDocument, {
+		variables: { id: activeNodeId || '' },
 		skip: !activeNodeId
 	});
 	const node = useMemo(() => data?.getUploadItem, [data]);

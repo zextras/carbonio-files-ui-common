@@ -498,8 +498,12 @@ export async function uploadWithDnD(
 
 	if (dataTransferObj.files.length > 0) {
 		// use find all to make this work also when there is the displayer open
-		await screen.findAllByText(dataTransferObj.files[0].name);
+		await screen.findAllByText(dataTransferObj.files[0].name, undefined, {
+			onTimeout: (err) => {
+				screen.logTestingPlaygroundURL();
+				return err;
+			}
+		});
 	}
-	expect(screen.queryByText(/some items have not been uploaded/i)).not.toBeInTheDocument();
 	expect(screen.queryByText(/Drop here your attachments/m)).not.toBeInTheDocument();
 }

@@ -22,7 +22,8 @@ import GET_CHILD from '../graphql/queries/getChild.graphql';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import GET_VERSIONS from '../graphql/queries/getVersions.graphql';
 import { UpdateFolderContentType } from '../hooks/graphql/useUpdateFolderContent';
-import { UploadFolderItem, UploadItem, UploadStatus } from '../types/common';
+import { UploadFolderItem } from '../types/common';
+import { UploadItem, UploadStatus } from '../types/graphql/client-types';
 import {
 	GetChildQuery,
 	GetChildQueryVariables,

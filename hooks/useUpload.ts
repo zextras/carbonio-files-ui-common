@@ -18,7 +18,8 @@ import { v4 as uuidv4 } from 'uuid';
 import buildClient from '../apollo';
 import { nodeSortVar } from '../apollo/nodeSortVar';
 import { UploadFunctions, uploadFunctionsVar, uploadVar } from '../apollo/uploadVar';
-import { UploadFolderItem, UploadItem, UploadStatus } from '../types/common';
+import { UploadFolderItem } from '../types/common';
+import { UploadItem, UploadStatus } from '../types/graphql/client-types';
 import { File as FilesFile } from '../types/graphql/types';
 import { DeepPick } from '../types/utils';
 import {

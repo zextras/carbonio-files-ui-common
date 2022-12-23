@@ -11,7 +11,7 @@ import keyBy from 'lodash/keyBy';
 import { uploadVar } from '../../apollo/uploadVar';
 import { ICON_REGEXP } from '../../constants/test';
 import { populateFolder, populateLocalRoot, populateUploadItems } from '../../mocks/mockUtils';
-import { UploadStatus } from '../../types/common';
+import { UploadStatus } from '../../types/graphql/client-types';
 import { mockGetBaseNode } from '../../utils/mockUtils';
 import { selectNodes, setup } from '../../utils/testUtils';
 import { UploadList } from './UploadList';

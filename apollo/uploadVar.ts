@@ -6,7 +6,7 @@
 
 import { makeVar } from '@apollo/client';
 
-import { UploadItem } from '../types/common';
+import { UploadItem } from '../types/graphql/client-types';
 
 export type UploadRecord = { [id: string]: UploadItem };
 

@@ -11,7 +11,7 @@ import { screen } from '@testing-library/react';
 import { uploadVar } from '../../apollo/uploadVar';
 import { ICON_REGEXP } from '../../constants/test';
 import { populateUploadFolderItem, populateUploadItem } from '../../mocks/mockUtils';
-import { UploadStatus } from '../../types/common';
+import { UploadStatus } from '../../types/graphql/client-types';
 import { buildBreadCrumbRegExp, setup } from '../../utils/testUtils';
 import { UploadNodeDetailsListItem } from './UploadNodeDetailsListItem';
 

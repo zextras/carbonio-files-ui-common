@@ -4,10 +4,11 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import React, { DragEventHandler } from 'react';
+import { DragEventHandler } from 'react';
 
 import { BreadcrumbsProps, ChipItem } from '@zextras/carbonio-design-system';
 
+import { UploadItem } from './graphql/client-types';
 import {
 	BaseNodeFragment,
 	ChildFragment,
@@ -97,28 +98,6 @@ export type RootListItemType = Pick<
 export type SortableNode = Pick<Node, 'id' | 'name' | 'updated_at' | 'type'> &
 	MakeOptional<Pick<File, 'size'>, 'size'>;
 
-export enum UploadStatus {
-	COMPLETED = 'Completed',
-	LOADING = 'Loading',
-	FAILED = 'Failed',
-	QUEUED = 'Queued'
-	// PAUSED: 'Paused'(tentative)
-}
-
-export interface UploadItem {
-	file: File | null;
-	// reference to the id of the parent node of Files after it is created
-	parentId: string | null;
-	parentNodeId: string | null;
-	status: UploadStatus;
-	progress: number; // (should be rounded down)
-	id: string;
-	// reference to the id of the node of Files after it is created
-	nodeId: string | null;
-	name: string;
-	fullPath: string;
-}
-
 export interface UploadFolderItem extends UploadItem {
 	children: Array<UploadItem['id']>;
 	contentCount: number;
@@ -135,17 +114,6 @@ export enum DocsType {
 }
 
 export type CreateDocsFile = GetNodeQuery;
-
-export interface ChipAction {
-	background?: string;
-	color?: string;
-	disabled?: boolean;
-	icon: string;
-	id: string;
-	label?: string;
-	onClick?: (event: React.SyntheticEvent) => void;
-	type: 'icon' | 'button';
-}
 
 export type SearchChip = ChipItem;
 
@@ -190,55 +158,6 @@ export type AdvancedFilters = {
 	[P in keyof Pick<SearchParams, 'sharedWithMe' | 'cascade'>]: { value: SearchParams[P] };
 };
 
-export type ChipActionsType = {
-	background?:
-		| string
-		| 'currentColor'
-		| 'transparent'
-		| 'primary'
-		| 'secondary'
-		| 'header'
-		| 'highlight'
-		| 'gray0'
-		| 'gray1'
-		| 'gray2'
-		| 'gray3'
-		| 'gray4'
-		| 'gray5'
-		| 'gray6'
-		| 'warning'
-		| 'error'
-		| 'success'
-		| 'info'
-		| 'text';
-	color?:
-		| string
-		| 'currentColor'
-		| 'transparent'
-		| 'primary'
-		| 'secondary'
-		| 'header'
-		| 'highlight'
-		| 'gray0'
-		| 'gray1'
-		| 'gray2'
-		| 'gray3'
-		| 'gray4'
-		| 'gray5'
-		| 'gray6'
-		| 'warning'
-		| 'error'
-		| 'success'
-		| 'info'
-		| 'text';
-	disabled?: boolean;
-	icon: string;
-	id: string;
-	label?: string;
-	onClick?: (event?: React.SyntheticEvent) => void;
-	type: 'icon' | 'button';
-};
-
 export enum ErrorCode {
 	/** Used By:
 	 * updateLink
@@ -263,7 +182,7 @@ export enum ErrorCode {
 	 * getNode
 	 * updateNode
 	 * deleteNodes
-	 * createFolder (destination does not exists)
+	 * createFolder (destination does not exist)
 	 * getPath
 	 * and a specific version is not present in the db
 	 */

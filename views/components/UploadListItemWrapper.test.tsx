@@ -16,7 +16,7 @@ import {
 	populateUploadFolderItem,
 	populateUploadItem
 } from '../../mocks/mockUtils';
-import { UploadItem, UploadStatus } from '../../types/common';
+import { UploadStatus } from '../../types/graphql/client-types';
 import { mockGetBaseNode } from '../../utils/mockUtils';
 import { buildBreadCrumbRegExp, setup } from '../../utils/testUtils';
 import { humanFileSize } from '../../utils/utils';
@@ -81,7 +81,7 @@ describe('Upload List Item Wrapper', () => {
 	});
 
 	test('If item is queued, queued label is shown instead of the progress', async () => {
-		const file: UploadItem = populateUploadItem({ status: UploadStatus.QUEUED });
+		const file = populateUploadItem({ status: UploadStatus.QUEUED });
 		const mockSelectId = jest.fn();
 
 		setup(

@@ -16,7 +16,8 @@ import some from 'lodash/some';
 
 import { ACTIONS_TO_REMOVE_DUE_TO_PRODUCT_CONTEXT } from '../../constants';
 import { ROOTS } from '../constants';
-import { Action, GetNodeParentType, Node, UploadStatus, UploadItem } from '../types/common';
+import { Action, GetNodeParentType, Node } from '../types/common';
+import { UploadItem, UploadStatus } from '../types/graphql/client-types';
 import { File as FilesFile, Folder, MakeOptional, Root } from '../types/graphql/types';
 import { OneOrMany } from '../types/utils';
 import { docsHandledMimeTypes, isFile, isFolder, isSupportedByPreview } from './utils';

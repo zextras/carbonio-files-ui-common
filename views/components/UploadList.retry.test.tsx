@@ -30,7 +30,7 @@ import {
 	populateNodes,
 	populateUploadItems
 } from '../../mocks/mockUtils';
-import { UploadStatus } from '../../types/common';
+import { UploadStatus } from '../../types/graphql/client-types';
 import {
 	CreateFolderMutation,
 	CreateFolderMutationVariables,

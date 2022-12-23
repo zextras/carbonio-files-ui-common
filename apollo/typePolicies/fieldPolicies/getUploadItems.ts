@@ -6,7 +6,7 @@
 import { FieldFunctionOptions, FieldPolicy } from '@apollo/client';
 import filter from 'lodash/filter';
 
-import { UploadItem } from '../../../types/common';
+import { UploadItem } from '../../../types/graphql/client-types';
 import { uploadVar } from '../../uploadVar';
 
 export const getUploadItemsFieldPolicy: FieldPolicy<
@@ -18,7 +18,8 @@ export const getUploadItemsFieldPolicy: FieldPolicy<
 	read(_, options) {
 		const parentId = options.args?.parentId;
 		if (parentId !== undefined) {
-			return filter(uploadVar(), (uploadItem) => uploadItem.parentId === parentId);
+			const result = filter(uploadVar(), (uploadItem) => uploadItem.parentId === parentId);
+			return result;
 		}
 		return Object.values(uploadVar());
 	}

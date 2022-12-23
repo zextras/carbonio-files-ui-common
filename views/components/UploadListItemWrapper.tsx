@@ -9,7 +9,7 @@ import React, { useCallback } from 'react';
 import { useActiveNode } from '../../../hooks/useActiveNode';
 import { useGetBaseNodeQuery } from '../../hooks/graphql/queries/useGetBaseNodeQuery';
 import { useUploadActions } from '../../hooks/useUploadActions';
-import { UploadItem } from '../../types/common';
+import { UploadItem } from '../../types/graphql/client-types';
 import { isUploadFolderItem } from '../../utils/uploadUtils';
 import { UploadListItem } from './UploadListItem';
 

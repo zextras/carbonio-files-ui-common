@@ -17,7 +17,8 @@ import {
 	populateNodes,
 	populateUploadItems
 } from '../mocks/mockUtils';
-import { Node, UploadStatus } from '../types/common';
+import { Node } from '../types/common';
+import { UploadStatus } from '../types/graphql/client-types';
 import { mockGetBaseNode } from '../utils/mockUtils';
 import { createDataTransfer, setup, uploadWithDnD } from '../utils/testUtils';
 import UploadView from './UploadView';

@@ -15,7 +15,7 @@ import { useActiveNode } from '../../../hooks/useActiveNode';
 import { useGetBaseNodeQuery } from '../../hooks/graphql/queries/useGetBaseNodeQuery';
 import { useMemoCompare } from '../../hooks/useMemoCompare';
 import { useUploadActions } from '../../hooks/useUploadActions';
-import { UploadItem } from '../../types/common';
+import { UploadItem } from '../../types/graphql/client-types';
 import { NodeType } from '../../types/graphql/types';
 import {
 	flatUploadItemChildrenIds,

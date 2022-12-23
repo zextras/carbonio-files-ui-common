@@ -5,7 +5,7 @@
  */
 import { FieldFunctionOptions, FieldPolicy } from '@apollo/client';
 
-import { UploadItem } from '../../../types/common';
+import { UploadItem } from '../../../types/graphql/client-types';
 import { uploadVar } from '../../uploadVar';
 
 export const getUploadItemFieldPolicy: FieldPolicy<

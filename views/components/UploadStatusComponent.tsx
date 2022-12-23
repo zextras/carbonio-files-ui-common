@@ -8,7 +8,7 @@ import React from 'react';
 import { Icon, Row, RowProps, Text } from '@zextras/carbonio-design-system';
 import { useTranslation } from 'react-i18next';
 
-import { UploadStatus } from '../../types/common';
+import { UploadStatus } from '../../types/graphql/client-types';
 
 interface UploadStatusProps {
 	status: UploadStatus;

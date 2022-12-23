@@ -12,9 +12,10 @@ import reduce from 'lodash/reduce';
 
 import { LIST_ITEM_AVATAR_HEIGHT_COMPACT } from '../../constants';
 import { Breadcrumbs } from '../../design_system_fork/Breadcrumbs';
-import GET_UPLOAD_ITEM from '../../graphql/queries/getUploadItem.graphql';
 import { useUploadActions } from '../../hooks/useUploadActions';
-import { Crumb, UploadItem } from '../../types/common';
+import { Crumb } from '../../types/common';
+import { UploadItem } from '../../types/graphql/client-types';
+import { GetUploadItemDocument } from '../../types/graphql/types';
 import { getUploadNodeType, isUploadFolderItem } from '../../utils/uploadUtils';
 import { getIconByFileType } from '../../utils/utils';
 import { NodeAvatarIcon } from './NodeAvatarIcon';
@@ -27,9 +28,9 @@ interface UploadNodeDetailsListItemProps {
 }
 
 export const UploadNodeDetailsListItem = ({ id }: UploadNodeDetailsListItemProps): JSX.Element => {
-	const { data } = useQuery(GET_UPLOAD_ITEM, { variables: { id } });
+	const { data } = useQuery(GetUploadItemDocument, { variables: { id } });
 
-	const item = useMemo<UploadItem | undefined>(() => data?.getUploadItem, [data]);
+	const item = useMemo<UploadItem | undefined>(() => data?.getUploadItem || undefined, [data]);
 
 	const crumbs = useMemo<Crumb[]>(
 		() =>

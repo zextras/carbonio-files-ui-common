@@ -12,7 +12,8 @@ import styled from 'styled-components';
 
 import { LIST_ITEM_HEIGHT } from '../../constants';
 import { Breadcrumbs } from '../../design_system_fork/Breadcrumbs';
-import { Node, UploadStatus } from '../../types/common';
+import { Node } from '../../types/common';
+import { UploadStatus } from '../../types/graphql/client-types';
 import { Maybe } from '../../types/graphql/types';
 import { buildCrumbs, humanFileSize } from '../../utils/utils';
 import { ContextualMenu } from './ContextualMenu';

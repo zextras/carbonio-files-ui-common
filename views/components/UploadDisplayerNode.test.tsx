@@ -16,7 +16,7 @@ import {
 	populateUploadItem,
 	populateUploadItems
 } from '../../mocks/mockUtils';
-import { UploadStatus } from '../../types/common';
+import { UploadStatus } from '../../types/graphql/client-types';
 import { setup } from '../../utils/testUtils';
 import { humanFileSize } from '../../utils/utils';
 import { UploadDisplayerNode } from './UploadDisplayerNode';

@@ -9,7 +9,7 @@ import { fireEvent, screen } from '@testing-library/react';
 
 import { ACTION_REGEXP, ICON_REGEXP, SELECTORS } from '../../constants/test';
 import { populateFolder, populateUploadItem } from '../../mocks/mockUtils';
-import { UploadStatus } from '../../types/common';
+import { UploadStatus } from '../../types/graphql/client-types';
 import { mockGetBaseNode } from '../../utils/mockUtils';
 import { setup } from '../../utils/testUtils';
 import { UploadListItemWrapper } from './UploadListItemWrapper';

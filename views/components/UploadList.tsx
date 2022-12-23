@@ -24,11 +24,12 @@ import { useActiveNode } from '../../../hooks/useActiveNode';
 import { useNavigation } from '../../../hooks/useNavigation';
 import { DRAG_TYPES, ROOTS } from '../../constants';
 import { ListContext, ListHeaderActionContext } from '../../contexts';
-import GET_UPLOAD_ITEMS from '../../graphql/queries/getUploadItems.graphql';
 import { usePrevious } from '../../hooks/usePrevious';
 import useSelection from '../../hooks/useSelection';
 import { useUpload } from '../../hooks/useUpload';
-import { Action, UploadItem } from '../../types/common';
+import { Action } from '../../types/common';
+import { UploadItem } from '../../types/graphql/client-types';
+import { GetUploadItemsDocument } from '../../types/graphql/types';
 import { buildActionItems, getPermittedUploadActions } from '../../utils/ActionsFactory';
 import { getUploadAddType, isUploadFolderItem } from '../../utils/uploadUtils';
 import { Dropzone } from './Dropzone';
@@ -40,7 +41,9 @@ export const UploadList: React.VFC = () => {
 	const [t] = useTranslation();
 
 	const { add, removeById, removeAllCompleted, retryById } = useUpload();
-	const { data } = useQuery(GET_UPLOAD_ITEMS, { variables: { parentId: null } });
+	const { data } = useQuery(GetUploadItemsDocument, {
+		variables: { parentId: null }
+	});
 
 	const uploadItems = useMemo<UploadItem[]>(() => data?.getUploadItems || [], [data]);
 

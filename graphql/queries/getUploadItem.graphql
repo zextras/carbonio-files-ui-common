@@ -1,7 +1,7 @@
-#import "../fragments/uploadItem.graphql"
+# SPDX-FileCopyrightText: 2022 Zextras <https://www.zextras.com>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
 
 query getUploadItem($id: ID!) {
-    getUploadItem(id: $id) @client {
-        ...UploadItem
-    }
+    getUploadItem(id: $id)
 }
