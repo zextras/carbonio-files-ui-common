@@ -18,13 +18,12 @@ import {
 import { EventEmitter } from 'events';
 import find from 'lodash/find';
 import forEach from 'lodash/forEach';
-import keyBy from 'lodash/keyBy';
-import { graphql, rest } from 'msw';
+import { rest } from 'msw';
 
 import server from '../../../mocks/server';
 import { uploadVar } from '../../apollo/uploadVar';
 import { REST_ENDPOINT, ROOTS, UPLOAD_PATH } from '../../constants';
-import { ICON_REGEXP } from '../../constants/test';
+import { EMITTER_CODES, ICON_REGEXP } from '../../constants/test';
 import handleUploadFileRequest, {
 	UploadRequestBody,
 	UploadRequestParams,
@@ -41,8 +40,6 @@ import { UploadItem, UploadStatus } from '../../types/graphql/client-types';
 import {
 	File as FilesFile,
 	Folder,
-	GetChildQuery,
-	GetChildQueryVariables,
 	GetChildrenQuery,
 	GetChildrenQueryVariables,
 	Maybe
@@ -53,11 +50,23 @@ import {
 	mockGetBaseNode,
 	mockGetChildren
 } from '../../utils/mockUtils';
-import { createDataTransfer, delayUntil, setup, uploadWithDnD } from '../../utils/testUtils';
+import {
+	buildBreadCrumbRegExp,
+	createDataTransfer,
+	delayUntil,
+	setup,
+	uploadWithDnD
+} from '../../utils/testUtils';
 import { UploadQueue } from '../../utils/uploadUtils';
 import { UploadList } from './UploadList';
 
 describe('Upload list', () => {
+	test('Show upload crumbs', async () => {
+		const { getByTextWithMarkup } = setup(<UploadList />);
+		await screen.findByText(/nothing here/i);
+		expect(getByTextWithMarkup(buildBreadCrumbRegExp('Uploads'))).toBeVisible();
+	});
+
 	describe('Drag and drop', () => {
 		test('Drag of files in the upload list shows upload dropzone with dropzone message. Drop triggers upload in local root', async () => {
 			const localRoot = populateFolder(0, ROOTS.LOCAL_ROOT);
@@ -65,7 +74,6 @@ describe('Upload list', () => {
 			forEach(uploadedFiles, (file) => {
 				file.parent = localRoot;
 			});
-			let reqIndex = 0;
 
 			// write local root data in cache as if it was already loaded
 			const getChildrenMockedQuery = mockGetChildren(getChildrenVariables(localRoot.id), localRoot);
@@ -76,50 +84,24 @@ describe('Upload list', () => {
 				}
 			});
 
-			server.use(
-				graphql.query<GetChildQuery, GetChildQueryVariables>('getChild', (req, res, ctx) => {
-					const { node_id: id } = req.variables;
-					const result = (reqIndex < uploadedFiles.length && uploadedFiles[reqIndex]) || null;
-					if (result) {
-						result.id = id;
-					}
-					reqIndex += 1;
-					return res(ctx.data({ getNode: result }));
-				})
-			);
-
 			const dataTransferObj = createDataTransfer(uploadedFiles);
 
 			const mocks = [mockGetBaseNode({ node_id: localRoot.id }, localRoot)];
 
 			setup(<UploadList />, { mocks });
 
-			await screen.findByText(/nothing here/i);
+			const dropzone = await screen.findByText(/nothing here/i);
 
-			fireEvent.dragEnter(screen.getByText(/nothing here/i), {
-				dataTransfer: dataTransferObj
-			});
-
-			await screen.findByTestId('dropzone-overlay');
-			expect(
-				screen.getByText(/Drop here your attachments to quick-add them to your Home/m)
-			).toBeVisible();
-
-			fireEvent.drop(screen.getByText(/nothing here/i), {
-				dataTransfer: dataTransferObj
-			});
-
-			await screen.findByText(uploadedFiles[0].name);
-			await screen.findByText(/upload occurred in Files' home/i);
+			await uploadWithDnD(dropzone, dataTransferObj);
 
 			expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
 				uploadedFiles.length
 			);
 			expect(screen.queryByText(/Drop here your attachments/m)).not.toBeInTheDocument();
 
-			await screen.findAllByTestId('icon: CheckmarkCircle2');
+			await screen.findAllByTestId(ICON_REGEXP.uploadCompleted);
 
-			expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(uploadedFiles.length);
+			expect(screen.getAllByTestId(ICON_REGEXP.uploadCompleted)).toHaveLength(uploadedFiles.length);
 
 			const localRootCachedData = global.apolloClient.readQuery<
 				GetChildrenQuery,
@@ -198,9 +180,6 @@ describe('Upload list', () => {
 			// file
 			uploadedFiles[1].parent = localRoot;
 
-			// folder does not query getChild
-			let reqIndex = 1;
-
 			// write local root data in cache as if it was already loaded
 			const getChildrenMockedQuery = mockGetChildren(getChildrenVariables(localRoot.id), localRoot);
 			global.apolloClient.cache.writeQuery<GetChildrenQuery, GetChildrenQueryVariables>({
@@ -209,18 +188,6 @@ describe('Upload list', () => {
 					getNode: localRoot
 				}
 			});
-
-			server.use(
-				graphql.query<GetChildQuery, GetChildQueryVariables>('getChild', (req, res, ctx) => {
-					const { node_id: id } = req.variables;
-					const result = (reqIndex < uploadedFiles.length && uploadedFiles[reqIndex]) || null;
-					if (result) {
-						result.id = id;
-					}
-					reqIndex += 1;
-					return res(ctx.data({ getNode: result }));
-				})
-			);
 
 			const dataTransferObj = createDataTransfer(uploadedFiles);
 
@@ -234,24 +201,9 @@ describe('Upload list', () => {
 
 			setup(<UploadList />, { mocks });
 
-			await screen.findByText(/nothing here/i);
+			const dropzone = await screen.findByText(/nothing here/i);
 
-			fireEvent.dragEnter(screen.getByText(/nothing here/i), {
-				dataTransfer: dataTransferObj
-			});
-
-			await screen.findByTestId('dropzone-overlay');
-			expect(
-				screen.getByText(/Drop here your attachments to quick-add them to your Home/m)
-			).toBeVisible();
-
-			fireEvent.drop(screen.getByText(/nothing here/i), {
-				dataTransfer: dataTransferObj
-			});
-
-			await screen.findByText(uploadedFiles[0].name);
-			await screen.findByText(/upload occurred in files' home/i);
-			expect(screen.queryByText(/some items have not been uploaded/i)).not.toBeInTheDocument();
+			await uploadWithDnD(dropzone, dataTransferObj);
 			expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(
 				uploadedFiles.length
 			);
@@ -270,7 +222,9 @@ describe('Upload list', () => {
 			expect(screen.getByText(uploadedFiles[0].name)).toBeVisible();
 			expect(screen.getAllByTestId(ICON_REGEXP.uploadLoading)).toHaveLength(2);
 			expect(screen.getByText(uploadedFiles[1].name)).toBeVisible();
-			await waitFor(() => expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(2));
+			await waitFor(() =>
+				expect(screen.getAllByTestId(ICON_REGEXP.uploadCompleted)).toHaveLength(2)
+			);
 			expect(screen.getByText(/1\/1/)).toBeVisible();
 		});
 
@@ -283,8 +237,6 @@ describe('Upload list', () => {
 
 			const emitter = new EventEmitter();
 
-			let reqIndex = 0;
-
 			// write local root data in cache as if it was already loaded
 			const getChildrenMockedQuery = mockGetChildren(getChildrenVariables(localRoot.id), localRoot);
 			global.apolloClient.cache.writeQuery<GetChildrenQuery, GetChildrenQueryVariables>({
@@ -295,19 +247,10 @@ describe('Upload list', () => {
 			});
 
 			server.use(
-				graphql.query<GetChildQuery, GetChildQueryVariables>('getChild', (req, res, ctx) => {
-					const { node_id: id } = req.variables;
-					const result = (reqIndex < uploadedFiles.length && uploadedFiles[reqIndex]) || null;
-					if (result) {
-						result.id = id;
-					}
-					reqIndex += 1;
-					return res(ctx.data({ getNode: result }));
-				}),
 				rest.post<UploadRequestBody, UploadRequestParams, UploadResponse>(
 					`${REST_ENDPOINT}${UPLOAD_PATH}`,
 					async (req, res, ctx) => {
-						await delayUntil(emitter, 'resolve');
+						await delayUntil(emitter, EMITTER_CODES.success);
 						return res(
 							ctx.json({
 								nodeId: faker.datatype.uuid()
@@ -323,20 +266,9 @@ describe('Upload list', () => {
 
 			setup(<UploadList />, { mocks });
 
-			await screen.findByText(/nothing here/i);
+			const dropzone = await screen.findByText(/nothing here/i);
 
-			fireEvent.dragEnter(screen.getByText(/nothing here/i), {
-				dataTransfer: dataTransferObj
-			});
-
-			await screen.findByTestId('dropzone-overlay');
-			expect(
-				screen.getByText(/Drop here your attachments to quick-add them to your Home/m)
-			).toBeVisible();
-
-			fireEvent.drop(screen.getByText(/nothing here/i), {
-				dataTransfer: dataTransferObj
-			});
+			await uploadWithDnD(dropzone, dataTransferObj);
 
 			const loadingIcons = await screen.findAllByTestId(ICON_REGEXP.uploadLoading);
 			expect(loadingIcons).toHaveLength(4);
@@ -349,12 +281,8 @@ describe('Upload list', () => {
 			const queuedItem = find(
 				screen.getAllByTestId('node-item', { exact: false }),
 				(item) => within(item).queryByText(/queued/i) !== null
-			);
+			) as HTMLElement;
 			expect(queuedItem).toBeDefined();
-			if (!queuedItem) {
-				// this should never run, but it is useful to avoid the cast in the next lines
-				fail(new Error('queued item not found'));
-			}
 			expect(within(queuedItem).getByText(/queued/i)).toBeVisible();
 			const queuedIconLoader = within(queuedItem).getByTestId(ICON_REGEXP.uploadLoading);
 			expect(queuedIconLoader).toBeInTheDocument();
@@ -367,14 +295,14 @@ describe('Upload list', () => {
 			);
 			expect(screen.queryByText(/Drop here your attachments/m)).not.toBeInTheDocument();
 
-			emitter.emit('resolve');
+			emitter.emit(EMITTER_CODES.success);
 			await screen.findAllByText('100%');
 			expect(screen.queryByText(/queued/i)).not.toBeInTheDocument();
-			expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(3);
+			expect(screen.getAllByTestId(ICON_REGEXP.uploadCompleted)).toHaveLength(3);
 			expect(screen.getByTestId(ICON_REGEXP.uploadLoading)).toBeVisible();
-			emitter.emit('resolve');
+			emitter.emit(EMITTER_CODES.success);
 			await waitForElementToBeRemoved(screen.queryByTestId(ICON_REGEXP.uploadLoading));
-			expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(4);
+			expect(screen.getAllByTestId(ICON_REGEXP.uploadCompleted)).toHaveLength(4);
 			expect(screen.queryByTestId(ICON_REGEXP.uploadLoading)).not.toBeInTheDocument();
 
 			const localRootCachedData = global.apolloClient.readQuery<
@@ -395,29 +323,17 @@ describe('Upload list', () => {
 
 			const emitter = new EventEmitter();
 
-			// first item fails
-			let reqIndex = 1;
-
 			server.use(
-				graphql.query<GetChildQuery, GetChildQueryVariables>('getChild', (req, res, ctx) => {
-					const { node_id: id } = req.variables;
-					const result = (reqIndex < uploadedFiles.length && uploadedFiles[reqIndex]) || null;
-					if (result) {
-						result.id = id;
-					}
-					reqIndex += 1;
-					return res(ctx.data({ getNode: result }));
-				}),
 				rest.post<UploadRequestBody, UploadRequestParams, UploadResponse>(
 					`${REST_ENDPOINT}${UPLOAD_PATH}`,
 					async (req, res, ctx) => {
 						const fileName =
 							req.headers.get('filename') && window.atob(req.headers.get('filename') as string);
 						if (fileName === uploadedFiles[0].name) {
-							await delayUntil(emitter, 'done-fail');
+							await delayUntil(emitter, EMITTER_CODES.fail);
 							return res(ctx.status(500));
 						}
-						await delayUntil(emitter, 'done-success');
+						await delayUntil(emitter, EMITTER_CODES.success);
 						return res(ctx.json({ nodeId: faker.datatype.uuid() }));
 					}
 				)
@@ -429,40 +345,28 @@ describe('Upload list', () => {
 
 			setup(<UploadList />, { mocks });
 
-			await screen.findByText(/nothing here/i);
+			const dropzone = await screen.findByText(/nothing here/i);
 
-			fireEvent.dragEnter(screen.getByText(/nothing here/i), {
-				dataTransfer: dataTransferObj
-			});
-
-			await screen.findByTestId('dropzone-overlay');
-			expect(
-				screen.getByText(/Drop here your attachments to quick-add them to your Home/m)
-			).toBeVisible();
-
-			fireEvent.drop(screen.getByText(/nothing here/i), {
-				dataTransfer: dataTransferObj
-			});
-
-			await screen.findByText(/Upload occurred in Files' Home/i);
-			await screen.findAllByTestId('node-item-', { exact: false });
+			await uploadWithDnD(dropzone, dataTransferObj);
 
 			expect(screen.getAllByTestId('node-item-', { exact: false })).toHaveLength(
 				uploadedFiles.length
 			);
 			expect(screen.getAllByTestId(ICON_REGEXP.uploadLoading)).toHaveLength(uploadedFiles.length);
 			expect(screen.getByText(/queued/i)).toBeVisible();
-			emitter.emit('done-fail');
+			emitter.emit(EMITTER_CODES.fail);
 			// wait for the first request to fail
 			await screen.findByTestId(ICON_REGEXP.uploadFailed);
 			// last item is removed from the queue and starts the upload
 			expect(screen.queryByText(/queued/i)).not.toBeInTheDocument();
-			emitter.emit('done-success');
+			emitter.emit(EMITTER_CODES.success);
 			// then wait for all other files to be uploaded
-			await waitFor(() => expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(3));
+			await waitFor(() =>
+				expect(screen.getAllByTestId(ICON_REGEXP.uploadCompleted)).toHaveLength(3)
+			);
 			expect(screen.getByTestId(ICON_REGEXP.uploadFailed)).toBeVisible();
 			expect(screen.queryByText(/queued/i)).not.toBeInTheDocument();
-			expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(3);
+			expect(screen.getAllByTestId(ICON_REGEXP.uploadCompleted)).toHaveLength(3);
 			expect(screen.queryByTestId(ICON_REGEXP.uploadLoading)).not.toBeInTheDocument();
 		});
 
@@ -475,29 +379,17 @@ describe('Upload list', () => {
 
 			const emitter = new EventEmitter();
 
-			// first item is aborted
-			let reqIndex = 1;
-
 			server.use(
-				graphql.query<GetChildQuery, GetChildQueryVariables>('getChild', (req, res, ctx) => {
-					const { node_id: id } = req.variables;
-					const result = (reqIndex < uploadedFiles.length && uploadedFiles[reqIndex]) || null;
-					if (result) {
-						result.id = id;
-					}
-					reqIndex += 1;
-					return res(ctx.data({ getNode: result }));
-				}),
 				rest.post<UploadRequestBody, UploadRequestParams, UploadResponse>(
 					`${REST_ENDPOINT}${UPLOAD_PATH}`,
 					async (req, res, ctx) => {
 						const fileName =
 							req.headers.get('filename') && window.atob(req.headers.get('filename') as string);
 						if (fileName === uploadedFiles[0].name) {
-							await delayUntil(emitter, 'abort');
-							return res(ctx.status(0));
+							await delayUntil(emitter, EMITTER_CODES.never);
+							return res(ctx.status(XMLHttpRequest.UNSENT));
 						}
-						await delayUntil(emitter, 'done');
+						await delayUntil(emitter, EMITTER_CODES.success);
 						return res(ctx.json({ nodeId: faker.datatype.uuid() }));
 					}
 				)
@@ -509,30 +401,10 @@ describe('Upload list', () => {
 
 			const { user } = setup(<UploadList />, { mocks });
 
-			await screen.findByText(/nothing here/i);
+			const dropzone = await screen.findByText(/nothing here/i);
 
-			fireEvent.dragEnter(screen.getByText(/nothing here/i), {
-				dataTransfer: dataTransferObj
-			});
+			await uploadWithDnD(dropzone, dataTransferObj);
 
-			await screen.findByTestId('dropzone-overlay');
-			expect(
-				screen.getByText(/Drop here your attachments to quick-add them to your Home/m)
-			).toBeVisible();
-
-			fireEvent.drop(screen.getByText(/nothing here/i), {
-				dataTransfer: dataTransferObj
-			});
-
-			await screen.findByText(/Upload occurred in Files' Home/i);
-			// close snackbar
-			act(() => {
-				// run timers of snackbar
-				jest.runOnlyPendingTimers();
-			});
-			await waitFor(() =>
-				expect(screen.queryByText(/Upload occurred in Files' Home/i)).not.toBeInTheDocument()
-			);
 			await screen.findAllByTestId('node-item-', { exact: false });
 			expect(screen.getAllByTestId('node-item-', { exact: false })).toHaveLength(
 				uploadedFiles.length
@@ -548,22 +420,25 @@ describe('Upload list', () => {
 			// last item upload is started, element is removed from the queue
 			expect(screen.queryByText(/queued/i)).not.toBeInTheDocument();
 			// then wait for all other files to be uploaded
-			emitter.emit('done');
+			emitter.emit(EMITTER_CODES.success);
 			await waitForElementToBeRemoved(screen.queryAllByTestId(ICON_REGEXP.uploadLoading));
-			expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(3);
+			expect(screen.getAllByTestId(ICON_REGEXP.uploadCompleted)).toHaveLength(3);
 			expect(screen.getAllByTestId('node-item-', { exact: false })).toHaveLength(
 				uploadedFiles.length - 1
 			);
 			expect(screen.queryByText(uploadedFiles[0].name)).not.toBeInTheDocument();
 			expect(screen.queryByText(/queued/i)).not.toBeInTheDocument();
-			expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(3);
+			expect(screen.getAllByTestId(ICON_REGEXP.uploadCompleted)).toHaveLength(3);
 			expect(screen.queryByTestId(ICON_REGEXP.uploadLoading)).not.toBeInTheDocument();
+
+			act(() => {
+				emitter.emit(EMITTER_CODES.never);
+			});
 		});
 
 		test('the queue use FIFO strategy', async () => {
 			const localRoot = populateLocalRoot();
 			const uploadedFiles = populateNodes(UploadQueue.LIMIT * 3, 'File') as FilesFile[];
-			const uploadedFilesMap = keyBy(uploadedFiles, 'id');
 			forEach(uploadedFiles, (file) => {
 				file.parent = localRoot;
 			});
@@ -571,14 +446,6 @@ describe('Upload list', () => {
 			const emitter = new EventEmitter();
 
 			server.use(
-				graphql.query<GetChildQuery, GetChildQueryVariables>('getChild', (req, res, ctx) => {
-					const { node_id: id } = req.variables;
-					const result = uploadedFilesMap[id];
-					if (result) {
-						result.id = id;
-					}
-					return res(ctx.data({ getNode: result }));
-				}),
 				rest.post<UploadRequestBody, UploadRequestParams, UploadResponse>(
 					`${REST_ENDPOINT}${UPLOAD_PATH}`,
 					async (req, res, ctx) => {
@@ -587,7 +454,7 @@ describe('Upload list', () => {
 						const result =
 							find(uploadedFiles, (uploadedFile) => uploadedFile.name === fileName)?.id ||
 							faker.datatype.uuid();
-						await delayUntil(emitter, 'done');
+						await delayUntil(emitter, EMITTER_CODES.success);
 						return res(ctx.json({ nodeId: result }));
 					}
 				)
@@ -601,35 +468,12 @@ describe('Upload list', () => {
 
 			setup(<UploadList />, { mocks });
 
-			await screen.findByText(/nothing here/i);
-
+			const dropzone1 = await screen.findByText(/nothing here/i);
 			// drag and drop first 4 files
-			fireEvent.dragEnter(screen.getByText(/nothing here/i), {
-				dataTransfer: dataTransferObj1
-			});
-
-			await screen.findByTestId('dropzone-overlay');
-			expect(
-				screen.getByText(/Drop here your attachments to quick-add them to your Home/m)
-			).toBeVisible();
-
-			fireEvent.drop(screen.getByText(/nothing here/i), {
-				dataTransfer: dataTransferObj1
-			});
-
-			await screen.findByText(uploadedFiles[0].name);
+			await uploadWithDnD(dropzone1, dataTransferObj1);
 			// immediately drag and drop the last two files
-			fireEvent.dragEnter(screen.getByText(uploadedFiles[0].name), {
-				dataTransfer: dataTransferObj2
-			});
-
-			await screen.findByTestId('dropzone-overlay');
-
-			fireEvent.drop(screen.getByText(uploadedFiles[0].name), {
-				dataTransfer: dataTransferObj2
-			});
-
-			await screen.findByText(uploadedFiles[4].name);
+			const dropzone2 = screen.getByText(uploadedFiles[0].name);
+			await uploadWithDnD(dropzone2, dataTransferObj2);
 			expect(screen.getAllByTestId('node-item-', { exact: false })).toHaveLength(
 				uploadedFiles.length
 			);
@@ -646,23 +490,25 @@ describe('Upload list', () => {
 					expect(within(nodeItem).queryByText(/\d+%/)).not.toBeInTheDocument();
 				}
 			});
-			emitter.emit('done');
+			emitter.emit(EMITTER_CODES.success);
 			await waitFor(() =>
-				expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(UploadQueue.LIMIT)
+				expect(screen.getAllByTestId(ICON_REGEXP.uploadCompleted)).toHaveLength(UploadQueue.LIMIT)
 			);
 			expect(
 				within(nodeItems[UploadQueue.LIMIT - 1]).queryByText(/queued/i)
 			).not.toBeInTheDocument();
 			expect(
-				within(nodeItems[UploadQueue.LIMIT - 1]).getByTestId('icon: CheckmarkCircle2')
+				within(nodeItems[UploadQueue.LIMIT - 1]).getByTestId(ICON_REGEXP.uploadCompleted)
 			).toBeVisible();
 			expect(within(nodeItems[UploadQueue.LIMIT]).queryByText(/queued/i)).not.toBeInTheDocument();
 			expect(within(nodeItems[UploadQueue.LIMIT]).getByText(/\d+%/i)).toBeVisible();
 			expect(within(nodeItems[UploadQueue.LIMIT * 2]).getByText(/queued/i)).toBeVisible();
 			expect(within(nodeItems[uploadedFiles.length - 1]).getByText(/queued/i)).toBeVisible();
-			emitter.emit('done');
+			emitter.emit(EMITTER_CODES.success);
 			await waitFor(() =>
-				expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(UploadQueue.LIMIT * 2)
+				expect(screen.getAllByTestId(ICON_REGEXP.uploadCompleted)).toHaveLength(
+					UploadQueue.LIMIT * 2
+				)
 			);
 			expect(within(nodeItems[UploadQueue.LIMIT * 2]).getByText(/\d+%/i)).toBeVisible();
 			expect(
@@ -672,9 +518,11 @@ describe('Upload list', () => {
 				within(nodeItems[uploadedFiles.length - 1]).queryByText(/queued/i)
 			).not.toBeInTheDocument();
 			expect(within(nodeItems[uploadedFiles.length - 1]).getByText(/\d+%/)).toBeVisible();
-			emitter.emit('done');
+			emitter.emit(EMITTER_CODES.success);
 			await waitFor(() =>
-				expect(screen.getAllByTestId('icon: CheckmarkCircle2')).toHaveLength(uploadedFiles.length)
+				expect(screen.getAllByTestId(ICON_REGEXP.uploadCompleted)).toHaveLength(
+					uploadedFiles.length
+				)
 			);
 			expect(screen.queryByText(/queued/i)).not.toBeInTheDocument();
 		});
@@ -712,21 +560,7 @@ describe('Upload list', () => {
 				)
 			);
 
-			const mocks = [
-				mockGetBaseNode({ node_id: localRoot.id }, localRoot)
-				// mockCreateFolder(
-				// 	{ name: folderToUpload.name, destination_id: folderToUpload.parent.id },
-				// 	folderToUpload
-				// ),
-				// mockCreateFolder(
-				// 	{ name: subFolder1.name, destination_id: folderToUpload.parent.id },
-				// 	subFolder1
-				// ),
-				// mockCreateFolder(
-				// 	{ name: subFolder2.name, destination_id: (subFolder2.parent as Folder).id },
-				// 	subFolder2
-				// )
-			];
+			const mocks = [mockGetBaseNode({ node_id: localRoot.id }, localRoot)];
 
 			setup(<UploadList />, { mocks });
 
@@ -743,9 +577,9 @@ describe('Upload list', () => {
 
 			await waitFor(() => expect(uploadFileHandler).toHaveBeenCalledTimes(numberOfFiles));
 
-			await screen.findByTestId('icon: CheckmarkCircle2');
+			await screen.findByTestId(ICON_REGEXP.uploadCompleted);
 
-			expect(screen.getByTestId('icon: CheckmarkCircle2')).toBeVisible();
+			expect(screen.getByTestId(ICON_REGEXP.uploadCompleted)).toBeVisible();
 			expect(screen.getByText(RegExp(`${numberOfNodes}/${numberOfNodes}`))).toBeVisible();
 		});
 	});

@@ -16,7 +16,6 @@ import { useTranslation } from 'react-i18next';
 
 import ListHeader from '../../../components/ListHeader';
 import { useActiveNode } from '../../../hooks/useActiveNode';
-import { useNavigation } from '../../../hooks/useNavigation';
 import { DRAG_TYPES, ROOTS } from '../../constants';
 import { ListContext, ListHeaderActionContext } from '../../contexts';
 import { usePrevious } from '../../hooks/usePrevious';
@@ -103,8 +102,6 @@ export const UploadList: React.VFC = () => {
 		[isSelectionModeActive, uploadItems, selectId, selectedMap]
 	);
 
-	const { navigateToFolder } = useNavigation();
-
 	const actionCallbacks = useMemo<Parameters<typeof useUploadActions>[2]>(
 		() => ({
 			[Action.RemoveUpload]: exitSelectionMode,
@@ -126,14 +123,11 @@ export const UploadList: React.VFC = () => {
 				type: 'info',
 				label: t('uploads.destination.home', "Upload occurred in Files' Home"),
 				actionLabel: t('snackbar.upload.goToFolder', 'Go to folder'),
-				onActionClick: () => {
-					navigateToFolder(ROOTS.LOCAL_ROOT);
-				},
 				replace: false,
 				hideButton: true
 			});
 		},
-		[add, createSnackbar, navigateToFolder, t]
+		[add, createSnackbar, t]
 	);
 
 	const dropzoneModal = useMemo(
