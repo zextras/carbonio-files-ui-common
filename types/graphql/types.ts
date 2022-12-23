@@ -12,6 +12,7 @@ export type Scalars = {
 	Boolean: boolean;
 	Int: number;
 	Float: number;
+	/** A custom scalar representing a date in a timestamp format */
 	DateTime: number;
 };
 
@@ -550,6 +551,8 @@ export type Query = {
 	getRootsList: Array<Maybe<Root>>;
 	/**  Returns the attributes of the specified share */
 	getShare?: Maybe<Share>;
+	getUploadItem?: Maybe<UploadItem>;
+	getUploadItems: Array<UploadItem>;
 	getUserById?: Maybe<User>;
 	getVersions: Array<Maybe<File>>;
 };
@@ -595,6 +598,14 @@ export type QueryGetPathArgs = {
 export type QueryGetShareArgs = {
 	node_id: Scalars['ID'];
 	share_target_id: Scalars['ID'];
+};
+
+export type QueryGetUploadItemArgs = {
+	id: Scalars['ID'];
+};
+
+export type QueryGetUploadItemsArgs = {
+	parentId?: InputMaybe<Scalars['ID']>;
 };
 
 export type QueryGetUserByIdArgs = {
@@ -655,6 +666,37 @@ export enum ShareSort {
 }
 
 export type SharedTarget = DistributionList | User;
+
+export type UploadFolderItem = UploadItem & {
+	__typename?: 'UploadFolderItem';
+	children?: Maybe<Array<Scalars['ID']>>;
+	fullPath?: Maybe<Scalars['String']>;
+	id: Scalars['ID'];
+	name: Scalars['String'];
+	nodeId?: Maybe<Scalars['String']>;
+	parentId?: Maybe<Scalars['String']>;
+	parentNodeId?: Maybe<Scalars['String']>;
+	progress: Scalars['Int'];
+	status?: Maybe<UploadStatus>;
+};
+
+export type UploadItem = {
+	fullPath?: Maybe<Scalars['String']>;
+	id: Scalars['ID'];
+	name: Scalars['String'];
+	nodeId?: Maybe<Scalars['String']>;
+	parentId?: Maybe<Scalars['String']>;
+	parentNodeId?: Maybe<Scalars['String']>;
+	progress: Scalars['Int'];
+	status?: Maybe<UploadStatus>;
+};
+
+export enum UploadStatus {
+	Completed = 'COMPLETED',
+	Failed = 'FAILED',
+	Loading = 'LOADING',
+	Queued = 'QUEUED'
+}
 
 /**  Definition of the User type */
 export type User = {
@@ -958,6 +1000,19 @@ type ShareTarget_DistributionList_Fragment = { __typename?: 'DistributionList'; 
 type ShareTarget_User_Fragment = { __typename?: 'User'; id: string };
 
 export type ShareTargetFragment = ShareTarget_DistributionList_Fragment | ShareTarget_User_Fragment;
+
+export type UploadItemFragment = {
+	__typename?: 'UploadFolderItem';
+	children?: Array<string> | null;
+	id: string;
+	name: string;
+	nodeId?: string | null;
+	parentId?: string | null;
+	parentNodeId?: string | null;
+	progress: number;
+	status?: UploadStatus | null;
+	fullPath?: string | null;
+};
 
 export type CloneVersionMutationVariables = Exact<{
 	node_id: Scalars['ID'];
@@ -3213,6 +3268,46 @@ export type GetSharesQuery = {
 				} | null>;
 		  }
 		| null;
+};
+
+export type GetUploadItemQueryVariables = Exact<{
+	id: Scalars['ID'];
+}>;
+
+export type GetUploadItemQuery = {
+	__typename?: 'Query';
+	getUploadItem?: {
+		__typename?: 'UploadFolderItem';
+		children?: Array<string> | null;
+		id: string;
+		name: string;
+		nodeId?: string | null;
+		parentId?: string | null;
+		parentNodeId?: string | null;
+		progress: number;
+		status?: UploadStatus | null;
+		fullPath?: string | null;
+	} | null;
+};
+
+export type GetUploadItemsQueryVariables = Exact<{
+	parentId?: InputMaybe<Scalars['ID']>;
+}>;
+
+export type GetUploadItemsQuery = {
+	__typename?: 'Query';
+	getUploadItems: Array<{
+		__typename?: 'UploadFolderItem';
+		children?: Array<string> | null;
+		id: string;
+		name: string;
+		nodeId?: string | null;
+		parentId?: string | null;
+		parentNodeId?: string | null;
+		progress: number;
+		status?: UploadStatus | null;
+		fullPath?: string | null;
+	}>;
 };
 
 export type GetVersionsQueryVariables = Exact<{

@@ -1,3 +1,7 @@
+#import "../fragments/uploadItem.graphql"
+
 query getUploadItems($parentId: ID) {
-    getUploadItems(parentId: $parentId) @client
+    getUploadItems(parentId: $parentId) @client {
+        ...UploadItem
+    }
 }

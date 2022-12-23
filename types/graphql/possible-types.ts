@@ -9,7 +9,8 @@ const result: PossibleTypesResultData = {
 	possibleTypes: {
 		Account: ['DistributionList', 'User'],
 		Node: ['File', 'Folder'],
-		SharedTarget: ['DistributionList', 'User']
+		SharedTarget: ['DistributionList', 'User'],
+		UploadItem: ['UploadFolderItem']
 	}
 };
 export default result;

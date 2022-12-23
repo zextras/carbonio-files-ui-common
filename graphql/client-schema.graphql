@@ -5,7 +5,18 @@ enum UploadStatus {
     QUEUED
 }
 
-type UploadItem {
+interface UploadItem {
+    id: ID!
+    name: String!
+    fullPath: String
+    progress: Int!
+    nodeId: String
+    parentId: String
+    parentNodeId: String
+    status: UploadStatus
+}
+
+type UploadFolderItem implements UploadItem {
     id: ID!
     name: String!
     fullPath: String
@@ -18,6 +29,6 @@ type UploadItem {
 }
 
 extend type Query {
-    getUploadItems: [UploadItem!]!
+    getUploadItems(parentId: ID): [UploadItem!]!
     getUploadItem(id: ID!): UploadItem
 }
