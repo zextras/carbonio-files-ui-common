@@ -18,7 +18,7 @@ import map from 'lodash/map';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { NODES_LOAD_LIMIT } from '../constants';
-import { ACTION_REGEXP, ICON_REGEXP } from '../constants/test';
+import { ACTION_REGEXP, ICON_REGEXP, SELECTORS } from '../constants/test';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import { populateFolder, populateNodePage } from '../mocks/mockUtils';
 import { Node } from '../types/common';
@@ -114,12 +114,12 @@ describe('Move', () => {
 			// activate selection mode by selecting items
 			await selectNodes([nodeToMove.id], user);
 			// check that all wanted items are selected
-			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+			expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 			await user.click(screen.getByTestId('icon: MoreVertical'));
 			await moveNode(destinationFolder, user);
 			await screen.findByText(/Item moved/i);
-			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+			expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 
 			expect(screen.queryAllByTestId('node-item', { exact: false })).toHaveLength(
 				currentFolder.children.nodes.length - 1
@@ -199,7 +199,7 @@ describe('Move', () => {
 				user
 			);
 			// check that all wanted items are selected
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToMove.length);
+			expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(nodesToMove.length);
 			let moveAction = screen.queryByTestId(ICON_REGEXP.move);
 			if (!moveAction) {
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
@@ -219,7 +219,7 @@ describe('Move', () => {
 			expect(screen.queryByRole('button', { name: /move/i })).not.toBeInTheDocument();
 			expect(screen.queryByText('Move')).not.toBeInTheDocument();
 			await screen.findByText(/Item moved/i);
-			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+			expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 
 			expect(screen.queryAllByTestId('node-item', { exact: false })).toHaveLength(
 				currentFolder.children.nodes.length - nodesToMove.length
@@ -296,7 +296,7 @@ describe('Move', () => {
 				user
 			);
 			// check that all wanted items are selected
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length);
+			expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(firstPage.length);
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 			await user.click(screen.getByTestId('icon: MoreVertical'));
 			const moveAction = await screen.findByText(ACTION_REGEXP.move);

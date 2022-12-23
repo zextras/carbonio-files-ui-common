@@ -11,7 +11,7 @@ import { act, fireEvent, screen, within } from '@testing-library/react';
 import map from 'lodash/map';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
-import { ACTION_REGEXP, ICON_REGEXP } from '../constants/test';
+import { ACTION_REGEXP, ICON_REGEXP, SELECTORS } from '../constants/test';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import { populateFile, populateFolder } from '../mocks/mockUtils';
 import { Node } from '../types/common';
@@ -70,7 +70,7 @@ describe('Copy', () => {
 			await selectNodes([file.id, folder.id], user);
 
 			// check that all wanted items are selected
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
+			expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(2);
 			const copyAction = await screen.findByTestId(ICON_REGEXP.copy);
 			expect(copyAction).toBeVisible();
 			expect(copyAction).not.toHaveAttribute('disabled', '');
@@ -127,7 +127,7 @@ describe('Copy', () => {
 			// activate selection mode by selecting items
 			await selectNodes([nodeToCopy.id], user);
 			// check that all wanted items are selected
-			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+			expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 			let copyAction = screen.queryByTestId(ICON_REGEXP.copy);
 			if (!copyAction) {
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
@@ -151,7 +151,7 @@ describe('Copy', () => {
 			await user.click(screen.getByRole('button', { name: ACTION_REGEXP.copy }));
 			await screen.findByText(/Item copied/i);
 			expect(screen.queryByRole('button', { name: ACTION_REGEXP.copy })).not.toBeInTheDocument();
-			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+			expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 
 			destinationFolderCachedData = global.apolloClient.readQuery<
 				GetChildrenQuery,
@@ -208,7 +208,7 @@ describe('Copy', () => {
 				user
 			);
 			// check that all wanted items are selected
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToCopy.length);
+			expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(nodesToCopy.length);
 
 			let copyAction = screen.queryByTestId(ICON_REGEXP.copy);
 			if (!copyAction) {
@@ -234,7 +234,7 @@ describe('Copy', () => {
 			await user.click(screen.getByRole('button', { name: ACTION_REGEXP.copy }));
 			await screen.findByText(/Item copied/i);
 			expect(screen.queryByRole('button', { name: ACTION_REGEXP.copy })).not.toBeInTheDocument();
-			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+			expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 
 			const nodeItems = screen.getAllByTestId('node-item', { exact: false });
 			expect(screen.getByText(copiedNodes[0].name)).toBeVisible();

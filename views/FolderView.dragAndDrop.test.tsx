@@ -22,6 +22,7 @@ import { graphql } from 'msw';
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import server from '../../mocks/server';
 import { TIMERS } from '../constants';
+import { SELECTORS } from '../constants/test';
 import {
 	populateFile,
 	populateFolder,
@@ -610,7 +611,7 @@ describe('Drag and drop', () => {
 			user
 		);
 		// check that all wanted items are selected
-		expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToDrag.length);
+		expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(nodesToDrag.length);
 
 		fireEvent.dragStart(itemToDrag, { dataTransfer: dataTransfer() });
 		forEach(nodesToDrag, (node) => {
@@ -634,7 +635,7 @@ describe('Drag and drop', () => {
 			expect(draggedImage).not.toBeInTheDocument();
 		});
 
-		expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+		expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 	});
 
 	test('Drag of a node shows move dropzone in breadcrumbs. Drop triggers move only on crumbs with right permissions. Dragged node is removed from current folder list', async () => {

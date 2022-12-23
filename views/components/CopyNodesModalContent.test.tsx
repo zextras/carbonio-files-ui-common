@@ -14,7 +14,7 @@ import map from 'lodash/map';
 
 import { destinationVar } from '../../apollo/destinationVar';
 import { NODES_LOAD_LIMIT, ROOTS } from '../../constants';
-import { ACTION_REGEXP } from '../../constants/test';
+import { ACTION_REGEXP, SELECTORS } from '../../constants/test';
 import GET_CHILDREN from '../../graphql/queries/getChildren.graphql';
 import {
 	populateFile,
@@ -379,7 +379,7 @@ describe('Copy Nodes Modal', () => {
 		await selectNodes([folder.id], user);
 		// wait a tick to be sure eventual selection icon is shown
 
-		expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+		expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 	});
 
 	test('confirm action without selecting a destination copy node in opened folder. Confirm button is active if destination folder matches origin folder', async () => {

@@ -14,7 +14,7 @@ import map from 'lodash/map';
 
 import { destinationVar } from '../../apollo/destinationVar';
 import { NODES_LOAD_LIMIT } from '../../constants';
-import { ACTION_REGEXP } from '../../constants/test';
+import { ACTION_REGEXP, SELECTORS } from '../../constants/test';
 import {
 	populateFile,
 	populateFolder,
@@ -201,7 +201,7 @@ describe('Move Nodes Modal', () => {
 					setTimeout(resolve, 0);
 				})
 		);
-		expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+		expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 	});
 
 	test('confirm action without selecting a destination moves node in opened folder. Confirm button is disabled if destination folder matches origin folder', async () => {

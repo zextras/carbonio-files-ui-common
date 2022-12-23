@@ -14,6 +14,7 @@ import { Route } from 'react-router-dom';
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import server from '../../mocks/server';
 import { FILTER_TYPE, INTERNAL_PATH, ROOTS, TIMERS } from '../constants';
+import { SELECTORS } from '../constants/test';
 import { populateFolder, populateNodes } from '../mocks/mockUtils';
 import {
 	File as FilesFile,
@@ -671,7 +672,7 @@ describe('Filter View', () => {
 				user
 			);
 			// check that all wanted items are selected
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToDrag.length);
+			expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(nodesToDrag.length);
 
 			fireEvent.dragStart(itemToDrag, { dataTransfer: dataTransfer() });
 			forEach(nodesToDrag, (node) => {
@@ -690,7 +691,7 @@ describe('Filter View', () => {
 			fireEvent.dragEnd(itemToDrag, { dataTransfer: dataTransfer() });
 
 			// selection mode stays active
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToDrag.length);
+			expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(nodesToDrag.length);
 		});
 
 		test('Drag of a node in a filter empty space shows disabled dropzone overlay for the list. Drop does nothing', async () => {

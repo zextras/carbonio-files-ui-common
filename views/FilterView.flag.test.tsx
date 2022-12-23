@@ -13,7 +13,7 @@ import { Route } from 'react-router-dom';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { FILTER_TYPE, INTERNAL_PATH, NODES_LOAD_LIMIT, ROOTS } from '../constants';
-import { ACTION_REGEXP, ICON_REGEXP } from '../constants/test';
+import { ACTION_REGEXP, ICON_REGEXP, SELECTORS } from '../constants/test';
 import { populateNodes } from '../mocks/mockUtils';
 import { Node } from '../types/common';
 import { getFindNodesVariables, mockFindNodes, mockFlagNodes } from '../utils/mockUtils';
@@ -68,7 +68,9 @@ describe('Filter View', () => {
 				await selectNodes(nodesIdsToUnflag, user);
 
 				// check that all wanted items are selected
-				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesIdsToUnflag.length);
+				expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(
+					nodesIdsToUnflag.length
+				);
 
 				const unflagIcon = await screen.findByTestId(ICON_REGEXP.unflag);
 				// click on unflag action on header bar
@@ -167,7 +169,7 @@ describe('Filter View', () => {
 			// select all loaded nodes
 			await selectNodes(nodesToUnflag, user);
 			// check that all wanted items are selected
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length);
+			expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(firstPage.length);
 
 			const unflagAction = await screen.findByTestId(ICON_REGEXP.unflag);
 			await user.click(unflagAction);

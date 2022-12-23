@@ -92,19 +92,19 @@ describe('Flag', () => {
 			await selectNodes(nodesIdsToFlag, user);
 
 			// check that all wanted items are selected
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesIdsToFlag.length);
+			expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(nodesIdsToFlag.length);
 
 			const flagIcon = await screen.findByTestId(ICON_REGEXP.flag);
 			// click on flag action on header bar
 			await user.click(flagIcon);
-			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+			expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 			await screen.findAllByTestId('icon: Flag');
 			expect(screen.getAllByTestId('icon: Flag')).toHaveLength(nodesIdsToFlag.length);
 
 			// activate selection mode by selecting items
 			await selectNodes(nodesIdsToUnflag, user);
 			// check that all wanted items are selected
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesIdsToUnflag.length);
+			expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(nodesIdsToUnflag.length);
 			// if present, open the additional actions
 			const moreActionsItem = screen.queryByTestId('icon: MoreVertical');
 			if (moreActionsItem !== null) {
@@ -113,7 +113,7 @@ describe('Flag', () => {
 			}
 			const unflagIcon = await screen.findByTestId(ICON_REGEXP.unflag);
 			await user.click(unflagIcon);
-			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+			expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 			await screen.findAllByTestId('icon: Flag');
 			expect(screen.getAllByTestId('icon: Flag')).toHaveLength(
 				nodesIdsToFlag.length - nodesIdsToUnflag.length

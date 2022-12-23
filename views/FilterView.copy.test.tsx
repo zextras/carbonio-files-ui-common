@@ -12,7 +12,7 @@ import { Route } from 'react-router-dom';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { FILTER_TYPE, INTERNAL_PATH, ROOTS } from '../constants';
-import { ACTION_REGEXP, ICON_REGEXP } from '../constants/test';
+import { ACTION_REGEXP, ICON_REGEXP, SELECTORS } from '../constants/test';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import {
 	populateFile,
@@ -67,7 +67,7 @@ describe('Filter View', () => {
 				await selectNodes([file.id, folder.id], user);
 
 				// check that all wanted items are selected
-				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
+				expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(2);
 
 				const copyAction = await screen.findByTestId(ICON_REGEXP.copy);
 				expect(copyAction).toBeVisible();
@@ -129,7 +129,7 @@ describe('Filter View', () => {
 				// activate selection mode by selecting items
 				await selectNodes([nodeToCopy.id], user);
 				// check that all wanted items are selected
-				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+				expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 
 				let copyAction = screen.queryByTestId(ICON_REGEXP.copy);
 				if (!copyAction) {
@@ -160,7 +160,7 @@ describe('Filter View', () => {
 
 				expect(screen.queryByRole('button', { name: ACTION_REGEXP.copy })).not.toBeInTheDocument();
 				// exit selection mode
-				expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+				expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 
 				expect(screen.queryAllByTestId('node-item', { exact: false })).toHaveLength(
 					currentFilter.length
@@ -239,7 +239,7 @@ describe('Filter View', () => {
 					user
 				);
 				// check that all wanted items are selected
-				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToCopy.length);
+				expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(nodesToCopy.length);
 				const copyAction = await screen.findByTestId(ICON_REGEXP.copy);
 				expect(copyAction).toBeVisible();
 				await user.click(copyAction);
@@ -261,7 +261,7 @@ describe('Filter View', () => {
 
 				expect(screen.queryByRole('button', { name: ACTION_REGEXP.copy })).not.toBeInTheDocument();
 				// exit selection mode
-				expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+				expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 
 				expect(screen.queryAllByTestId('node-item', { exact: false })).toHaveLength(
 					currentFilter.length
@@ -339,7 +339,7 @@ describe('Filter View', () => {
 					user
 				);
 				// check that all wanted items are selected
-				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToCopy.length);
+				expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(nodesToCopy.length);
 				let copyAction = screen.queryByTestId(ICON_REGEXP.copy);
 				if (!copyAction) {
 					const moreAction = await screen.findByTestId(ICON_REGEXP.moreVertical);
@@ -375,7 +375,7 @@ describe('Filter View', () => {
 
 				expect(screen.queryByRole('button', { name: ACTION_REGEXP.copy })).not.toBeInTheDocument();
 				// exit selection mode
-				expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+				expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 
 				expect(screen.queryAllByTestId('node-item', { exact: false })).toHaveLength(
 					currentFilter.length

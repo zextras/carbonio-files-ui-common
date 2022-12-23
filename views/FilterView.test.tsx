@@ -15,7 +15,7 @@ import { Link, Route, Switch } from 'react-router-dom';
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import server from '../../mocks/server';
 import { FILTER_TYPE, INTERNAL_PATH, NODES_LOAD_LIMIT, ROOTS } from '../constants';
-import { ICON_REGEXP } from '../constants/test';
+import { ICON_REGEXP, SELECTORS } from '../constants/test';
 import handleFindNodesRequest from '../mocks/handleFindNodesRequest';
 import { populateFolder, populateNode, populateNodes } from '../mocks/mockUtils';
 import { FindNodesQuery, FindNodesQueryVariables } from '../types/graphql/types';
@@ -229,15 +229,15 @@ describe('Filter view', () => {
 			});
 			await screen.findByText(nodes[0].name);
 			expect(screen.getByText(nodes[0].name)).toBeVisible();
-			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+			expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 			await selectNodes([nodes[0].id], user);
 			// check that all wanted items are selected
-			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+			expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 			expect(screen.getByText(/select all/i)).toBeVisible();
 			// deselect node. Selection mode remains active
 			await selectNodes([nodes[0].id], user);
-			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
-			expect(screen.getAllByTestId('unCheckedAvatar')).toHaveLength(nodes.length);
+			expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
+			expect(screen.getAllByTestId(SELECTORS.uncheckedAvatar)).toHaveLength(nodes.length);
 			expect(screen.getByText(/select all/i)).toBeVisible();
 
 			expect(screen.queryByTestId(ICON_REGEXP.moveToTrash)).not.toBeInTheDocument();
@@ -255,8 +255,8 @@ describe('Filter view', () => {
 			const arrowBack = screen.getByTestId('icon: ArrowBackOutline');
 			expect(arrowBack).toBeVisible();
 			await user.click(arrowBack);
-			expect(screen.queryByTestId('unCheckedAvatar')).not.toBeInTheDocument();
-			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+			expect(screen.queryByTestId(SELECTORS.uncheckedAvatar)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 			expect(screen.queryByText(/select all/i)).not.toBeInTheDocument();
 		});
 	});

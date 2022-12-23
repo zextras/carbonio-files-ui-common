@@ -83,7 +83,7 @@ describe('Filter View', () => {
 					user
 				);
 				// check that all wanted items are selected
-				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodes.length);
+				expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(nodes.length);
 
 				expect(screen.queryByTestId('icon: EditOutline')).not.toBeInTheDocument();
 
@@ -120,7 +120,7 @@ describe('Filter View', () => {
 				// activate selection mode by selecting items
 				await selectNodes([node.id], user);
 				// check that all wanted items are selected
-				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+				expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 
 				expect(screen.queryByTestId('icon: EditOutline')).not.toBeInTheDocument();
 
@@ -170,7 +170,7 @@ describe('Filter View', () => {
 				// activate selection mode by selecting items
 				await selectNodes([element.id], user);
 				// check that all wanted items are selected
-				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+				expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 				await user.click(screen.getByTestId('icon: MoreVertical'));
 				await renameNode(newName, user);
@@ -233,7 +233,7 @@ describe('Filter View', () => {
 				// activate selection mode by selecting items
 				await selectNodes([element.id], user);
 				// check that all wanted items are selected
-				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+				expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 				await user.click(screen.getByTestId('icon: MoreVertical'));
 				screen.getByTestId(`node-item-${element.id}`);
@@ -246,7 +246,7 @@ describe('Filter View', () => {
 				expect(nodeItems).toHaveLength(nodes.length);
 				expect(nodeItems[0]).toBe(nodeItem);
 				// selection mode is de-activate
-				expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+				expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 				const list = screen.getByTestId('list-');
 				expect(within(list).queryByTestId('icon: MoreVertical')).not.toBeInTheDocument();
 			});

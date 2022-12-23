@@ -10,7 +10,7 @@ import { fireEvent, screen, within } from '@testing-library/react';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 
-import { ACTION_REGEXP, ICON_REGEXP } from '../../constants/test';
+import { ACTION_REGEXP, ICON_REGEXP, SELECTORS } from '../../constants/test';
 import { populateFolder, populateNode, sortNodes } from '../../mocks/mockUtils';
 import { Node } from '../../types/common';
 import { NodeSort } from '../../types/graphql/types';
@@ -38,7 +38,7 @@ describe('Rename', () => {
 				user
 			);
 			// check that all wanted items are selected
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(children.length);
+			expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(children.length);
 
 			// check that the rename action becomes visible but disabled
 			expect(screen.queryByTestId(ICON_REGEXP.rename)).not.toBeInTheDocument();
@@ -61,7 +61,7 @@ describe('Rename', () => {
 			// activate selection mode by selecting items
 			await selectNodes([node.id], user);
 			// check that all wanted items are selected
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(children.length);
+			expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(children.length);
 
 			// check that the rename action becomes visible but disabled
 			expect(screen.queryByTestId(ICON_REGEXP.rename)).not.toBeInTheDocument();

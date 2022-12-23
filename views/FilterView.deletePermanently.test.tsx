@@ -13,7 +13,7 @@ import { Route } from 'react-router-dom';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { FILTER_TYPE, INTERNAL_PATH, NODES_LOAD_LIMIT, ROOTS } from '../constants';
-import { ACTION_REGEXP } from '../constants/test';
+import { ACTION_REGEXP, SELECTORS } from '../constants/test';
 import { populateFile, populateNodes } from '../mocks/mockUtils';
 import { Node } from '../types/common';
 import { getFindNodesVariables, mockDeletePermanently, mockFindNodes } from '../utils/mockUtils';
@@ -69,7 +69,7 @@ describe('Filter View', () => {
 				// activate selection mode by selecting items
 				await selectNodes(nodesIdsToDeletePermanently, user);
 				// check that all wanted items are selected
-				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+				expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 
 				const element = await screen.findByText(currentFilter[0].name);
 
@@ -94,7 +94,7 @@ describe('Filter View', () => {
 				expect(confirmButton).not.toBeInTheDocument();
 
 				expect(element).not.toBeInTheDocument();
-				expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+				expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 				expect(screen.queryAllByTestId(`file-icon-preview`).length).toEqual(2);
 
 				expect.assertions(8);
@@ -133,7 +133,7 @@ describe('Filter View', () => {
 				// activate selection mode by selecting items
 				await selectNodes(nodesIdsToDeletePermanently, user);
 				// check that all wanted items are selected
-				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
+				expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(2);
 
 				const selectionModeActiveListHeader = screen.getByTestId('list-header-selectionModeActive');
 
@@ -230,7 +230,7 @@ describe('Filter View', () => {
 			// select all loaded nodes
 			await selectNodes(nodesToDelete, user);
 			// check that all wanted items are selected
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length);
+			expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(firstPage.length);
 
 			const deletePermanentlyAction = await screen.findByTestId('icon: DeletePermanentlyOutline');
 			expect(deletePermanentlyAction).toBeVisible();

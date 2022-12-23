@@ -12,7 +12,7 @@ import map from 'lodash/map';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { NODES_LOAD_LIMIT } from '../constants';
-import { ACTION_REGEXP } from '../constants/test';
+import { ACTION_REGEXP, SELECTORS } from '../constants/test';
 import { populateFile, populateFolder, populateNodePage, sortNodes } from '../mocks/mockUtils';
 import { Node } from '../types/common';
 import { Folder, NodeSort } from '../types/graphql/types';
@@ -84,7 +84,7 @@ describe('Mark for deletion - trash', () => {
 			// activate selection mode by selecting items
 			await selectNodes([folderId1], user);
 			// check that all wanted items are selected
-			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+			expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 
 			await user.click(screen.getByTestId('icon: MoreVertical'));
@@ -95,14 +95,14 @@ describe('Mark for deletion - trash', () => {
 
 			await screen.findByText(/item moved to trash/i);
 			expect(trashAction).not.toBeInTheDocument();
-			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+			expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 
 			expect(screen.queryAllByTestId(`file-icon-preview`).length).toEqual(1);
 
 			// activate selection mode by selecting items
 			await selectNodes([fileId1], user);
 			// check that all wanted items are selected
-			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+			expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 
 			await user.click(screen.getByTestId('icon: MoreVertical'));
@@ -151,7 +151,7 @@ describe('Mark for deletion - trash', () => {
 			expect(screen.queryByText((secondPage[0] as Node).name)).not.toBeInTheDocument();
 			await selectNodes(nodesToTrash, user);
 			// check that all wanted items are selected
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length);
+			expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(firstPage.length);
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 
 			await user.click(screen.getByTestId('icon: MoreVertical'));

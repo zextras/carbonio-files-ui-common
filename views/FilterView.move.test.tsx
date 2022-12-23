@@ -78,7 +78,7 @@ describe('Filter View', () => {
 				// activate selection mode by selecting items
 				await selectNodes([file.id], user);
 				// check that all wanted items are selected
-				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+				expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 				await user.click(screen.getByTestId('icon: MoreVertical'));
 				await screen.findByText(ACTION_REGEXP.copy);
@@ -86,13 +86,13 @@ describe('Filter View', () => {
 				// activate selection mode by selecting items
 				await selectNodes([file.id, folder.id], user);
 				// check that all wanted items are selected
-				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+				expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 				expect(screen.queryByTestId('icon: MoreVertical')).not.toBeInTheDocument();
 				expect(screen.queryByTestId(ICON_REGEXP.move)).not.toBeInTheDocument();
 				// activate selection mode by selecting items
 				await selectNodes([folder.id, node.id], user);
 				// check that all wanted items are selected
-				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+				expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 				await user.click(screen.getByTestId('icon: MoreVertical'));
 				expect(await screen.findByText(ACTION_REGEXP.move)).toBeInTheDocument();
@@ -128,7 +128,7 @@ describe('Filter View', () => {
 				await selectNodes([file.id, folder.id], user);
 
 				// check that all wanted items are selected
-				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
+				expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(2);
 				const moreVertical = queryByRoleWithIcon('button', { icon: ICON_REGEXP.moreVertical });
 				if (moreVertical !== null) {
 					await user.click(moreVertical);
@@ -169,7 +169,7 @@ describe('Filter View', () => {
 				// activate selection mode by selecting items
 				await selectNodes([file.id], user);
 				// check that all wanted items are selected
-				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+				expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 				await user.click(screen.getByTestId('icon: MoreVertical'));
 
@@ -180,7 +180,7 @@ describe('Filter View', () => {
 				// activate selection mode by selecting items
 				await selectNodes([file.id, folder.id], user);
 				// check that all wanted items are selected
-				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+				expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 				await user.click(screen.getByTestId('icon: MoreVertical'));
 
@@ -191,7 +191,7 @@ describe('Filter View', () => {
 				// activate selection mode by selecting items
 				await selectNodes([folder.id, node.id], user);
 				// check that all wanted items are selected
-				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+				expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 				await user.click(screen.getByTestId('icon: MoreVertical'));
 				await screen.findByText(ACTION_REGEXP.moveToTrash);
@@ -261,7 +261,7 @@ describe('Filter View', () => {
 				// activate selection mode by selecting items
 				await selectNodes([nodeToMove.id], user);
 				// check that all wanted items are selected
-				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+				expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 				await user.click(screen.getByTestId('icon: MoreVertical'));
 				const moveAction = await screen.findByText(ACTION_REGEXP.move);
@@ -286,7 +286,7 @@ describe('Filter View', () => {
 				await screen.findByText(/item moved/i);
 				expect(screen.queryByRole('button', { name: ACTION_REGEXP.move })).not.toBeInTheDocument();
 				// exit selection mode
-				expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+				expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 
 				expect(screen.queryAllByTestId('node-item', { exact: false })).toHaveLength(
 					currentFilter.length

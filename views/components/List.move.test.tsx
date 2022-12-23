@@ -7,7 +7,7 @@ import React from 'react';
 
 import { fireEvent, screen } from '@testing-library/react';
 
-import { ACTION_REGEXP, ICON_REGEXP } from '../../constants/test';
+import { ACTION_REGEXP, ICON_REGEXP, SELECTORS } from '../../constants/test';
 import { populateFile, populateFolder, populateNode } from '../../mocks/mockUtils';
 import { Node } from '../../types/common';
 import { setup, selectNodes } from '../../utils/testUtils';
@@ -43,7 +43,7 @@ describe('Move', () => {
 			// select file without can_write_file permission
 			await selectNodes([file.id], user);
 			// check that all wanted items are selected
-			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+			expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 			await user.click(screen.getByTestId('icon: MoreVertical'));
 
@@ -54,13 +54,13 @@ describe('Move', () => {
 			// deselect file and select folder without can_write_folder permission
 			await selectNodes([file.id, folder.id], user);
 			// check that all wanted items are selected
-			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+			expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 			expect(screen.queryByTestId(ICON_REGEXP.moreVertical)).not.toBeInTheDocument();
 			expect(screen.queryByTestId(ICON_REGEXP.move)).not.toBeInTheDocument();
 			// deselect folder and select node with right permission
 			await selectNodes([folder.id, node.id], user);
 			// check that all wanted items are selected
-			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+			expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 			await user.click(screen.getByTestId('icon: MoreVertical'));
 			moveAction = await screen.findByText(ACTION_REGEXP.move);
@@ -93,10 +93,10 @@ describe('Move', () => {
 			await selectNodes([file.id, folder.id], user);
 
 			// check that all wanted items are selected
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
+			expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(2);
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 			await user.click(screen.getByTestId('icon: MoreVertical'));
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
+			expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(2);
 
 			const moveIcon = await screen.findByTestId(ICON_REGEXP.move);
 			expect(moveIcon).toBeVisible();

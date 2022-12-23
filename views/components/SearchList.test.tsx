@@ -21,7 +21,7 @@ import { graphql } from 'msw';
 import server from '../../../mocks/server';
 import { searchParamsVar } from '../../apollo/searchVar';
 import { INTERNAL_PATH, NODES_LOAD_LIMIT, ROOTS } from '../../constants';
-import { ACTION_REGEXP, ICON_REGEXP } from '../../constants/test';
+import { ACTION_REGEXP, ICON_REGEXP, SELECTORS } from '../../constants/test';
 import { populateFolder, populateNodes } from '../../mocks/mockUtils';
 import { AdvancedFilters } from '../../types/common';
 import {
@@ -374,7 +374,7 @@ describe('Search list', () => {
 			);
 			// check that all wanted items are selected
 			await waitFor(() => {
-				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToDrag.length);
+				expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(nodesToDrag.length);
 			});
 
 			fireEvent.dragStart(itemToDrag, { dataTransfer: dataTransfer() });
@@ -399,7 +399,7 @@ describe('Search list', () => {
 			fireEvent.dragEnd(itemToDrag, { dataTransfer: dataTransfer() });
 
 			// selection mode stays active
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToDrag.length);
+			expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(nodesToDrag.length);
 		});
 	});
 
@@ -444,7 +444,7 @@ describe('Search list', () => {
 				// activate selection mode by selecting items
 				await selectNodes(nodesIdsToMFD, user);
 				// check that all wanted items are selected
-				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+				expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 
 				await user.click(screen.getByTestId(ICON_REGEXP.moreVertical));
@@ -455,7 +455,7 @@ describe('Search list', () => {
 				await user.click(trashAction);
 
 				await screen.findByText(/item moved to trash/i);
-				expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+				expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 
 				expect(screen.queryAllByTestId(`file-icon-preview`).length).toEqual(2);
 
@@ -487,7 +487,7 @@ describe('Search list', () => {
 				// activate selection mode by selecting items
 				await selectNodes(nodesIdsToMFD, user);
 				// check that all wanted items are selected
-				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
+				expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(2);
 
 				expect(screen.queryByTestId(ICON_REGEXP.moveToTrash)).not.toBeInTheDocument();
 				const moreIconButton = screen.queryByTestId(ICON_REGEXP.moreVertical);
@@ -552,7 +552,7 @@ describe('Search list', () => {
 				// activate selection mode by selecting items
 				await selectNodes(nodesIdsToRestore, user);
 				// check that all wanted items are selected
-				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+				expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 
 				const selectionModeActiveListHeader = screen.getByTestId('list-header-selectionModeActive');
 
@@ -564,7 +564,7 @@ describe('Search list', () => {
 				await user.click(restoreIcon);
 
 				await screen.findByText(/^success$/i);
-				expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+				expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 
 				expect(screen.queryAllByTestId(`file-icon-preview`).length).toEqual(2);
 
@@ -602,7 +602,7 @@ describe('Search list', () => {
 				// activate selection mode by selecting items
 				await selectNodes(nodesIdsToRestore, user);
 				// check that all wanted items are selected
-				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+				expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 
 				const selectionModeActiveListHeader = screen.getByTestId('list-header-selectionModeActive');
 
@@ -655,7 +655,7 @@ describe('Search list', () => {
 				// activate selection mode by selecting items
 				await selectNodes(nodesIdsToRestore, user);
 				// check that all wanted items are selected
-				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
+				expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(2);
 
 				expect(screen.queryByTestId(ICON_REGEXP.restore)).not.toBeInTheDocument();
 				expect(screen.queryByTestId(ICON_REGEXP.moveToTrash)).not.toBeInTheDocument();
@@ -819,7 +819,7 @@ describe('Search list', () => {
 			// deselect node. Selection mode remains active
 			await selectNodes([nodes[0].id], user);
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
-			expect(screen.getAllByTestId('unCheckedAvatar')).toHaveLength(nodes.length);
+			expect(screen.getAllByTestId(SELECTORS.uncheckedAvatar)).toHaveLength(nodes.length);
 			expect(screen.getByText(/select all/i)).toBeVisible();
 			expect(screen.queryByTestId(ICON_REGEXP.moreVertical)).not.toBeInTheDocument();
 
@@ -842,7 +842,7 @@ describe('Search list', () => {
 			await user.click(exitSelectionModeItem);
 			await screen.findByText(/[1-9] advanced filter(s)?/i);
 			expect(screen.queryByTestId('icon: Trash2Outline')).not.toBeInTheDocument();
-			expect(screen.queryByTestId('unCheckedAvatar')).not.toBeInTheDocument();
+			expect(screen.queryByTestId(SELECTORS.uncheckedAvatar)).not.toBeInTheDocument();
 			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
 			expect(screen.queryByText(/select all/i)).not.toBeInTheDocument();
 		});
