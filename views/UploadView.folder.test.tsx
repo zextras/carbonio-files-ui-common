@@ -710,5 +710,193 @@ describe('Upload View', () => {
 				emitter.emit(EMITTER_CODES.never);
 			});
 		});
+
+		describe('Remove action', () => {
+			test('Remove on a loading item of the content decrement content counter on parents', async () => {
+				const localRoot = populateLocalRoot();
+				const folder = populateFolder();
+				folder.parent = localRoot;
+				const level1Folder = populateFolder();
+				level1Folder.parent = folder;
+				folder.children = populateNodePage([level1Folder]);
+				const level2Folder = populateFolder();
+				level2Folder.parent = level1Folder;
+				level1Folder.children = populateNodePage([level2Folder]);
+				const level3File = populateFile();
+				level3File.parent = level2Folder;
+				level2Folder.children = populateNodePage([level3File]);
+
+				const dataTransferObj = createDataTransfer([folder]);
+
+				const emitter = new EventEmitter();
+
+				server.use(
+					rest.post<UploadRequestBody, UploadRequestParams, UploadResponse>(
+						`${REST_ENDPOINT}${UPLOAD_PATH}`,
+						async (req, res, ctx) =>
+							Promise.any([
+								delayUntil(emitter, EMITTER_CODES.never).then(() =>
+									res(ctx.status(XMLHttpRequest.UNSENT))
+								)
+							])
+					)
+				);
+
+				const mocks = [mockGetBaseNode({ node_id: localRoot.id }, localRoot)];
+
+				const { user } = setup(<UploadView />, { mocks });
+
+				const dropzone = await screen.findByText(/nothing here/i);
+
+				await uploadWithDnD(dropzone, dataTransferObj);
+				await screen.findByText(/content/i);
+				await screen.findByText(level3File.name);
+				await screen.findByText('3/4');
+				expect(screen.getByText('3/4')).toBeVisible();
+				expect(screen.getByText('2/3')).toBeVisible();
+				expect(screen.getByText('1/2')).toBeVisible();
+
+				const fileItem = screen
+					.getAllByTestId('node-item', { exact: false })
+					.find((item) => within(item).queryByText(level3File.name) !== null) as HTMLElement;
+				expect(fileItem).toBeDefined();
+
+				await user.click(within(fileItem).getByTestId(ICON_REGEXP.removeUpload));
+				await screen.findAllByTestId(ICON_REGEXP.uploadCompleted);
+
+				expect(screen.getByText('3/3')).toBeVisible();
+				expect(screen.getByText('2/2')).toBeVisible();
+				expect(screen.getByText('1/1')).toBeVisible();
+
+				act(() => {
+					emitter.emit(EMITTER_CODES.never);
+				});
+			});
+
+			test('Remove on a completed item of the content decrement both completed and content counter on parents', async () => {
+				const localRoot = populateLocalRoot();
+				const folder = populateFolder();
+				folder.parent = localRoot;
+				const level1Folder = populateFolder();
+				level1Folder.parent = folder;
+				const level1File = populateFile();
+				level1File.parent = folder;
+				folder.children = populateNodePage([level1Folder, level1File]);
+				const level2Folder = populateFolder();
+				level2Folder.parent = level1Folder;
+				level1Folder.children = populateNodePage([level2Folder]);
+				const level3File = populateFile();
+				level3File.parent = level2Folder;
+				level2Folder.children = populateNodePage([level3File]);
+
+				const dataTransferObj = createDataTransfer([folder]);
+
+				const emitter = new EventEmitter();
+
+				server.use(
+					rest.post<UploadRequestBody, UploadRequestParams, UploadResponse>(
+						`${REST_ENDPOINT}${UPLOAD_PATH}`,
+						async (req, res, ctx) =>
+							Promise.any([
+								delayUntil(emitter, EMITTER_CODES.never).then(() =>
+									res(ctx.status(XMLHttpRequest.UNSENT))
+								)
+							])
+					)
+				);
+
+				const mocks = [mockGetBaseNode({ node_id: localRoot.id }, localRoot)];
+
+				const { user } = setup(<UploadView />, { mocks });
+
+				const dropzone = await screen.findByText(/nothing here/i);
+
+				await uploadWithDnD(dropzone, dataTransferObj);
+				await screen.findByText(/content/i);
+				await screen.findByText(level2Folder.name);
+				await screen.findByText('3/5');
+				expect(screen.getByText('3/5')).toBeVisible();
+				expect(screen.getByText('2/3')).toBeVisible();
+
+				const folder2Item = screen
+					.getAllByTestId('node-item', { exact: false })
+					.find((item) => within(item).queryByText(level2Folder.name) !== null) as HTMLElement;
+				expect(folder2Item).toBeDefined();
+
+				expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(5);
+				await user.click(within(folder2Item).getByTestId(ICON_REGEXP.removeUpload));
+				await waitFor(() =>
+					expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(3)
+				);
+
+				expect(screen.getByText('2/3')).toBeVisible();
+				expect(screen.getByText('1/1')).toBeVisible();
+
+				act(() => {
+					emitter.emit(EMITTER_CODES.never);
+				});
+			});
+
+			test('Remove on a failed item of the content decrement content counter on parents', async () => {
+				const localRoot = populateLocalRoot();
+				const folder = populateFolder();
+				folder.parent = localRoot;
+				const level1Folder = populateFolder();
+				level1Folder.parent = folder;
+				const level1File = populateFile();
+				level1File.parent = folder;
+				folder.children = populateNodePage([level1Folder, level1File]);
+				const level2Folder = populateFolder();
+				level2Folder.parent = level1Folder;
+				level1Folder.children = populateNodePage([level2Folder]);
+				const level3File = populateFile();
+				level3File.parent = level2Folder;
+				level2Folder.children = populateNodePage([level3File]);
+
+				const dataTransferObj = createDataTransfer([folder]);
+
+				server.use(
+					rest.post<UploadRequestBody, UploadRequestParams, UploadResponse>(
+						`${REST_ENDPOINT}${UPLOAD_PATH}`,
+						async (req, res, ctx) => res(ctx.status(500))
+					)
+				);
+
+				const mocks = [mockGetBaseNode({ node_id: localRoot.id }, localRoot)];
+
+				const { user } = setup(<UploadView />, { mocks });
+
+				const dropzone = await screen.findByText(/nothing here/i);
+
+				await uploadWithDnD(dropzone, dataTransferObj);
+				await screen.findByText(/content/i);
+				await screen.findByText(level3File.name);
+				await waitFor(() =>
+					expect(screen.getAllByTestId(ICON_REGEXP.uploadFailed)).toHaveLength(5)
+				);
+				expect(screen.getByText('3/5')).toBeVisible();
+				expect(screen.getByText('2/3')).toBeVisible();
+				expect(screen.getByText('1/2')).toBeVisible();
+
+				const file3Item = screen
+					.getAllByTestId('node-item', { exact: false })
+					.find((item) => within(item).queryByText(level3File.name) !== null) as HTMLElement;
+				expect(file3Item).toBeDefined();
+
+				expect(within(file3Item).getByTestId(ICON_REGEXP.removeUpload)).toBeInTheDocument();
+				expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(5);
+				await user.click(within(file3Item).getByTestId(ICON_REGEXP.removeUpload));
+				await screen.findByText('3/4');
+				await waitFor(() =>
+					expect(screen.getAllByTestId('node-item', { exact: false })).toHaveLength(4)
+				);
+
+				expect(screen.getByText('3/4')).toBeVisible();
+				expect(screen.getByText('2/2')).toBeVisible();
+				expect(screen.getByText('1/1')).toBeVisible();
+				expect(screen.getAllByTestId(ICON_REGEXP.uploadCompleted)).toHaveLength(2);
+				expect(screen.getAllByTestId(ICON_REGEXP.uploadFailed)).toHaveLength(2);
+			});
+		});
 	});
 });

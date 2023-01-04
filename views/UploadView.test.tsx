@@ -12,6 +12,7 @@ import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { uploadVar } from '../apollo/uploadVar';
 import { ICON_REGEXP } from '../constants/test';
 import {
+	populateFile,
 	populateFolder,
 	populateLocalRoot,
 	populateNodes,
@@ -31,6 +32,34 @@ jest.mock('../../hooks/useCreateOptions', () => ({
 }));
 
 describe('Upload view', () => {
+	test('Click on an item open the displayer', async () => {
+		const localRoot = populateLocalRoot();
+		const node = populateFile();
+		node.parent = localRoot;
+
+		const dataTransferObj = createDataTransfer([node]);
+
+		const mocks = [mockGetBaseNode({ node_id: localRoot.id }, localRoot)];
+
+		const { user, getByRoleWithIcon } = setup(<UploadView />, { mocks });
+
+		const dropzone = await screen.findByText(/nothing here/i);
+		await screen.findByText(/view files and folders/i);
+
+		await uploadWithDnD(dropzone, dataTransferObj);
+
+		expect(screen.getByText(node.name)).toBeVisible();
+		expect(screen.getByText(/view files and folders/i)).toBeVisible();
+
+		await user.click(screen.getByText(node.name));
+		await waitFor(() => expect(screen.getAllByText(node.name)).toHaveLength(2));
+		expect(getByRoleWithIcon('button', { icon: ICON_REGEXP.close })).toBeVisible();
+		expect(screen.queryByText(/view files and folders/i)).not.toBeInTheDocument();
+		await user.click(getByRoleWithIcon('button', { icon: ICON_REGEXP.close }));
+		await screen.findByText(/view files and folders/i);
+		expect(screen.getByText(node.name)).toBeVisible();
+	});
+
 	describe('Drag and drop', () => {
 		test('When the first item uploaded is a folder, open displayer for this folder', async () => {
 			const localRoot = populateLocalRoot();

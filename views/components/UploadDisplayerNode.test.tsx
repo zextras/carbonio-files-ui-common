@@ -181,7 +181,7 @@ describe('Upload Displayer Node', () => {
 			mocks: []
 		});
 
-		await screen.findByText(uploadItem.name);
+		await screen.findAllByText(uploadItem.name);
 		expect(screen.getByText(/size/i)).toBeVisible();
 		expect(screen.getByText(humanFileSize(uploadItem.file?.size || 0))).toBeVisible();
 	});
@@ -194,7 +194,7 @@ describe('Upload Displayer Node', () => {
 			mocks: []
 		});
 
-		await screen.findByText(uploadItem.name);
+		await screen.findAllByText(uploadItem.name);
 		expect(screen.queryByText(/size/i)).not.toBeInTheDocument();
 		expect(screen.queryByText(humanFileSize(uploadItem.file?.size || 0))).not.toBeInTheDocument();
 	});
@@ -207,7 +207,7 @@ describe('Upload Displayer Node', () => {
 			mocks: []
 		});
 
-		await screen.findByText(uploadItem.name);
+		await screen.findAllByText(uploadItem.name);
 		expect(screen.queryByText(/content/i)).not.toBeInTheDocument();
 	});
 
@@ -222,9 +222,35 @@ describe('Upload Displayer Node', () => {
 			mocks: []
 		});
 
-		await screen.findByText(uploadItem.name);
+		await screen.findAllByText(uploadItem.name);
 		expect(screen.getByText(/content/i)).toBeVisible();
 		expect(screen.getByText(children[0].name)).toBeVisible();
 		expect(screen.getByText(children[1].name)).toBeVisible();
+	});
+
+	test('Parent folder name is shown as partial path', async () => {
+		const uploadItem = populateUploadItem({ fullPath: 'parent folder name/item' });
+		uploadVar({ [uploadItem.id]: uploadItem });
+
+		setup(<UploadDisplayerNode uploadItem={uploadItem} />, {
+			mocks: []
+		});
+
+		await screen.findByText(uploadItem.name);
+		expect(screen.getByText(/path/i)).toBeVisible();
+		expect(screen.getByText(/parent folder name/i)).toBeVisible();
+	});
+
+	test('Item name is shown as partial path if item has no parent', async () => {
+		const uploadItem = populateUploadItem({ fullPath: '/item name' });
+		uploadVar({ [uploadItem.id]: uploadItem });
+
+		setup(<UploadDisplayerNode uploadItem={uploadItem} />, {
+			mocks: []
+		});
+
+		await screen.findByText(uploadItem.name);
+		expect(screen.getByText(/path/i)).toBeVisible();
+		expect(screen.getByText(/item name/i)).toBeVisible();
 	});
 });
