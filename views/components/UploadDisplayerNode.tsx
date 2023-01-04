@@ -35,8 +35,9 @@ interface UploadDisplayerNodeProps {
 }
 
 function UploadDisplayerNodeContent({ id }: { id: string }): JSX.Element {
-	const ids = useMemo(() => drop(flatUploadItemChildrenIds(id)), [id]);
-
+	// reload children ids each time otherwise remove of sub-items is not detected
+	const ids = drop(flatUploadItemChildrenIds(id));
+	// then memoized with a deep equality the ids to check if they are changed or not
 	const memoIds = useMemoCompare(ids, (prev, next) => isEqual(prev, next));
 
 	const contentItems = useMemo(
@@ -71,7 +72,7 @@ export const UploadDisplayerNode = ({ uploadItem }: UploadDisplayerNodeProps): J
 			}
 			const path: string[] = uploadItem.fullPath.split('/');
 			if (path.length > 0) {
-				if (path.length > 1) {
+				if (path.length > 1 && path[path.length - 2].length > 0) {
 					return {
 						name: path[path.length - 2],
 						type: NodeType.Folder,
