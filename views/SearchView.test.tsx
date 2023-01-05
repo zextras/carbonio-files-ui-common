@@ -13,6 +13,7 @@ import map from 'lodash/map';
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { searchParamsVar } from '../apollo/searchVar';
 import { INTERNAL_PATH, ROOTS } from '../constants';
+import { ACTION_REGEXP } from '../constants/test';
 import BASE_NODE from '../graphql/fragments/baseNode.graphql';
 import {
 	populateFolder,
@@ -42,13 +43,7 @@ import {
 	mockRestoreNodes,
 	mockTrashNodes
 } from '../utils/mockUtils';
-import {
-	actionRegexp,
-	buildBreadCrumbRegExp,
-	buildChipsFromKeywords,
-	moveNode,
-	setup
-} from '../utils/testUtils';
+import { buildBreadCrumbRegExp, buildChipsFromKeywords, moveNode, setup } from '../utils/testUtils';
 import { getChipLabel } from '../utils/utils';
 import { SearchView } from './SearchView';
 
@@ -318,7 +313,7 @@ describe('Search view', () => {
 			// right click to open contextual menu
 			const nodeToTrashItem = screen.getByTestId(`node-item-${node.id}`);
 			fireEvent.contextMenu(nodeToTrashItem);
-			const moveToTrashAction = await screen.findByText(actionRegexp.moveToTrash);
+			const moveToTrashAction = await screen.findByText(ACTION_REGEXP.moveToTrash);
 			expect(moveToTrashAction).toBeVisible();
 			await user.click(moveToTrashAction);
 			// await snackbar to be shown
@@ -329,10 +324,10 @@ describe('Search view', () => {
 			const trashedNodeItem = screen.getByTestId(`node-item-${node.id}`);
 			expect(trashedNodeItem).toBeVisible();
 			fireEvent.contextMenu(trashedNodeItem);
-			await screen.findByText(actionRegexp.restore);
-			expect(screen.getByText(actionRegexp.restore)).toBeVisible();
-			expect(screen.getByText(actionRegexp.deletePermanently)).toBeVisible();
-			expect(screen.queryByText(actionRegexp.moveToTrash)).not.toBeInTheDocument();
+			await screen.findByText(ACTION_REGEXP.restore);
+			expect(screen.getByText(ACTION_REGEXP.restore)).toBeVisible();
+			expect(screen.getByText(ACTION_REGEXP.deletePermanently)).toBeVisible();
+			expect(screen.queryByText(ACTION_REGEXP.moveToTrash)).not.toBeInTheDocument();
 		});
 
 		test('Mark for deletion does not close the displayer from searches with nodes both marked for deletion and not', async () => {
@@ -376,7 +371,7 @@ describe('Search view', () => {
 			// right click to open contextual menu
 			const nodeToTrashItem = screen.getByTestId(`node-item-${node.id}`);
 			fireEvent.contextMenu(nodeToTrashItem);
-			const moveToTrashAction = await screen.findByText(actionRegexp.moveToTrash);
+			const moveToTrashAction = await screen.findByText(ACTION_REGEXP.moveToTrash);
 			expect(moveToTrashAction).toBeVisible();
 			await user.click(moveToTrashAction);
 			// await snackbar to be shown
@@ -387,10 +382,10 @@ describe('Search view', () => {
 			const trashedNodeItem = screen.getByTestId(`node-item-${node.id}`);
 			expect(trashedNodeItem).toBeVisible();
 			fireEvent.contextMenu(trashedNodeItem);
-			await screen.findByText(actionRegexp.restore);
-			expect(screen.getByText(actionRegexp.restore)).toBeVisible();
-			expect(screen.getByText(actionRegexp.deletePermanently)).toBeVisible();
-			expect(screen.queryByText(actionRegexp.moveToTrash)).not.toBeInTheDocument();
+			await screen.findByText(ACTION_REGEXP.restore);
+			expect(screen.getByText(ACTION_REGEXP.restore)).toBeVisible();
+			expect(screen.getByText(ACTION_REGEXP.deletePermanently)).toBeVisible();
+			expect(screen.queryByText(ACTION_REGEXP.moveToTrash)).not.toBeInTheDocument();
 		});
 
 		test('Restore does not close the displayer from searches with only trashed nodes', async () => {
@@ -451,7 +446,7 @@ describe('Search view', () => {
 			// right click to open contextual menu
 			const nodeToRestoreItem = screen.getByTestId(`node-item-${node.id}`);
 			fireEvent.contextMenu(nodeToRestoreItem);
-			const restoreAction = await screen.findByText(actionRegexp.restore);
+			const restoreAction = await screen.findByText(ACTION_REGEXP.restore);
 			expect(restoreAction).toBeVisible();
 			expect(restoreAction.parentNode).not.toHaveAttribute('disabled', '');
 			await user.click(restoreAction);
@@ -463,10 +458,10 @@ describe('Search view', () => {
 			const restoredNodeItem = screen.getByTestId(`node-item-${node.id}`);
 			expect(restoredNodeItem).toBeVisible();
 			fireEvent.contextMenu(restoredNodeItem);
-			await screen.findByText(actionRegexp.moveToTrash);
-			expect(screen.getByText(actionRegexp.moveToTrash)).toBeVisible();
-			expect(screen.queryByText(actionRegexp.deletePermanently)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.restore)).not.toBeInTheDocument();
+			await screen.findByText(ACTION_REGEXP.moveToTrash);
+			expect(screen.getByText(ACTION_REGEXP.moveToTrash)).toBeVisible();
+			expect(screen.queryByText(ACTION_REGEXP.deletePermanently)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.restore)).not.toBeInTheDocument();
 		});
 
 		test('Restore does not close the displayer from searches with nodes both marked for deletion and not', async () => {
@@ -524,7 +519,7 @@ describe('Search view', () => {
 			// right click to open contextual menu
 			const nodeToRestoreItem = screen.getByTestId(`node-item-${node.id}`);
 			fireEvent.contextMenu(nodeToRestoreItem);
-			const restoreAction = await screen.findByText(actionRegexp.restore);
+			const restoreAction = await screen.findByText(ACTION_REGEXP.restore);
 			expect(restoreAction).toBeVisible();
 			expect(restoreAction.parentNode).not.toHaveAttribute('disabled', '');
 			await user.click(restoreAction);
@@ -536,10 +531,10 @@ describe('Search view', () => {
 			const restoredNodeItem = screen.getByTestId(`node-item-${node.id}`);
 			expect(restoredNodeItem).toBeVisible();
 			fireEvent.contextMenu(restoredNodeItem);
-			await screen.findByText(actionRegexp.moveToTrash);
-			expect(screen.getByText(actionRegexp.moveToTrash)).toBeVisible();
-			expect(screen.queryByText(actionRegexp.deletePermanently)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.restore)).not.toBeInTheDocument();
+			await screen.findByText(ACTION_REGEXP.moveToTrash);
+			expect(screen.getByText(ACTION_REGEXP.moveToTrash)).toBeVisible();
+			expect(screen.queryByText(ACTION_REGEXP.deletePermanently)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.restore)).not.toBeInTheDocument();
 		});
 	});
 });

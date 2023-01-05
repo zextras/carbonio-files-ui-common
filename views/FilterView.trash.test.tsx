@@ -13,6 +13,7 @@ import { Route } from 'react-router-dom';
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import server from '../../mocks/server';
 import { FILTER_TYPE, INTERNAL_PATH, NODES_LOAD_LIMIT, ROOTS } from '../constants';
+import { ACTION_REGEXP, ICON_REGEXP, SELECTORS } from '../constants/test';
 import FIND_NODES from '../graphql/queries/findNodes.graphql';
 import GET_NODE from '../graphql/queries/getNode.graphql';
 import handleFindNodesRequest from '../mocks/handleFindNodesRequest';
@@ -26,7 +27,7 @@ import {
 	NodeSort
 } from '../types/graphql/types';
 import { getFindNodesVariables, getNodeVariables, mockFindNodes } from '../utils/mockUtils';
-import { actionRegexp, iconRegexp, selectNodes, setup } from '../utils/testUtils';
+import { selectNodes, setup } from '../utils/testUtils';
 import FilterView from './FilterView';
 
 const mockedRequestHandler = jest.fn();
@@ -49,7 +50,7 @@ describe('Filter view', () => {
 	describe('Trash filter', () => {
 		test('Restore close the displayer from trash views', async () => {
 			const { user } = setup(
-				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
+				<Route path={`/:view/:filter?`}>
 					<FilterView />
 				</Route>,
 				{
@@ -110,7 +111,7 @@ describe('Filter view', () => {
 
 		test('Delete permanently close the displayer from trash views', async () => {
 			const { user } = setup(
-				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
+				<Route path={`/:view/:filter?`}>
 					<FilterView />
 				</Route>,
 				{
@@ -159,7 +160,7 @@ describe('Filter view', () => {
 			expect(deletePermanentlyAction).toBeVisible();
 			await user.click(deletePermanentlyAction);
 			const deletePermanentlyConfirm = await screen.findByRole('button', {
-				name: actionRegexp.deletePermanently
+				name: ACTION_REGEXP.deletePermanently
 			});
 			await user.click(deletePermanentlyConfirm);
 			await waitFor(() =>
@@ -179,7 +180,7 @@ describe('Filter view', () => {
 
 		test('in trash filter only restore and delete permanently actions are visible', async () => {
 			const { user } = setup(
-				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
+				<Route path={`/:view/:filter?`}>
 					<FilterView />
 				</Route>,
 				{ initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`] }
@@ -189,16 +190,16 @@ describe('Filter view', () => {
 			const nodeItems = await screen.findAllByTestId('node-item', { exact: false });
 			fireEvent.contextMenu(nodeItems[0]);
 			// check that restore action becomes visible
-			const restoreAction = await screen.findByText(actionRegexp.restore);
+			const restoreAction = await screen.findByText(ACTION_REGEXP.restore);
 			expect(restoreAction).toBeVisible();
-			expect(screen.getByText(actionRegexp.deletePermanently)).toBeVisible();
-			expect(screen.queryByText(actionRegexp.rename)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.flag)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.unflag)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.move)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.moveToTrash)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.download)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.copy)).not.toBeInTheDocument();
+			expect(screen.getByText(ACTION_REGEXP.deletePermanently)).toBeVisible();
+			expect(screen.queryByText(ACTION_REGEXP.rename)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.flag)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.unflag)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.move)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.moveToTrash)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.download)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.copy)).not.toBeInTheDocument();
 
 			const queryResult = global.apolloClient.readQuery<FindNodesQuery, FindNodesQueryVariables>({
 				query: FIND_NODES,
@@ -212,7 +213,7 @@ describe('Filter view', () => {
 			const nodes = queryResult?.findNodes?.nodes as Node[];
 			// selection mode
 			await selectNodes([nodes[0].id], user);
-			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+			expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 			expect(screen.queryByTestId('icon: MoreVertical')).not.toBeInTheDocument();
 			const restoreActionSelection = await within(
 				screen.getByTestId('list-header-selectionModeActive')
@@ -223,18 +224,18 @@ describe('Filter view', () => {
 					'icon: DeletePermanentlyOutline'
 				)
 			).toBeVisible();
-			expect(screen.queryByText(actionRegexp.rename)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.flag)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.unflag)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.move)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.moveToTrash)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.download)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.copy)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.rename)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.flag)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.unflag)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.move)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.moveToTrash)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.download)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.copy)).not.toBeInTheDocument();
 			// exit selection mode
 			await user.click(screen.getByTestId('icon: ArrowBackOutline'));
 			expect(restoreActionSelection).not.toBeInTheDocument();
 			expect(screen.queryByTestId('icon: MoreVertical')).not.toBeInTheDocument();
-			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+			expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 
 			const node = populateNode(nodes[0].__typename, nodes[0].id, nodes[0].name);
 			node.permissions.can_write_folder = true;
@@ -257,13 +258,13 @@ describe('Filter view', () => {
 			expect(screen.queryByTestId('icon: MoreVertical')).not.toBeInTheDocument();
 			expect(within(displayer).getByTestId('icon: RestoreOutline')).toBeVisible();
 			expect(within(displayer).getByTestId('icon: DeletePermanentlyOutline')).toBeVisible();
-			expect(screen.queryByText(actionRegexp.rename)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.flag)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.unflag)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.move)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.moveToTrash)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.download)).not.toBeInTheDocument();
-			expect(screen.queryByText(actionRegexp.copy)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.rename)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.flag)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.unflag)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.move)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.moveToTrash)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.download)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.copy)).not.toBeInTheDocument();
 		});
 
 		test('if there is no element selected, trash actions are hidden', async () => {
@@ -279,27 +280,27 @@ describe('Filter view', () => {
 				)
 			];
 
-			const { user } = setup(
-				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
-				{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`] }
-			);
+			const { user } = setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
+				mocks,
+				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`]
+			});
 			await screen.findByText(nodes[0].name);
 			expect(screen.getByText(nodes[0].name)).toBeVisible();
-			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+			expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 			await selectNodes([nodes[0].id], user);
 			// check that all wanted items are selected
-			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+			expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 			expect(screen.getByText(/select all/i)).toBeVisible();
 			// deselect node. Selection mode remains active
 			await selectNodes([nodes[0].id], user);
-			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
-			expect(screen.getAllByTestId('unCheckedAvatar')).toHaveLength(nodes.length);
+			expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
+			expect(screen.getAllByTestId(SELECTORS.uncheckedAvatar)).toHaveLength(nodes.length);
 			expect(screen.getByText(/select all/i)).toBeVisible();
 
-			expect(screen.queryByTestId(iconRegexp.moreVertical)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.restore)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.deletePermanently)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.moveToTrash)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.moreVertical)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.restore)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.deletePermanently)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.moveToTrash)).not.toBeInTheDocument();
 
 			expect(screen.getByTestId('icon: ArrowBackOutline')).toBeVisible();
 			await user.click(screen.getByTestId('icon: ArrowBackOutline'));
@@ -309,15 +310,15 @@ describe('Filter view', () => {
 			expect(
 				within(listHeader).queryByTestId('icon: DeletePermanentlyOutline')
 			).not.toBeInTheDocument();
-			expect(screen.queryByTestId('unCheckedAvatar')).not.toBeInTheDocument();
-			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+			expect(screen.queryByTestId(SELECTORS.uncheckedAvatar)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 			expect(screen.queryByText(/select all/i)).not.toBeInTheDocument();
 		});
 	});
 
 	describe('My Trash filter', () => {
 		test('My Trash filter sharedWithMe=false and includes only trashed nodes', async () => {
-			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`]
 			});
 			await screen.findByText(/view files and folders/i);
@@ -342,7 +343,7 @@ describe('Filter view', () => {
 
 	describe('Shared Trash filter', () => {
 		test('Shared trash filter has sharedWithMe=true and includes only trashed nodes', async () => {
-			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.sharedTrash}`]
 			});
 			await screen.findByText(/view files and folders/i);

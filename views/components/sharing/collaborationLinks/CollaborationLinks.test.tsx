@@ -10,7 +10,6 @@ import { act, screen, waitFor, within } from '@testing-library/react';
 
 import { populateCollaborationLink, populateNode } from '../../../../mocks/mockUtils';
 import { SharePermission } from '../../../../types/graphql/types';
-import { isFile } from '../../../../utils/ActionsFactory';
 import {
 	mockCreateCollaborationLink,
 	mockDeleteCollaborationLinks,
@@ -18,6 +17,7 @@ import {
 } from '../../../../utils/mockUtils';
 import { setup } from '../../../../utils/testUtils';
 import * as moduleUtils from '../../../../utils/utils';
+import { isFile } from '../../../../utils/utils';
 import { CollaborationLinks } from './CollaborationLinks';
 
 describe('Collaboration Link', () => {

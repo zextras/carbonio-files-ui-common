@@ -19,30 +19,31 @@ interface DisplayerHeaderParams {
 	trashed?: boolean;
 }
 
-export const DisplayerHeader: React.VFC<DisplayerHeaderParams> = ({
-	name,
-	type,
-	mimeType,
-	closeAction,
-	trashed
-}) => (
-	<>
-		<Container
-			data-testid="DisplayerHeader"
-			orientation="horizontal"
-			height="3rem"
-			background="gray5"
-			mainAlignment="space-between"
-			crossAlignment="center"
-			padding={{ left: 'large', right: 'extrasmall' }}
-			style={{ minHeight: '3rem' }}
-		>
-			<Icon size="large" icon={(trashed && 'Trash2Outline') || getIconByFileType(type, mimeType)} />
-			<Row mainAlignment="flex-start" padding={{ left: 'large' }} takeAvailableSpace>
-				<Text>{name}</Text>
-			</Row>
-			<IconButton icon="Close" onClick={closeAction} />
-		</Container>
-		<Divider color="gray3" />
-	</>
+export const DisplayerHeader = React.memo<DisplayerHeaderParams>(
+	({ name, type, mimeType, closeAction, trashed }) => (
+		<>
+			<Container
+				data-testid="DisplayerHeader"
+				orientation="horizontal"
+				height="3rem"
+				background="gray5"
+				mainAlignment="space-between"
+				crossAlignment="center"
+				padding={{ left: 'large', right: 'extrasmall' }}
+				style={{ minHeight: '3rem' }}
+			>
+				<Icon
+					size="large"
+					icon={(trashed && 'Trash2Outline') || getIconByFileType(type, mimeType)}
+				/>
+				<Row mainAlignment="flex-start" padding={{ left: 'large' }} takeAvailableSpace>
+					<Text>{name}</Text>
+				</Row>
+				<IconButton icon="Close" onClick={closeAction} />
+			</Container>
+			<Divider color="gray3" />
+		</>
+	)
 );
+
+DisplayerHeader.displayName = 'DisplayerHeader';

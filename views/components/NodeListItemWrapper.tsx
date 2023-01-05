@@ -25,11 +25,10 @@ import {
 	canBeMoveDestination,
 	canUploadFile,
 	getAllPermittedActions,
-	getPermittedHoverBarActions,
-	isFile,
-	isFolder
+	getPermittedHoverBarActions
 } from '../../utils/ActionsFactory';
-import { isTrashView } from '../../utils/utils';
+import { getUploadAddType } from '../../utils/uploadUtils';
+import { isFile, isFolder, isTrashView } from '../../utils/utils';
 import { Dropzone } from './Dropzone';
 import { NodeListItem } from './NodeListItem';
 
@@ -216,9 +215,9 @@ export const NodeListItemWrapper: React.VFC<NodeListItemWrapperProps> = ({
 		[exitSelectionMode, moveNodesMutation, node]
 	);
 
-	const uploadAction = useCallback(
+	const uploadAction = useCallback<React.DragEventHandler>(
 		(event) => {
-			add(event.dataTransfer.files, node.id, true);
+			add(getUploadAddType(event.dataTransfer), node.id);
 			createSnackbar({
 				key: new Date().toLocaleString(),
 				type: 'info',
@@ -292,7 +291,7 @@ export const NodeListItemWrapper: React.VFC<NodeListItemWrapperProps> = ({
 					lastEditor={node.last_editor}
 					incomingShare={me !== node.owner?.id}
 					outgoingShare={me === node.owner?.id && node.shares && node.shares.length > 0}
-					size={(isFile(node) && node.size) || undefined}
+					size={isFile(node) ? node.size : undefined}
 					flagActive={node.flagged}
 					toggleFlagTrue={toggleFlagTrue}
 					toggleFlagFalse={toggleFlagFalse}
@@ -317,7 +316,7 @@ export const NodeListItemWrapper: React.VFC<NodeListItemWrapperProps> = ({
 					trashed={node.rootId === ROOTS.TRASH}
 					selectionContextualMenuActionsItems={selectionContextualMenuActionsItems}
 					dragging={dragging}
-					version={(isFile(node) && node.version) || undefined}
+					version={isFile(node) ? node.version : undefined}
 				/>
 			)}
 		</Dropzone>

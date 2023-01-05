@@ -8,9 +8,10 @@ import React from 'react';
 import { fireEvent, screen, within } from '@testing-library/react';
 import map from 'lodash/map';
 
+import { ACTION_REGEXP } from '../../constants/test';
 import { populateFile, populateFolder, populateNode } from '../../mocks/mockUtils';
 import { Node } from '../../types/common';
-import { actionRegexp, setup, selectNodes } from '../../utils/testUtils';
+import { setup, selectNodes } from '../../utils/testUtils';
 import { List } from './List';
 
 describe('Mark for deletion - trash', () => {
@@ -128,8 +129,8 @@ describe('Mark for deletion - trash', () => {
 			// right click to open contextual menu
 			const nodeItem = screen.getByTestId(`node-item-${node.id}`);
 			fireEvent.contextMenu(nodeItem);
-			await screen.findByText(actionRegexp.copy);
-			expect(screen.queryByText(actionRegexp.moveToTrash)).not.toBeInTheDocument();
+			await screen.findByText(ACTION_REGEXP.copy);
+			expect(screen.queryByText(ACTION_REGEXP.moveToTrash)).not.toBeInTheDocument();
 			expect.assertions(1);
 		});
 	});

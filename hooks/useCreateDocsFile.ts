@@ -76,11 +76,8 @@ const createFileCompleted = (
 						});
 						if (parentFolder?.getNode?.__typename === 'Folder') {
 							const parentNode = parentFolder.getNode;
-							const newPosition = addNodeToFolder(parentNode, result.data.getNode);
-							scrollToNodeItem(
-								result.data.getNode.id,
-								newPosition === parentFolder.getNode.children.nodes.length
-							);
+							const { isLast } = addNodeToFolder(parentNode, result.data.getNode);
+							scrollToNodeItem(result.data.getNode.id, isLast);
 						}
 					}
 					return result;

@@ -11,6 +11,7 @@ import forEach from 'lodash/forEach';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { NODES_LOAD_LIMIT } from '../constants';
+import { ICON_REGEXP, SELECTORS } from '../constants/test';
 import { populateFolder, populateNodePage, populateNodes } from '../mocks/mockUtils';
 import { Node } from '../types/common';
 import { Folder } from '../types/graphql/types';
@@ -21,7 +22,7 @@ import {
 	mockGetParent,
 	mockGetPermissions
 } from '../utils/mockUtils';
-import { iconRegexp, setup, selectNodes, triggerLoadMore } from '../utils/testUtils';
+import { setup, selectNodes, triggerLoadMore } from '../utils/testUtils';
 import { DisplayerProps } from './components/Displayer';
 import FolderView from './FolderView';
 
@@ -56,37 +57,37 @@ describe('Folder View Selection mode', () => {
 
 		await screen.findByText((currentFolder.children.nodes[0] as Node).name);
 		expect(screen.getByText((currentFolder.children.nodes[0] as Node).name)).toBeVisible();
-		expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+		expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 		await selectNodes([(currentFolder.children.nodes[0] as Node).id], user);
 		// check that all wanted items are selected
-		expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+		expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 		expect(screen.getByText(/select all/i)).toBeVisible();
 		// deselect node. Selection mode remains active
 		await selectNodes([(currentFolder.children.nodes[0] as Node).id], user);
-		expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
-		expect(screen.getAllByTestId('unCheckedAvatar')).toHaveLength(
+		expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
+		expect(screen.getAllByTestId(SELECTORS.uncheckedAvatar)).toHaveLength(
 			currentFolder.children.nodes.length
 		);
 		expect(screen.getByText(/select all/i)).toBeVisible();
 
-		expect(screen.queryByTestId(iconRegexp.moveToTrash)).not.toBeInTheDocument();
-		expect(screen.queryByTestId(iconRegexp.moreVertical)).not.toBeInTheDocument();
-		expect(screen.queryByTestId(iconRegexp.rename)).not.toBeInTheDocument();
-		expect(screen.queryByTestId(iconRegexp.copy)).not.toBeInTheDocument();
-		expect(screen.queryByTestId(iconRegexp.move)).not.toBeInTheDocument();
-		expect(screen.queryByTestId(iconRegexp.flag)).not.toBeInTheDocument();
-		expect(screen.queryByTestId(iconRegexp.unflag)).not.toBeInTheDocument();
-		expect(screen.queryByTestId(iconRegexp.download)).not.toBeInTheDocument();
-		expect(screen.queryByTestId(iconRegexp.openDocument)).not.toBeInTheDocument();
-		expect(screen.queryByTestId(iconRegexp.restore)).not.toBeInTheDocument();
-		expect(screen.queryByTestId(iconRegexp.deletePermanently)).not.toBeInTheDocument();
+		expect(screen.queryByTestId(ICON_REGEXP.moveToTrash)).not.toBeInTheDocument();
+		expect(screen.queryByTestId(ICON_REGEXP.moreVertical)).not.toBeInTheDocument();
+		expect(screen.queryByTestId(ICON_REGEXP.rename)).not.toBeInTheDocument();
+		expect(screen.queryByTestId(ICON_REGEXP.copy)).not.toBeInTheDocument();
+		expect(screen.queryByTestId(ICON_REGEXP.move)).not.toBeInTheDocument();
+		expect(screen.queryByTestId(ICON_REGEXP.flag)).not.toBeInTheDocument();
+		expect(screen.queryByTestId(ICON_REGEXP.unflag)).not.toBeInTheDocument();
+		expect(screen.queryByTestId(ICON_REGEXP.download)).not.toBeInTheDocument();
+		expect(screen.queryByTestId(ICON_REGEXP.openDocument)).not.toBeInTheDocument();
+		expect(screen.queryByTestId(ICON_REGEXP.restore)).not.toBeInTheDocument();
+		expect(screen.queryByTestId(ICON_REGEXP.deletePermanently)).not.toBeInTheDocument();
 
 		const arrowBack = screen.getByTestId('icon: ArrowBackOutline');
 		expect(arrowBack).toBeVisible();
 		await user.click(arrowBack);
 		expect(arrowBack).not.toBeInTheDocument();
-		expect(screen.queryByTestId('unCheckedAvatar')).not.toBeInTheDocument();
-		expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+		expect(screen.queryByTestId(SELECTORS.uncheckedAvatar)).not.toBeInTheDocument();
+		expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 		expect(screen.queryByText(/select all/i)).not.toBeInTheDocument();
 	});
 
@@ -115,36 +116,36 @@ describe('Folder View Selection mode', () => {
 		expect(screen.queryByText(/select all/i)).not.toBeInTheDocument();
 		await selectNodes([(currentFolder.children.nodes[0] as Folder).id], user);
 		// check that all wanted items are selected
-		expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+		expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 		expect(screen.getByText(/\bselect all/i)).toBeVisible();
 		await user.click(screen.getByText(/\bselect all/i));
 		await screen.findByText(/deselect all/i);
-		expect(screen.queryByTestId('unCheckedAvatar')).not.toBeInTheDocument();
-		expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(
+		expect(screen.queryByTestId(SELECTORS.uncheckedAvatar)).not.toBeInTheDocument();
+		expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(
 			currentFolder.children.nodes.length
 		);
 		expect(screen.getByText(/deselect all/i)).toBeVisible();
 		expect(screen.queryByText(/\bselect all/i)).not.toBeInTheDocument();
 		await triggerLoadMore();
 		await screen.findByText(secondPage[0].name);
-		expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(
+		expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(
 			currentFolder.children.nodes.length
 		);
-		expect(screen.getAllByTestId('unCheckedAvatar')).toHaveLength(secondPage.length);
+		expect(screen.getAllByTestId(SELECTORS.uncheckedAvatar)).toHaveLength(secondPage.length);
 		expect(screen.queryByText(/deselect all/i)).not.toBeInTheDocument();
 		expect(screen.getByText(/\bselect all/i)).toBeVisible();
 		await user.click(screen.getByText(/\bselect all/i));
 		await screen.findByText(/deselect all/i);
-		expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(
+		expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(
 			currentFolder.children.nodes.length + secondPage.length
 		);
-		expect(screen.queryByTestId('unCheckedAvatar')).not.toBeInTheDocument();
+		expect(screen.queryByTestId(SELECTORS.uncheckedAvatar)).not.toBeInTheDocument();
 		expect(screen.getByText(/deselect all/i)).toBeVisible();
 		await user.click(screen.getByText(/deselect all/i));
 		await screen.findByText(/\bselect all/i);
-		expect(screen.getAllByTestId('unCheckedAvatar')).toHaveLength(
+		expect(screen.getAllByTestId(SELECTORS.uncheckedAvatar)).toHaveLength(
 			currentFolder.children.nodes.length + secondPage.length
 		);
-		expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+		expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 	});
 });

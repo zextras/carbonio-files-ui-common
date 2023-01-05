@@ -18,6 +18,7 @@ import map from 'lodash/map';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { NODES_LOAD_LIMIT } from '../constants';
+import { ACTION_REGEXP, ICON_REGEXP, SELECTORS } from '../constants/test';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import { populateFolder, populateNodePage } from '../mocks/mockUtils';
 import { Node } from '../types/common';
@@ -32,9 +33,7 @@ import {
 	mockMoveNodes
 } from '../utils/mockUtils';
 import {
-	actionRegexp,
 	buildBreadCrumbRegExp,
-	iconRegexp,
 	moveNode,
 	setup,
 	selectNodes,
@@ -115,12 +114,12 @@ describe('Move', () => {
 			// activate selection mode by selecting items
 			await selectNodes([nodeToMove.id], user);
 			// check that all wanted items are selected
-			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+			expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 			await user.click(screen.getByTestId('icon: MoreVertical'));
 			await moveNode(destinationFolder, user);
 			await screen.findByText(/Item moved/i);
-			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+			expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 
 			expect(screen.queryAllByTestId('node-item', { exact: false })).toHaveLength(
 				currentFolder.children.nodes.length - 1
@@ -200,8 +199,8 @@ describe('Move', () => {
 				user
 			);
 			// check that all wanted items are selected
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToMove.length);
-			let moveAction = screen.queryByTestId(iconRegexp.move);
+			expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(nodesToMove.length);
+			let moveAction = screen.queryByTestId(ICON_REGEXP.move);
 			if (!moveAction) {
 				expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 				await user.click(screen.getByTestId('icon: MoreVertical'));
@@ -220,7 +219,7 @@ describe('Move', () => {
 			expect(screen.queryByRole('button', { name: /move/i })).not.toBeInTheDocument();
 			expect(screen.queryByText('Move')).not.toBeInTheDocument();
 			await screen.findByText(/Item moved/i);
-			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+			expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 
 			expect(screen.queryAllByTestId('node-item', { exact: false })).toHaveLength(
 				currentFolder.children.nodes.length - nodesToMove.length
@@ -297,17 +296,17 @@ describe('Move', () => {
 				user
 			);
 			// check that all wanted items are selected
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length);
+			expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(firstPage.length);
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 			await user.click(screen.getByTestId('icon: MoreVertical'));
-			const moveAction = await screen.findByText(actionRegexp.move);
+			const moveAction = await screen.findByText(ACTION_REGEXP.move);
 			expect(moveAction).toBeVisible();
 			expect(moveAction).not.toHaveAttribute('disabled', '');
 			await user.click(moveAction);
 			await findByTextWithMarkup(buildBreadCrumbRegExp(commonParent.name, currentFolder.name));
 			const modalList = screen.getByTestId('modal-list-', { exact: false });
 			await within(modalList).findByText((currentFolder.children.nodes[0] as Node).name);
-			const moveModalButton = await screen.findByRole('button', { name: actionRegexp.move });
+			const moveModalButton = await screen.findByRole('button', { name: ACTION_REGEXP.move });
 			expect(moveModalButton).toHaveAttribute('disabled', '');
 			await user.click(screen.getByText(commonParent.name));
 			await findByTextWithMarkup(buildBreadCrumbRegExp(commonParent.name));

@@ -13,7 +13,7 @@ import { nodeSortVar } from '../../../apollo/nodeSortVar';
 import { NODES_LOAD_LIMIT } from '../../../constants';
 import GET_CHILDREN from '../../../graphql/queries/getChildren.graphql';
 import { GetChildrenQuery, GetChildrenQueryVariables } from '../../../types/graphql/types';
-import { isFolder } from '../../../utils/ActionsFactory';
+import { isFolder } from '../../../utils/utils';
 import { useErrorHandler } from '../../useErrorHandler';
 import { useMemoCompare } from '../../useMemoCompare';
 

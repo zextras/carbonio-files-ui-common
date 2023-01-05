@@ -14,6 +14,7 @@ import map from 'lodash/map';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { NODES_LOAD_LIMIT, NODES_SORT_DEFAULT } from '../constants';
+import { ACTION_REGEXP, SELECTORS } from '../constants/test';
 import { populateFolder, populateNodePage, populateNodes, sortNodes } from '../mocks/mockUtils';
 import { Node } from '../types/common';
 import { Folder } from '../types/graphql/types';
@@ -26,7 +27,7 @@ import {
 	mockTrashNodes,
 	mockUpdateNode
 } from '../utils/mockUtils';
-import { actionRegexp, renameNode, setup, selectNodes, triggerLoadMore } from '../utils/testUtils';
+import { renameNode, setup, selectNodes, triggerLoadMore } from '../utils/testUtils';
 import { DisplayerProps } from './components/Displayer';
 import FolderView from './FolderView';
 
@@ -95,7 +96,7 @@ describe('Rename', () => {
 			// activate selection mode by selecting items
 			await selectNodes([element.id], user);
 			// check that all wanted items are selected
-			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+			expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 			await user.click(screen.getByTestId('icon: MoreVertical'));
 			// check that the rename action becomes visible
@@ -110,7 +111,7 @@ describe('Rename', () => {
 			expect(nodes).toHaveLength(currentFolder.children.nodes.length);
 			expect(nodes[newPos]).toBe(screen.getByTestId(`node-item-${element.id}`));
 			// selection mode is de-activate
-			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+			expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 			expect(screen.queryByTestId('icon: MoreVertical')).not.toBeInTheDocument();
 		});
 	});
@@ -175,7 +176,7 @@ describe('Rename', () => {
 			expect(nodes).toHaveLength(currentFolder.children.nodes.length);
 			expect(nodes[nodes.length - 1]).toBe(updatedNodeItem);
 			// contextual menu is closed
-			expect(screen.queryByText(actionRegexp.rename)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.rename)).not.toBeInTheDocument();
 		});
 
 		test('Rename a node to an unordered position does not change cursor for pagination', async () => {
@@ -284,7 +285,7 @@ describe('Rename', () => {
 			// wait that the modal close
 			expect(screen.queryByTestId('input-name')).not.toBeInTheDocument();
 			// contextual menu is closed
-			expect(screen.queryByText(actionRegexp.rename)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.rename)).not.toBeInTheDocument();
 			// check the new item. It has the new name and it's located as last element of the updated list
 			let updatedNodeItem = screen.getByTestId(`node-item-${element.id}`);
 			expect(updatedNodeItem).toBeVisible();
@@ -381,7 +382,7 @@ describe('Rename', () => {
 			// rename node to put it in the unordered list
 			fireEvent.contextMenu(screen.getByText(nodeToRename.name));
 			await renameNode(newName, user);
-			expect(screen.queryByRole('button', { name: actionRegexp.rename })).not.toBeInTheDocument();
+			expect(screen.queryByRole('button', { name: ACTION_REGEXP.rename })).not.toBeInTheDocument();
 			await screen.findByText(newName);
 			expect(screen.queryByText(nodeToRename.name)).not.toBeInTheDocument();
 			expect(screen.getByText(newName)).toBeVisible();
@@ -455,10 +456,10 @@ describe('Rename', () => {
 			// select all ordered items (all but the renamed node)
 			await selectNodes(nodesToTrash, user);
 			// check that all wanted items are selected
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length - 1);
+			expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(firstPage.length - 1);
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 			await user.click(screen.getByTestId('icon: MoreVertical'));
-			const trashAction = await screen.findByText(actionRegexp.moveToTrash);
+			const trashAction = await screen.findByText(ACTION_REGEXP.moveToTrash);
 			expect(trashAction).toBeVisible();
 			expect(trashAction.parentNode).not.toHaveAttribute('disabled', '');
 			await user.click(trashAction);

@@ -13,10 +13,11 @@ import { Route } from 'react-router-dom';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { FILTER_TYPE, INTERNAL_PATH, NODES_LOAD_LIMIT, ROOTS } from '../constants';
+import { ACTION_REGEXP, SELECTORS } from '../constants/test';
 import { populateFile, populateNodes } from '../mocks/mockUtils';
 import { Node } from '../types/common';
 import { getFindNodesVariables, mockDeletePermanently, mockFindNodes } from '../utils/mockUtils';
-import { actionRegexp, setup, selectNodes } from '../utils/testUtils';
+import { setup, selectNodes } from '../utils/testUtils';
 import FilterView from './FilterView';
 
 jest.mock('../../hooks/useCreateOptions', () => ({
@@ -58,17 +59,17 @@ describe('Filter View', () => {
 					)
 				];
 
-				const { user } = setup(
-					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
-					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`] }
-				);
+				const { user } = setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
+					mocks,
+					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`]
+				});
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 				// activate selection mode by selecting items
 				await selectNodes(nodesIdsToDeletePermanently, user);
 				// check that all wanted items are selected
-				expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+				expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 
 				const element = await screen.findByText(currentFilter[0].name);
 
@@ -93,7 +94,7 @@ describe('Filter View', () => {
 				expect(confirmButton).not.toBeInTheDocument();
 
 				expect(element).not.toBeInTheDocument();
-				expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+				expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 				expect(screen.queryAllByTestId(`file-icon-preview`).length).toEqual(2);
 
 				expect.assertions(8);
@@ -122,17 +123,17 @@ describe('Filter View', () => {
 					)
 				];
 
-				const { user } = setup(
-					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
-					{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
-				);
+				const { user } = setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
+					mocks,
+					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
+				});
 
 				// wait for the load to be completed
 				await waitForElementToBeRemoved(screen.queryByTestId('icon: Refresh'));
 				// activate selection mode by selecting items
 				await selectNodes(nodesIdsToDeletePermanently, user);
 				// check that all wanted items are selected
-				expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
+				expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(2);
 
 				const selectionModeActiveListHeader = screen.getByTestId('list-header-selectionModeActive');
 
@@ -171,7 +172,7 @@ describe('Filter View', () => {
 					)
 				];
 
-				setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+				setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 					mocks,
 					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
 				});
@@ -182,11 +183,11 @@ describe('Filter View', () => {
 				// right click to open contextual menu
 				const nodeItem = screen.getByTestId(`node-item-${node.id}`);
 				fireEvent.contextMenu(nodeItem);
-				const renameAction = await screen.findByText(actionRegexp.rename);
+				const renameAction = await screen.findByText(ACTION_REGEXP.rename);
 				expect(renameAction).toBeVisible();
-				const moveToTrashAction = await screen.findByText(actionRegexp.moveToTrash);
+				const moveToTrashAction = await screen.findByText(ACTION_REGEXP.moveToTrash);
 				expect(moveToTrashAction).toBeVisible();
-				const deletePermanentlyAction = screen.queryByText(actionRegexp.deletePermanently);
+				const deletePermanentlyAction = screen.queryByText(ACTION_REGEXP.deletePermanently);
 				expect(deletePermanentlyAction).not.toBeInTheDocument();
 			});
 		});
@@ -216,10 +217,10 @@ describe('Filter View', () => {
 				)
 			];
 
-			const { user } = setup(
-				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
-				{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`] }
-			);
+			const { user } = setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
+				mocks,
+				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`]
+			});
 
 			await screen.findByText(firstPage[0].name);
 			expect(screen.getByText(firstPage[0].name)).toBeVisible();
@@ -229,14 +230,14 @@ describe('Filter View', () => {
 			// select all loaded nodes
 			await selectNodes(nodesToDelete, user);
 			// check that all wanted items are selected
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length);
+			expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(firstPage.length);
 
 			const deletePermanentlyAction = await screen.findByTestId('icon: DeletePermanentlyOutline');
 			expect(deletePermanentlyAction).toBeVisible();
 			expect(deletePermanentlyAction.parentNode).not.toHaveAttribute('disabled', '');
 			await user.click(deletePermanentlyAction);
 			const confirmDeleteButton = await screen.findByRole('button', {
-				name: actionRegexp.deletePermanently
+				name: ACTION_REGEXP.deletePermanently
 			});
 			await user.click(confirmDeleteButton);
 			await waitForElementToBeRemoved(screen.queryByText(firstPage[0].name));

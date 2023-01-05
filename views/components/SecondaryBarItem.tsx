@@ -34,12 +34,9 @@ import { useUpload } from '../../hooks/useUpload';
 import { PickIdNodeType } from '../../types/common';
 import { Folder, Node } from '../../types/graphql/types';
 import { DeepPick } from '../../types/utils';
-import {
-	canBeWriteNodeDestination,
-	canUploadFile,
-	isFile,
-	isFolder
-} from '../../utils/ActionsFactory';
+import { canBeWriteNodeDestination, canUploadFile } from '../../utils/ActionsFactory';
+import { getUploadAddType } from '../../utils/uploadUtils';
+import { isFile, isFolder } from '../../utils/utils';
 import { Dropzone } from './Dropzone';
 
 // TODO: replace with updated DS Accordion once available
@@ -101,7 +98,7 @@ export const SecondaryBarItem: React.VFC<SecondaryBarItemProps> = ({ item, expan
 				});
 			} else if (getBaseNodeData?.getNode) {
 				if (isUploadingFiles) {
-					add(event.dataTransfer.files, item.id, true);
+					add(getUploadAddType(event.dataTransfer), item.id);
 				} else if (movingNodes) {
 					const nodesToMove: Array<Partial<Node> & PickIdNodeType> = JSON.parse(movingNodes);
 					moveNodesMutation(getBaseNodeData.getNode as Folder, ...nodesToMove).then(() => {

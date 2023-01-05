@@ -6,27 +6,31 @@
 
 import { useCallback } from 'react';
 
-import { ApolloClient, NormalizedCacheObject, useApolloClient } from '@apollo/client';
+import { ApolloClient, useApolloClient } from '@apollo/client';
 
 import { addNodeInCachedChildren, removeNodesFromFolder } from '../../apollo/cacheUtils';
 import { nodeSortVar } from '../../apollo/nodeSortVar';
-import { ChildFragment, Folder, Maybe } from '../../types/graphql/types';
-import { addNodeInSortedList } from '../../utils/utils';
-
-type CachedFolder = Pick<Folder, 'id' | '__typename'> & {
-	children: { nodes: Array<Maybe<Partial<File | Folder> & ChildFragment> | undefined> };
-};
+import GET_CHILDREN from '../../graphql/queries/getChildren.graphql';
+import {
+	ChildFragment,
+	Folder,
+	GetChildrenQuery,
+	GetChildrenQueryVariables,
+	Maybe,
+	Node
+} from '../../types/graphql/types';
+import { addNodeInSortedList, isFolder } from '../../utils/utils';
 
 export type UpdateFolderContentType = {
-	addNodeToFolder: (folder: CachedFolder, newNode: ChildFragment) => number;
-	removeNodesFromFolder: (
-		folder: Pick<CachedFolder, 'id' | '__typename'>,
-		nodeIdsToRemove: string[]
-	) => void;
+	addNodeToFolder: (
+		folder: Pick<Folder, 'id'>,
+		newNode: ChildFragment
+	) => { newPosition: number; isLast: boolean };
+	removeNodesFromFolder: (folder: Pick<Folder, 'id'>, nodeIdsToRemove: string[]) => void;
 };
 
 export const useUpdateFolderContent = (
-	apolloClientArg?: ApolloClient<NormalizedCacheObject>
+	apolloClientArg?: ApolloClient<object>
 ): UpdateFolderContentType => {
 	// TODO remove apolloClientArg when useApolloClient is safe(provider moved up)
 	// eslint-disable-next-line react-hooks/rules-of-hooks
@@ -34,17 +38,41 @@ export const useUpdateFolderContent = (
 
 	const addNodeToFolder = useCallback<UpdateFolderContentType['addNodeToFolder']>(
 		(folder, newNode) => {
+			const cachedFolder = apolloClient.cache.readQuery<
+				GetChildrenQuery,
+				GetChildrenQueryVariables
+			>({
+				query: GET_CHILDREN,
+				variables: {
+					node_id: folder.id,
+					children_limit: Number.MAX_SAFE_INTEGER,
+					sort: nodeSortVar()
+				}
+			});
+
+			if (cachedFolder === null) {
+				return { newPosition: 0, isLast: true };
+			}
+
+			let nodes: Array<Maybe<Node>> = [];
+
+			if (cachedFolder && cachedFolder.getNode && isFolder(cachedFolder.getNode)) {
+				nodes = cachedFolder.getNode.children.nodes;
+			}
+
 			// if folder is empty, just write cache
-			if (folder.children.nodes.length === 0) {
+			if (nodes.length === 0) {
 				addNodeInCachedChildren(apolloClient.cache, newNode, folder.id, 0);
-				return 0;
+				return { newPosition: 0, isLast: true };
 			}
 			// else find the position of the node in the loaded list to check
 			// if the updated node is an ordered or an unordered node
-			const newIndex = addNodeInSortedList(folder.children.nodes, newNode, nodeSortVar());
+			const newIndex = addNodeInSortedList(nodes, newNode, nodeSortVar());
 			addNodeInCachedChildren(apolloClient.cache, newNode, folder.id, newIndex);
-
-			return newIndex > -1 ? newIndex : folder.children.nodes.length;
+			return {
+				newPosition: newIndex > -1 ? newIndex : nodes.length,
+				isLast: newIndex === -1 || newIndex === nodes.length
+			};
 		},
 		[apolloClient]
 	);

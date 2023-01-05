@@ -116,7 +116,9 @@ export const PREVIEW_TYPE = {
 	DOCUMENT: 'document'
 } as const;
 // internal paths
-export const INTERNAL_PATH = {
+export const INTERNAL_PATH: {
+	[K in Uppercase<NonNullable<URLParams['view']>>]: `/${Lowercase<K>}`;
+} = {
 	ROOT: '/root',
 	UPLOADS: '/uploads',
 	SEARCH: '/search',
@@ -133,4 +135,3 @@ export const FILTER_TYPE: { [K in URLParams['filter']]: `/${K}` } = {
 
 export const FILES_ROUTE = 'files';
 export const FILES_APP_ID = 'carbonio-files-ui';
-export const UPLOAD_QUEUE_LIMIT = 3;

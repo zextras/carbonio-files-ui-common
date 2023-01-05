@@ -27,7 +27,7 @@ import { generateError, getFirstOfNextMonth, setup } from '../../utils/testUtils
 import { formatDate, initExpirationDate } from '../../utils/utils';
 import { Displayer } from './Displayer';
 
-describe.skip('Displayer', () => {
+describe('Displayer', () => {
 	describe('With unsaved changes', () => {
 		describe('on edit link', () => {
 			test('on description input, click on other tab show dialog to warn user about unsaved changes', async () => {
@@ -116,7 +116,7 @@ describe.skip('Displayer', () => {
 				expect(screen.getByRole('button', { name: /save and leave/i })).toBeVisible();
 			});
 
-			test('cancel action leaves fields valued and navigation is kept on sharing tab', async () => {
+			test.skip('cancel action leaves fields valued and navigation is kept on sharing tab', async () => {
 				const node = populateFile();
 				node.permissions.can_share = true;
 				node.permissions.can_write_folder = true;
@@ -171,7 +171,7 @@ describe.skip('Displayer', () => {
 				expect(screen.getByText(chosenDate)).toBeVisible();
 			});
 
-			test('leave anyway action reset fields and continue navigation', async () => {
+			test.skip('leave anyway action reset fields and continue navigation', async () => {
 				const node = populateFile();
 				node.permissions.can_share = true;
 				node.permissions.can_write_folder = true;
@@ -238,7 +238,7 @@ describe.skip('Displayer', () => {
 				expect(screen.getByText(formatDate(link.expires_at, 'DD/MM/YYYY'))).toBeVisible();
 			});
 
-			test('save and leave action update link and continue navigation', async () => {
+			test.skip('save and leave action update link and continue navigation', async () => {
 				const node = populateFile();
 				node.permissions.can_share = true;
 				node.permissions.can_write_folder = true;
@@ -319,7 +319,7 @@ describe.skip('Displayer', () => {
 				).not.toBeInTheDocument();
 			});
 
-			test('save and leave action with errors leaves fields valued and navigation is kept on sharing tab', async () => {
+			test.skip('save and leave action with errors leaves fields valued and navigation is kept on sharing tab', async () => {
 				const node = populateFile();
 				node.permissions.can_share = true;
 				node.permissions.can_write_folder = true;

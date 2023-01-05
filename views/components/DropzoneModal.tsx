@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 
 import { Container, Icon, Padding, Text } from '@zextras/carbonio-design-system';
 import map from 'lodash/map';
-import styled, { css, FlattenSimpleInterpolation } from 'styled-components';
+import styled, { css, FlattenSimpleInterpolation, SimpleInterpolation } from 'styled-components';
 
 import { cssCalcBuilder } from '../../utils/utils';
 
@@ -46,6 +46,11 @@ const DetailText = styled(Text)`
 		)};
 `;
 
+const CustomIcon = styled(Icon)<{ $size?: string }>`
+	height: ${({ $size }): SimpleInterpolation => $size};
+	width: ${({ $size }): SimpleInterpolation => $size};
+`;
+
 interface DropzoneModalProps {
 	title: string;
 	message: string;
@@ -72,7 +77,7 @@ export const DropzoneModal: React.VFC<DropzoneModalProps> = ({
 						: '1.75rem';
 				return (
 					<Padding right="small" left="small" key={`icon-${index}`}>
-						<Icon icon={icon} height={size} width={size} color={color} />
+						<CustomIcon icon={icon} $size={size} color={color} />
 					</Padding>
 				);
 			}),
@@ -81,9 +86,9 @@ export const DropzoneModal: React.VFC<DropzoneModalProps> = ({
 
 	return (
 		<BackDropLayoutInnerBox
-			minHeight="180"
+			minHeight="11.25rem"
 			maxWidth="90%"
-			background="gray6"
+			background={'gray6'}
 			height="fit"
 			width="fit"
 		>

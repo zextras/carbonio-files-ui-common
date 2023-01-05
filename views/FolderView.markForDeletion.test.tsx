@@ -12,6 +12,7 @@ import map from 'lodash/map';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { NODES_LOAD_LIMIT } from '../constants';
+import { ACTION_REGEXP, SELECTORS } from '../constants/test';
 import { populateFile, populateFolder, populateNodePage, sortNodes } from '../mocks/mockUtils';
 import { Node } from '../types/common';
 import { Folder, NodeSort } from '../types/graphql/types';
@@ -23,7 +24,7 @@ import {
 	mockGetPermissions,
 	mockTrashNodes
 } from '../utils/mockUtils';
-import { actionRegexp, setup, selectNodes, triggerLoadMore } from '../utils/testUtils';
+import { setup, selectNodes, triggerLoadMore } from '../utils/testUtils';
 import { DisplayerProps } from './components/Displayer';
 import FolderView from './FolderView';
 
@@ -83,34 +84,34 @@ describe('Mark for deletion - trash', () => {
 			// activate selection mode by selecting items
 			await selectNodes([folderId1], user);
 			// check that all wanted items are selected
-			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+			expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 
 			await user.click(screen.getByTestId('icon: MoreVertical'));
 
-			const trashAction = await screen.findByText(actionRegexp.moveToTrash);
+			const trashAction = await screen.findByText(ACTION_REGEXP.moveToTrash);
 			expect(trashAction.parentNode).not.toHaveAttribute('disabled');
 			await user.click(trashAction);
 
 			await screen.findByText(/item moved to trash/i);
 			expect(trashAction).not.toBeInTheDocument();
-			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+			expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 
 			expect(screen.queryAllByTestId(`file-icon-preview`).length).toEqual(1);
 
 			// activate selection mode by selecting items
 			await selectNodes([fileId1], user);
 			// check that all wanted items are selected
-			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+			expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 
 			await user.click(screen.getByTestId('icon: MoreVertical'));
 
 			// wait for copy action to check that popper is open
-			const copyAction = await screen.findByText(actionRegexp.copy);
+			const copyAction = await screen.findByText(ACTION_REGEXP.copy);
 			expect(copyAction.parentNode).not.toHaveAttribute('disabled');
 
-			expect(screen.queryByText(actionRegexp.moveToTrash)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.moveToTrash)).not.toBeInTheDocument();
 			expect.assertions(10);
 		});
 
@@ -150,12 +151,12 @@ describe('Mark for deletion - trash', () => {
 			expect(screen.queryByText((secondPage[0] as Node).name)).not.toBeInTheDocument();
 			await selectNodes(nodesToTrash, user);
 			// check that all wanted items are selected
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(firstPage.length);
+			expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(firstPage.length);
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 
 			await user.click(screen.getByTestId('icon: MoreVertical'));
 
-			const trashAction = await screen.findByText(actionRegexp.moveToTrash);
+			const trashAction = await screen.findByText(ACTION_REGEXP.moveToTrash);
 			expect(trashAction).toBeVisible();
 			await user.click(trashAction);
 
@@ -213,13 +214,13 @@ describe('Mark for deletion - trash', () => {
 			// open context menu
 			fireEvent.contextMenu(nodeItem);
 
-			await screen.findByText(actionRegexp.moveToTrash);
-			await user.click(screen.getByText(actionRegexp.moveToTrash));
+			await screen.findByText(ACTION_REGEXP.moveToTrash);
+			await user.click(screen.getByText(ACTION_REGEXP.moveToTrash));
 
 			await screen.findByText(/Item moved to trash/i);
 
 			// contextual menu is closed
-			expect(screen.queryByText(actionRegexp.moveToTrash)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.moveToTrash)).not.toBeInTheDocument();
 
 			expect(screen.queryAllByTestId(`file-icon-preview`).length).toEqual(4);
 			expect.assertions(3);
@@ -268,12 +269,12 @@ describe('Mark for deletion - trash', () => {
 			// open context menu
 			fireEvent.contextMenu(nodeItem);
 
-			await screen.findByText(actionRegexp.moveToTrash);
-			await user.click(screen.getByText(actionRegexp.moveToTrash));
+			await screen.findByText(ACTION_REGEXP.moveToTrash);
+			await user.click(screen.getByText(ACTION_REGEXP.moveToTrash));
 			await screen.findByText(/Item moved to trash/i);
 
 			// contextual menu is closed
-			expect(screen.queryByText(actionRegexp.moveToTrash)).not.toBeInTheDocument();
+			expect(screen.queryByText(ACTION_REGEXP.moveToTrash)).not.toBeInTheDocument();
 
 			expect(screen.queryAllByTestId(`file-icon-preview`).length).toEqual(3);
 		});
@@ -316,7 +317,7 @@ describe('Mark for deletion - trash', () => {
 			expect(screen.getByText(firstPage[0].name)).toBeVisible();
 			expect(screen.getByText(firstPage[NODES_LOAD_LIMIT - 1].name)).toBeVisible();
 			fireEvent.contextMenu(screen.getByText(firstPage[NODES_LOAD_LIMIT - 1].name));
-			const moveToTrashAction = await screen.findByText(actionRegexp.moveToTrash);
+			const moveToTrashAction = await screen.findByText(ACTION_REGEXP.moveToTrash);
 			expect(moveToTrashAction).toBeVisible();
 			expect(moveToTrashAction.parentNode).not.toHaveAttribute('disabled', '');
 			await user.click(moveToTrashAction);

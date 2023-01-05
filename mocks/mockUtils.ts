@@ -12,7 +12,8 @@ import some from 'lodash/some';
 
 import { LOGGED_USER } from '../../mocks/constants';
 import { CONFIGS, NODES_LOAD_LIMIT, NODES_SORT_DEFAULT, ROOTS } from '../constants';
-import { SortableNode } from '../types/common';
+import { SortableNode, UploadFolderItem } from '../types/common';
+import { UploadItem, UploadStatus } from '../types/graphql/client-types';
 import {
 	Config,
 	DistributionList,
@@ -130,7 +131,7 @@ export function populateShares(node: FilesFile | Folder, limit = 1): Share[] {
 		__typename: node.__typename
 	};
 	for (let i = 0; i < limit; i += 1) {
-		shares.push(populateShare(nodeRef as Node, i));
+		shares.push(populateShare(nodeRef as unknown as Node, i));
 	}
 	return shares;
 }
@@ -162,7 +163,7 @@ function populateNodeFields(type?: NodeType, id?: string, name?: string): Node {
 export function populateUnknownNode(
 	id?: string,
 	name?: string
-): Partial<Node> & ActionsFactoryNodeType {
+): Partial<Node> & Omit<ActionsFactoryNodeType, '__typename'> {
 	return {
 		id: id || faker.datatype.uuid(),
 		creator: populateUser(),
@@ -206,9 +207,9 @@ export function populateNode(type?: NodeTypename, id?: string, name?: string): F
 	}
 }
 
-export function populateNodes(limit?: number, type?: NodeTypename): Node[] {
+export function populateNodes(limit?: number, type?: NodeTypename): Array<FilesFile | Folder> {
 	const nodesLength = limit || 100;
-	const nodes: Node[] = [];
+	const nodes: Array<FilesFile | Folder> = [];
 	for (let i = 0; i < nodesLength; i += 1) {
 		const node = populateNode(type);
 		node.name = `n${i} - ${node.name}`;
@@ -458,5 +459,49 @@ export function populateConfigs(configMap?: Record<string, string>): Config[] {
 		[CONFIGS.MAX_KEEP_VERSIONS]: '3'
 	};
 	const configs = { ...defaultConfigs, ...configMap };
-	return map(configs, (configValue, configName) => ({ name: configName, value: configValue }));
+	return map(configs, (configValue, configName) => ({
+		__typename: 'Config',
+		name: configName,
+		value: configValue
+	}));
+}
+
+export function populateUploadItem(item?: Partial<UploadItem>): UploadItem {
+	const name = item?.name || faker.system.fileName();
+	const mimeType = faker.system.mimeType();
+	const file = new File(['(⌐□_□)'], name, { type: mimeType });
+	return {
+		id: faker.datatype.uuid(),
+		name,
+		file,
+		parentNodeId: null,
+		nodeId: null,
+		status: UploadStatus.QUEUED,
+		progress: 0,
+		fullPath: file.webkitRelativePath || `/${name}`,
+		parentId: null,
+		...item
+	};
+}
+
+export function populateUploadFolderItem(item?: Partial<UploadFolderItem>): UploadFolderItem {
+	const uploadItem = populateUploadItem({ name: faker.system.fileName({ extensionCount: 0 }) });
+	return {
+		...uploadItem,
+		file: new File(['(⌐□_□)'], uploadItem.name, { type: undefined }),
+		contentCount: 1 + (item?.children?.length || 0),
+		children: item?.children || [],
+		failedCount: 0,
+		...item
+	};
+}
+
+export function populateUploadItems(limit?: number, type?: NodeTypename): UploadItem[] {
+	const items: UploadItem[] = [];
+	for (let i = 0; i < (limit || 10); i += 1) {
+		const itemType = type || faker.helpers.arrayElement<NodeTypename>(['Folder', 'File']);
+		const item = itemType === 'Folder' ? populateUploadFolderItem() : populateUploadItem();
+		items.push(item);
+	}
+	return items;
 }

@@ -6,13 +6,17 @@
 
 import React from 'react';
 
-import { fireEvent, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 
 import { UseNavigationHook } from '../../../hooks/useNavigation';
+import { ICON_REGEXP } from '../../constants/test';
 import { UseUploadHook } from '../../hooks/useUpload';
-import { populateFolder } from '../../mocks/mockUtils';
-import { UploadStatus, UploadType } from '../../types/common';
-import { GetBaseNodeQuery, GetBaseNodeQueryVariables } from '../../types/graphql/types';
+import {
+	populateFolder,
+	populateUploadFolderItem,
+	populateUploadItem
+} from '../../mocks/mockUtils';
+import { UploadStatus } from '../../types/graphql/client-types';
 import { mockGetBaseNode } from '../../utils/mockUtils';
 import { buildBreadCrumbRegExp, setup } from '../../utils/testUtils';
 import { humanFileSize } from '../../utils/utils';
@@ -42,15 +46,14 @@ jest.mock('../../../hooks/useNavigation', () => ({
 }));
 
 describe('Upload List Item Wrapper', () => {
-	test('File name, destination folder, percentage and size are visible', async () => {
+	test('File name, destination folder, progress and size are visible', async () => {
 		const destinationFolder = populateFolder();
-		const file = {
-			file: new File(['uploading file'], 'file1.txt', { type: 'text/plain' }),
-			percentage: 20,
+		const file = populateUploadItem({
+			progress: 20,
 			parentId: destinationFolder.id,
-			id: 'fileToUploadId',
-			status: UploadStatus.LOADING
-		};
+			status: UploadStatus.LOADING,
+			parentNodeId: destinationFolder.id
+		});
 		const mockSelectId = jest.fn();
 
 		const mocks = [mockGetBaseNode({ node_id: destinationFolder.id }, destinationFolder)];
@@ -65,39 +68,23 @@ describe('Upload List Item Wrapper', () => {
 			{ mocks }
 		);
 
-		expect(screen.getByText(file.file.name)).toBeVisible();
+		expect(screen.getByText(file.name)).toBeVisible();
 		const destinationFolderItem = await findByTextWithMarkup(
 			buildBreadCrumbRegExp(destinationFolder.name)
 		);
 		expect(destinationFolderItem).toBeVisible();
-		expect(screen.getByText(humanFileSize(file.file.size))).toBeVisible();
-		expect(screen.getByText(new RegExp(`${file.percentage}\\s*%`, 'm'))).toBeVisible();
-		expect(screen.getByTestId('icon: AnimatedLoader')).toBeVisible();
+		if (file.file) {
+			expect(screen.getByText(humanFileSize(file.file.size))).toBeVisible();
+		}
+		expect(screen.getByText(new RegExp(`${file.progress}\\s*%`, 'm'))).toBeVisible();
+		expect(screen.getByTestId(ICON_REGEXP.uploadLoading)).toBeVisible();
 	});
 
-	test('Retry action is hidden if uploading is in progress', async () => {
-		const destinationFolder = populateFolder();
-		const file: UploadType = {
-			file: new File(['uploading file'], 'file1.txt', { type: 'text/plain' }),
-			percentage: 20,
-			parentId: destinationFolder.id,
-			id: 'fileToUploadId',
-			status: UploadStatus.LOADING
-		};
+	test('If item is queued, queued label is shown instead of the progress', async () => {
+		const file = populateUploadItem({ status: UploadStatus.QUEUED });
 		const mockSelectId = jest.fn();
 
-		const mockedGetBaseNodeRequest = mockGetBaseNode(
-			{ node_id: destinationFolder.id },
-			destinationFolder
-		);
-		global.apolloClient.writeQuery<GetBaseNodeQuery, GetBaseNodeQueryVariables>({
-			...mockedGetBaseNodeRequest.request,
-			data: {
-				getNode: destinationFolder
-			}
-		});
-
-		const { user } = setup(
+		setup(
 			<UploadListItemWrapper
 				node={file}
 				isSelected={false}
@@ -107,54 +94,47 @@ describe('Upload List Item Wrapper', () => {
 			{ mocks: [] }
 		);
 
-		expect(screen.getByText(file.file.name)).toBeVisible();
-		// hover bar
-		await user.hover(screen.getByText(file.file.name));
-		expect(screen.queryByTestId('icon: PlayCircleOutline')).not.toBeInTheDocument();
-		expect(screen.getByTestId('icon: CloseCircleOutline')).toBeInTheDocument();
-		expect(screen.getByTestId('icon: FolderOutline')).toBeInTheDocument();
-		await user.click(screen.getByTestId('icon: CloseCircleOutline'));
-		await user.click(screen.getByTestId('icon: FolderOutline'));
-		expect(mockedUseUploadHook.removeById).toHaveBeenCalledWith([file.id]);
-		expect(mockedUseNavigationHook.navigateToFolder).toHaveBeenCalledWith(destinationFolder.id);
-		// contextual menu
-		fireEvent.contextMenu(screen.getByText(file.file.name));
-		await screen.findByText(/go to destination folder/i);
-		expect(screen.queryByText(/retry upload/i)).not.toBeInTheDocument();
-		expect(screen.getByText(/remove upload/i)).not.toHaveAttribute('disabled', '');
-		expect(screen.getByText(/go to destination folder/i)).not.toHaveAttribute('disabled', '');
+		expect(screen.getByText(/queued/i)).toBeVisible();
+		expect(screen.getByTestId(ICON_REGEXP.uploadLoading)).toBeVisible();
+		expect(screen.queryByText(/\d+\s*%/)).not.toBeInTheDocument();
 	});
 
-	test('File name, destination folder, queued label and size are visible', async () => {
-		const destinationFolder = populateFolder();
-		const file = {
-			file: new File(['uploading file'], 'file1.txt', { type: 'text/plain' }),
-			percentage: 0,
-			parentId: destinationFolder.id,
-			id: 'fileToUploadId',
-			status: UploadStatus.QUEUED
-		};
-		const mockSelectId = jest.fn();
+	test('Progress for files is shown with the percentage', async () => {
+		const uploadItem = populateUploadItem({ progress: 45, status: UploadStatus.LOADING });
 
-		const mocks = [mockGetBaseNode({ node_id: destinationFolder.id }, destinationFolder)];
-
-		const { findByTextWithMarkup } = setup(
+		const selectFn = jest.fn();
+		setup(
 			<UploadListItemWrapper
-				node={file}
+				node={uploadItem}
 				isSelected={false}
 				isSelectionModeActive={false}
-				selectId={mockSelectId}
+				selectId={selectFn}
 			/>,
-			{ mocks }
+			{ mocks: [] }
 		);
 
-		expect(screen.getByText(file.file.name)).toBeVisible();
-		const destinationFolderItem = await findByTextWithMarkup(
-			buildBreadCrumbRegExp(destinationFolder.name)
+		expect(screen.getByText(/45\s*%/)).toBeVisible();
+	});
+
+	test('Progress for folders is shown as the fraction of loaded items on the total content count. The folder itself is included in the fraction values', async () => {
+		const uploadItem = populateUploadFolderItem({
+			failedCount: 2,
+			progress: 3,
+			contentCount: 10,
+			status: UploadStatus.LOADING
+		});
+
+		const selectFn = jest.fn();
+		setup(
+			<UploadListItemWrapper
+				node={uploadItem}
+				isSelected={false}
+				isSelectionModeActive={false}
+				selectId={selectFn}
+			/>,
+			{ mocks: [] }
 		);
-		expect(destinationFolderItem).toBeVisible();
-		expect(screen.getByText(humanFileSize(file.file.size))).toBeVisible();
-		expect(screen.getByText('Queued')).toBeVisible();
-		expect(screen.getByTestId('icon: AnimatedLoader')).toBeVisible();
+
+		expect(screen.getByText(/3\/10/)).toBeVisible();
 	});
 });

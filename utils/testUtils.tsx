@@ -10,12 +10,11 @@ import { ApolloProvider } from '@apollo/client';
 import { MockedProvider } from '@apollo/client/testing';
 import {
 	act,
-	FindAllBy,
-	FindBy,
+	ByRoleMatcher,
+	ByRoleOptions,
+	fireEvent,
 	GetAllBy,
-	GetBy,
 	queries,
-	QueryBy,
 	queryHelpers,
 	render,
 	RenderOptions,
@@ -31,16 +30,20 @@ import { PreviewManager, PreviewsManagerContext } from '@zextras/carbonio-ui-pre
 import { PreviewManagerContextType } from '@zextras/carbonio-ui-preview/lib/preview/PreviewManager';
 import { EventEmitter } from 'events';
 import { GraphQLError } from 'graphql';
+import filter from 'lodash/filter';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
+import reduce from 'lodash/reduce';
 import { I18nextProvider } from 'react-i18next';
 import { MemoryRouter } from 'react-router-dom';
 
 import I18nFactory from '../../i18n/i18n-test-factory';
 import StyledWrapper from '../../StyledWrapper';
-import { AdvancedFilters } from '../types/common';
-import { Folder } from '../types/graphql/types';
+import { SELECTORS } from '../constants/test';
+import { AdvancedFilters, Node } from '../types/common';
+import { File as FilesFile, Folder } from '../types/graphql/types';
 import { Mock } from './mockUtils';
+import { isFile, isFolder } from './utils';
 
 export type UserEvent = ReturnType<typeof userEvent['setup']>;
 
@@ -48,16 +51,14 @@ export type UserEvent = ReturnType<typeof userEvent['setup']>;
  * Matcher function to search a string in more html elements and not just in a single element.
  */
 const queryAllByTextWithMarkup: GetAllBy<[string | RegExp]> = (container, text) =>
-	screen.queryAllByText((_content: string, node: Element | null) => {
-		if (node) {
+	screen.queryAllByText((_content, element) => {
+		if (element && element instanceof HTMLElement) {
 			const hasText = (singleNode: Element): boolean => {
 				const regExp = RegExp(text);
 				return singleNode.textContent != null && regExp.test(singleNode.textContent);
 			};
-			const childrenDontHaveText = Array.from(node.children).every(
-				(child) => !hasText(child as HTMLElement)
-			);
-			return hasText(node) && childrenDontHaveText;
+			const childrenDontHaveText = Array.from(element.children).every((child) => !hasText(child));
+			return hasText(element) && childrenDontHaveText;
 		}
 		return false;
 	});
@@ -71,6 +72,32 @@ const getByTextWithMarkupMissingError = (
 	text: string | RegExp
 ): string => `Unable to find an element with text: ${text}`;
 
+type ByRoleWithIconOptions = ByRoleOptions & {
+	icon: string | RegExp;
+};
+/**
+ * Matcher function to search an icon button through the icon data-testid
+ */
+const queryAllByRoleWithIcon: GetAllBy<[ByRoleMatcher, ByRoleWithIconOptions]> = (
+	container,
+	role,
+	{ icon, ...options }
+) =>
+	filter(
+		screen.queryAllByRole('button', options),
+		(element) => within(element).queryByTestId(icon) !== null
+	);
+const getByRoleWithIconMultipleError = (
+	container: Element | null,
+	role: ByRoleMatcher,
+	options: ByRoleWithIconOptions
+): string => `Found multiple elements with role ${role} and icon ${options.icon}`;
+const getByRoleWithIconMissingError = (
+	container: Element | null,
+	role: ByRoleMatcher,
+	options: ByRoleWithIconOptions
+): string => `Unable to find an element with role ${role} and icon ${options.icon}`;
+
 const [
 	queryByTextWithMarkup,
 	getAllByTextWithMarkup,
@@ -83,20 +110,31 @@ const [
 	getByTextWithMarkupMissingError
 );
 
-export type CustomByTextWithMarkupQueries = {
-	queryByTextWithMarkup: QueryBy<[string | RegExp]>;
-	getAllByTextWithMarkup: GetAllBy<[string | RegExp]>;
-	getByTextWithMarkup: GetBy<[string | RegExp]>;
-	findAllByTextWithMarkup: FindAllBy<[string | RegExp]>;
-	findByTextWithMarkup: FindBy<[string | RegExp]>;
-};
+const [
+	queryByRoleWithIcon,
+	getAllByRoleWithIcon,
+	getByRoleWithIcon,
+	findAllByRoleWithIcon,
+	findByRoleWithIcon
+] = queryHelpers.buildQueries<[ByRoleMatcher, ByRoleWithIconOptions]>(
+	queryAllByRoleWithIcon,
+	getByRoleWithIconMultipleError,
+	getByRoleWithIconMissingError
+);
 
-export const customQueryByTextWithMarkup: CustomByTextWithMarkupQueries = {
+const customQueries = {
+	// byTextWithMarkup
 	queryByTextWithMarkup,
 	getAllByTextWithMarkup,
 	getByTextWithMarkup,
 	findAllByTextWithMarkup,
-	findByTextWithMarkup
+	findByTextWithMarkup,
+	// byRoleWithIcon
+	queryByRoleWithIcon,
+	getAllByRoleWithIcon,
+	getByRoleWithIcon,
+	findAllByRoleWithIcon,
+	findByRoleWithIcon
 };
 
 function escapeRegExp(string: string): string {
@@ -107,7 +145,7 @@ function escapeRegExp(string: string): string {
  * Create a regExp for searching breadcrumb as a string with the textWithMarkup helper function.
  * <br />
  * The regExp is built to match a breadcrumb formed as "/ level0 / level1 / level2" ,
- * with a / at the begin and no / at the end
+ * with a / at the beginning and no / at the end
  * @param nodesNames
  *
  * @example
@@ -185,14 +223,14 @@ function customRender(
 	}: WrapperProps & {
 		options?: Omit<RenderOptions, 'queries' | 'wrapper'>;
 	} = {}
-): RenderResult<typeof queries & CustomByTextWithMarkupQueries> {
+): RenderResult<typeof queries & typeof customQueries> {
 	return render(ui, {
 		wrapper: ({ children }: Pick<WrapperProps, 'children'>) => (
 			<Wrapper initialRouterEntries={initialRouterEntries} mocks={mocks}>
 				{children}
 			</Wrapper>
 		),
-		queries: { ...queries, ...customQueryByTextWithMarkup },
+		queries: { ...queries, ...customQueries },
 		...options
 	});
 }
@@ -254,10 +292,10 @@ export async function selectNodes(nodesToSelect: string[], user: UserEvent): Pro
 		const node = within(screen.getByTestId(`node-item-${id}`));
 		let clickableItem = node.queryByTestId('file-icon-preview');
 		if (clickableItem == null) {
-			clickableItem = node.queryByTestId('unCheckedAvatar');
+			clickableItem = node.queryByTestId(SELECTORS.uncheckedAvatar);
 		}
 		if (clickableItem == null) {
-			clickableItem = node.queryByTestId('checkedAvatar');
+			clickableItem = node.queryByTestId(SELECTORS.checkedAvatar);
 		}
 		if (clickableItem) {
 			// eslint-disable-next-line no-await-in-loop
@@ -310,37 +348,6 @@ export function buildChipsFromKeywords(keywords: string[]): AdvancedFilters['key
 	return map(keywords, (k) => ({ label: k, hasAvatar: false, value: k, background: 'gray2' }));
 }
 
-export const actionRegexp = {
-	rename: /^rename$/i,
-	copy: /^copy$/i,
-	flag: /^flag$/i,
-	unflag: /^unflag$/i,
-	move: /^move$/i,
-	moveToTrash: /^move to trash$/i,
-	download: /^download$/i,
-	openDocument: /^open document$/i,
-	deletePermanently: /^delete permanently$/i,
-	restore: /^restore$/i,
-	manageShares: /^manage shares$/i,
-	preview: /^preview$/i
-} as const;
-
-export const iconRegexp = {
-	moreVertical: /^icon: MoreVertical$/i,
-	moveToTrash: /^icon: Trash2Outline$/i,
-	restore: /^icon: RestoreOutline$/i,
-	deletePermanently: /^icon: DeletePermanentlyOutline$/i,
-	rename: /^icon: Edit2Outline$/i,
-	copy: /^icon: Copy$/i,
-	move: /^icon: MoveOutline$/i,
-	flag: /^icon: FlagOutline$/i,
-	unflag: /^icon: UnflagOutline$/i,
-	download: /^icon: Download$/i,
-	openDocument: /^icon: BookOpenOutline$/i,
-	close: /^icon: Close$/i,
-	trash: /^icon: Trash2Outline$/i
-} as const;
-
 export function getFirstOfNextMonth(from: Date | number = Date.now()): Date {
 	const startingDate = new Date(from);
 	let chosenDate: Date;
@@ -371,3 +378,133 @@ export const PreviewInitComponent: React.FC<{
 	}, [emptyPreview, initPreview, initPreviewArgs]);
 	return <>{children}</>;
 };
+type DataTransferUploadStub = {
+	items: Array<{ webkitGetAsEntry: () => Partial<FileSystemEntry> }>;
+	files: Array<File>;
+	types: Array<string>;
+};
+
+function createFileSystemDirectoryEntryReader(
+	node: Pick<Folder, '__typename' | 'name' | 'children'>
+): ReturnType<FileSystemDirectoryEntry['createReader']> {
+	// clone array to mutate with the splice in order to simulate the readEntries called until it returns an empty array (or undefined)
+	const children = [...node.children.nodes];
+	const readEntries = (
+		successCallback: FileSystemEntriesCallback,
+		_errorCallback?: ErrorCallback
+	): ReturnType<FileSystemDirectoryReader['readEntries']> => {
+		const childrenEntries = reduce<typeof node.children.nodes[number], FileSystemEntry[]>(
+			children.splice(0, Math.min(children.length, 10)),
+			(accumulator, childNode) => {
+				if (childNode) {
+					accumulator.push(
+						// eslint-disable-next-line @typescript-eslint/no-use-before-define
+						createFileSystemEntry(
+							childNode,
+							(isFile(childNode) &&
+								new File(['(⌐□_□)😂😂😂😂'], childNode.name, {
+									type: (isFile(childNode) && childNode.mime_type) || undefined
+								})) ||
+								undefined
+						)
+					);
+				}
+				return accumulator;
+			},
+			[]
+		);
+		successCallback(childrenEntries);
+	};
+
+	return {
+		readEntries
+	};
+}
+
+function createFileSystemEntry(
+	node: Pick<Node, '__typename' | 'name'> &
+		(Pick<FilesFile, 'mime_type'> | Pick<Folder, '__typename'>),
+	file?: File
+): FileSystemEntry {
+	const baseEntry: FileSystemEntry = {
+		name: node.name,
+		fullPath: `/${node.name}`,
+		isFile: isFile(node),
+		isDirectory: isFolder(node),
+		filesystem: {
+			name: node.name,
+			root: new FileSystemDirectoryEntry()
+		},
+		getParent: jest.fn()
+	};
+	if (isFolder(node)) {
+		const reader = createFileSystemDirectoryEntryReader(node);
+		const directoryEntry: FileSystemDirectoryEntry = {
+			...baseEntry,
+			createReader: () => reader,
+			getFile: jest.fn(),
+			getDirectory: jest.fn()
+		};
+		return directoryEntry;
+	}
+	const fileEntry: FileSystemFileEntry = {
+		...baseEntry,
+		file(successCallback: FileCallback, errorCallback?: ErrorCallback) {
+			if (file) {
+				successCallback(file);
+			} else if (errorCallback) {
+				errorCallback(new DOMException('no file provided', 'createFileSystemEntry'));
+			}
+		}
+	};
+	return fileEntry;
+}
+
+export function createDataTransfer(nodes: Array<Node>): DataTransferUploadStub {
+	const fileBlobs: File[] = [];
+	const items = map<Node, { webkitGetAsEntry: () => Partial<FileSystemEntry> }>(nodes, (node) => {
+		const fileBlob = new File(['(⌐□_□)😂😂😂😂'], node.name, {
+			type: (isFile(node) && node.mime_type) || undefined
+		});
+		fileBlobs.push(fileBlob);
+		const fileEntry = createFileSystemEntry(node, fileBlob);
+		return {
+			webkitGetAsEntry: () => fileEntry
+		};
+	});
+
+	return {
+		files: fileBlobs,
+		items,
+		types: ['Files']
+	};
+}
+
+export async function uploadWithDnD(
+	dropzoneElement: HTMLElement,
+	dataTransferObj: DataTransferUploadStub
+): Promise<void> {
+	fireEvent.dragEnter(dropzoneElement, {
+		dataTransfer: dataTransferObj
+	});
+
+	await screen.findByTestId('dropzone-overlay');
+	expect(
+		screen.getByText(/Drop here your attachments to quick-add them to your Home/m)
+	).toBeVisible();
+
+	fireEvent.drop(dropzoneElement, {
+		dataTransfer: dataTransferObj
+	});
+
+	if (dataTransferObj.files.length > 0) {
+		// use find all to make this work also when there is the displayer open
+		await screen.findAllByText(dataTransferObj.files[0].name, undefined, {
+			onTimeout: (err) => {
+				screen.logTestingPlaygroundURL();
+				return err;
+			}
+		});
+	}
+	expect(screen.queryByText(/Drop here your attachments/m)).not.toBeInTheDocument();
+}

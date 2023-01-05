@@ -7,9 +7,10 @@ import React from 'react';
 
 import { fireEvent, screen } from '@testing-library/react';
 
+import { ACTION_REGEXP, ICON_REGEXP, SELECTORS } from '../../constants/test';
 import { populateFile, populateFolder, populateNode } from '../../mocks/mockUtils';
 import { Node } from '../../types/common';
-import { actionRegexp, iconRegexp, setup, selectNodes } from '../../utils/testUtils';
+import { setup, selectNodes } from '../../utils/testUtils';
 import { List } from './List';
 
 describe('Move', () => {
@@ -42,27 +43,27 @@ describe('Move', () => {
 			// select file without can_write_file permission
 			await selectNodes([file.id], user);
 			// check that all wanted items are selected
-			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+			expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 			await user.click(screen.getByTestId('icon: MoreVertical'));
 
 			// wait copy to be sure that popper is open
-			await screen.findByText(actionRegexp.copy);
-			let moveAction = screen.queryByText(actionRegexp.move);
+			await screen.findByText(ACTION_REGEXP.copy);
+			let moveAction = screen.queryByText(ACTION_REGEXP.move);
 			expect(moveAction).not.toBeInTheDocument();
 			// deselect file and select folder without can_write_folder permission
 			await selectNodes([file.id, folder.id], user);
 			// check that all wanted items are selected
-			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.moreVertical)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.move)).not.toBeInTheDocument();
+			expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.moreVertical)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.move)).not.toBeInTheDocument();
 			// deselect folder and select node with right permission
 			await selectNodes([folder.id, node.id], user);
 			// check that all wanted items are selected
-			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+			expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 			await user.click(screen.getByTestId('icon: MoreVertical'));
-			moveAction = await screen.findByText(actionRegexp.move);
+			moveAction = await screen.findByText(ACTION_REGEXP.move);
 			expect(moveAction).toBeVisible();
 			expect(moveAction).not.toHaveAttribute('disabled', '');
 		});
@@ -92,12 +93,12 @@ describe('Move', () => {
 			await selectNodes([file.id, folder.id], user);
 
 			// check that all wanted items are selected
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
+			expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(2);
 			expect(screen.getByTestId('icon: MoreVertical')).toBeVisible();
 			await user.click(screen.getByTestId('icon: MoreVertical'));
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(2);
+			expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(2);
 
-			const moveIcon = await screen.findByTestId(iconRegexp.move);
+			const moveIcon = await screen.findByTestId(ICON_REGEXP.move);
 			expect(moveIcon).toBeVisible();
 			expect(moveIcon.parentElement).not.toHaveAttribute('disabled', '');
 		});
@@ -131,17 +132,17 @@ describe('Move', () => {
 			// right click to open contextual menu on file without permission
 			const fileItem = await screen.findByText(file.name);
 			fireEvent.contextMenu(fileItem);
-			await screen.findByText(actionRegexp.copy);
-			expect(screen.queryByText(actionRegexp.move)).not.toBeInTheDocument();
+			await screen.findByText(ACTION_REGEXP.copy);
+			expect(screen.queryByText(ACTION_REGEXP.move)).not.toBeInTheDocument();
 			// right click to open contextual menu on folder without permission
 			const folderItem = await screen.findByText(folder.name);
 			fireEvent.contextMenu(folderItem);
-			await screen.findByText(actionRegexp.copy);
-			expect(screen.queryByText(actionRegexp.move)).not.toBeInTheDocument();
+			await screen.findByText(ACTION_REGEXP.copy);
+			expect(screen.queryByText(ACTION_REGEXP.move)).not.toBeInTheDocument();
 			// right click to open contextual menu on node with permission
 			const nodeItem = await screen.findByText(node.name);
 			fireEvent.contextMenu(nodeItem);
-			expect(await screen.findByText(actionRegexp.move)).toBeInTheDocument();
+			expect(await screen.findByText(ACTION_REGEXP.move)).toBeInTheDocument();
 		});
 	});
 });

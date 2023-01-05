@@ -11,6 +11,7 @@ import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
+import { ACTION_REGEXP, ICON_REGEXP, SELECTORS } from '../constants/test';
 import { populateFolder, populateNode } from '../mocks/mockUtils';
 import { Node } from '../types/common';
 import { Folder } from '../types/graphql/types';
@@ -21,7 +22,7 @@ import {
 	mockGetChildren,
 	mockGetPermissions
 } from '../utils/mockUtils';
-import { actionRegexp, iconRegexp, setup, selectNodes } from '../utils/testUtils';
+import { setup, selectNodes } from '../utils/testUtils';
 import { DisplayerProps } from './components/Displayer';
 import FolderView from './FolderView';
 
@@ -91,28 +92,28 @@ describe('Flag', () => {
 			await selectNodes(nodesIdsToFlag, user);
 
 			// check that all wanted items are selected
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesIdsToFlag.length);
+			expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(nodesIdsToFlag.length);
 
-			const flagIcon = await screen.findByTestId(iconRegexp.flag);
+			const flagIcon = await screen.findByTestId(ICON_REGEXP.flag);
 			// click on flag action on header bar
 			await user.click(flagIcon);
-			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+			expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 			await screen.findAllByTestId('icon: Flag');
 			expect(screen.getAllByTestId('icon: Flag')).toHaveLength(nodesIdsToFlag.length);
 
 			// activate selection mode by selecting items
 			await selectNodes(nodesIdsToUnflag, user);
 			// check that all wanted items are selected
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesIdsToUnflag.length);
+			expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(nodesIdsToUnflag.length);
 			// if present, open the additional actions
 			const moreActionsItem = screen.queryByTestId('icon: MoreVertical');
 			if (moreActionsItem !== null) {
 				await user.click(moreActionsItem);
-				await screen.findByTestId('dropdown-popper-list');
+				await screen.findByTestId(SELECTORS.dropdownList);
 			}
-			const unflagIcon = await screen.findByTestId(iconRegexp.unflag);
+			const unflagIcon = await screen.findByTestId(ICON_REGEXP.unflag);
 			await user.click(unflagIcon);
-			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+			expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 			await screen.findAllByTestId('icon: Flag');
 			expect(screen.getAllByTestId('icon: Flag')).toHaveLength(
 				nodesIdsToFlag.length - nodesIdsToUnflag.length
@@ -160,7 +161,7 @@ describe('Flag', () => {
 			const nodeItem = screen.getByTestId(`node-item-${node.id}`);
 			// open context menu and click on flag action
 			fireEvent.contextMenu(nodeItem);
-			const flagAction = await screen.findByText(actionRegexp.flag);
+			const flagAction = await screen.findByText(ACTION_REGEXP.flag);
 			expect(flagAction).toBeVisible();
 			await user.click(flagAction);
 			await within(nodeItem).findByTestId('icon: Flag');
@@ -168,7 +169,7 @@ describe('Flag', () => {
 			expect(within(nodeItem).getByTestId('icon: Flag')).toBeVisible();
 			// open context menu and click on unflag action
 			fireEvent.contextMenu(nodeItem);
-			const unflagAction = await screen.findByText(actionRegexp.unflag);
+			const unflagAction = await screen.findByText(ACTION_REGEXP.unflag);
 			expect(unflagAction).toBeVisible();
 			await user.click(unflagAction);
 			expect(unflagAction).not.toBeInTheDocument();

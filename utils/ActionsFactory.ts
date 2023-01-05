@@ -16,10 +16,11 @@ import some from 'lodash/some';
 
 import { ACTIONS_TO_REMOVE_DUE_TO_PRODUCT_CONTEXT } from '../../constants';
 import { ROOTS } from '../constants';
-import { Action, GetNodeParentType, Node, UploadStatus, UploadType } from '../types/common';
-import { File as FilesFile, File, Folder, MakeOptional, Root } from '../types/graphql/types';
+import { Action, GetNodeParentType, Node } from '../types/common';
+import { UploadItem, UploadStatus } from '../types/graphql/client-types';
+import { File as FilesFile, Folder, MakeOptional, Root } from '../types/graphql/types';
 import { OneOrMany } from '../types/utils';
-import { docsHandledMimeTypes, isSupportedByPreview } from './utils';
+import { docsHandledMimeTypes, isFile, isFolder, isSupportedByPreview } from './utils';
 
 export type ActionsFactoryNodeType = Pick<
 	Node,
@@ -29,9 +30,12 @@ export type ActionsFactoryNodeType = Pick<
 	(Pick<FilesFile, '__typename'> | Pick<Folder, '__typename'>) &
 	MakeOptional<Pick<FilesFile, 'mime_type'>, 'mime_type'>;
 
-export type ActionsFactoryUploadType = Pick<UploadType, 'status' | 'parentId'>;
+export type ActionsFactoryUploadItem = Pick<
+	Partial<UploadItem>,
+	'status' | 'parentNodeId' | 'nodeId'
+>;
 
-export type ActionsFactoryGlobalType = ActionsFactoryNodeType | ActionsFactoryUploadType;
+export type ActionsFactoryGlobalType = ActionsFactoryNodeType | ActionsFactoryUploadItem;
 
 export type ActionsFactoryChecker = (nodes: ActionsFactoryGlobalType[]) => boolean;
 
@@ -64,15 +68,7 @@ const completeListActions: Action[] = [
 	Action.DeletePermanently
 ];
 
-const uploadActions: Action[] = [Action.removeUpload, Action.RetryUpload, Action.GoToFolder];
-
-export function isFile(node: { __typename?: string }): node is File {
-	return node.__typename === 'File';
-}
-
-export function isFolder(node: { __typename?: string }): node is Folder {
-	return node.__typename === 'Folder';
-}
+const uploadActions: Action[] = [Action.RemoveUpload, Action.RetryUpload, Action.GoToFolder];
 
 export function isRoot(node: { __typename?: string }): node is Root {
 	return node.__typename === 'Root';
@@ -453,9 +449,17 @@ export function canRetryUpload(nodes: OneOrMany<ActionsFactoryGlobalType>): bool
 	if (size(nodes) === 0) {
 		throw Error('cannot evaluate canRetryUpload on empty nodes array');
 	}
-	const $nodes = nodes as ActionsFactoryUploadType[];
+	const $nodes = nodes as ActionsFactoryUploadItem[];
 	// can retry only if all selected nodes are failed
-	return find($nodes, (node) => node.status !== UploadStatus.FAILED) === undefined;
+	return (
+		find(
+			$nodes,
+			(node) =>
+				node.status !== UploadStatus.FAILED ||
+				node.parentNodeId === undefined ||
+				node.parentNodeId === null
+		) === undefined
+	);
 }
 
 export function canGoToFolder(nodes: OneOrMany<ActionsFactoryGlobalType>): boolean {
@@ -465,12 +469,12 @@ export function canGoToFolder(nodes: OneOrMany<ActionsFactoryGlobalType>): boole
 	if (size(nodes) === 0) {
 		throw Error('cannot evaluate canGoToFolder on empty nodes array');
 	}
-	const $nodes = nodes as ActionsFactoryUploadType[];
+	const $nodes = nodes as ActionsFactoryUploadItem[];
 	// can go to folder only if all selected nodes have the same parent
 	return every(
 		$nodes,
 		(node, index, array) =>
-			node.parentId && array[0].parentId && node.parentId === array[0].parentId
+			node.parentNodeId && array[0].parentNodeId && node.parentNodeId === array[0].parentNodeId
 	);
 }
 
@@ -521,7 +525,7 @@ const actionsCheckMap: {
 	[Action.UpsertDescription]: canUpsertDescription,
 	[Action.GoToFolder]: canGoToFolder,
 	[Action.RetryUpload]: canRetryUpload,
-	[Action.removeUpload]: canRemoveUpload
+	[Action.RemoveUpload]: canRemoveUpload
 	// [Actions.CreateFolder]: canCreateFolder,
 };
 
@@ -569,8 +573,16 @@ export function getPermittedHoverBarActions(node: ActionsFactoryNodeType): Actio
 	return getPermittedActions([node as ActionsFactoryGlobalType], hoverBarActions);
 }
 
-export function getPermittedUploadActions(nodes: ActionsFactoryUploadType[]): Action[] {
-	return getPermittedActions(nodes as ActionsFactoryGlobalType[], uploadActions);
+export function getPermittedUploadActions(
+	nodes: ActionsFactoryUploadItem[],
+	customCheckers?: ActionsFactoryCheckerMap
+): Action[] {
+	return getPermittedActions(
+		nodes as ActionsFactoryGlobalType[],
+		uploadActions,
+		undefined,
+		customCheckers
+	);
 }
 
 export function buildActionItems(

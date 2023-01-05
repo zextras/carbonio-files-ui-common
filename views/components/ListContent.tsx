@@ -20,7 +20,8 @@ import { DeleteNodesType } from '../../hooks/graphql/mutations/useDeleteNodesMut
 import { Action, GetNodeParentType, NodeListItemType, PickIdNodeType } from '../../types/common';
 import { Node } from '../../types/graphql/types';
 import { DeepPick, OneOrMany } from '../../types/utils';
-import { ActionsFactoryCheckerMap, getPermittedActions, isFile } from '../../utils/ActionsFactory';
+import { ActionsFactoryCheckerMap, getPermittedActions } from '../../utils/ActionsFactory';
+import { isFile } from '../../utils/utils';
 import { Draggable } from './Draggable';
 import { NodeListItem } from './NodeListItem';
 import { NodeListItemWrapper } from './NodeListItemWrapper';
@@ -136,7 +137,7 @@ export const ListContent = React.forwardRef<HTMLDivElement, ListContentProps>(
 								outgoingShare={
 									me === nodeToDrag.owner?.id && nodeToDrag.shares && nodeToDrag.shares.length > 0
 								}
-								size={(isFile(nodeToDrag) && nodeToDrag.size) || undefined}
+								size={isFile(nodeToDrag) ? nodeToDrag.size : undefined}
 								flagActive={nodeToDrag.flagged}
 							/>
 						);

@@ -26,7 +26,7 @@ import { generateError, setup } from '../../utils/testUtils';
 import { getChipLabel } from '../../utils/utils';
 import { Displayer } from './Displayer';
 
-describe.skip('Displayer', () => {
+describe('Displayer', () => {
 	describe('With unsaved changes', () => {
 		describe('on edit share chip', () => {
 			test('click on other tab show dialog to warn user about unsaved changes', async () => {
@@ -81,7 +81,7 @@ describe.skip('Displayer', () => {
 				expect(screen.queryByRole('button', { name: /^save$/i })).not.toBeInTheDocument();
 			});
 
-			test('cancel action leaves permissions unsaved and navigation is kept on sharing tab', async () => {
+			test.skip('cancel action leaves permissions unsaved and navigation is kept on sharing tab', async () => {
 				const node = populateNode();
 				const share = populateShare(node, 'share1');
 				share.permission = SharePermission.ReadOnly;
@@ -140,7 +140,7 @@ describe.skip('Displayer', () => {
 				expect(screen.getByRole('button', { name: /save/i })).not.toHaveAttribute('disabled', '');
 			});
 
-			test('leave anyway continue with navigation and does not save the permissions', async () => {
+			test.skip('leave anyway continue with navigation and does not save the permissions', async () => {
 				const node = populateNode();
 				const share = populateShare(node, 'share1');
 				share.permission = SharePermission.ReadOnly;
@@ -204,7 +204,7 @@ describe.skip('Displayer', () => {
 				expect(screen.getByRole('button', { name: /save/i })).toHaveAttribute('disabled', '');
 			});
 
-			test('save and leave continue with navigation and save the new permissions', async () => {
+			test.skip('save and leave continue with navigation and save the new permissions', async () => {
 				const node = populateNode();
 				const shareTarget = populateUser();
 				const share = populateShare(node, 'share1', shareTarget);
@@ -281,7 +281,7 @@ describe.skip('Displayer', () => {
 				expect(screen.getByRole('button', { name: /save/i })).toHaveAttribute('disabled', '');
 			});
 
-			test('save and leave with error keeps navigation on sharing tab', async () => {
+			test.skip('save and leave with error keeps navigation on sharing tab', async () => {
 				const node = populateNode();
 				const shareTarget = populateUser();
 				const share = populateShare(node, 'share1', shareTarget);

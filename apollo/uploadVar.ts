@@ -6,15 +6,15 @@
 
 import { makeVar } from '@apollo/client';
 
-import { UploadType } from '../types/common';
+import { UploadItem } from '../types/graphql/client-types';
 
-export type UploadRecord = { [id: string]: UploadType };
+export type UploadRecord = { [id: string]: UploadItem };
 
 export const uploadVar = makeVar<UploadRecord>({});
 
 export interface UploadFunctions {
 	abort: () => void;
-	retry: (file: UploadType) => UploadFunctions['abort'];
+	retry: (file: UploadItem) => UploadFunctions['abort'];
 }
 
 export const uploadFunctionsVar = makeVar<{ [id: string]: UploadFunctions }>({});

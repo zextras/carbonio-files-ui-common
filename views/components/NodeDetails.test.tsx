@@ -11,6 +11,7 @@ import { sample } from 'lodash';
 import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 
+import { NODES_LOAD_LIMIT } from '../../constants';
 import {
 	populateFile,
 	populateFolder,
@@ -24,7 +25,7 @@ import {
 import { Folder, NodeType, QueryGetPathArgs } from '../../types/graphql/types';
 import { canUpsertDescription } from '../../utils/ActionsFactory';
 import { mockGetPath } from '../../utils/mockUtils';
-import { buildBreadCrumbRegExp, setup } from '../../utils/testUtils';
+import { buildBreadCrumbRegExp, setup, triggerLoadMore } from '../../utils/testUtils';
 import { formatDate, formatTime, humanFileSize, previewHandledMimeTypes } from '../../utils/utils';
 import { NodeDetails } from './NodeDetails';
 
@@ -436,5 +437,54 @@ describe('Node Details', () => {
 		);
 		expect(screen.getByText(node.name)).toBeVisible();
 		expect(screen.queryByRole('img')).not.toBeInTheDocument();
+	});
+
+	test('intersectionObserver trigger the fetchMore function to load more elements when observed element is intersected', async () => {
+		const node = populateFolder();
+		node.parent = populateFolder();
+		node.last_editor = populateUser();
+		node.shares = populateShares(node, 5);
+		node.owner = populateUser();
+		const nodes = populateNodes(NODES_LOAD_LIMIT);
+		forEach(nodes, (child) => {
+			child.owner = node.owner;
+		});
+		const loadMore = jest.fn();
+		setup(
+			<NodeDetails
+				typeName={node.__typename}
+				id={node.id}
+				name={node.name}
+				owner={node.owner}
+				creator={node.creator}
+				lastEditor={node.last_editor}
+				createdAt={node.created_at}
+				updatedAt={node.updated_at}
+				description={node.description}
+				canUpsertDescription={canUpsertDescription(node)}
+				loadMore={loadMore}
+				loading={false}
+				shares={node.shares}
+				hasMore
+				nodes={nodes}
+				type={node.type}
+			/>,
+			{ mocks: [] }
+		);
+
+		// wait the rendering of the first item
+		const firstElement = await screen.findByText(nodes[0].name);
+		expect(firstElement).toBeVisible();
+		// the loading icon should be still visible at the bottom of the list because we have load the max limit of items per page
+		expect(screen.getByTestId('icon: Refresh')).toBeVisible();
+
+		// elements after the limit should not be rendered
+		expect(screen.queryAllByTestId(`details-node-item-`, { exact: false })).toHaveLength(
+			nodes.length
+		);
+
+		await triggerLoadMore();
+
+		expect(loadMore).toHaveBeenCalled();
 	});
 });

@@ -17,6 +17,7 @@ import { find as findStyled } from 'styled-components/test-utils';
 
 import { DestinationVar, destinationVar } from '../../apollo/destinationVar';
 import { ROOTS } from '../../constants';
+import { ICON_REGEXP } from '../../constants/test';
 import {
 	populateFile,
 	populateFolder,
@@ -26,7 +27,6 @@ import {
 } from '../../mocks/mockUtils';
 import { Node, NodeWithMetadata } from '../../types/common';
 import { GetRootsListQuery, GetRootsListQueryVariables } from '../../types/graphql/types';
-import { isFile, isFolder } from '../../utils/ActionsFactory';
 import {
 	getChildrenVariables,
 	getFindNodesVariables,
@@ -40,7 +40,8 @@ import {
 	mockGetPermissions,
 	mockGetRootsList
 } from '../../utils/mockUtils';
-import { buildBreadCrumbRegExp, generateError, iconRegexp, setup } from '../../utils/testUtils';
+import { buildBreadCrumbRegExp, generateError, setup } from '../../utils/testUtils';
+import { isFile, isFolder } from '../../utils/utils';
 import { NodesSelectionModalContent } from './NodesSelectionModalContent';
 import { HoverContainer } from './StyledComponents';
 
@@ -3190,8 +3191,8 @@ describe('Nodes Selection Modal Content', () => {
 			await waitFor(() =>
 				expect(screen.getByRole('button', { name: /select/i })).not.toHaveAttribute('disabled', '')
 			);
-			expect(screen.getByTestId(iconRegexp.close)).toBeVisible();
-			await user.click(screen.getByTestId(iconRegexp.close));
+			expect(screen.getByTestId(ICON_REGEXP.close)).toBeVisible();
+			await user.click(screen.getByTestId(ICON_REGEXP.close));
 			expect(closeAction).toHaveBeenCalled();
 			expect(confirmAction).not.toHaveBeenCalled();
 		});

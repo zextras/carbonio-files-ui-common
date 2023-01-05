@@ -370,7 +370,7 @@ describe('useUpdateFolderContent', () => {
 
 			newPos = addNodeInSortedList(childrenNodes, element, sort);
 
-			addNodeToFolder({ ...folder, children: { nodes: childrenNodes } }, element);
+			addNodeToFolder({ ...folder }, element);
 
 			const {
 				children: { nodes: childrenNodes2 }
@@ -384,7 +384,7 @@ describe('useUpdateFolderContent', () => {
 			newPos = addNodeInSortedList(childrenNodes2, element, sort);
 			newPos = newPos > -1 ? newPos : childrenNodes2.length;
 			// call the hook saying that there are more children to load
-			addNodeToFolder({ ...folder, children: { nodes: childrenNodes2 } }, element);
+			addNodeToFolder({ ...folder }, element);
 			const {
 				children: { nodes: childrenNodes3 }
 			} = readGetChildrenQuery(folder.id, sort);
@@ -430,7 +430,7 @@ describe('useUpdateFolderContent', () => {
 			expect(newPos).toBe(-1);
 
 			// add the last item to the folder, it is out from ordered items, so it will be put in the unordered items
-			addNodeToFolder({ ...folder, children: { nodes: childrenNodes } }, last);
+			addNodeToFolder({ ...folder }, last);
 
 			const {
 				children: { nodes: childrenNodes2 }
@@ -446,7 +446,7 @@ describe('useUpdateFolderContent', () => {
 			newPos = addNodeInSortedList(childrenNodes2, secondLast, sort);
 			expect(newPos).toBe(childrenNodes2.length - 1);
 
-			addNodeToFolder({ ...folder, children: { nodes: childrenNodes2 } }, secondLast);
+			addNodeToFolder({ ...folder }, secondLast);
 
 			const {
 				children: { nodes: childrenNodes3 }

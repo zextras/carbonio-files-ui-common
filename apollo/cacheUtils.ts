@@ -12,8 +12,7 @@ import CHILD from '../graphql/fragments/child.graphql';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';
 import { NodesPageCachedObject } from '../types/apollo';
 import { ChildFragment, GetChildrenQuery, GetChildrenQueryVariables } from '../types/graphql/types';
-import { isFolder } from '../utils/ActionsFactory';
-import { addNodeInSortedList } from '../utils/utils';
+import { addNodeInSortedList, isFolder } from '../utils/utils';
 import { nodeSortVar } from './nodeSortVar';
 
 export const removeNodesFromFolder = (

@@ -38,7 +38,7 @@ jest.mock('../../hooks/useCreateOptions', () => ({
 describe('Filter View', () => {
 	describe('Recents filter', () => {
 		test('Recents filter is sort by updated_at_desc and excludes trashed nodes', async () => {
-			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.recents}`]
 			});
 			await screen.findByText(/view files and folders/i);
@@ -79,7 +79,7 @@ describe('Filter View', () => {
 				)
 			];
 
-			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.recents}`],
 				mocks
 			});

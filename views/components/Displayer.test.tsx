@@ -8,6 +8,7 @@ import React from 'react';
 
 import { screen, within } from '@testing-library/react';
 
+import { ACTION_REGEXP, ICON_REGEXP } from '../../constants/test';
 import GET_CHILDREN from '../../graphql/queries/getChildren.graphql';
 import {
 	populateFolder,
@@ -34,13 +35,7 @@ import {
 	mockMoveNodes,
 	mockUpdateNode
 } from '../../utils/mockUtils';
-import {
-	actionRegexp,
-	buildBreadCrumbRegExp,
-	iconRegexp,
-	renameNode,
-	setup
-} from '../../utils/testUtils';
+import { buildBreadCrumbRegExp, renameNode, setup } from '../../utils/testUtils';
 import { getChipLabel } from '../../utils/utils';
 import { Displayer } from './Displayer';
 
@@ -76,7 +71,7 @@ describe('Displayer', () => {
 		await screen.findAllByText(node.name);
 
 		const copyIcon = within(screen.getByTestId('displayer-actions-header')).queryByTestId(
-			iconRegexp.copy
+			ICON_REGEXP.copy
 		);
 		if (copyIcon) {
 			expect(copyIcon.parentNode).not.toHaveAttribute('disabled');
@@ -85,7 +80,7 @@ describe('Displayer', () => {
 			const moreVertical = await screen.findByTestId('icon: MoreVertical');
 			if (moreVertical) {
 				await user.click(moreVertical);
-				const copyAction = await screen.findByText(actionRegexp.copy);
+				const copyAction = await screen.findByText(ACTION_REGEXP.copy);
 				expect(copyAction.parentNode).not.toHaveAttribute('disabled');
 				await user.click(copyAction);
 			} else {
@@ -93,14 +88,14 @@ describe('Displayer', () => {
 			}
 		}
 		// modal opening
-		const copyButton = await screen.findByRole('button', { name: actionRegexp.copy });
+		const copyButton = await screen.findByRole('button', { name: ACTION_REGEXP.copy });
 		// breadcrumb loading
 		await findByTextWithMarkup(buildBreadCrumbRegExp(parent.name));
 		// folder loading
 		await screen.findByText((parent.children.nodes[0] as File | Folder).name);
 		expect(copyButton).not.toHaveAttribute('disabled');
 		await user.click(copyButton);
-		expect(screen.queryByRole('button', { name: actionRegexp.copy })).not.toBeInTheDocument();
+		expect(screen.queryByRole('button', { name: ACTION_REGEXP.copy })).not.toBeInTheDocument();
 		await screen.findByText(/item copied/i);
 		jest.advanceTimersToNextTimer();
 		const queryResult = global.apolloClient.readQuery<GetChildrenQuery, GetChildrenQueryVariables>({
@@ -146,11 +141,11 @@ describe('Displayer', () => {
 		const moreVertical = screen.getByTestId('icon: MoreVertical');
 		expect(moreVertical).toBeVisible();
 		await user.click(moreVertical);
-		const moveAction = await screen.findByText(actionRegexp.move);
+		const moveAction = await screen.findByText(ACTION_REGEXP.move);
 		expect(moveAction.parentNode).not.toHaveAttribute('disabled');
 		await user.click(moveAction);
 		// modal opening
-		const moveButton = await screen.findByRole('button', { name: actionRegexp.move });
+		const moveButton = await screen.findByRole('button', { name: ACTION_REGEXP.move });
 		// folder loading
 		const destinationFolderItem = await screen.findByText(
 			(parent.children.nodes[0] as File | Folder).name
@@ -161,7 +156,7 @@ describe('Displayer', () => {
 		await user.click(destinationFolderItem);
 		expect(moveButton).not.toHaveAttribute('disabled');
 		await user.click(moveButton);
-		expect(screen.queryByRole('button', { name: actionRegexp.move })).not.toBeInTheDocument();
+		expect(screen.queryByRole('button', { name: ACTION_REGEXP.move })).not.toBeInTheDocument();
 		await screen.findByText(/item moved/i);
 
 		await screen.findByText(/view files and folders/i);
@@ -196,7 +191,7 @@ describe('Displayer', () => {
 		expect(moreVertical).toBeVisible();
 		await user.click(moreVertical);
 		await renameNode(newName, user);
-		expect(screen.queryByRole('button', { name: actionRegexp.rename })).not.toBeInTheDocument();
+		expect(screen.queryByRole('button', { name: ACTION_REGEXP.rename })).not.toBeInTheDocument();
 		expect(screen.getAllByText(newName)).toHaveLength(2);
 		expect(screen.queryByText(node.name)).not.toBeInTheDocument();
 		expect(getByTextWithMarkup(buildBreadCrumbRegExp(newName))).toBeVisible();

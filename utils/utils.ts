@@ -12,6 +12,7 @@ import { chain } from 'lodash';
 import debounce from 'lodash/debounce';
 import findIndex from 'lodash/findIndex';
 import first from 'lodash/first';
+import forEach from 'lodash/forEach';
 import includes from 'lodash/includes';
 import map from 'lodash/map';
 import reduce from 'lodash/reduce';
@@ -45,7 +46,15 @@ import {
 	SortableNode,
 	TargetModule
 } from '../types/common';
-import { Maybe, Node, NodeSort, NodeType, SharePermission } from '../types/graphql/types';
+import {
+	File,
+	Folder,
+	Maybe,
+	Node,
+	NodeSort,
+	NodeType,
+	SharePermission
+} from '../types/graphql/types';
 
 /**
  * Format a size in byte as human-readable
@@ -337,7 +346,7 @@ export function propertyComparator<T extends SortableNode[keyof SortableNode]>(
 		propertyModifier
 	}: {
 		defaultIfNull?: T;
-		propertyModifier?: (p: T) => T;
+		propertyModifier?: (p: NonNullable<T>) => NonNullable<T>;
 	} = {}
 ): number {
 	let propA = (a == null || a[property] == null ? defaultIfNull : (a[property] as T)) || null;
@@ -614,6 +623,72 @@ const uploadToCompleted = (
 	}
 };
 
+async function readEntries(
+	directoryReader: FileSystemDirectoryReader
+): Promise<Array<FileSystemEntry>> {
+	return new Promise<Array<FileSystemEntry>>((resolve, reject) => {
+		directoryReader.readEntries((entries): void => {
+			resolve(entries);
+		}, reject);
+	});
+}
+
+interface FileSystemDirectoryEntryWithChildren extends FileSystemDirectoryEntry {
+	children?: Array<TreeNode>;
+}
+
+export type TreeNode = FileSystemFileEntry | FileSystemDirectoryEntryWithChildren;
+
+export function isFileSystemFileEntry(entry: FileSystemEntry): entry is FileSystemFileEntry {
+	return entry.isFile;
+}
+
+export function isFileSystemDirectoryEntry(
+	entry: FileSystemEntry
+): entry is FileSystemDirectoryEntry {
+	return entry.isDirectory;
+}
+
+export async function scan(item: FileSystemEntry): Promise<TreeNode> {
+	if (isFileSystemFileEntry(item)) {
+		return item;
+	}
+	if (isFileSystemDirectoryEntry(item)) {
+		const directoryReader = item.createReader();
+		let flag = true;
+		const entries: Array<FileSystemEntry> = [];
+		while (flag) {
+			// https://eslint.org/docs/latest/rules/no-await-in-loop#:~:text=In%20many%20cases%20the%20iterations%20of%20a%20loop%20are%20not%20actually%20independent%20of%20each%2Dother.%20For%20example%2C%20the%20output%20of%20one%20iteration%20might%20be%20used%20as%20the%20input%20to%20another
+			// eslint-disable-next-line no-await-in-loop
+			const newEntries = await readEntries(directoryReader);
+			if (size(newEntries) === 0) {
+				flag = false;
+			} else {
+				entries.push(...newEntries);
+			}
+		}
+		const treeNodes = await Promise.all(map(entries, (entry) => scan(entry)));
+		const returnValue: FileSystemDirectoryEntryWithChildren = item;
+		returnValue.children = treeNodes;
+		return returnValue;
+	}
+	throw new Error('is not FileSystemEntry or FileSystemDirectoryEntry');
+}
+
+export function flat(tree: TreeNode): Array<TreeNode> {
+	const result: Array<TreeNode> = [];
+	if (isFileSystemFileEntry(tree)) {
+		result.push(tree);
+	} else {
+		result.push(tree);
+		forEach(tree.children, (child) => {
+			const temp = flat(child);
+			result.push(...temp);
+		});
+	}
+	return result;
+}
+
 export function uploadToTargetModule(args: {
 	nodeId: string;
 	targetModule: TargetModule;
@@ -765,4 +840,12 @@ export function cssCalcBuilder(
 	);
 
 	return `calc(${operationsString})`;
+}
+
+export function isFile(node: { __typename?: string } & Record<string, unknown>): node is File {
+	return node.__typename === 'File';
+}
+
+export function isFolder(node: { __typename?: string } & Record<string, unknown>): node is Folder {
+	return node.__typename === 'Folder';
 }

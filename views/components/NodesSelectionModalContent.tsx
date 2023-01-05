@@ -47,8 +47,8 @@ import {
 	GetBaseNodeQueryVariables
 } from '../../types/graphql/types';
 import { ArrayOneOrMore } from '../../types/utils';
-import { canCreateFolder, isFile, isFolder } from '../../utils/ActionsFactory';
-import { decodeError } from '../../utils/utils';
+import { canCreateFolder } from '../../utils/ActionsFactory';
+import { decodeError, isFile, isFolder } from '../../utils/utils';
 import { LoadingIcon } from './LoadingIcon';
 import { ModalFooterCustom } from './ModalFooterCustom';
 import { ModalList } from './ModalList';

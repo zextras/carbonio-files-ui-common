@@ -29,7 +29,8 @@ import { useGetChildrenQuery } from '../../hooks/graphql/queries/useGetChildrenQ
 import { useDestinationVarManager } from '../../hooks/useDestinationVarManager';
 import { GetNodeParentType, Node, NodeListItemType, RootListItemType } from '../../types/common';
 import { Folder, GetChildrenQuery, GetChildrenQueryVariables } from '../../types/graphql/types';
-import { canBeCopyDestination, isFile, isFolder, isRoot } from '../../utils/ActionsFactory';
+import { canBeCopyDestination, isRoot } from '../../utils/ActionsFactory';
+import { isFile, isFolder } from '../../utils/utils';
 import { ModalFooterCustom } from './ModalFooterCustom';
 import { ModalList } from './ModalList';
 import { ModalRootsList } from './ModalRootsList';

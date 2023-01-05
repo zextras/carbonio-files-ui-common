@@ -63,16 +63,17 @@ import {
 	ActionsFactoryCheckerMap,
 	buildActionItems,
 	canBeMoveDestination,
-	isFolder,
-	getAllPermittedActions,
-	isFile
+	getAllPermittedActions
 } from '../../utils/ActionsFactory';
+import { getUploadAddType } from '../../utils/uploadUtils';
 import {
 	downloadNode,
 	getDocumentPreviewSrc,
 	getImgPreviewSrc,
 	getPdfPreviewSrc,
 	humanFileSize,
+	isFile,
+	isFolder,
 	isSupportedByPreview,
 	openNodeWithDocs
 } from '../../utils/utils';
@@ -551,7 +552,7 @@ export const List: React.VFC<ListProps> = ({
 	const uploadWithDragAndDrop = useCallback<React.DragEventHandler>(
 		(event) => {
 			if (canUpload) {
-				add(event.dataTransfer.files, folderId || ROOTS.LOCAL_ROOT, true);
+				add(getUploadAddType(event.dataTransfer), folderId || ROOTS.LOCAL_ROOT);
 				if (!folderId) {
 					createSnackbar({
 						key: new Date().toLocaleString(),

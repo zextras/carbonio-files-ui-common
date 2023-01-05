@@ -14,10 +14,9 @@ import {
 	canMarkForDeletion,
 	canMove,
 	canRename,
-	canUnFlag,
-	isFile,
-	isFolder
+	canUnFlag
 } from './ActionsFactory';
+import { isFile, isFolder } from './utils';
 
 type NodeWithoutPermission<T extends Node> = Omit<T, 'permissions'> & {
 	permissions: Partial<T['permissions']>;

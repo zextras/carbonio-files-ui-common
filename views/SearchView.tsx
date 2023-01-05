@@ -17,6 +17,7 @@ import { DISPLAYER_WIDTH, FILES_APP_ID, LIST_WIDTH, ROOTS } from '../constants';
 import { ListContext } from '../contexts';
 import { useUpload } from '../hooks/useUpload';
 import { DocsType } from '../types/common';
+import { getUploadAddTypeFromInput } from '../utils/uploadUtils';
 import { getNewDocumentActionLabel, inputElement } from '../utils/utils';
 import { Displayer } from './components/Displayer';
 import { SearchList } from './components/SearchList';
@@ -52,13 +53,13 @@ export const SearchView: React.VFC<SearchViewProps> = ({
 
 	const inputElementOnchange = useCallback(
 		(ev: Event) => {
-			if (ev.currentTarget instanceof HTMLInputElement && ev.currentTarget.files) {
-				add(ev.currentTarget.files, ROOTS.LOCAL_ROOT);
-				// required to select 2 times the same file/files
-				if (ev.target instanceof HTMLInputElement) {
-					ev.target.value = '';
+			if (ev.currentTarget instanceof HTMLInputElement) {
+				if (ev.currentTarget.files) {
+					add(getUploadAddTypeFromInput(ev.currentTarget.files), ROOTS.LOCAL_ROOT);
+					setShowUploadSnackbar(true);
 				}
-				setShowUploadSnackbar(true);
+				// required to select 2 times the same file/files
+				ev.currentTarget.value = '';
 			}
 		},
 		[add]

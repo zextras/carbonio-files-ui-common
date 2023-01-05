@@ -7,7 +7,7 @@
 /* eslint-disable arrow-body-style */
 import { useCallback } from 'react';
 
-import { FetchResult, MutationResult, useMutation } from '@apollo/client';
+import { FetchResult, MutationHookOptions, MutationResult, useMutation } from '@apollo/client';
 
 import CREATE_FOLDER from '../../../graphql/mutations/createFolder.graphql';
 import {
@@ -20,30 +20,31 @@ import { useErrorHandler } from '../../useErrorHandler';
 import { useUpdateFolderContent } from '../useUpdateFolderContent';
 
 export type CreateFolderType = (
-	parentFolder: Folder,
+	parentFolder: Pick<Folder, 'id'>,
 	name: string
 ) => Promise<FetchResult<CreateFolderMutation>>;
 
-type CreateFolderMutationOptions = {
+interface CreateFolderMutationOptions
+	extends MutationHookOptions<CreateFolderMutation, CreateFolderMutationVariables> {
 	showSnackbar?: boolean;
-};
+}
 
 /**
  * Can return error: ErrorCode.FILE_VERSION_NOT_FOUND, ErrorCode.NODE_NOT_FOUND
  */
 export function useCreateFolderMutation(
-	{ showSnackbar = true }: CreateFolderMutationOptions = { showSnackbar: true }
+	{ showSnackbar = true, ...mutationOptions }: CreateFolderMutationOptions = { showSnackbar: true }
 ): {
 	createFolder: CreateFolderType;
 } & Pick<MutationResult<CreateFolderMutation>, 'error' | 'loading' | 'reset'> {
 	const [createFolderMutation, { error: createFolderError, loading, reset }] = useMutation<
 		CreateFolderMutation,
 		CreateFolderMutationVariables
-	>(CREATE_FOLDER);
-	const { addNodeToFolder } = useUpdateFolderContent();
+	>(CREATE_FOLDER, mutationOptions);
+	const { addNodeToFolder } = useUpdateFolderContent(mutationOptions.client);
 
-	const createFolder: CreateFolderType = useCallback(
-		(parentFolder: Pick<Folder, '__typename' | 'id' | 'children'>, name: string) => {
+	const createFolder = useCallback<CreateFolderType>(
+		(parentFolder: Parameters<CreateFolderType>[0], name: string) => {
 			return createFolderMutation({
 				variables: {
 					destination_id: parentFolder.id,
@@ -54,11 +55,8 @@ export function useCreateFolderMutation(
 				// otherwise this new folder will be loaded with next fetchMore calls
 				update(cache, { data }) {
 					if (data?.createFolder) {
-						const newPosition = addNodeToFolder(parentFolder, data.createFolder);
-						scrollToNodeItem(
-							data.createFolder.id,
-							newPosition === parentFolder.children.nodes.length
-						);
+						const { isLast } = addNodeToFolder(parentFolder, data.createFolder);
+						scrollToNodeItem(data.createFolder.id, isLast);
 					}
 				}
 			});

@@ -32,8 +32,7 @@ import {
 	SharedTarget,
 	SharePermission
 } from '../../../types/graphql/types';
-import { isFile, isFolder } from '../../../utils/ActionsFactory';
-import { getChipLabel, sharePermissionsGetter } from '../../../utils/utils';
+import { getChipLabel, isFile, isFolder, sharePermissionsGetter } from '../../../utils/utils';
 import { RouteLeavingGuard } from '../RouteLeavingGuard';
 import { ChipWithPopover } from './ChipWithPopover';
 import { EditShareChipPopoverContainer } from './EditShareChipPopoverContainer';

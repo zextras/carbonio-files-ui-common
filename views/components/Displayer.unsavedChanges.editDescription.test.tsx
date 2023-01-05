@@ -25,7 +25,7 @@ import {
 import { generateError, setup } from '../../utils/testUtils';
 import { Displayer } from './Displayer';
 
-describe.skip('Displayer', () => {
+describe('Displayer', () => {
 	describe('With unsaved changes', () => {
 		describe('on description', () => {
 			test('click on other tab show dialog to warn user about unsaved changes', async () => {
@@ -70,7 +70,7 @@ describe.skip('Displayer', () => {
 				expect(screen.getByRole('button', { name: /save and leave/i })).toBeVisible();
 			});
 
-			test('cancel action leaves description input field open and valued and navigation is kept on details tab', async () => {
+			test.skip('cancel action leaves description input field open and valued and navigation is kept on details tab', async () => {
 				const node = populateNode();
 				node.permissions.can_write_file = true;
 				node.permissions.can_write_folder = true;
@@ -109,7 +109,7 @@ describe.skip('Displayer', () => {
 				expect(screen.queryByTestId('icon: Edit2Outline')).not.toBeInTheDocument();
 			});
 
-			test('leave anyway closes description input field, continue with navigation and does not save the description', async () => {
+			test.skip('leave anyway closes description input field, continue with navigation and does not save the description', async () => {
 				const node = populateFile();
 				node.type = NodeType.Image;
 				node.extension = 'png';
@@ -173,7 +173,7 @@ describe.skip('Displayer', () => {
 				expect(screen.queryByText(/you have unsaved changes/i)).not.toBeInTheDocument();
 			});
 
-			test('save and leave closes description input field, continue with navigation and save the description', async () => {
+			test.skip('save and leave closes description input field, continue with navigation and save the description', async () => {
 				const node = populateNode();
 				node.permissions.can_write_file = true;
 				node.permissions.can_write_folder = true;
@@ -233,7 +233,7 @@ describe.skip('Displayer', () => {
 				expect(screen.queryByText(/you have unsaved changes/i)).not.toBeInTheDocument();
 			});
 
-			test('save and leave with error keeps description input field open and valued and navigation is kept on details tab', async () => {
+			test.skip('save and leave with error keeps description input field open and valued and navigation is kept on details tab', async () => {
 				const node = populateNode();
 				node.permissions.can_write_file = true;
 				node.permissions.can_write_folder = true;

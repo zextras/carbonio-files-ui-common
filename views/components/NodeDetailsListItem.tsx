@@ -20,8 +20,8 @@ interface NodeDetailsListItemProps {
 	name: string;
 	type: NodeType;
 	mimeType?: Maybe<string>;
-	owner: Partial<User>;
-	updatedAt: number;
+	owner?: Partial<User>;
+	updatedAt?: number;
 }
 
 export const NodeDetailsListItem: React.VFC<NodeDetailsListItemProps> = ({

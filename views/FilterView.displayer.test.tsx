@@ -67,7 +67,7 @@ describe('Filter View', () => {
 				})
 			);
 			const { getByTextWithMarkup, user } = setup(
-				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
+				<Route path={`/:view/:filter?`}>
 					<FilterView />
 				</Route>,
 				{
@@ -155,7 +155,7 @@ describe('Filter View', () => {
 			);
 
 			const { getByTextWithMarkup, queryByTextWithMarkup, findByTextWithMarkup, user } = setup(
-				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`}>
+				<Route path={`/:view/:filter?`}>
 					<FilterView />
 				</Route>,
 				{

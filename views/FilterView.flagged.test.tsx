@@ -38,7 +38,7 @@ jest.mock('../../hooks/useCreateOptions', () => ({
 describe('Filter view', () => {
 	describe('Flagged filter', () => {
 		test('Flagged filter has flagged=true and excludes trashed nodes', async () => {
-			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
 			});
 
@@ -71,7 +71,7 @@ describe('Filter view', () => {
 			];
 
 			const { getByTextWithMarkup } = setup(
-				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
+				<Route path={`/:view/:filter?`} component={FilterView} />,
 				{
 					initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`],
 					mocks

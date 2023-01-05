@@ -14,6 +14,7 @@ import { Route } from 'react-router-dom';
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import server from '../../mocks/server';
 import { FILTER_TYPE, INTERNAL_PATH, ROOTS, TIMERS } from '../constants';
+import { SELECTORS } from '../constants/test';
 import { populateFolder, populateNodes } from '../mocks/mockUtils';
 import {
 	File as FilesFile,
@@ -31,7 +32,7 @@ import {
 	mockGetChildren,
 	mockMoveNodes
 } from '../utils/mockUtils';
-import { setup, selectNodes } from '../utils/testUtils';
+import { setup, selectNodes, createDataTransfer } from '../utils/testUtils';
 import FilterView from './FilterView';
 
 jest.mock('../../hooks/useCreateOptions', () => ({
@@ -47,10 +48,8 @@ describe('Filter View', () => {
 			const currentFilter = populateNodes(5, 'File');
 			const localRoot = populateFolder(0, ROOTS.LOCAL_ROOT);
 			const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
-			const files: File[] = [];
 			forEach(uploadedFiles, (file) => {
 				file.parent = localRoot;
-				files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 			});
 			let reqIndex = 0;
 
@@ -87,12 +86,9 @@ describe('Filter View', () => {
 				)
 			];
 
-			const dataTransferObj = {
-				types: ['Files'],
-				files
-			};
+			const dataTransferObj = createDataTransfer(uploadedFiles);
 
-			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 				mocks,
 				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.sharedWithMe}`]
 			});
@@ -134,10 +130,8 @@ describe('Filter View', () => {
 			const currentFilter = populateNodes(5);
 			const localRoot = populateFolder(0, ROOTS.LOCAL_ROOT);
 			const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
-			const files: File[] = [];
 			forEach(uploadedFiles, (file) => {
 				file.parent = localRoot;
-				files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 			});
 			let reqIndex = 0;
 
@@ -168,12 +162,9 @@ describe('Filter View', () => {
 				)
 			];
 
-			const dataTransferObj = {
-				types: ['Files'],
-				files
-			};
+			const dataTransferObj = createDataTransfer(uploadedFiles);
 
-			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 				mocks,
 				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`]
 			});
@@ -213,10 +204,8 @@ describe('Filter View', () => {
 			destinationFolder.permissions.can_write_file = true;
 			currentFilter.push(destinationFolder);
 			const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
-			const files: File[] = [];
 			forEach(uploadedFiles, (file) => {
 				file.parent = destinationFolder;
-				files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 			});
 			let reqIndex = 0;
 
@@ -243,12 +232,9 @@ describe('Filter View', () => {
 				)
 			];
 
-			const dataTransferObj = {
-				types: ['Files'],
-				files
-			};
+			const dataTransferObj = createDataTransfer(uploadedFiles);
 
-			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 				mocks,
 				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.sharedWithMe}`]
 			});
@@ -278,10 +264,8 @@ describe('Filter View', () => {
 			destinationFolder.permissions.can_write_file = false;
 			currentFilter.push(destinationFolder);
 			const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
-			const files: File[] = [];
 			forEach(uploadedFiles, (file) => {
 				file.parent = destinationFolder;
-				files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 			});
 			let reqIndex = 0;
 
@@ -303,12 +287,9 @@ describe('Filter View', () => {
 				)
 			];
 
-			const dataTransferObj = {
-				types: ['Files'],
-				files
-			};
+			const dataTransferObj = createDataTransfer(uploadedFiles);
 
-			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 				mocks,
 				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
 			});
@@ -339,10 +320,8 @@ describe('Filter View', () => {
 			destinationFolder.permissions.can_write_file = true;
 			currentFilter.push(destinationFolder);
 			const uploadedFiles = populateNodes(2, 'File') as FilesFile[];
-			const files: File[] = [];
 			forEach(uploadedFiles, (file) => {
 				file.parent = destinationFolder;
-				files.push(new File(['(⌐□_□)'], file.name, { type: file.mime_type }));
 			});
 			let reqIndex = 0;
 
@@ -364,12 +343,9 @@ describe('Filter View', () => {
 				)
 			];
 
-			const dataTransferObj = {
-				types: ['Files'],
-				files
-			};
+			const dataTransferObj = createDataTransfer(uploadedFiles);
 
-			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 				mocks,
 				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`]
 			});
@@ -432,7 +408,7 @@ describe('Filter View', () => {
 				})
 			});
 
-			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 				mocks,
 				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.myTrash}`]
 			});
@@ -505,7 +481,7 @@ describe('Filter View', () => {
 				})
 			});
 
-			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 				mocks,
 				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
 			});
@@ -599,7 +575,7 @@ describe('Filter View', () => {
 				})
 			});
 
-			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 				mocks,
 				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
 			});
@@ -685,10 +661,10 @@ describe('Filter View', () => {
 				})
 			});
 
-			const { user } = setup(
-				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
-				{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
-			);
+			const { user } = setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
+				mocks,
+				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
+			});
 
 			const itemToDrag = await screen.findByText(nodesToDrag[0].name);
 			await selectNodes(
@@ -696,7 +672,7 @@ describe('Filter View', () => {
 				user
 			);
 			// check that all wanted items are selected
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToDrag.length);
+			expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(nodesToDrag.length);
 
 			fireEvent.dragStart(itemToDrag, { dataTransfer: dataTransfer() });
 			forEach(nodesToDrag, (node) => {
@@ -715,7 +691,7 @@ describe('Filter View', () => {
 			fireEvent.dragEnd(itemToDrag, { dataTransfer: dataTransfer() });
 
 			// selection mode stays active
-			expect(screen.getAllByTestId('checkedAvatar')).toHaveLength(nodesToDrag.length);
+			expect(screen.getAllByTestId(SELECTORS.checkedAvatar)).toHaveLength(nodesToDrag.length);
 		});
 
 		test('Drag of a node in a filter empty space shows disabled dropzone overlay for the list. Drop does nothing', async () => {
@@ -752,7 +728,7 @@ describe('Filter View', () => {
 				})
 			});
 
-			setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+			setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 				mocks,
 				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
 			});

@@ -18,6 +18,7 @@ import { ListContext } from '../contexts';
 import useQueryParam from '../hooks/useQueryParam';
 import { useUpload } from '../hooks/useUpload';
 import { DocsType } from '../types/common';
+import { getUploadAddTypeFromInput } from '../utils/uploadUtils';
 import { getNewDocumentActionLabel, inputElement } from '../utils/utils';
 import { Displayer } from './components/Displayer';
 import FileList from './components/FileList';
@@ -42,13 +43,13 @@ const FileView: React.VFC = () => {
 
 	const inputElementOnchange = useCallback(
 		(ev: Event) => {
-			if (ev.currentTarget instanceof HTMLInputElement && ev.currentTarget.files) {
-				add(ev.currentTarget.files, ROOTS.LOCAL_ROOT);
-				// required to select 2 times the same file/files
-				if (ev.target instanceof HTMLInputElement) {
-					ev.target.value = '';
+			if (ev.currentTarget instanceof HTMLInputElement) {
+				if (ev.currentTarget.files) {
+					add(getUploadAddTypeFromInput(ev.currentTarget.files), ROOTS.LOCAL_ROOT);
+					setShowUploadSnackbar(true);
 				}
-				setShowUploadSnackbar(true);
+				// required to select 2 times the same file/files
+				ev.currentTarget.value = '';
 			}
 		},
 		[add]

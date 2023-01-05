@@ -15,6 +15,7 @@ import { Link, Route, Switch } from 'react-router-dom';
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import server from '../../mocks/server';
 import { FILTER_TYPE, INTERNAL_PATH, NODES_LOAD_LIMIT, ROOTS } from '../constants';
+import { ICON_REGEXP, SELECTORS } from '../constants/test';
 import handleFindNodesRequest from '../mocks/handleFindNodesRequest';
 import { populateFolder, populateNode, populateNodes } from '../mocks/mockUtils';
 import { FindNodesQuery, FindNodesQueryVariables } from '../types/graphql/types';
@@ -27,7 +28,7 @@ import {
 	mockGetChildren,
 	mockGetPermissions
 } from '../utils/mockUtils';
-import { iconRegexp, selectNodes, setup, triggerLoadMore } from '../utils/testUtils';
+import { selectNodes, setup, triggerLoadMore } from '../utils/testUtils';
 import FilterView from './FilterView';
 import FolderView from './FolderView';
 
@@ -55,7 +56,7 @@ jest.mock('../../hooks/useCreateOptions', () => ({
 
 describe('Filter view', () => {
 	test('No url param render a "Missing filter" message', async () => {
-		setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+		setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 			initialRouterEntries: [`${INTERNAL_PATH.FILTER}/`]
 		});
 		await screen.findByTestId('missing-filter');
@@ -64,7 +65,7 @@ describe('Filter view', () => {
 	});
 
 	test('Create folder option is always disabled', async () => {
-		setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+		setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 			initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
 		});
 		await screen.findByText(/view files and folders/i);
@@ -82,7 +83,7 @@ describe('Filter view', () => {
 			)
 		];
 
-		setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+		setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 			initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`],
 			mocks
 		});
@@ -112,7 +113,7 @@ describe('Filter view', () => {
 			)
 		];
 
-		setup(<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />, {
+		setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
 			initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`],
 			mocks
 		});
@@ -177,7 +178,7 @@ describe('Filter view', () => {
 			<div>
 				<Link
 					to={{
-						pathname: '/folder',
+						pathname: '/',
 						search: `?folder=${currentFolder.id}`
 					}}
 				>
@@ -185,8 +186,8 @@ describe('Filter view', () => {
 				</Link>
 				<Link to={`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`}>Go to filter</Link>
 				<Switch>
-					<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />
-					<Route path="/folder" component={FolderView} />
+					<Route path={`/:view/:filter?`} component={FilterView} />
+					<Route path="/" component={FolderView} />
 				</Switch>
 			</div>,
 			{ initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`], mocks }
@@ -222,40 +223,40 @@ describe('Filter view', () => {
 					nodes
 				)
 			];
-			const { user } = setup(
-				<Route path={`${INTERNAL_PATH.FILTER}/:filter?`} component={FilterView} />,
-				{ mocks, initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`] }
-			);
+			const { user } = setup(<Route path={`/:view/:filter?`} component={FilterView} />, {
+				mocks,
+				initialRouterEntries: [`${INTERNAL_PATH.FILTER}${FILTER_TYPE.flagged}`]
+			});
 			await screen.findByText(nodes[0].name);
 			expect(screen.getByText(nodes[0].name)).toBeVisible();
-			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+			expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 			await selectNodes([nodes[0].id], user);
 			// check that all wanted items are selected
-			expect(screen.getByTestId('checkedAvatar')).toBeInTheDocument();
+			expect(screen.getByTestId(SELECTORS.checkedAvatar)).toBeInTheDocument();
 			expect(screen.getByText(/select all/i)).toBeVisible();
 			// deselect node. Selection mode remains active
 			await selectNodes([nodes[0].id], user);
-			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
-			expect(screen.getAllByTestId('unCheckedAvatar')).toHaveLength(nodes.length);
+			expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
+			expect(screen.getAllByTestId(SELECTORS.uncheckedAvatar)).toHaveLength(nodes.length);
 			expect(screen.getByText(/select all/i)).toBeVisible();
 
-			expect(screen.queryByTestId(iconRegexp.moveToTrash)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.moreVertical)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.rename)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.copy)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.move)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.flag)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.unflag)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.download)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.openDocument)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.restore)).not.toBeInTheDocument();
-			expect(screen.queryByTestId(iconRegexp.deletePermanently)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.moveToTrash)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.moreVertical)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.rename)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.copy)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.move)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.flag)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.unflag)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.download)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.openDocument)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.restore)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(ICON_REGEXP.deletePermanently)).not.toBeInTheDocument();
 
 			const arrowBack = screen.getByTestId('icon: ArrowBackOutline');
 			expect(arrowBack).toBeVisible();
 			await user.click(arrowBack);
-			expect(screen.queryByTestId('unCheckedAvatar')).not.toBeInTheDocument();
-			expect(screen.queryByTestId('checkedAvatar')).not.toBeInTheDocument();
+			expect(screen.queryByTestId(SELECTORS.uncheckedAvatar)).not.toBeInTheDocument();
+			expect(screen.queryByTestId(SELECTORS.checkedAvatar)).not.toBeInTheDocument();
 			expect(screen.queryByText(/select all/i)).not.toBeInTheDocument();
 		});
 	});
