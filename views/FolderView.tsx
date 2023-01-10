@@ -280,7 +280,7 @@ const FolderView: React.VFC = () => {
 					group: FILES_APP_ID,
 					label: t('create.options.new.upload', 'Upload'),
 					icon: 'CloudUploadOutline',
-					onClick: (event: React.SyntheticEvent | KeyboardEvent): void => {
+					click: (event: React.SyntheticEvent | KeyboardEvent): void => {
 						event && event.stopPropagation();
 						inputElement.click();
 						inputElement.onchange = inputElementOnchange;
