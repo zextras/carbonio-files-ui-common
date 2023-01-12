@@ -7,13 +7,11 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import {
-	Avatar,
 	Button,
 	ChipInput,
 	ChipInputProps,
 	ChipItem,
 	Container,
-	Row,
 	Text
 } from '@zextras/carbonio-design-system';
 import filter from 'lodash/filter';
@@ -29,7 +27,6 @@ import throttle from 'lodash/throttle';
 import trim from 'lodash/trim';
 import uniq from 'lodash/uniq';
 import { useTranslation } from 'react-i18next';
-import styled from 'styled-components';
 
 import { soapFetch } from '../../../../network/network';
 import { useCreateShareMutation } from '../../../hooks/graphql/mutations/useCreateShareMutation';
@@ -51,77 +48,12 @@ import {
 } from '../../../types/network';
 import { getChipLabel, sharePermissionsGetter } from '../../../utils/utils';
 import { RouteLeavingGuard } from '../RouteLeavingGuard';
+import { Hint, Loader } from '../StyledComponents';
 import { AddShareChip } from './AddShareChip';
 
 const emailRegex =
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars, max-len, no-control-regex
 	/(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
-
-interface HintProps {
-	label: string;
-	email?: string;
-}
-
-const Hint: React.VFC<HintProps> = ({ label, email }) => (
-	<Container
-		orientation="horizontal"
-		mainAlignment="flex-start"
-		crossAlignment="center"
-		minWidth="16rem"
-		minHeight="2rem"
-	>
-		<Avatar label={label} />
-		<Container orientation="vertical" crossAlignment="flex-start" padding={{ left: 'small' }}>
-			{email !== undefined && label !== email ? (
-				<>
-					<Row takeAvailableSpace mainAlignment="flex-start">
-						<Text size="medium">{label}</Text>
-					</Row>
-					<Row takeAvailableSpace mainAlignment="flex-start">
-						<Text color="secondary" size="small">
-							{email}
-						</Text>
-					</Row>
-				</>
-			) : (
-				<Text size="medium">{label}</Text>
-			)}
-		</Container>
-	</Container>
-);
-
-const SkeletonTile = styled.div<{ width: string; height: string; radius: string }>`
-	width: ${({ width }): string => width ?? '1rem'};
-	max-width: ${({ width }): string => width ?? '1rem'};
-	min-width: ${({ width }): string => width ?? '1rem'};
-	height: ${({ height }): string => height ?? '1rem'};
-	max-height: ${({ height }): string => height ?? '1rem'};
-	min-height: ${({ height }): string => height ?? '1rem'};
-	border-radius: ${({ radius }): string => radius ?? '0.125rem'};
-	background: ${({ theme }): string => theme.palette.gray2.regular};
-`;
-
-const Loader: React.VFC = () => (
-	<Container
-		orientation="horizontal"
-		mainAlignment="flex-start"
-		crossAlignment="center"
-		minWidth="16rem"
-		minHeight="2rem"
-		data-testid="add-sharing-loader"
-	>
-		<SkeletonTile radius="50%" width="2rem" height="2rem" />
-		<Container orientation="vertical" crossAlignment="flex-start" padding={{ left: 'small' }}>
-			<SkeletonTile
-				radius="0.25rem"
-				width={`${Math.random() * 9.375 + 4}rem`}
-				height="0.875rem"
-				style={{ marginBottom: '0.25rem' }}
-			/>
-			<SkeletonTile radius="0.25rem" width={`${Math.random() * 9.375 + 4}rem`} height="0.75rem" />
-		</Container>
-	</Container>
-);
 
 interface AddSharingProps {
 	node: Pick<Node, '__typename' | 'id' | 'owner'> & {

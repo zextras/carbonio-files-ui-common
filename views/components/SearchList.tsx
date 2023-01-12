@@ -49,7 +49,8 @@ export const SearchList: React.VFC = () => {
 		folderId: searchParams.folderId?.value,
 		cascade: searchParams.cascade?.value,
 		sharedWithMe: searchParams.sharedWithMe?.value,
-		sort: nodeSort
+		sort: nodeSort,
+		ownerId: searchParams.ownerId?.value
 	});
 
 	useEffect(() => {

@@ -34,6 +34,7 @@ import { Folder } from '../../types/graphql/types';
 import { AdvancedSwitch } from './AdvancedSwitch';
 import { FolderSelectionModalContent } from './FolderSelectionModalContent';
 import { ModalFooterCustom } from './ModalFooterCustom';
+import { OwnerChipInput } from './OwnerChipInput';
 
 const FolderChipInput = styled(ChipInput)`
 	cursor: pointer;
@@ -276,19 +277,24 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 						initialValue={!!currentFilters.sharedByMe}
 					/>
 				</Row>
-				<Row takeAvailableSpace wrap="nowrap" width="fill">
-					<Container padding={{ all: 'extrasmall' }}>
-						<ChipInput
-							placeholder={t('search.advancedSearch.modal.keywords.label', 'Keywords')}
-							background="gray5"
-							value={keywords}
-							onChange={keywordsOnChange}
-							onAdd={keywordsOnAdd}
-							separators={[',', ';', 'Enter']}
-							onInputType={keywordsOnType}
-							confirmChipOnSpace={false}
-						/>
-					</Container>
+				<Row
+					takeAvailableSpace
+					wrap="nowrap"
+					width="fill"
+					padding={{ all: 'extrasmall' }}
+					gap="0.5rem"
+				>
+					<ChipInput
+						placeholder={t('search.advancedSearch.modal.keywords.label', 'Keywords')}
+						background="gray5"
+						value={keywords}
+						onChange={keywordsOnChange}
+						onAdd={keywordsOnAdd}
+						separators={[',', ';', 'Enter']}
+						onInputType={keywordsOnType}
+						confirmChipOnSpace={false}
+					/>
+					<OwnerChipInput currentFilters={currentFilters} updateFilter={updateFilter} />
 				</Row>
 				<Row takeAvailableSpace wrap="nowrap" width="fill">
 					<Container padding={{ all: 'extrasmall' }}>

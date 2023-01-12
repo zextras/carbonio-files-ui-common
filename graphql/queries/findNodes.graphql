@@ -15,7 +15,9 @@ query findNodes(
     $page_token: String,
     $sort: NodeSort,
     $shares_limit: Int = 1,
-    $direct_share: Boolean
+    $direct_share: Boolean,
+    $owner_id: String,
+    $type: NodeType
 ) {
     findNodes(
         keywords: $keywords,
@@ -27,7 +29,9 @@ query findNodes(
         limit: $limit,
         page_token: $page_token,
         sort: $sort,
-        direct_share: $direct_share
+        direct_share: $direct_share,
+        owner_id: $owner_id,
+        type: $type
     ) {
         nodes {
             ...Child
