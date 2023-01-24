@@ -50,7 +50,8 @@ export const SearchList: React.VFC = () => {
 		cascade: searchParams.cascade?.value,
 		sharedWithMe: searchParams.sharedWithMe?.value,
 		sort: nodeSort,
-		ownerId: searchParams.ownerId?.value
+		ownerId: searchParams.ownerId?.value,
+		type: searchParams.type?.value
 	});
 
 	useEffect(() => {

@@ -33,6 +33,7 @@ import { AdvancedFilters, NodeListItemType } from '../../types/common';
 import { Folder } from '../../types/graphql/types';
 import { AdvancedSwitch } from './AdvancedSwitch';
 import { FolderSelectionModalContent } from './FolderSelectionModalContent';
+import { ItemTypeChipInput } from './ItemTypeChipInput';
 import { ModalFooterCustom } from './ModalFooterCustom';
 import { OwnerChipInput } from './OwnerChipInput';
 
@@ -300,8 +301,17 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 						<OwnerChipInput currentFilters={currentFilters} updateFilter={updateFilter} />
 					</Container>
 				</Row>
-				<Row takeAvailableSpace wrap="nowrap" width="fill">
-					<Container padding={{ all: 'extrasmall' }}>
+				<Row
+					takeAvailableSpace
+					wrap="nowrap"
+					width="fill"
+					padding={{ all: 'extrasmall' }}
+					gap="0.5rem"
+				>
+					<Container maxWidth={'50%'}>
+						<ItemTypeChipInput currentFilters={currentFilters} updateFilter={updateFilter} />
+					</Container>
+					<Container maxWidth={'50%'}>
 						<FolderChipInput
 							placeholder={t('search.advancedSearch.modal.folder.label', 'Select a folder')}
 							background="gray5"
