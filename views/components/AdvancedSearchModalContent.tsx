@@ -284,17 +284,21 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 					padding={{ all: 'extrasmall' }}
 					gap="0.5rem"
 				>
-					<ChipInput
-						placeholder={t('search.advancedSearch.modal.keywords.label', 'Keywords')}
-						background="gray5"
-						value={keywords}
-						onChange={keywordsOnChange}
-						onAdd={keywordsOnAdd}
-						separators={[',', ';', 'Enter']}
-						onInputType={keywordsOnType}
-						confirmChipOnSpace={false}
-					/>
-					<OwnerChipInput currentFilters={currentFilters} updateFilter={updateFilter} />
+					<Container maxWidth={'50%'}>
+						<ChipInput
+							placeholder={t('search.advancedSearch.modal.keywords.label', 'Keywords')}
+							background="gray5"
+							value={keywords}
+							onChange={keywordsOnChange}
+							onAdd={keywordsOnAdd}
+							separators={[',', ';', 'Enter']}
+							onInputType={keywordsOnType}
+							confirmChipOnSpace={false}
+						/>
+					</Container>
+					<Container maxWidth={'50%'}>
+						<OwnerChipInput currentFilters={currentFilters} updateFilter={updateFilter} />
+					</Container>
 				</Row>
 				<Row takeAvailableSpace wrap="nowrap" width="fill">
 					<Container padding={{ all: 'extrasmall' }}>

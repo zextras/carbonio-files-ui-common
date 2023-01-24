@@ -148,6 +148,7 @@ export const OwnerChipInput: React.VFC<OwnerChipInputProps> = ({
 			placeholder={t('search.advancedSearch.modal.owner.label', 'Owner')}
 			background="gray5"
 			maxChips={1}
+			separators={['']}
 			confirmChipOnSpace={false}
 			confirmChipOnBlur={false}
 			value={ownerChipInputValue}
