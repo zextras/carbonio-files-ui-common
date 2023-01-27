@@ -124,7 +124,7 @@ export const OwnerChipInput: React.VFC<OwnerChipInputProps> = ({
 				updateFilter('ownerId', {
 					label: newOwner[0].label,
 					avatarBackground: 'secondary',
-					onClick: (event: React.SyntheticEvent): void => {
+					onClick: (event) => {
 						event.stopPropagation();
 					},
 					value: (newOwner[0] as ContactInfo)._attrs.zimbraId || undefined
