@@ -10,10 +10,22 @@ import { act, screen, waitFor } from '@testing-library/react';
 import { ROOTS } from '../../constants';
 import { populateFolder } from '../../mocks/mockUtils';
 import { AdvancedFilters } from '../../types/common';
+import { ContactInfo } from '../../types/network';
 import { mockGetPath } from '../../utils/mockUtils';
 import { setup } from '../../utils/testUtils';
 import { AdvancedSearchModalContent } from './AdvancedSearchModalContent';
 
+const mockedSoapFetch: jest.Mock = jest.fn();
+
+jest.mock('../../../network/network', () => ({
+	soapFetch: jest.fn(
+		(): Promise<unknown> =>
+			new Promise((resolve, reject) => {
+				const result = mockedSoapFetch();
+				result ? resolve(result) : reject(new Error('no result provided'));
+			})
+	)
+}));
 describe('Advanced search modal content', () => {
 	test('Render all the advanced params empty if no previous filter was set', () => {
 		const filters = {};
@@ -37,6 +49,7 @@ describe('Advanced search modal content', () => {
 			)
 		).toBeVisible();
 		expect(screen.getByText(/keywords/i)).toBeVisible();
+		expect(screen.getByText(/owner/i)).toBeVisible();
 		expect(screen.getByText(/select a folder/i)).toBeVisible();
 		expect(screen.getByTestId('icon: FolderOutline')).toBeVisible();
 		expect(screen.getByRole('button', { name: /reset filters/i })).toBeVisible();
@@ -81,7 +94,12 @@ describe('Advanced search modal content', () => {
 					label: 'keyword2',
 					hasAvatar: false
 				}
-			]
+			],
+			ownerId: {
+				avatarBackground: 'secondary',
+				label: 'Name Surname',
+				value: '12345678-1234-1234-1234-abcdeabcde12'
+			}
 		};
 		const closeAction = jest.fn();
 		const searchAdvancedFilters = jest.fn();
@@ -120,10 +138,13 @@ describe('Advanced search modal content', () => {
 		expect(screen.getByText(/\bkeyword1\b/)).toBeVisible();
 		expect(screen.getByText(/\bkeyword2\b/)).toBeVisible();
 		expect(screen.getByText(/\bHome\b/)).toBeVisible();
-		expect(screen.getByTestId('icon: Folder')).toBeVisible();
+		expect(screen.getByTestId('icon: Folder')).toBeInTheDocument();
 
-		// 4 close icons: 2 keywords, 1 folder, 1 close modal
-		expect(screen.getAllByTestId('icon: Close')).toHaveLength(4);
+		// owner chip
+		expect(screen.getByText('Name Surname')).toBeVisible();
+
+		// 4 close icons: 2 keywords, 1 folder, 1 close modal, 1 owner
+		expect(screen.getAllByTestId('icon: Close')).toHaveLength(5);
 	});
 
 	test('reset action clears all the filters', async () => {
@@ -157,7 +178,12 @@ describe('Advanced search modal content', () => {
 					label: 'keyword2',
 					hasAvatar: false
 				}
-			]
+			],
+			ownerId: {
+				avatarBackground: 'secondary',
+				label: 'Name Surname',
+				value: '12345678-1234-1234-1234-abcdeabcde12'
+			}
 		};
 		const closeAction = jest.fn();
 		const searchAdvancedFilters = jest.fn();
@@ -178,8 +204,11 @@ describe('Advanced search modal content', () => {
 		expect(screen.getByText(/\bHome\b/)).toBeVisible();
 		expect(screen.getByTestId('icon: Folder')).toBeVisible();
 
-		// 4 close icons: 2 keywords, 1 folder, 1 close modal
-		expect(screen.getAllByTestId('icon: Close')).toHaveLength(4);
+		// owner chip
+		expect(screen.getByText('Name Surname')).toBeVisible();
+
+		// 4 close icons: 2 keywords, 1 folder, 1 close modal, 1 owner
+		expect(screen.getAllByTestId('icon: Close')).toHaveLength(5);
 
 		const resetButton = screen.getByRole('button', { name: /reset filters/i });
 		const searchButton = screen.getByRole('button', { name: /search/i });
@@ -200,6 +229,8 @@ describe('Advanced search modal content', () => {
 		expect(screen.queryByText(/\bkeyword2\b/)).not.toBeInTheDocument();
 		expect(screen.queryByText(/\bHome\b/)).not.toBeInTheDocument();
 		expect(screen.queryByTestId('icon: Folder')).not.toBeInTheDocument();
+		expect(screen.queryByText('Name Surname')).not.toBeInTheDocument();
+		expect(screen.queryByText('Folder')).not.toBeInTheDocument();
 
 		// 1 close icon: close modal
 		expect(screen.getByTestId('icon: Close')).toBeVisible();
@@ -774,6 +805,70 @@ describe('Advanced search modal content', () => {
 				}),
 				cascade: { value: false },
 				sharedWithMe: { value: false }
+			});
+		});
+	});
+
+	describe('owner param', () => {
+		test('search owner, select it from dropDown and call searchAdvancedFilters function with proper params', async () => {
+			const contactInfo: ContactInfo = {
+				_attrs: {
+					email: 'test@email.com',
+					zimbraId: 'zimbraId',
+					fullName: 'test email',
+					firstName: 'firstName',
+					lastName: 'lastName',
+					objectClass: []
+				},
+				ref: 'ref',
+				id: 'id'
+			};
+			mockedSoapFetch.mockReturnValue({
+				cn: [contactInfo]
+			});
+
+			const filters = {};
+			const closeAction = jest.fn();
+			const searchAdvancedFilters = jest.fn();
+			const { user } = setup(
+				<AdvancedSearchModalContent
+					filters={filters}
+					closeAction={closeAction}
+					searchAdvancedFilters={searchAdvancedFilters}
+				/>,
+				{ mocks: [] }
+			);
+			// 1 close icon: close modal one
+			expect(screen.getByTestId('icon: Close')).toBeVisible();
+			const searchButton = screen.getByRole('button', { name: /search/i });
+			expect(searchButton).toBeVisible();
+			expect(searchButton).toHaveAttribute('disabled', '');
+			const inputElement = screen.getByRole('textbox', { name: /owner/i });
+			expect(screen.getByText(/owner/i)).toBeVisible();
+
+			await user.type(inputElement, 'test');
+			expect(inputElement).toHaveValue('test');
+
+			const dropdownItem = await screen.findByText('test@email.com');
+			expect(dropdownItem).toBeVisible();
+
+			await user.click(dropdownItem);
+
+			// 2 close icons: 1 chip and modal
+			await waitFor(() => expect(screen.getAllByTestId('icon: Close')).toHaveLength(2));
+			// search button becomes enabled
+			await waitFor(() => expect(searchButton).not.toHaveAttribute('disabled', ''));
+			expect(screen.getByText('firstName lastName')).toBeVisible();
+
+			expect(screen.getAllByTestId('icon: Close')).toHaveLength(2);
+			await user.click(searchButton);
+			expect(searchAdvancedFilters).toHaveBeenCalled();
+			expect(searchAdvancedFilters).toHaveBeenCalledWith({
+				ownerId: expect.objectContaining({
+					avatarBackground: 'secondary',
+					label: 'firstName  lastName',
+					value: 'zimbraId'
+				})
 			});
 		});
 	});

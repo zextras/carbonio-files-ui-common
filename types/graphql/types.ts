@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2022 Zextras <https://www.zextras.com>
+ * SPDX-FileCopyrightText: 2023 Zextras <https://www.zextras.com>
  *
  * SPDX-License-Identifier: AGPL-3.0-only
  */
@@ -21,37 +21,18 @@ export type Scalars = {
 	Boolean: boolean;
 	Int: number;
 	Float: number;
-	/** A custom scalar representing a date in a timestamp format */
 	DateTime: number;
 	UploadItem: ClientTypes.UploadItem;
 };
 
 export type Account = DistributionList | User;
 
-/**
- *  Definition of a collaboration link. It represents an internal link that allows a logged user to
- *  auto-share a specific node with a specific permission.
- *  Each node can have at maximum 2 CollaborationLink:
- *   - one that allows to auto-share the node with the READ+SHARE permission;
- *   - one that allows to auto-share the node with the WRITE+SHARE permission.
- *  A collaboration link can be generated only if the requester has the <strong>can_share</strong>
- *  permission on the node.
- */
 export type CollaborationLink = {
 	__typename?: 'CollaborationLink';
-	/**  Link creation timestamp. */
 	created_at: Scalars['DateTime'];
-	/**  Unique identifier of the CollaborationLink. */
 	id: Scalars['ID'];
-	/**  Node on which the share is created when a logged user clicks on the collaboration link. */
 	node: Node;
-	/**  The permission type created/updated when a logged user clicks on the collaboration link. */
 	permission: SharePermission;
-	/**
-	 *  Full URL allowing a logged user to auto-share the related node with the related permission.
-	 *  After the creation/update of the share, the system returns a redirect to the internal url of
-	 *  the shared node.
-	 */
 	url: Scalars['String'];
 };
 
@@ -73,225 +54,111 @@ export type DistributionListUsersArgs = {
 	limit: Scalars['Int'];
 };
 
-/**  Definition of the File type which implements the Node interface */
 export type File = Node & {
 	__typename?: 'File';
 	cloned_from_version?: Maybe<Scalars['Int']>;
-	/**
-	 *  Returns all the CollaborationLinks of current node.
-	 *  It can be maximum of 2 collaboration links:
-	 *   - one that allows to auto-share the node with the READ+SHARE permission;
-	 *   - one that allows to auto-share the node with the WRITE+SHARE permission.
-	 */
 	collaboration_links: Array<Maybe<CollaborationLink>>;
-	/**  File creation timestamp */
 	created_at: Scalars['DateTime'];
-	/**  Creator of the file */
 	creator: User;
-	/**  Description of the file */
 	description: Scalars['String'];
-	/**  Extension of the file */
 	extension?: Maybe<Scalars['String']>;
-	/**  True if the owner has marked the file as favourite, false otherwise */
 	flagged: Scalars['Boolean'];
-	/**  Unique identifier of the file */
 	id: Scalars['ID'];
-	/**  Boolean representing if a version in kept forever or not */
 	keep_forever: Scalars['Boolean'];
-	/**  Last user who has edited the file */
 	last_editor?: Maybe<User>;
 	links: Array<Maybe<Link>>;
-	/**  Mime type of the file */
 	mime_type: Scalars['String'];
-	/**  Name of the file */
 	name: Scalars['String'];
-	/**  Owner of the file */
 	owner: User;
-	/**  Parent folder containing the file */
 	parent?: Maybe<Node>;
-	/**  File permissions of the user making the request */
 	permissions: Permissions;
-	/**  The top level root where the node resides */
 	rootId?: Maybe<Scalars['ID']>;
-	/**  Specific share of the current file with the target user (if exists) */
 	share?: Maybe<Share>;
-	/**  List of shares of the current file (if they exist) */
 	shares: Array<Maybe<Share>>;
-	/**  Size of the file */
 	size: Scalars['Float'];
-	/**  Type of the node */
 	type: NodeType;
-	/**  File update timestamp */
 	updated_at: Scalars['DateTime'];
-	/**  Version of the file */
 	version: Scalars['Int'];
 };
 
-/**  Definition of the File type which implements the Node interface */
 export type FileShareArgs = {
 	share_target_id: Scalars['ID'];
 };
 
-/**  Definition of the File type which implements the Node interface */
 export type FileSharesArgs = {
 	cursor?: InputMaybe<Scalars['String']>;
 	limit: Scalars['Int'];
 	sorts?: InputMaybe<Array<ShareSort>>;
 };
 
-/**  Definition of the Folder type which implements the Node interface */
 export type Folder = Node & {
 	__typename?: 'Folder';
-	/**  List of all child nodes of a folder. */
 	children: NodePage;
-	/**
-	 *  Returns all the CollaborationLinks of current node.
-	 *  It can be maximum of 2 collaboration links:
-	 *   - one that allows to auto-share the node with the READ+SHARE permission;
-	 *   - one that allows to auto-share the node with the WRITE+SHARE permission.
-	 */
 	collaboration_links: Array<Maybe<CollaborationLink>>;
-	/**  Folder creation timestamp */
 	created_at: Scalars['DateTime'];
-	/**  Creator of the folder */
 	creator: User;
-	/**  Description of the folder */
 	description: Scalars['String'];
-	/**  True if the owner has marked the folder as favourite, false otherwise */
 	flagged: Scalars['Boolean'];
-	/**  Unique identifier of the folder */
 	id: Scalars['ID'];
-	/**  Last user who has edited the folder */
 	last_editor?: Maybe<User>;
 	links: Array<Maybe<Link>>;
-	/**  Name of the folder */
 	name: Scalars['String'];
-	/**  Owner of the folder */
 	owner: User;
-	/**  Parent folder containing the folder. The parent can be null when the current folder is the root */
 	parent?: Maybe<Node>;
-	/**  Folder permissions of the user making the request */
 	permissions: Permissions;
-	/**  The top level root where the node resides */
 	rootId?: Maybe<Scalars['ID']>;
-	/**  Specific share of the current folder with the target user (if exists) */
 	share?: Maybe<Share>;
-	/**  List of shares of the current folder (if they exist) */
 	shares: Array<Maybe<Share>>;
-	/**  Type of the node */
 	type: NodeType;
-	/**  Folder update timestamp */
 	updated_at: Scalars['DateTime'];
 };
 
-/**  Definition of the Folder type which implements the Node interface */
 export type FolderChildrenArgs = {
 	limit: Scalars['Int'];
 	page_token?: InputMaybe<Scalars['String']>;
 	sort: NodeSort;
 };
 
-/**  Definition of the Folder type which implements the Node interface */
 export type FolderShareArgs = {
 	share_target_id: Scalars['ID'];
 };
 
-/**  Definition of the Folder type which implements the Node interface */
 export type FolderSharesArgs = {
 	cursor?: InputMaybe<Scalars['String']>;
 	limit: Scalars['Int'];
 	sorts?: InputMaybe<Array<ShareSort>>;
 };
 
-/**
- *  Definition of the Link type. It represents a public link of a specific node.
- *  Temporarily only a file can have a link
- */
 export type Link = {
 	__typename?: 'Link';
-	/**  Link creation timestamp. */
 	created_at: Scalars['DateTime'];
-	/**  Link description. It must be shorter than 300 characters. */
 	description?: Maybe<Scalars['String']>;
-	/**  Link expiration timestamp. */
 	expires_at?: Maybe<Scalars['DateTime']>;
-	/**  Unique identifier of the link. */
 	id: Scalars['ID'];
-	/**  Node related to this link. */
 	node: Node;
-	/**
-	 *  Full URL to access the related node. It will be returned only if the requester has the
-	 *  <strong>can_share<strong> permission on the node. However anyone who has this link can
-	 *  download the node.
-	 */
 	url?: Maybe<Scalars['String']>;
 };
 
 export type Mutation = {
 	__typename?: 'Mutation';
 	cloneVersion: File;
-	/**  Allows to copy a list of Nodes into a specified Folder. */
 	copyNodes?: Maybe<Array<Node>>;
-	/**
-	 *  Allows to create a collaboration link for an existing node. A collaboration link can be created
-	 *  only if the requester has the <strong>can_share<strong> permission on the specified node.
-	 *  If the collaboration link already exists the system returns the already created one.
-	 */
 	createCollaborationLink: CollaborationLink;
-	/**  <strong>Creates a new folder</strong> */
 	createFolder: Node;
-	/**
-	 *  Allows to create a public link for an existing node. A link can be created only if the requester has the
-	 *  <strong>can_share<strong> permission on the specified node.
-	 *  Optionally, an expiration timestamp and/or a description can be set.
-	 */
 	createLink: Link;
-	/**
-	 *  Allows to share an existing node to a user specifying the user permissions on that node,
-	 *  and, optionally, an expiration timestamp.
-	 */
 	createShare: Share;
-	/**
-	 *  Allows to delete a list of collaboration links in batch. It returns:
-	 *   - an array of IDs for each collaboration link removed;
-	 *   - a list of errors for each collaboration link that could not be removed.
-	 */
 	deleteCollaborationLinks: Array<Maybe<Scalars['ID']>>;
-	/**
-	 *  Allows to delete a list of links in batch. It returns an array of IDs for each removed link and
-	 *  a list of errors for each link that could not be removed.
-	 */
 	deleteLinks: Array<Maybe<Scalars['ID']>>;
-	/**
-	 *  Allows to delete a list of nodes. If the node is a folder then this operation removes the node and all its children,
-	 *  if the node is a file then it removes all the related versions. This operation requires can_delete permission on
-	 *  every node that should be deleted and it cannot be reverted.
-	 */
 	deleteNodes?: Maybe<Array<Scalars['ID']>>;
 	deleteShare: Scalars['Boolean'];
-	/** TODO doc */
 	deleteVersions: Array<Maybe<Scalars['Int']>>;
-	/**  Allows to flag a list of nodes. */
 	flagNodes?: Maybe<Array<Scalars['ID']>>;
 	keepVersions: Array<Maybe<Scalars['Int']>>;
-	/**
-	 *  Allows to move a list of nodes into a folder destination. This operation requires write permissions on each file
-	 *  should be moved and write permission on the destination folder otherwise it fails.
-	 */
 	moveNodes?: Maybe<Array<Node>>;
-	/**  Restores a list of nodes. */
 	restoreNodes?: Maybe<Array<Maybe<Node>>>;
-	/**  Trashes a list of nodes. */
 	trashNodes?: Maybe<Array<Scalars['ID']>>;
-	/**
-	 *  Allows to update the expiration timestamp and/or the description of an existing link.
-	 *  An existing link can be updated only if the requester has the <strong>can_share<strong>
-	 *  permission on the specified node.
-	 */
 	updateLink?: Maybe<Link>;
-	/**  <strong>Update an existing node</strong> */
 	updateNode: Node;
-	/**  Allows to update the SharePermissions and the expiration timestamp of an existing share. */
 	updateShare?: Maybe<Share>;
 };
 
@@ -395,54 +262,30 @@ export type MutationUpdateShareArgs = {
 	share_target_id: Scalars['ID'];
 };
 
-/**  Definition of the Node interface */
 export type Node = {
-	/**
-	 *  Returns all the CollaborationLinks of current node.
-	 *  It can be maximum of 2 collaboration links:
-	 *   - one that allows to auto-share the node with the READ+SHARE permission;
-	 *   - one that allows to auto-share the node with the WRITE+SHARE permission.
-	 */
 	collaboration_links: Array<Maybe<CollaborationLink>>;
-	/**  Node creation timestamp */
 	created_at: Scalars['DateTime'];
-	/**  Creator of the node (it will be a User type when it will be implemented) */
 	creator: User;
-	/**  Description of the file/folder */
 	description: Scalars['String'];
-	/**  True if the owner has marked the node as favourite, false otherwise */
 	flagged: Scalars['Boolean'];
-	/**  Unique identifier of the node */
 	id: Scalars['ID'];
-	/**  Last user who has edited the node (it will be a User type when it will be implemented) */
 	last_editor?: Maybe<User>;
 	links: Array<Maybe<Link>>;
-	/**  Name of the file/folder */
 	name: Scalars['String'];
-	/**  Owner of the node (it will be a User type when it will be implemented) */
 	owner: User;
-	/**  Parent folder containing the node. The parent can be null when the current node is the root folder */
 	parent?: Maybe<Node>;
-	/**  Node permissions of the user making the request */
 	permissions: Permissions;
-	/**  The top level root where the node resides */
 	rootId?: Maybe<Scalars['ID']>;
-	/**  Specific share of the current node with the target user (if exists) */
 	share?: Maybe<Share>;
-	/**  List of shares of the current node (if they exist) */
 	shares: Array<Maybe<Share>>;
-	/**  Type of the node */
 	type: NodeType;
-	/**  Node update timestamp */
 	updated_at: Scalars['DateTime'];
 };
 
-/**  Definition of the Node interface */
 export type NodeShareArgs = {
 	share_target_id: Scalars['ID'];
 };
 
-/**  Definition of the Node interface */
 export type NodeSharesArgs = {
 	cursor?: InputMaybe<Scalars['String']>;
 	limit: Scalars['Int'];
@@ -451,13 +294,10 @@ export type NodeSharesArgs = {
 
 export type NodePage = {
 	__typename?: 'NodePage';
-	/** The list of nodes of the requested page */
 	nodes: Array<Maybe<Node>>;
-	/**  The token to use as a cursor for requesting the next page of nodes */
 	page_token?: Maybe<Scalars['String']>;
 };
 
-/**  Definition of the NodeSort enumerator. This is useful for sorting the result of a list of nodes. */
 export enum NodeSort {
 	LastEditorAsc = 'LAST_EDITOR_ASC',
 	LastEditorDesc = 'LAST_EDITOR_DESC',
@@ -473,7 +313,6 @@ export enum NodeSort {
 	UpdatedAtDesc = 'UPDATED_AT_DESC'
 }
 
-/** Definition of NodeType enumerator. This is used for discriminating the specific type of a node */
 export enum NodeType {
 	Application = 'APPLICATION',
 	Audio = 'AUDIO',
@@ -488,35 +327,6 @@ export enum NodeType {
 	Video = 'VIDEO'
 }
 
-/**
- * +---------------------------------+-------------------------------------------------------+
- * | Operation                       | Permission                                            |
- * +---------------------------------+-------------------------------------------------------+
- * | Create folder                   | Destination folder: Write and not trashed             |
- * +---------------------------------+-------------------------------------------------------+
- * | Upload node                     | Destination folder: Write and not trashed             |
- * +---------------------------------+-------------------------------------------------------+
- * | Copy node                       | Node to copy: Read                                    |
- * |                                 | Destination folder: Write and not trashed             |
- * +---------------------------------+-------------------------------------------------------+
- * | Move node                       | Node to move: Write                                   |
- * |                                 | Destination folder: Write and not trashed             |
- * +---------------------------------+-------------------------------------------------------+
- * | Download node                   | Read                                                  |
- * +---------------------------------+-------------------------------------------------------+
- * | Delete node                     | Only the owner can delete a node                      |
- * +---------------------------------+-------------------------------------------------------+
- * | List folder                     | Read Folder                                           |
- * +---------------------------------+-------------------------------------------------------+
- * | Get metadata                    | Read                                                  |
- * +---------------------------------+-------------------------------------------------------+
- * | Update metadata                 | Write                                                 |
- * +---------------------------------+-------------------------------------------------------+
- * | Trash/Untrash a node            | Write                                                 |
- * +---------------------------------+-------------------------------------------------------+
- * | Flag/Unflag a node              | Read                                                  |
- * +---------------------------------+-------------------------------------------------------+
- */
 export type Permissions = {
 	__typename?: 'Permissions';
 	can_add_version: Scalars['Boolean'];
@@ -533,33 +343,15 @@ export type Permissions = {
 
 export type Query = {
 	__typename?: 'Query';
-	/** <strong> Returns a NodePage based on the given criteria </strong> */
 	findNodes?: Maybe<NodePage>;
 	getAccountByEmail?: Maybe<Account>;
 	getAccountsByEmail: Array<Maybe<Account>>;
-	/**
-	 *  Returns all the CollaborationLinks of the specified node.
-	 *  The response is not paginated because each node can have a maximum of 2 collaboration links:
-	 *   - one that allows to auto-share the node with the READ+SHARE permission;
-	 *   - one that allows to auto-share the node with the WRITE+SHARE permission.
-	 */
 	getCollaborationLinks: Array<Maybe<CollaborationLink>>;
 	getConfigs: Array<Maybe<Config>>;
-	/**
-	 *  Returns all the links of the specified node.
-	 *  The response is not paginated because each node can have a maximum of 50 links.
-	 */
 	getLinks: Array<Maybe<Link>>;
-	/**  <strong>Returns the attributes of the node specified by ID</strong> */
 	getNode?: Maybe<Node>;
-	/**
-	 *  <strong> Returns the list of nodes corresponding to the path of a node</strong>
-	 *  The path is ordered and returns from the highest visible one to the requested node.
-	 */
 	getPath: Array<Maybe<Node>>;
-	/**  Returns the list of all root folders */
 	getRootsList: Array<Maybe<Root>>;
-	/**  Returns the attributes of the specified share */
 	getShare?: Maybe<Share>;
 	getUploadItem?: Maybe<Scalars['UploadItem']>;
 	getUploadItems: Array<Scalars['UploadItem']>;
@@ -574,10 +366,12 @@ export type QueryFindNodesArgs = {
 	folder_id?: InputMaybe<Scalars['String']>;
 	keywords?: InputMaybe<Array<Scalars['String']>>;
 	limit?: InputMaybe<Scalars['Int']>;
+	owner_id?: InputMaybe<Scalars['String']>;
 	page_token?: InputMaybe<Scalars['String']>;
 	shared_by_me?: InputMaybe<Scalars['Boolean']>;
 	shared_with_me?: InputMaybe<Scalars['Boolean']>;
 	sort?: InputMaybe<NodeSort>;
+	type?: InputMaybe<NodeType>;
 };
 
 export type QueryGetAccountByEmailArgs = {
@@ -627,31 +421,21 @@ export type QueryGetVersionsArgs = {
 	versions?: InputMaybe<Array<Scalars['Int']>>;
 };
 
-/**  Definition of the type Root. Represents a root folder */
 export type Root = {
 	__typename?: 'Root';
-	/**  Unique identifier of the root */
 	id: Scalars['ID'];
-	/**  Name of the root */
 	name: Scalars['String'];
 };
 
-/**  Definition of the Share type. It represents a share between a node and a user. */
 export type Share = {
 	__typename?: 'Share';
-	/**  Share creation timestamp */
 	created_at: Scalars['DateTime'];
-	/**  Share expiration timestamp */
 	expires_at?: Maybe<Scalars['DateTime']>;
-	/**  Node shared */
 	node: Node;
-	/**  User permission for the node */
 	permission: SharePermission;
-	/**  User to whom a node has been shared */
 	share_target?: Maybe<SharedTarget>;
 };
 
-/**  The SharePermissions enumerator represents the permissions of a node shared with a user */
 export enum SharePermission {
 	ReadAndShare = 'READ_AND_SHARE',
 	ReadAndWrite = 'READ_AND_WRITE',
@@ -659,32 +443,23 @@ export enum SharePermission {
 	ReadWriteAndShare = 'READ_WRITE_AND_SHARE'
 }
 
-/**  Definition of the ShareSort enumerator. This is useful for sorting the result of a list of shares. */
 export enum ShareSort {
 	CreationAsc = 'CREATION_ASC',
 	CreationDesc = 'CREATION_DESC',
 	ExpirationAsc = 'EXPIRATION_ASC',
 	ExpirationDesc = 'EXPIRATION_DESC',
-	/**  The order is ascending: this means that first are shown the shares with fewer permissions. */
 	SharePermissionsAsc = 'SHARE_PERMISSIONS_ASC',
-	/**  The order is descending: this means that first are shown the shares with more permissions. */
 	SharePermissionsDesc = 'SHARE_PERMISSIONS_DESC',
-	/**  The order is based on the target user identifier and not on his email or display name. */
 	TargetUserAsc = 'TARGET_USER_ASC',
-	/**  The order is based on the target user identifier and not on his email or display name. */
 	TargetUserDesc = 'TARGET_USER_DESC'
 }
 
 export type SharedTarget = DistributionList | User;
 
-/**  Definition of the User type */
 export type User = {
 	__typename?: 'User';
-	/**  Email of the user */
 	email: Scalars['String'];
-	/**  Full name of the user */
 	full_name: Scalars['String'];
-	/**  Unique identifier of the folder */
 	id: Scalars['ID'];
 };
 
@@ -1483,6 +1258,8 @@ export type FindNodesQueryVariables = Exact<{
 	sort?: InputMaybe<NodeSort>;
 	shares_limit?: InputMaybe<Scalars['Int']>;
 	direct_share?: InputMaybe<Scalars['Boolean']>;
+	owner_id?: InputMaybe<Scalars['String']>;
+	type?: InputMaybe<NodeType>;
 }>;
 
 export type FindNodesQuery = {
@@ -4332,6 +4109,16 @@ export const FindNodesDocument = {
 					kind: 'VariableDefinition',
 					variable: { kind: 'Variable', name: { kind: 'Name', value: 'direct_share' } },
 					type: { kind: 'NamedType', name: { kind: 'Name', value: 'Boolean' } }
+				},
+				{
+					kind: 'VariableDefinition',
+					variable: { kind: 'Variable', name: { kind: 'Name', value: 'owner_id' } },
+					type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } }
+				},
+				{
+					kind: 'VariableDefinition',
+					variable: { kind: 'Variable', name: { kind: 'Name', value: 'type' } },
+					type: { kind: 'NamedType', name: { kind: 'Name', value: 'NodeType' } }
 				}
 			],
 			selectionSet: {
@@ -4390,6 +4177,16 @@ export const FindNodesDocument = {
 								kind: 'Argument',
 								name: { kind: 'Name', value: 'direct_share' },
 								value: { kind: 'Variable', name: { kind: 'Name', value: 'direct_share' } }
+							},
+							{
+								kind: 'Argument',
+								name: { kind: 'Name', value: 'owner_id' },
+								value: { kind: 'Variable', name: { kind: 'Name', value: 'owner_id' } }
+							},
+							{
+								kind: 'Argument',
+								name: { kind: 'Name', value: 'type' },
+								value: { kind: 'Variable', name: { kind: 'Name', value: 'type' } }
 							}
 						],
 						selectionSet: {

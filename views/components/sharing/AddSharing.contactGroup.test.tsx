@@ -34,7 +34,10 @@ import { setup } from '../../../utils/testUtils';
 import { getChipLabel } from '../../../utils/utils';
 import { AddSharing } from './AddSharing';
 
-const mockedSoapFetch = jest.fn<unknown, [request: RequestName, args: unknown]>();
+const mockedSoapFetch = jest.fn<
+	unknown,
+	[request: RequestName, args: unknown, nameSpaceValue: string | undefined]
+>();
 
 jest.mock('../../../../network/network', () => ({
 	soapFetch: jest.fn(

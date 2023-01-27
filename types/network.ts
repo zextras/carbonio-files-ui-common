@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: AGPL-3.0-only
  */
-export type RequestName = 'AutoComplete' | 'GetContacts';
+export type RequestName = 'AutoComplete' | 'GetContacts' | 'AutoCompleteGal';
 
 /**
  * @see https://files.zimbra.com/docs/soap_api/8.8.15/api-reference/zimbraMail/AutoComplete.html
@@ -17,6 +17,38 @@ export interface AutocompleteRequest {
 
 export interface AutocompleteResponse {
 	match: Array<Match>;
+}
+
+export interface AutocompleteGalRequest {
+	needExp?: boolean;
+	type?: 'all' | 'account' | 'resource' | 'group';
+	name: string;
+}
+
+export interface ContactInfoAttrs {
+	zimbraId: string;
+	email: string;
+	lastName: string;
+	firstName?: string;
+	fullName: string;
+	objectClass: Array<
+		| 'zimbraDistributionList'
+		| 'zimbraMailRecipient'
+		| 'inetOrgPerson'
+		| 'zimbraAccount'
+		| 'amavisAccount'
+	>;
+	type?: 'group' | unknown;
+}
+
+export interface ContactInfo {
+	id: string;
+	ref: string;
+	_attrs: ContactInfoAttrs;
+}
+
+export interface AutocompleteGalResponse {
+	cn: Array<ContactInfo>;
 }
 
 export interface GetContactsRequest {

@@ -138,6 +138,7 @@ export type SearchParams = {
 		| 'cascade'
 		| 'keywords'
 		| 'direct_share'
+		| 'owner_id'
 	> as SnakeToCamelCase<K & string>]: FindNodesQueryVariables[K];
 };
 
