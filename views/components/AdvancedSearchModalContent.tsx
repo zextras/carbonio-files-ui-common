@@ -197,7 +197,7 @@ export const AdvancedSearchModalContent: React.VFC<AdvancedSearchModalContentPro
 					})}`,
 					avatarIcon: 'Folder',
 					avatarBackground: 'secondary',
-					onClick: (event: React.SyntheticEvent): void => {
+					onClick: (event) => {
 						event.stopPropagation();
 					},
 					value: (folder.id !== ROOTS.SHARED_WITH_ME && folder.id) || undefined
