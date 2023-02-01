@@ -5,11 +5,13 @@
  */
 import React from 'react';
 
-import { act, screen, waitFor } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 
 import { ROOTS } from '../../constants';
+import { SELECTORS } from '../../constants/test';
 import { populateFolder } from '../../mocks/mockUtils';
 import { AdvancedFilters } from '../../types/common';
+import { NodeType } from '../../types/graphql/types';
 import { ContactInfo } from '../../types/network';
 import { mockGetPath } from '../../utils/mockUtils';
 import { setup } from '../../utils/testUtils';
@@ -50,6 +52,7 @@ describe('Advanced search modal content', () => {
 		).toBeVisible();
 		expect(screen.getByText(/keywords/i)).toBeVisible();
 		expect(screen.getByText(/owner/i)).toBeVisible();
+		expect(screen.getByText(/item type/i)).toBeVisible();
 		expect(screen.getByText(/select a folder/i)).toBeVisible();
 		expect(screen.getByTestId('icon: FolderOutline')).toBeVisible();
 		expect(screen.getByRole('button', { name: /reset filters/i })).toBeVisible();
@@ -99,6 +102,12 @@ describe('Advanced search modal content', () => {
 				avatarBackground: 'secondary',
 				label: 'Name Surname',
 				value: '12345678-1234-1234-1234-abcdeabcde12'
+			},
+			type: {
+				avatarBackground: 'secondary',
+				avatarIcon: 'Folder',
+				label: 'Folder',
+				value: NodeType.Folder
 			}
 		};
 		const closeAction = jest.fn();
@@ -138,13 +147,15 @@ describe('Advanced search modal content', () => {
 		expect(screen.getByText(/\bkeyword1\b/)).toBeVisible();
 		expect(screen.getByText(/\bkeyword2\b/)).toBeVisible();
 		expect(screen.getByText(/\bHome\b/)).toBeVisible();
-		expect(screen.getByTestId('icon: Folder')).toBeInTheDocument();
+		expect(screen.getAllByTestId('icon: Folder')).toHaveLength(2);
 
 		// owner chip
 		expect(screen.getByText('Name Surname')).toBeVisible();
+		// item type chip
+		expect(screen.getByText('Folder')).toBeVisible();
 
-		// 4 close icons: 2 keywords, 1 folder, 1 close modal, 1 owner
-		expect(screen.getAllByTestId('icon: Close')).toHaveLength(5);
+		// 4 close icons: 2 keywords, 1 folder, 1 close modal, 1 item type, 1 owner
+		expect(screen.getAllByTestId('icon: Close')).toHaveLength(6);
 	});
 
 	test('reset action clears all the filters', async () => {
@@ -183,6 +194,12 @@ describe('Advanced search modal content', () => {
 				avatarBackground: 'secondary',
 				label: 'Name Surname',
 				value: '12345678-1234-1234-1234-abcdeabcde12'
+			},
+			type: {
+				avatarBackground: 'secondary',
+				avatarIcon: 'Folder',
+				label: 'Folder',
+				value: NodeType.Folder
 			}
 		};
 		const closeAction = jest.fn();
@@ -202,13 +219,18 @@ describe('Advanced search modal content', () => {
 		expect(screen.getByText(/\bkeyword1\b/)).toBeVisible();
 		expect(screen.getByText(/\bkeyword2\b/)).toBeVisible();
 		expect(screen.getByText(/\bHome\b/)).toBeVisible();
-		expect(screen.getByTestId('icon: Folder')).toBeVisible();
+		expect(screen.getAllByTestId('icon: Folder')).toHaveLength(2);
+
+		expect(screen.getAllByTestId('icon: Folder')[0]).toBeVisible();
+		expect(screen.getAllByTestId('icon: Folder')[1]).toBeVisible();
 
 		// owner chip
 		expect(screen.getByText('Name Surname')).toBeVisible();
+		// item type chip
+		expect(screen.getByText('Folder')).toBeVisible();
 
-		// 4 close icons: 2 keywords, 1 folder, 1 close modal, 1 owner
-		expect(screen.getAllByTestId('icon: Close')).toHaveLength(5);
+		// 4 close icons: 2 keywords, 1 folder, 1 close modal, 1 owner, 1 item type
+		expect(screen.getAllByTestId('icon: Close')).toHaveLength(6);
 
 		const resetButton = screen.getByRole('button', { name: /reset filters/i });
 		const searchButton = screen.getByRole('button', { name: /search/i });
@@ -868,6 +890,79 @@ describe('Advanced search modal content', () => {
 					avatarBackground: 'secondary',
 					label: 'firstName  lastName',
 					value: 'zimbraId'
+				})
+			});
+		});
+	});
+
+	describe('item type param', () => {
+		test('open dropdown, select an item from dropDown and call searchAdvancedFilters function with proper params', async () => {
+			const filters = {};
+			const closeAction = jest.fn();
+			const searchAdvancedFilters = jest.fn();
+			const { user } = setup(
+				<AdvancedSearchModalContent
+					filters={filters}
+					closeAction={closeAction}
+					searchAdvancedFilters={searchAdvancedFilters}
+				/>,
+				{ mocks: [] }
+			);
+			// 1 close icon: close modal one
+			expect(screen.getByTestId('icon: Close')).toBeVisible();
+			const searchButton = screen.getByRole('button', { name: /search/i });
+			expect(searchButton).toBeVisible();
+			expect(searchButton).toHaveAttribute('disabled', '');
+			const inputElement = screen.getByRole('textbox', { name: /item type/i });
+			expect(screen.getByText(/item type/i)).toBeVisible();
+
+			// open dropdown clicking on input
+			await user.click(inputElement);
+
+			const dropdownList = await screen.findByTestId(SELECTORS.dropdownList);
+
+			const folderDropdownItemLabel = await within(dropdownList).findByText('Folder');
+			expect(folderDropdownItemLabel).toBeVisible();
+			expect(await within(dropdownList).findByTestId('icon: FolderOutline')).toBeVisible();
+
+			expect(await within(dropdownList).findByText('Document')).toBeVisible();
+			expect(await within(dropdownList).findByTestId('icon: FileTextOutline')).toBeVisible();
+
+			expect(await within(dropdownList).findByText('Spreadsheet')).toBeVisible();
+			expect(await within(dropdownList).findByTestId('icon: FileCalcOutline')).toBeVisible();
+
+			expect(await within(dropdownList).findByText('Presentation')).toBeVisible();
+			expect(
+				await within(dropdownList).findByTestId('icon: FilePresentationOutline')
+			).toBeVisible();
+
+			expect(await within(dropdownList).findByText('Image')).toBeVisible();
+			expect(await within(dropdownList).findByTestId('icon: ImageOutline')).toBeVisible();
+
+			expect(await within(dropdownList).findByText('Video')).toBeVisible();
+			expect(await within(dropdownList).findByTestId('icon: VideoOutline')).toBeVisible();
+
+			expect(await within(dropdownList).findByText('Audio')).toBeVisible();
+			expect(await within(dropdownList).findByTestId('icon: MusicOutline')).toBeVisible();
+
+			await user.click(folderDropdownItemLabel);
+
+			// 2 close icons: 1 chip and modal
+			await waitFor(() => expect(screen.getAllByTestId('icon: Close')).toHaveLength(2));
+			// search button becomes enabled
+			await waitFor(() => expect(searchButton).not.toHaveAttribute('disabled', ''));
+
+			expect(screen.getByText('Folder')).toBeVisible();
+			expect(screen.getAllByTestId('icon: Close')).toHaveLength(2);
+			await user.click(searchButton);
+
+			expect(searchAdvancedFilters).toHaveBeenCalled();
+			expect(searchAdvancedFilters).toHaveBeenCalledWith({
+				type: expect.objectContaining({
+					avatarBackground: 'secondary',
+					label: 'Folder',
+					value: NodeType.Folder,
+					avatarIcon: 'Folder'
 				})
 			});
 		});

@@ -36,7 +36,8 @@ export function useFindNodesQuery({
 	keywords,
 	directShare,
 	sort,
-	ownerId
+	ownerId,
+	type
 }: FindNodesQueryHookParams): FindNodesQueryHookReturnType {
 	const { data, fetchMore, ...queryResult } = useQuery<FindNodesQuery, FindNodesQueryVariables>(
 		FIND_NODES,
@@ -54,7 +55,8 @@ export function useFindNodesQuery({
 				limit: NODES_LOAD_LIMIT,
 				sort,
 				direct_share: directShare,
-				owner_id: ownerId
+				owner_id: ownerId,
+				type
 			},
 			skip:
 				flagged === undefined &&
@@ -62,6 +64,7 @@ export function useFindNodesQuery({
 				sharedByMe === undefined &&
 				folderId === undefined &&
 				ownerId === undefined &&
+				type === undefined &&
 				(keywords === undefined || keywords === null || keywords.length === 0) &&
 				cascade === undefined,
 			notifyOnNetworkStatusChange: true,
