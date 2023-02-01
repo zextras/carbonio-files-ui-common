@@ -43,7 +43,7 @@ export const ItemTypeChipInput: React.VFC<ItemTypeChipInputProps> = ({
 					label: newItemType[0].label,
 					avatarBackground: 'secondary',
 					avatarIcon: newItemType[0].avatarIcon,
-					onClick: (event: React.SyntheticEvent): void => {
+					onClick: (event) => {
 						event.stopPropagation();
 					},
 					value: (newItemType[0].value as string) || undefined

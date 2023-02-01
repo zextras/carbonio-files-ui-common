@@ -896,7 +896,7 @@ describe('Advanced search modal content', () => {
 	});
 
 	describe('item type param', () => {
-		test('open dropdown, select an item it from dropDown and call searchAdvancedFilters function with proper params', async () => {
+		test('open dropdown, select an item from dropDown and call searchAdvancedFilters function with proper params', async () => {
 			const filters = {};
 			const closeAction = jest.fn();
 			const searchAdvancedFilters = jest.fn();
