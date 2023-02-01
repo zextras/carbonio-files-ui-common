@@ -7,7 +7,7 @@
 import { useCallback } from 'react';
 
 import { ApolloQueryResult, QueryResult, useQuery } from '@apollo/client';
-import isEqual from 'lodash/isEqual';
+import { isEqual } from 'lodash';
 
 import { NODES_LOAD_LIMIT } from '../../../constants';
 import FIND_NODES from '../../../graphql/queries/findNodes.graphql';

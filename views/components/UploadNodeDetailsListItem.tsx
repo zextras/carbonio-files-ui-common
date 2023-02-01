@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 
 import { useQuery } from '@apollo/client';
 import { Container, Text } from '@zextras/carbonio-design-system';
-import reduce from 'lodash/reduce';
+import { reduce } from 'lodash';
 
 import { LIST_ITEM_AVATAR_HEIGHT_COMPACT } from '../../constants';
 import { Breadcrumbs } from '../../design_system_fork/Breadcrumbs';

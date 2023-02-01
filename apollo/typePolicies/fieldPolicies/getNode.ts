@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 import { FieldFunctionOptions, FieldPolicy, Reference } from '@apollo/client';
-import find from 'lodash/find';
+import { find } from 'lodash';
 
 import introspection from '../../../types/graphql/possible-types';
 import { GetNodeQueryVariables, QueryGetNodeArgs } from '../../../types/graphql/types';

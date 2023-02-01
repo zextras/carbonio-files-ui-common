@@ -8,8 +8,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { FetchResult, useLazyQuery } from '@apollo/client';
 import { ChipAction, Text, useSnackbar } from '@zextras/carbonio-design-system';
-import filter from 'lodash/filter';
-import map from 'lodash/map';
+import { map, filter } from 'lodash';
 import { useTranslation } from 'react-i18next';
 
 import { SHARE_CHIP_MAX_WIDTH, SHARE_CHIP_SIZE } from '../../../constants';

@@ -6,13 +6,7 @@
 
 import { useCallback, useMemo } from 'react';
 
-import filter from 'lodash/filter';
-import forEach from 'lodash/forEach';
-import includes from 'lodash/includes';
-import map from 'lodash/map';
-import noop from 'lodash/noop';
-import partition from 'lodash/partition';
-import reduce from 'lodash/reduce';
+import { forEach, map, filter, includes, reduce, noop, partition } from 'lodash';
 import { v4 as uuidv4 } from 'uuid';
 
 import buildClient from '../apollo';

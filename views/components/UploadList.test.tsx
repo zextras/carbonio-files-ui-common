@@ -16,8 +16,7 @@ import {
 	within
 } from '@testing-library/react';
 import { EventEmitter } from 'events';
-import find from 'lodash/find';
-import forEach from 'lodash/forEach';
+import { forEach, find } from 'lodash';
 import { rest } from 'msw';
 
 import server from '../../../mocks/server';

@@ -7,7 +7,7 @@
 import React from 'react';
 
 import { act, screen, waitFor, within } from '@testing-library/react';
-import forEach from 'lodash/forEach';
+import { forEach } from 'lodash';
 
 import { SELECTORS } from '../../../constants/test';
 import {

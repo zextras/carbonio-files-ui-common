@@ -30,10 +30,7 @@ import { PreviewManager, PreviewsManagerContext } from '@zextras/carbonio-ui-pre
 import { PreviewManagerContextType } from '@zextras/carbonio-ui-preview/lib/preview/PreviewManager';
 import { EventEmitter } from 'events';
 import { GraphQLError } from 'graphql';
-import filter from 'lodash/filter';
-import forEach from 'lodash/forEach';
-import map from 'lodash/map';
-import reduce from 'lodash/reduce';
+import { forEach, map, filter, reduce } from 'lodash';
 import { I18nextProvider } from 'react-i18next';
 import { MemoryRouter } from 'react-router-dom';
 

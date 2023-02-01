@@ -15,8 +15,7 @@ import {
 	useModal,
 	useSnackbar
 } from '@zextras/carbonio-design-system';
-import reduce from 'lodash/reduce';
-import size from 'lodash/size';
+import { reduce, size } from 'lodash';
 import moment from 'moment-timezone';
 import { useTranslation } from 'react-i18next';
 

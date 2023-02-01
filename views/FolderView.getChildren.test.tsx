@@ -8,7 +8,7 @@ import React from 'react';
 
 import { ApolloError } from '@apollo/client';
 import { screen, waitFor, waitForElementToBeRemoved, within } from '@testing-library/react';
-import forEach from 'lodash/forEach';
+import { forEach } from 'lodash';
 import { graphql } from 'msw';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';

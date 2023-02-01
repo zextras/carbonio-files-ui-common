@@ -16,8 +16,7 @@ import {
 	Button,
 	pseudoClasses
 } from '@zextras/carbonio-design-system';
-import includes from 'lodash/includes';
-import noop from 'lodash/noop';
+import { includes, noop } from 'lodash';
 import { useTranslation } from 'react-i18next';
 import styled, { SimpleInterpolation } from 'styled-components';
 

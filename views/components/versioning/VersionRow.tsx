@@ -15,7 +15,7 @@ import {
 	Container,
 	useSnackbar
 } from '@zextras/carbonio-design-system';
-import forEach from 'lodash/forEach';
+import { forEach } from 'lodash';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 

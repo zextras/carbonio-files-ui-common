@@ -8,17 +8,19 @@ import React from 'react';
 
 import { ApolloError } from '@apollo/client';
 import { Location } from 'history';
-import { chain } from 'lodash';
-import debounce from 'lodash/debounce';
-import findIndex from 'lodash/findIndex';
-import first from 'lodash/first';
-import forEach from 'lodash/forEach';
-import includes from 'lodash/includes';
-import map from 'lodash/map';
-import reduce from 'lodash/reduce';
-import size from 'lodash/size';
-import toLower from 'lodash/toLower';
-import trim from 'lodash/trim';
+import {
+	chain,
+	forEach,
+	map,
+	includes,
+	reduce,
+	size,
+	debounce,
+	findIndex,
+	first,
+	toLower,
+	trim
+} from 'lodash';
 import moment, { Moment } from 'moment-timezone';
 import { TFunction } from 'react-i18next';
 

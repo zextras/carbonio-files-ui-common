@@ -7,8 +7,7 @@
 import { useCallback } from 'react';
 
 import { ApolloClient, NormalizedCacheObject, useApolloClient } from '@apollo/client';
-import filter from 'lodash/filter';
-import size from 'lodash/size';
+import { filter, size } from 'lodash';
 
 import { FindNodesCachedObject } from '../../types/apollo';
 

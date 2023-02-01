@@ -7,7 +7,7 @@
 import React from 'react';
 
 import { Container } from '@zextras/carbonio-design-system';
-import intersection from 'lodash/intersection';
+import { intersection } from 'lodash';
 
 import { DRAG_TYPES } from '../../constants';
 

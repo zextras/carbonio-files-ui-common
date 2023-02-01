@@ -6,9 +6,7 @@
 import React from 'react';
 
 import { fireEvent, screen, waitForElementToBeRemoved } from '@testing-library/react';
-import forEach from 'lodash/forEach';
-import last from 'lodash/last';
-import map from 'lodash/map';
+import { forEach, map, last } from 'lodash';
 import { Route } from 'react-router-dom';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';

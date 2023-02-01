@@ -8,8 +8,7 @@
 import { useCallback } from 'react';
 
 import { FetchResult, useMutation } from '@apollo/client';
-import filter from 'lodash/filter';
-import includes from 'lodash/includes';
+import { filter, includes } from 'lodash';
 
 import LINK from '../../../graphql/fragments/link.graphql';
 import DELETE_LINKS from '../../../graphql/mutations/deleteLinks.graphql';

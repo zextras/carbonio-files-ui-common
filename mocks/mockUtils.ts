@@ -5,10 +5,7 @@
  */
 
 import { faker } from '@faker-js/faker';
-import filter from 'lodash/filter';
-import find from 'lodash/find';
-import map from 'lodash/map';
-import some from 'lodash/some';
+import { map, find, filter, some } from 'lodash';
 
 import { LOGGED_USER } from '../../mocks/constants';
 import { CONFIGS, NODES_LOAD_LIMIT, NODES_SORT_DEFAULT, ROOTS } from '../constants';

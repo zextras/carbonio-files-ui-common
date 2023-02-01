@@ -8,8 +8,7 @@ import { useCallback } from 'react';
 
 import { FetchResult, useMutation } from '@apollo/client';
 import { useSnackbar } from '@zextras/carbonio-design-system';
-import filter from 'lodash/filter';
-import some from 'lodash/some';
+import { filter, some } from 'lodash';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 

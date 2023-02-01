@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 import { FieldFunctionOptions, FieldPolicy } from '@apollo/client';
-import filter from 'lodash/filter';
+import { filter } from 'lodash';
 
 import { UploadItem } from '../../../types/graphql/client-types';
 import { uploadVar } from '../../uploadVar';

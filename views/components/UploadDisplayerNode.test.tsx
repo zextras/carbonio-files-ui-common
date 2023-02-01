@@ -7,7 +7,7 @@ import React from 'react';
 
 import { faker } from '@faker-js/faker';
 import { screen } from '@testing-library/react';
-import keyBy from 'lodash/keyBy';
+import { keyBy } from 'lodash';
 
 import { uploadVar } from '../../apollo/uploadVar';
 import { ICON_REGEXP } from '../../constants/test';

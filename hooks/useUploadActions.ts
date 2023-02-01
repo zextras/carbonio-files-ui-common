@@ -6,7 +6,7 @@
 import { useCallback, useMemo } from 'react';
 
 import { Action as DSAction } from '@zextras/carbonio-design-system';
-import map from 'lodash/map';
+import { map } from 'lodash';
 import { useTranslation } from 'react-i18next';
 
 import { useNavigation } from '../../hooks/useNavigation';

@@ -6,9 +6,7 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import { Container, Icon, Padding, Row } from '@zextras/carbonio-design-system';
-import { sample } from 'lodash';
-import debounce from 'lodash/debounce';
-import map from 'lodash/map';
+import { sample, map, debounce } from 'lodash';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 

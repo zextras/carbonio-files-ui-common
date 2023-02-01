@@ -8,8 +8,7 @@ import { useCallback } from 'react';
 
 import { FetchResult, useMutation } from '@apollo/client';
 import { useSnackbar } from '@zextras/carbonio-design-system';
-import map from 'lodash/map';
-import some from 'lodash/some';
+import { map, some } from 'lodash';
 import { useTranslation } from 'react-i18next';
 
 import { useActiveNode } from '../../../../hooks/useActiveNode';

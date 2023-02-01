@@ -7,8 +7,7 @@
 import React from 'react';
 
 import { fireEvent, screen, within } from '@testing-library/react';
-import find from 'lodash/find';
-import map from 'lodash/map';
+import { map, find } from 'lodash';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { searchParamsVar } from '../apollo/searchVar';

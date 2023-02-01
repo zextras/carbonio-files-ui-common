@@ -8,8 +8,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useReactiveVar } from '@apollo/client';
 import { Container, Responsive, Snackbar } from '@zextras/carbonio-design-system';
-import filter from 'lodash/filter';
-import noop from 'lodash/noop';
+import { filter, noop } from 'lodash';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useParams } from 'react-router-dom';
 

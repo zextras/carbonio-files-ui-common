@@ -14,18 +14,20 @@ import {
 	Container,
 	Text
 } from '@zextras/carbonio-design-system';
-import filter from 'lodash/filter';
-import findIndex from 'lodash/findIndex';
-import first from 'lodash/first';
-import forEach from 'lodash/forEach';
-import keyBy from 'lodash/keyBy';
-import map from 'lodash/map';
-import reduce from 'lodash/reduce';
-import size from 'lodash/size';
-import some from 'lodash/some';
-import throttle from 'lodash/throttle';
-import trim from 'lodash/trim';
-import uniq from 'lodash/uniq';
+import {
+	forEach,
+	map,
+	uniq,
+	filter,
+	reduce,
+	size,
+	some,
+	findIndex,
+	first,
+	trim,
+	keyBy,
+	throttle
+} from 'lodash';
 import { useTranslation } from 'react-i18next';
 
 import { soapFetch } from '../../../../network/network';

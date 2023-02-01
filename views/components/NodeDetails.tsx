@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 
 import { ApolloError } from '@apollo/client';
 import { Container } from '@zextras/carbonio-design-system';
-import map from 'lodash/map';
+import { map } from 'lodash';
 import { useTranslation } from 'react-i18next';
 
 import { NodeDetailsUserRow } from '../../../components/NodeDetailsUserRow';

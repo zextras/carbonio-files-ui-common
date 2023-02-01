@@ -8,9 +8,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Container, Responsive } from '@zextras/carbonio-design-system';
 import { Action } from '@zextras/carbonio-shell-ui';
-import filter from 'lodash/filter';
-import last from 'lodash/last';
-import map from 'lodash/map';
+import { map, filter, last } from 'lodash';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 

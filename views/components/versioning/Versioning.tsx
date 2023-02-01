@@ -8,12 +8,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { FetchResult } from '@apollo/client';
 import { Button, Container, Padding, Text } from '@zextras/carbonio-design-system';
-import drop from 'lodash/drop';
-import filter from 'lodash/filter';
-import keyBy from 'lodash/keyBy';
-import map from 'lodash/map';
-import partition from 'lodash/partition';
-import take from 'lodash/take';
+import { map, filter, partition, take, keyBy, drop } from 'lodash';
 import moment from 'moment-timezone';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';

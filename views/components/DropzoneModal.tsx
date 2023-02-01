@@ -7,7 +7,7 @@
 import React, { useMemo } from 'react';
 
 import { Container, Icon, Padding, Text } from '@zextras/carbonio-design-system';
-import map from 'lodash/map';
+import { map } from 'lodash';
 import styled, { css, FlattenSimpleInterpolation, SimpleInterpolation } from 'styled-components';
 
 import { cssCalcBuilder } from '../../utils/utils';

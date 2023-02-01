@@ -8,10 +8,7 @@ import React, { DragEventHandler, useCallback, useEffect, useMemo, useRef } from
 
 import { gql, useApolloClient } from '@apollo/client';
 import { BreadcrumbsProps, getColor, useSnackbar } from '@zextras/carbonio-design-system';
-import forEach from 'lodash/forEach';
-import isEmpty from 'lodash/isEmpty';
-import map from 'lodash/map';
-import uniq from 'lodash/uniq';
+import { forEach, isEmpty, map, uniq } from 'lodash';
 import { useTranslation } from 'react-i18next';
 import { DefaultTheme, useTheme } from 'styled-components';
 

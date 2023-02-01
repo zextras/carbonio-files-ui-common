@@ -7,10 +7,7 @@
 import React from 'react';
 
 import { fireEvent, screen, waitForElementToBeRemoved, within } from '@testing-library/react';
-import findIndex from 'lodash/findIndex';
-import forEach from 'lodash/forEach';
-import last from 'lodash/last';
-import map from 'lodash/map';
+import { forEach, map, findIndex, last } from 'lodash';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { NODES_LOAD_LIMIT, NODES_SORT_DEFAULT } from '../constants';

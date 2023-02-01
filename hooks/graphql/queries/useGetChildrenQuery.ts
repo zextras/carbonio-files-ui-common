@@ -7,7 +7,7 @@
 import { useCallback, useMemo } from 'react';
 
 import { QueryResult, useQuery, useReactiveVar } from '@apollo/client';
-import isEqual from 'lodash/isEqual';
+import { isEqual } from 'lodash';
 
 import { nodeSortVar } from '../../../apollo/nodeSortVar';
 import { NODES_LOAD_LIMIT } from '../../../constants';

@@ -15,8 +15,7 @@ import {
 	Row,
 	Text
 } from '@zextras/carbonio-design-system';
-import noop from 'lodash/noop';
-import reduce from 'lodash/reduce';
+import { reduce, noop } from 'lodash';
 import { useTranslation } from 'react-i18next';
 
 import { destinationVar, DestinationVar } from '../../apollo/destinationVar';

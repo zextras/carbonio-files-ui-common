@@ -7,7 +7,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { ApolloError, useApolloClient, useQuery } from '@apollo/client';
-import size from 'lodash/size';
+import { size } from 'lodash';
 import { useTranslation } from 'react-i18next';
 
 import GET_PARENT from '../graphql/queries/getParent.graphql';

@@ -14,8 +14,7 @@ import {
 	Text,
 	TextWithTooltip
 } from '@zextras/carbonio-design-system';
-import find from 'lodash/find';
-import reduce from 'lodash/reduce';
+import { find, reduce } from 'lodash';
 import { useTranslation } from 'react-i18next';
 
 import useUserInfo from '../../../hooks/useUserInfo';

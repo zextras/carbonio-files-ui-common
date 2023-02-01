@@ -16,9 +16,7 @@ import {
 	useSnackbar
 } from '@zextras/carbonio-design-system';
 import { PreviewsManagerContext } from '@zextras/carbonio-ui-preview';
-import debounce from 'lodash/debounce';
-import includes from 'lodash/includes';
-import some from 'lodash/some';
+import { includes, some, debounce } from 'lodash';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import styled from 'styled-components';

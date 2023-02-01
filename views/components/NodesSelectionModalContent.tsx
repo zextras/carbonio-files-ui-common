@@ -19,12 +19,7 @@ import {
 	Text,
 	Tooltip
 } from '@zextras/carbonio-design-system';
-import debounce from 'lodash/debounce';
-import findIndex from 'lodash/findIndex';
-import map from 'lodash/map';
-import reduce from 'lodash/reduce';
-import some from 'lodash/some';
-import trim from 'lodash/trim';
+import { map, reduce, some, debounce, findIndex, trim } from 'lodash';
 import { useTranslation } from 'react-i18next';
 
 import { DestinationVar, destinationVar } from '../../apollo/destinationVar';

@@ -6,7 +6,7 @@
 import React from 'react';
 
 import { fireEvent, screen, waitForElementToBeRemoved, within } from '@testing-library/react';
-import map from 'lodash/map';
+import { map } from 'lodash';
 import { graphql } from 'msw';
 import { Route } from 'react-router-dom';
 

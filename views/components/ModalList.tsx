@@ -8,7 +8,7 @@ import React, { useLayoutEffect, useMemo, useRef } from 'react';
 
 import { useQuery } from '@apollo/client';
 import { Container, Row } from '@zextras/carbonio-design-system';
-import takeRightWhile from 'lodash/takeRightWhile';
+import { takeRightWhile } from 'lodash';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 

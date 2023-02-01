@@ -14,8 +14,7 @@ import {
 	waitForElementToBeRemoved,
 	within
 } from '@testing-library/react';
-import forEach from 'lodash/forEach';
-import map from 'lodash/map';
+import { forEach, map } from 'lodash';
 import { graphql } from 'msw';
 
 import server from '../../../mocks/server';

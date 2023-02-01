@@ -6,7 +6,7 @@
 import React from 'react';
 
 import { screen, within } from '@testing-library/react';
-import find from 'lodash/find';
+import { find } from 'lodash';
 import { graphql } from 'msw';
 import { Route } from 'react-router-dom';
 

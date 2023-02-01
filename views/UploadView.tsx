@@ -7,7 +7,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { Container, Responsive, Snackbar } from '@zextras/carbonio-design-system';
-import noop from 'lodash/noop';
+import { noop } from 'lodash';
 import { useTranslation } from 'react-i18next';
 
 import { ACTION_IDS, ACTION_TYPES } from '../../constants';

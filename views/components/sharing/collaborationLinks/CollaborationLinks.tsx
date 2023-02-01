@@ -19,7 +19,7 @@ import {
 	useModal,
 	useSnackbar
 } from '@zextras/carbonio-design-system';
-import find from 'lodash/find';
+import { find } from 'lodash';
 import { useTranslation } from 'react-i18next';
 
 import { useCreateCollaborationLinkMutation } from '../../../../hooks/graphql/mutations/useCreateCollaborationLinkMutation';
