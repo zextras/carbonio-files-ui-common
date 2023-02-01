@@ -22,6 +22,44 @@ interface ItemTypeChipInputProps {
 	) => void;
 }
 
+const itemTypesArray = [
+	{
+		id: 'Folder',
+		value: NodeType.Folder,
+		icon: 'Folder'
+	},
+	{
+		id: 'Document',
+		value: NodeType.Text,
+		icon: 'FileText'
+	},
+	{
+		id: 'Spreadsheet',
+		value: NodeType.Spreadsheet,
+		icon: 'FileCalc'
+	},
+	{
+		id: 'Presentation',
+		value: NodeType.Presentation,
+		icon: 'FilePresentation'
+	},
+	{
+		id: 'Image',
+		value: NodeType.Image,
+		icon: 'Image'
+	},
+	{
+		id: 'Video',
+		value: NodeType.Video,
+		icon: 'Video'
+	},
+	{
+		id: 'Audio',
+		value: NodeType.Audio,
+		icon: 'Music'
+	}
+];
+
 export const ItemTypeChipInput: React.VFC<ItemTypeChipInputProps> = ({
 	currentFilters,
 	updateFilter
@@ -67,73 +105,28 @@ export const ItemTypeChipInput: React.VFC<ItemTypeChipInputProps> = ({
 			return [];
 		}
 		return reduce<
-			{ id: string; label: string; icon: string; value: NodeType; avatarIcon: string },
+			{ id: string; icon: string; value: NodeType },
 			NonNullable<ChipInputProps['options']>
 		>(
-			[
-				{
-					label: t('search.advancedSearch.modal.itemType.dropdownOption.folder', 'Folder'),
-					id: 'Folder',
-					icon: 'FolderOutline',
-					value: NodeType.Folder,
-					avatarIcon: 'Folder'
-				},
-				{
-					label: t('search.advancedSearch.modal.itemType.dropdownOption.document', 'Document'),
-					id: 'Document',
-					icon: 'FileTextOutline',
-					value: NodeType.Text,
-					avatarIcon: 'FileText'
-				},
-				{
-					label: t(
-						'search.advancedSearch.modal.itemType.dropdownOption.spreadsheet',
-						'Spreadsheet'
-					),
-					id: 'Spreadsheet',
-					icon: 'FileCalcOutline',
-					value: NodeType.Spreadsheet,
-					avatarIcon: 'FileCalc'
-				},
-				{
-					label: t(
-						'search.advancedSearch.modal.itemType.dropdownOption.presentation',
-						'Presentation'
-					),
-					id: 'Presentation',
-					icon: 'FilePresentationOutline',
-					value: NodeType.Presentation,
-					avatarIcon: 'FilePresentation'
-				},
-				{
-					label: t('search.advancedSearch.modal.itemType.dropdownOption.image', 'Image'),
-					id: 'Image',
-					icon: 'ImageOutline',
-					value: NodeType.Image,
-					avatarIcon: 'Image'
-				},
-				{
-					label: t('search.advancedSearch.modal.itemType.dropdownOption.video', 'Video'),
-					id: 'Video',
-					icon: 'VideoOutline',
-					value: NodeType.Video,
-					avatarIcon: 'Video'
-				},
-				{
-					label: t('search.advancedSearch.modal.itemType.dropdownOption.audio', 'Audio'),
-					id: 'Audio',
-					icon: 'MusicOutline',
-					value: NodeType.Audio,
-					avatarIcon: 'Music'
-				}
-			],
+			itemTypesArray,
 			(accumulator, item) => {
-				if (filterValue === null || item.label.toLowerCase().includes(filterValue.toLowerCase())) {
-					accumulator.push({
-						icon: item.icon,
-						label: item.label,
+				if (filterValue === null || item.id.toLowerCase().includes(filterValue.toLowerCase())) {
+					const mappedItem = {
+						icon: `${item.icon}Outline`,
+						label: t(
+							`search.advancedSearch.modal.itemType.dropdownOption.${item.id.toLowerCase()}`,
+							item.id
+						),
 						id: `$${item.id}`,
-						value: { ...item }
+						avatarIcon: item.icon,
+						value: item.value
+					};
+
+					accumulator.push({
+						icon: mappedItem.icon,
+						label: mappedItem.label,
+						id: mappedItem.id,
+						value: { ...mappedItem }
 					});
 				}
 				return accumulator;
