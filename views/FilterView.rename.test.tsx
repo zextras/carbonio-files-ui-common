@@ -14,9 +14,7 @@ import {
 	waitForElementToBeRemoved,
 	within
 } from '@testing-library/react';
-import find from 'lodash/find';
-import forEach from 'lodash/forEach';
-import map from 'lodash/map';
+import { forEach, map, find } from 'lodash';
 import { Route } from 'react-router-dom';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';

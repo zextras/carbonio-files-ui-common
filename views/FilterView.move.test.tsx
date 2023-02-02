@@ -6,8 +6,7 @@
 import React from 'react';
 
 import { fireEvent, screen, within } from '@testing-library/react';
-import forEach from 'lodash/forEach';
-import map from 'lodash/map';
+import { forEach, map } from 'lodash';
 import { Route } from 'react-router-dom';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';

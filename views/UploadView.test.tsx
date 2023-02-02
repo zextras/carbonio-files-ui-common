@@ -6,7 +6,7 @@
 import React from 'react';
 
 import { screen, waitFor } from '@testing-library/react';
-import keyBy from 'lodash/keyBy';
+import { keyBy } from 'lodash';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { uploadVar } from '../apollo/uploadVar';

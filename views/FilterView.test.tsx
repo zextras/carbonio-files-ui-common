@@ -7,8 +7,7 @@
 import React from 'react';
 
 import { screen, waitFor, waitForElementToBeRemoved, within } from '@testing-library/react';
-import forEach from 'lodash/forEach';
-import map from 'lodash/map';
+import { forEach, map } from 'lodash';
 import { graphql } from 'msw';
 import { Link, Route, Switch } from 'react-router-dom';
 

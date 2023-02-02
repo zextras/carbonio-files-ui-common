@@ -5,7 +5,7 @@
  */
 
 import { Container } from '@zextras/carbonio-design-system';
-import reduce from 'lodash/reduce';
+import { reduce } from 'lodash';
 import styled, { css, FlattenSimpleInterpolation } from 'styled-components';
 
 export const GridItem = styled(Container)<{

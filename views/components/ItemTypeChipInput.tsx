@@ -7,8 +7,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { ChipInput, ChipInputProps, ChipItem } from '@zextras/carbonio-design-system';
-import isEmpty from 'lodash/isEmpty';
-import reduce from 'lodash/reduce';
+import { isEmpty, reduce } from 'lodash';
 import { useTranslation } from 'react-i18next';
 
 import { AdvancedFilters } from '../../types/common';

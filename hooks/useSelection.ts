@@ -7,12 +7,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useReactiveVar } from '@apollo/client';
-import filter from 'lodash/filter';
-import find from 'lodash/find';
-import includes from 'lodash/includes';
-import isEqual from 'lodash/isEqual';
-import map from 'lodash/map';
-import reduce from 'lodash/reduce';
+import { map, find, filter, includes, isEqual, reduce } from 'lodash';
 
 import { selectionModeVar } from '../apollo/selectionVar';
 import { PickIdNodeType } from '../types/common';

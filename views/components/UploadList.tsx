@@ -8,10 +8,7 @@ import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 
 import { useQuery } from '@apollo/client';
 import { Button, Container, useSnackbar } from '@zextras/carbonio-design-system';
-import filter from 'lodash/filter';
-import includes from 'lodash/includes';
-import map from 'lodash/map';
-import size from 'lodash/size';
+import { map, filter, includes, size } from 'lodash';
 import { useTranslation } from 'react-i18next';
 
 import ListHeader from '../../../components/ListHeader';

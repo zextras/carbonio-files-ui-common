@@ -7,9 +7,7 @@
 import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Container, Row } from '@zextras/carbonio-design-system';
-import forEach from 'lodash/forEach';
-import isEmpty from 'lodash/isEmpty';
-import reduce from 'lodash/reduce';
+import { forEach, isEmpty, reduce } from 'lodash';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 

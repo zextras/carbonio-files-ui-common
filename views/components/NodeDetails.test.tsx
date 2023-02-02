@@ -7,9 +7,7 @@
 import React from 'react';
 
 import { screen } from '@testing-library/react';
-import { sample } from 'lodash';
-import forEach from 'lodash/forEach';
-import map from 'lodash/map';
+import { sample, forEach, map } from 'lodash';
 
 import { NODES_LOAD_LIMIT } from '../../constants';
 import {

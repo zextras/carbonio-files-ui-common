@@ -5,7 +5,7 @@
  */
 
 import { faker } from '@faker-js/faker';
-import forEach from 'lodash/forEach';
+import { forEach } from 'lodash';
 import { GraphQLContext, GraphQLRequest, ResponseResolver } from 'msw';
 
 import buildClient from '../apollo';

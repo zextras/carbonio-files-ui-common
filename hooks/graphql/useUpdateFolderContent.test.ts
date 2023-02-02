@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import find from 'lodash/find';
+import { find } from 'lodash';
 
 import { NODES_LOAD_LIMIT, NODES_SORT_DEFAULT } from '../../constants';
 import GET_CHILDREN from '../../graphql/queries/getChildren.graphql';

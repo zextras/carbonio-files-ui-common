@@ -8,7 +8,7 @@ import React from 'react';
 
 import { faker } from '@faker-js/faker';
 import { act, fireEvent, screen, within } from '@testing-library/react';
-import map from 'lodash/map';
+import { map } from 'lodash';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { ACTION_REGEXP, ICON_REGEXP, SELECTORS } from '../constants/test';

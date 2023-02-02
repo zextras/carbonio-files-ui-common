@@ -5,7 +5,7 @@
  */
 
 import { faker } from '@faker-js/faker';
-import take from 'lodash/take';
+import { take } from 'lodash';
 import { GraphQLContext, GraphQLRequest, ResponseResolver, ResponseTransformer } from 'msw';
 
 import { ROOTS } from '../constants';

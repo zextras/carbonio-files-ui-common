@@ -7,7 +7,7 @@
 import React, { useMemo } from 'react';
 
 import { Action as DSAction, CollapsingActions } from '@zextras/carbonio-design-system';
-import map from 'lodash/map';
+import { map } from 'lodash';
 
 import { HoverBarContainer } from './StyledComponents';
 

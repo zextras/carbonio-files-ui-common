@@ -7,8 +7,7 @@
 import { useCallback } from 'react';
 
 import { FetchResult, useMutation } from '@apollo/client';
-import filter from 'lodash/filter';
-import includes from 'lodash/includes';
+import { filter, includes } from 'lodash';
 
 import DELETE_VERSIONS from '../../../graphql/mutations/deleteVersions.graphql';
 import GET_VERSIONS from '../../../graphql/queries/getVersions.graphql';

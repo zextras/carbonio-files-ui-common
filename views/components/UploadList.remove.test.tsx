@@ -9,8 +9,7 @@ import { ApolloError } from '@apollo/client';
 import { faker } from '@faker-js/faker';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { EventEmitter } from 'events';
-import forEach from 'lodash/forEach';
-import keyBy from 'lodash/keyBy';
+import { forEach, keyBy } from 'lodash';
 import { graphql, ResponseResolver, rest, RestContext, RestRequest } from 'msw';
 
 import server from '../../../mocks/server';

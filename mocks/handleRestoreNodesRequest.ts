@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import map from 'lodash/map';
+import { map } from 'lodash';
 import { GraphQLContext, GraphQLRequest, ResponseResolver } from 'msw';
 
 import { ROOTS } from '../constants';

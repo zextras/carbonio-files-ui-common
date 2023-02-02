@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import forEach from 'lodash/forEach';
+import { forEach } from 'lodash';
 import { GraphQLContext, GraphQLRequest, ResponseResolver } from 'msw';
 
 import buildClient from '../apollo';

@@ -7,7 +7,7 @@
 import React from 'react';
 
 import { fireEvent, screen, within } from '@testing-library/react';
-import map from 'lodash/map';
+import { map } from 'lodash';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import GET_CHILD from '../graphql/queries/getChild.graphql';

@@ -8,8 +8,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { ChipAction } from '@zextras/carbonio-design-system';
-import filter from 'lodash/filter';
-import toLower from 'lodash/toLower';
+import { filter, toLower } from 'lodash';
 import { useTranslation } from 'react-i18next';
 
 import { useActiveNode } from '../../../../hooks/useActiveNode';

@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 
 import { ApolloProvider, ReactiveVar } from '@apollo/client';
 import { useModal } from '@zextras/carbonio-design-system';
-import size from 'lodash/size';
+import { size } from 'lodash';
 
 import buildClient from '../../apollo';
 import { DestinationVar, destinationVar } from '../../apollo/destinationVar';

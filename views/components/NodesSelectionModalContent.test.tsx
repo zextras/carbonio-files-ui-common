@@ -11,8 +11,7 @@ import React from 'react';
 import 'jest-styled-components';
 import { ApolloError, ReactiveVar } from '@apollo/client';
 import { act, screen, waitFor, within } from '@testing-library/react';
-import forEach from 'lodash/forEach';
-import size from 'lodash/size';
+import { forEach, size } from 'lodash';
 import { find as findStyled } from 'styled-components/test-utils';
 
 import { DestinationVar, destinationVar } from '../../apollo/destinationVar';

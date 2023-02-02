@@ -6,7 +6,7 @@
 import React from 'react';
 
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
-import forEach from 'lodash/forEach';
+import { forEach } from 'lodash';
 import { graphql } from 'msw';
 import { Route } from 'react-router-dom';
 

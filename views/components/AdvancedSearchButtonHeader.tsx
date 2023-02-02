@@ -7,9 +7,7 @@
 import React, { useMemo } from 'react';
 
 import { Button, Container, Divider } from '@zextras/carbonio-design-system';
-import filter from 'lodash/filter';
-import isArray from 'lodash/isArray';
-import isEmpty from 'lodash/isEmpty';
+import { isEmpty, filter, isArray } from 'lodash';
 import { useTranslation } from 'react-i18next';
 
 import { useSearch } from '../../../hooks/useSearch';

@@ -8,12 +8,7 @@
 // it might be a file without extension and with a size of 0 or exactly N x 4096B.
 // https://stackoverflow.com/a/25095250/17280436
 import { ApolloClient, ApolloQueryResult, NormalizedCacheObject } from '@apollo/client';
-import filter from 'lodash/filter';
-import find from 'lodash/find';
-import forEach from 'lodash/forEach';
-import map from 'lodash/map';
-import pull from 'lodash/pull';
-import reduce from 'lodash/reduce';
+import { forEach, map, find, filter, reduce, pull } from 'lodash';
 import { v4 as uuidv4 } from 'uuid';
 
 import { UploadFunctions, uploadFunctionsVar, UploadRecord, uploadVar } from '../apollo/uploadVar';

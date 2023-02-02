@@ -8,8 +8,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useReactiveVar } from '@apollo/client';
 import { Action as DSAction, useSnackbar } from '@zextras/carbonio-design-system';
-import isEmpty from 'lodash/isEmpty';
-import some from 'lodash/some';
+import { isEmpty, some } from 'lodash';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 

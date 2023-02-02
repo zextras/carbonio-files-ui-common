@@ -8,7 +8,7 @@ import React, { useCallback, useContext, useMemo } from 'react';
 
 import { Action as DSAction, CollapsingActions, Container } from '@zextras/carbonio-design-system';
 import { PreviewsManagerContext } from '@zextras/carbonio-ui-preview';
-import includes from 'lodash/includes';
+import { includes } from 'lodash';
 import { useTranslation } from 'react-i18next';
 
 import { useActiveNode } from '../../../hooks/useActiveNode';

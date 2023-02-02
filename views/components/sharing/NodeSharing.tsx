@@ -16,7 +16,7 @@ import {
 	Text,
 	Tooltip
 } from '@zextras/carbonio-design-system';
-import reduce from 'lodash/reduce';
+import { reduce } from 'lodash';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 

@@ -6,8 +6,7 @@
 import React from 'react';
 
 import { screen, waitFor, within } from '@testing-library/react';
-import find from 'lodash/find';
-import map from 'lodash/map';
+import { map, find } from 'lodash';
 import { graphql, rest } from 'msw';
 
 import server from '../../../../mocks/server';

@@ -6,7 +6,7 @@
 import { useMemo } from 'react';
 
 import { useQuery } from '@apollo/client';
-import reduce from 'lodash/reduce';
+import { reduce } from 'lodash';
 
 import GET_CONFIGS from '../../../graphql/queries/getConfigs.graphql';
 import { Config, GetConfigsQuery, GetConfigsQueryVariables } from '../../../types/graphql/types';

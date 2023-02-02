@@ -18,11 +18,7 @@ import {
 	ModalHeader,
 	Row
 } from '@zextras/carbonio-design-system';
-import every from 'lodash/every';
-import isArray from 'lodash/isArray';
-import isEmpty from 'lodash/isEmpty';
-import isEqual from 'lodash/isEqual';
-import map from 'lodash/map';
+import { isEmpty, map, isEqual, every, isArray } from 'lodash';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 

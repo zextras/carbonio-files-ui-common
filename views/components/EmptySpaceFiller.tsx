@@ -7,7 +7,7 @@
 import React from 'react';
 
 import { Container } from '@zextras/carbonio-design-system';
-import noop from 'lodash/noop';
+import { noop } from 'lodash';
 
 import { ContextualMenu, ContextualMenuProps } from './ContextualMenu';
 

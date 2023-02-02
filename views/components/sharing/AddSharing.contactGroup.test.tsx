@@ -6,10 +6,7 @@
 import React from 'react';
 
 import { screen, waitFor, within } from '@testing-library/react';
-import find from 'lodash/find';
-import forEach from 'lodash/forEach';
-import map from 'lodash/map';
-import reduce from 'lodash/reduce';
+import { forEach, map, find, reduce } from 'lodash';
 
 import { soapFetch } from '../../../../network/network';
 import {

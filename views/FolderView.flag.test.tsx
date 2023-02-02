@@ -7,8 +7,7 @@
 import React from 'react';
 
 import { fireEvent, screen, waitForElementToBeRemoved, within } from '@testing-library/react';
-import forEach from 'lodash/forEach';
-import map from 'lodash/map';
+import { forEach, map } from 'lodash';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { ACTION_REGEXP, ICON_REGEXP, SELECTORS } from '../constants/test';

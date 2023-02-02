@@ -7,7 +7,7 @@
 import React from 'react';
 
 import { screen } from '@testing-library/react';
-import forEach from 'lodash/forEach';
+import { forEach } from 'lodash';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';
 import { NODES_LOAD_LIMIT } from '../constants';

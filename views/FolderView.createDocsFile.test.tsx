@@ -8,7 +8,7 @@ import React from 'react';
 
 import { screen, waitForElementToBeRemoved, within } from '@testing-library/react';
 import { DropdownItem } from '@zextras/carbonio-design-system';
-import find from 'lodash/find';
+import { find } from 'lodash';
 import { graphql, rest } from 'msw';
 
 import { CreateOptionsContent } from '../../hooks/useCreateOptions';

@@ -4,9 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 import { ApolloCache, NormalizedCacheObject } from '@apollo/client';
-import filter from 'lodash/filter';
-import findIndex from 'lodash/findIndex';
-import size from 'lodash/size';
+import { filter, findIndex, size } from 'lodash';
 
 import CHILD from '../graphql/fragments/child.graphql';
 import GET_CHILDREN from '../graphql/queries/getChildren.graphql';

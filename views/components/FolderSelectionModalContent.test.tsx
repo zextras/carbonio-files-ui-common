@@ -10,7 +10,7 @@ import React from 'react';
 
 import { screen, waitFor } from '@testing-library/react';
 import 'jest-styled-components';
-import map from 'lodash/map';
+import { map } from 'lodash';
 import { find as findStyled } from 'styled-components/test-utils';
 
 import { destinationVar } from '../../apollo/destinationVar';

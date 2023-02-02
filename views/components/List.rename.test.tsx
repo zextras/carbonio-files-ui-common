@@ -7,8 +7,7 @@ import React from 'react';
 
 import { ApolloError } from '@apollo/client';
 import { fireEvent, screen, within } from '@testing-library/react';
-import forEach from 'lodash/forEach';
-import map from 'lodash/map';
+import { forEach, map } from 'lodash';
 
 import { ACTION_REGEXP, ICON_REGEXP, SELECTORS } from '../../constants/test';
 import { populateFolder, populateNode, sortNodes } from '../../mocks/mockUtils';

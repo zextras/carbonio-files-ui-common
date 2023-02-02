@@ -5,7 +5,7 @@
  */
 
 import { FieldFunctionOptions, Reference } from '@apollo/client';
-import keyBy from 'lodash/keyBy';
+import { keyBy } from 'lodash';
 
 import { NodesListCachedObject } from '../../types/apollo';
 

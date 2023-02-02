@@ -6,8 +6,7 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { Container, Divider, TabBar, TabBarProps } from '@zextras/carbonio-design-system';
-import filter from 'lodash/filter';
-import map from 'lodash/map';
+import { map, filter } from 'lodash';
 import { useTranslation } from 'react-i18next';
 
 import { useActiveNode } from '../../../hooks/useActiveNode';

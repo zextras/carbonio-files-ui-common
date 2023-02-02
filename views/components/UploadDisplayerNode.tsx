@@ -6,9 +6,7 @@
 import React, { useMemo } from 'react';
 
 import { CollapsingActions, Container } from '@zextras/carbonio-design-system';
-import drop from 'lodash/drop';
-import isEqual from 'lodash/isEqual';
-import map from 'lodash/map';
+import { map, isEqual, drop } from 'lodash';
 import { useTranslation } from 'react-i18next';
 
 import { useActiveNode } from '../../../hooks/useActiveNode';

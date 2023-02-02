@@ -19,7 +19,7 @@ import {
 	Row,
 	useSnackbar
 } from '@zextras/carbonio-design-system';
-import size from 'lodash/size';
+import { size } from 'lodash';
 import moment from 'moment-timezone';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';

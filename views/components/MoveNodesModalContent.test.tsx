@@ -9,8 +9,7 @@
 import React from 'react';
 
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
-import forEach from 'lodash/forEach';
-import map from 'lodash/map';
+import { forEach, map } from 'lodash';
 
 import { destinationVar } from '../../apollo/destinationVar';
 import { NODES_LOAD_LIMIT } from '../../constants';

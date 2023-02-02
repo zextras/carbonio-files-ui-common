@@ -8,10 +8,7 @@ import { useCallback } from 'react';
 
 import { FetchResult, useMutation } from '@apollo/client';
 import { useSnackbar } from '@zextras/carbonio-design-system';
-import find from 'lodash/find';
-import forEach from 'lodash/forEach';
-import map from 'lodash/map';
-import some from 'lodash/some';
+import { forEach, map, find, some } from 'lodash';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 

@@ -15,9 +15,7 @@ import {
 	waitForElementToBeRemoved,
 	within
 } from '@testing-library/react';
-import find from 'lodash/find';
-import forEach from 'lodash/forEach';
-import map from 'lodash/map';
+import { forEach, map, find } from 'lodash';
 
 import { UseNavigationHook } from '../../../hooks/useNavigation';
 import { draggedItemsVar } from '../../apollo/dragAndDropVar';

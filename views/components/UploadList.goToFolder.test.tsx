@@ -6,7 +6,7 @@
 import React from 'react';
 
 import { screen } from '@testing-library/react';
-import keyBy from 'lodash/keyBy';
+import { keyBy } from 'lodash';
 import { useLocation } from 'react-router-dom';
 
 import { uploadVar } from '../../apollo/uploadVar';

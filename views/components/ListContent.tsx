@@ -7,10 +7,7 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import type { Action as DSAction } from '@zextras/carbonio-design-system';
-import filter from 'lodash/filter';
-import forEach from 'lodash/forEach';
-import includes from 'lodash/includes';
-import map from 'lodash/map';
+import { forEach, map, filter, includes } from 'lodash';
 import styled from 'styled-components';
 
 import useUserInfo from '../../../hooks/useUserInfo';

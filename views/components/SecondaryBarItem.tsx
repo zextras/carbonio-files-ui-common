@@ -15,11 +15,7 @@ import {
 	Row,
 	Tooltip
 } from '@zextras/carbonio-design-system';
-import every from 'lodash/every';
-import find from 'lodash/find';
-import map from 'lodash/map';
-import noop from 'lodash/noop';
-import uniq from 'lodash/uniq';
+import { map, uniq, find, noop, every } from 'lodash';
 import styled from 'styled-components';
 
 import useUserInfo from '../../../hooks/useUserInfo';

@@ -7,11 +7,7 @@
 import React, { useContext, useEffect, useMemo } from 'react';
 
 import { useReactiveVar } from '@apollo/client';
-import { sample } from 'lodash';
-import filter from 'lodash/filter';
-import isArray from 'lodash/isArray';
-import isEmpty from 'lodash/isEmpty';
-import reduce from 'lodash/reduce';
+import { sample, isEmpty, filter, reduce, isArray } from 'lodash';
 import { useTranslation } from 'react-i18next';
 
 import { useSearch } from '../../../hooks/useSearch';

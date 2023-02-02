@@ -6,7 +6,7 @@
 import React from 'react';
 
 import { fireEvent, screen, within } from '@testing-library/react';
-import map from 'lodash/map';
+import { map } from 'lodash';
 
 import { ACTION_REGEXP } from '../../constants/test';
 import { populateFile, populateFolder, populateNode } from '../../mocks/mockUtils';

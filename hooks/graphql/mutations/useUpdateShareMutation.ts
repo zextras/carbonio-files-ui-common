@@ -7,7 +7,7 @@
 import { useCallback } from 'react';
 
 import { ApolloError, FetchResult, useMutation } from '@apollo/client';
-import reduce from 'lodash/reduce';
+import { reduce } from 'lodash';
 
 import SHARE_TARGET from '../../../graphql/fragments/shareTarget.graphql';
 import UPDATE_SHARE from '../../../graphql/mutations/updateShare.graphql';

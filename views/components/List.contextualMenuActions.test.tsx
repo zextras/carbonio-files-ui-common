@@ -6,7 +6,7 @@
 import React from 'react';
 
 import { act, fireEvent, screen } from '@testing-library/react';
-import forEach from 'lodash/forEach';
+import { forEach } from 'lodash';
 
 import { ACTION_REGEXP } from '../../constants/test';
 import { populateFolder, populateNode } from '../../mocks/mockUtils';

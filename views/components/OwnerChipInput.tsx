@@ -7,10 +7,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { ChipInput, ChipInputProps, ChipItem } from '@zextras/carbonio-design-system';
-import filter from 'lodash/filter';
-import isEmpty from 'lodash/isEmpty';
-import reduce from 'lodash/reduce';
-import throttle from 'lodash/throttle';
+import { isEmpty, filter, reduce, throttle } from 'lodash';
 import { useTranslation } from 'react-i18next';
 
 import { soapFetch } from '../../../network/network';

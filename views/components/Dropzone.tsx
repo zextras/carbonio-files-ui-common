@@ -7,8 +7,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Container } from '@zextras/carbonio-design-system';
-import { throttle } from 'lodash';
-import intersection from 'lodash/intersection';
+import { throttle, intersection } from 'lodash';
 import styled, { DefaultTheme } from 'styled-components';
 
 import { TIMERS } from '../../constants';

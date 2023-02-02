@@ -15,9 +15,7 @@ import {
 	Text,
 	TextWithTooltip
 } from '@zextras/carbonio-design-system';
-import every from 'lodash/every';
-import find from 'lodash/find';
-import reduce from 'lodash/reduce';
+import { find, reduce, every } from 'lodash';
 import { useTranslation } from 'react-i18next';
 
 import { DestinationVar, destinationVar } from '../../apollo/destinationVar';

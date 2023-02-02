@@ -10,13 +10,7 @@ import { useReactiveVar } from '@apollo/client';
 import { Action as DSAction, Container, useSnackbar } from '@zextras/carbonio-design-system';
 import { PreviewsManagerContext } from '@zextras/carbonio-ui-preview';
 import { PreviewManagerContextType } from '@zextras/carbonio-ui-preview/lib/preview/PreviewManager';
-import filter from 'lodash/filter';
-import find from 'lodash/find';
-import includes from 'lodash/includes';
-import isEmpty from 'lodash/isEmpty';
-import reduce from 'lodash/reduce';
-import size from 'lodash/size';
-import some from 'lodash/some';
+import { isEmpty, find, filter, includes, reduce, size, some } from 'lodash';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 

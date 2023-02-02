@@ -5,14 +5,7 @@
  */
 
 import type { Action as DSAction } from '@zextras/carbonio-design-system';
-import every from 'lodash/every';
-import find from 'lodash/find';
-import forEach from 'lodash/forEach';
-import includes from 'lodash/includes';
-import isBoolean from 'lodash/isBoolean';
-import reduce from 'lodash/reduce';
-import size from 'lodash/size';
-import some from 'lodash/some';
+import { forEach, find, includes, reduce, size, some, every, isBoolean } from 'lodash';
 
 import { ACTIONS_TO_REMOVE_DUE_TO_PRODUCT_CONTEXT } from '../../constants';
 import { ROOTS } from '../constants';

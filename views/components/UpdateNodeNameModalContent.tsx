@@ -15,7 +15,7 @@ import {
 	ModalFooter,
 	ModalHeader
 } from '@zextras/carbonio-design-system';
-import trim from 'lodash/trim';
+import { trim } from 'lodash';
 import { useTranslation } from 'react-i18next';
 
 import { CreateDocsFile } from '../../types/common';
